@@ -28,6 +28,7 @@ interface ProfileResponse {
   firstName: string;
   lastName: string;
   isActive: boolean;
+  isSystemAdmin: boolean;
 }
 
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
