@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Plus Jakarta Sans Regular";
+  src: url("./assets/fonts/PlusJakartaSans-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans Medium";
+  src: url("./assets/fonts/PlusJakartaSans-Medium.ttf");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans Semibold";
+  src: url("./assets/fonts/PlusJakartaSans-SemiBold.ttf");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans Bold";
+  src: url("./assets/fonts/PlusJakartaSans-Bold.ttf");
+}
+
+@theme {
+  --color-primary-50: #f4f2ff;
+  --color-primary-100: #e9e8ff;
+  --color-primary-200: #d6d4ff;
+  --color-primary-300: #b9b1ff;
+  --color-primary-400: #9685ff;
+  --color-primary-500: #8669ff;
+  --color-primary-600: #6330f7;
+  --color-primary-700: #551ee3;
+  --color-primary-800: #4618bf;
+  --color-primary-900: #3b169c;
+  --color-primary-950: #220b6a;
+
+  --color-primary-light: var(--color-primary-500);
+  --color-primary: var(--color-primary-600);
+  --color-secondary: var(--color-primary-800);
+
+  --font-body: "Plus Jakarta Sans Regular";
+  --font-body-medium: "Plus Jakarta Sans Medium";
+  --font-body-semibold: "Plus Jakarta Sans Semibold";
+  --font-body-bold: "Plus Jakarta Sans Bold";
+
+  --shadow-input: 0px 0px 5.5px rgb(134 105 255 / 0.08);
+  --shadow-card: var(--shadow-md);
+
+  --radius-card: var(--radius-lg);
+  --radius-input: var(--radius-lg);
+  --radius-button: var(--radius-lg);
+
+  --text-exs: 0.65rem;
+}
+
+@layer base {
+  .border-input {
+    @apply border border-gray-200;
+  }
+
+  .border-input-effect {
+    @apply focus-within:border-primary-400 focus-within:shadow-input;
+  }
+
+  .border-card {
+    @apply border border-gray-100;
+  }
+
+  .border-card-effect {
+    @apply hover:border-gray-200 hover:shadow-sm;
+  }
+
+  .border-button {
+    @apply border border-gray-200;
+  }
+}
