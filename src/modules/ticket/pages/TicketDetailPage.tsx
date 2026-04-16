@@ -21,6 +21,7 @@ import {
 } from "../services/ticket.service";
 import {
   STATUSES,
+  PRIORITIES,
   PRIORITY_COLORS,
   STATUS_COLORS,
 } from "../domain/ticket-enums";
@@ -59,6 +60,8 @@ export default function TicketDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editDescription, setEditDescription] = useState("");
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
     message: string;
@@ -125,6 +128,8 @@ export default function TicketDetailPage() {
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "admin";
   const canManage = currentMember?.role === "admin" || currentMember?.role === "agent";
+  const isCreator = ticket?.creatorId === user?.id;
+  const canEdit = canManage || isCreator;
 
   const assignableMembers = members.filter(
     (m) => m.role === "admin" || m.role === "agent",
@@ -133,6 +138,29 @@ export default function TicketDetailPage() {
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.userId === userId);
     return m ? `${m.firstName} ${m.lastName}` : userId;
+  };
+
+  const handleSaveDescription = async () => {
+    if (!workspaceSlug || !ticketId) return;
+    try {
+      await updateTicket(workspaceSlug, ticketId, { description: editDescription });
+      fetchTicket();
+      setEditingDescription(false);
+      toast.success("Description updated");
+    } catch {
+      toast.error("Failed to update description");
+    }
+  };
+
+  const handlePriorityChange = async (priority: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    try {
+      await updateTicket(workspaceSlug, ticketId, { priority });
+      fetchTicket();
+      toast.success("Priority updated");
+    } catch {
+      toast.error("Failed to update priority");
+    }
   };
 
   const handleStatusChange = async (status: string) => {
@@ -279,12 +307,47 @@ export default function TicketDetailPage() {
         {/* Main content */}
         <div className="lg:col-span-2 space-y-4">
           <Card className="p-5">
-            <p className="text-xs font-body-medium text-gray-400 mb-2 uppercase">
-              Description
-            </p>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-              {ticket.description}
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-body-medium text-gray-400 uppercase">
+                Description
+              </p>
+              {canEdit && !editingDescription && (
+                <button
+                  onClick={() => {
+                    setEditDescription(ticket.description);
+                    setEditingDescription(true);
+                  }}
+                  className="text-xs text-primary hover:underline cursor-pointer"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {editingDescription ? (
+              <div>
+                <Textarea
+                  value={editDescription}
+                  onChange={setEditDescription}
+                  height={120}
+                />
+                <div className="flex gap-2 mt-2">
+                  <Button size="xs" onClick={handleSaveDescription}>
+                    Save
+                  </Button>
+                  <Button
+                    size="xs"
+                    color="light"
+                    onClick={() => setEditingDescription(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {ticket.description}
+              </p>
+            )}
           </Card>
 
           {/* Attachments */}
@@ -395,7 +458,7 @@ export default function TicketDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {canManage && (
+          {canEdit && (
             <Card className="p-4">
               <FormInput label="Status" className={clsx("!mb-0")}>
                 <Select
@@ -403,6 +466,19 @@ export default function TicketDetailPage() {
                   label={(s) => s}
                   value={(s) => s === ticket.status}
                   onChange={handleStatusChange}
+                />
+              </FormInput>
+            </Card>
+          )}
+
+          {canEdit && (
+            <Card className="p-4">
+              <FormInput label="Priority" className={clsx("!mb-0")}>
+                <Select
+                  options={[...PRIORITIES]}
+                  label={(p) => p}
+                  value={(p) => p === ticket.priority}
+                  onChange={handlePriorityChange}
                 />
               </FormInput>
             </Card>
@@ -428,7 +504,7 @@ export default function TicketDetailPage() {
                 tags={workspaceTags}
                 selectedIds={ticket.tagIds}
                 onChange={handleTagsChange}
-                disabled={!canManage}
+                disabled={!canEdit}
               />
             </FormInput>
           </Card>
