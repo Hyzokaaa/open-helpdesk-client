@@ -22,6 +22,7 @@ import {
 import {
   STATUSES,
   PRIORITIES,
+  CATEGORIES,
   PRIORITY_COLORS,
   STATUS_COLORS,
 } from "../domain/ticket-enums";
@@ -160,6 +161,17 @@ export default function TicketDetailPage() {
       toast.success("Priority updated");
     } catch {
       toast.error("Failed to update priority");
+    }
+  };
+
+  const handleCategoryChange = async (category: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    try {
+      await updateTicket(workspaceSlug, ticketId, { category });
+      fetchTicket();
+      toast.success("Category updated");
+    } catch {
+      toast.error("Failed to update category");
     }
   };
 
@@ -458,7 +470,7 @@ export default function TicketDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {canEdit && (
+          {canManage && (
             <Card className="p-4">
               <FormInput label="Status" className={clsx("!mb-0")}>
                 <Select
@@ -479,6 +491,19 @@ export default function TicketDetailPage() {
                   label={(p) => p}
                   value={(p) => p === ticket.priority}
                   onChange={handlePriorityChange}
+                />
+              </FormInput>
+            </Card>
+          )}
+
+          {canEdit && (
+            <Card className="p-4">
+              <FormInput label="Category" className={clsx("!mb-0")}>
+                <Select
+                  options={[...CATEGORIES]}
+                  label={(c) => c}
+                  value={(c) => c === ticket.category}
+                  onChange={handleCategoryChange}
                 />
               </FormInput>
             </Card>
