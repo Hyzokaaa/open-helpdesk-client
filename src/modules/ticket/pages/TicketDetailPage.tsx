@@ -124,6 +124,7 @@ export default function TicketDetailPage() {
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "admin";
+  const canManage = currentMember?.role === "admin" || currentMember?.role === "agent";
 
   const assignableMembers = members.filter(
     (m) => m.role === "admin" || m.role === "agent",
@@ -394,7 +395,7 @@ export default function TicketDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {isAdmin && (
+          {canManage && (
             <Card className="p-4">
               <FormInput label="Status" className={clsx("!mb-0")}>
                 <Select
@@ -427,7 +428,7 @@ export default function TicketDetailPage() {
                 tags={workspaceTags}
                 selectedIds={ticket.tagIds}
                 onChange={handleTagsChange}
-                disabled={!isAdmin}
+                disabled={!canManage}
               />
             </FormInput>
           </Card>
