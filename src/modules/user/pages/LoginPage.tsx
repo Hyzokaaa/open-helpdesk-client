@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -72,12 +72,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary hover:underline">
-              Register
-            </Link>
-          </p>
         </div>
       </div>
     </div>

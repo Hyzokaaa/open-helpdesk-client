@@ -1,5 +1,6 @@
 import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
+import useUser from "@modules/user/hooks/useUser";
 
 interface NavItem {
   label: string;
@@ -9,6 +10,7 @@ interface NavItem {
 export default function Sidebar() {
   const location = useLocation();
   const { workspaceSlug } = useParams();
+  const { user } = useUser();
 
   const mainNav: NavItem[] = [
     { label: "Workspaces", path: "/dashboard/workspaces" },
@@ -69,6 +71,26 @@ export default function Sidebar() {
                 {item.label}
               </Link>
             ))}
+          </>
+        )}
+
+        {user?.isSystemAdmin && (
+          <>
+            <div className="border-t border-gray-100 my-3" />
+            <p className="px-3 text-exs text-gray-400 font-body-medium uppercase mb-1">
+              System
+            </p>
+            <Link
+              to="/dashboard/admin"
+              className={clsx(
+                "px-3 py-2 rounded-lg text-sm font-body-medium transition-colors",
+                isActive("/dashboard/admin")
+                  ? "bg-primary-50 text-primary"
+                  : "text-gray-600 hover:bg-gray-50",
+              )}
+            >
+              Administration
+            </Link>
           </>
         )}
       </nav>

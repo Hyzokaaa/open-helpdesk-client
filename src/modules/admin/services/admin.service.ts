@@ -1,0 +1,24 @@
+import { http } from "@modules/app/modules/http/domain/http";
+
+export interface UserItem {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isSystemAdmin: boolean;
+}
+
+export async function listAllUsers(): Promise<UserItem[]> {
+  const res = await http.get<UserItem[]>("/users");
+  return res.data;
+}
+
+export async function createUser(data: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}): Promise<{ id: string; email: string }> {
+  const res = await http.post("/users", data);
+  return res.data;
+}
