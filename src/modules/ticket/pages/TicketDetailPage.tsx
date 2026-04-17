@@ -9,6 +9,7 @@ import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBa
 import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import CommentInput from "@modules/comment/components/CommentInput";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useUser from "@modules/user/hooks/useUser";
 import {
@@ -58,7 +59,6 @@ export default function TicketDetailPage() {
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newComment, setNewComment] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -227,12 +227,11 @@ export default function TicketDetailPage() {
     }
   };
 
-  const handleAddComment = async () => {
-    if (!workspaceSlug || !ticketId || !newComment.trim()) return;
+  const handleAddComment = async (content: string) => {
+    if (!workspaceSlug || !ticketId) return;
     setSendingComment(true);
     try {
-      await createComment(workspaceSlug, ticketId, newComment);
-      setNewComment("");
+      await createComment(workspaceSlug, ticketId, content);
       fetchComments();
     } catch {
       toast.error("Failed to add comment");
@@ -442,29 +441,24 @@ export default function TicketDetailPage() {
                   <p className="text-exs text-gray-400 mb-1">
                     {getMemberName(c.authorId)}
                   </p>
-                  <p className="text-sm text-gray-700">{c.content}</p>
+                  <p
+                    className="text-sm text-gray-700"
+                    dangerouslySetInnerHTML={{
+                      __html: c.content.replace(
+                        /@\[([^\]]+)\]\([^)]+\)/g,
+                        '<span class="text-primary font-body-semibold">@$1</span>',
+                      ),
+                    }}
+                  />
                 </Card>
               ))}
             </div>
 
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Textarea
-                  placeholder="Write a comment..."
-                  value={newComment}
-                  onChange={setNewComment}
-                  height={60}
-                />
-              </div>
-              <Button
-                size="sm"
-                loading={sendingComment}
-                onClick={handleAddComment}
-                className="self-end"
-              >
-                Send
-              </Button>
-            </div>
+            <CommentInput
+              members={members}
+              loading={sendingComment}
+              onSubmit={handleAddComment}
+            />
           </div>
         </div>
 
