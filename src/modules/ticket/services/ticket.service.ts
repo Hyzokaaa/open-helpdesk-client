@@ -29,6 +29,7 @@ export interface TicketDetail {
 
 export interface TicketFilters {
   status?: string;
+  excludeStatus?: string;
   priority?: string;
   assigneeId?: string;
   creatorId?: string;
@@ -45,6 +46,7 @@ export async function listTickets(
 ): Promise<PaginatedResult<TicketListItem>> {
   const params = new URLSearchParams();
   if (filters.status) params.set("status", filters.status);
+  if (filters.excludeStatus) params.set("excludeStatus", filters.excludeStatus);
   if (filters.priority) params.set("priority", filters.priority);
   if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);
   if (filters.creatorId) params.set("creatorId", filters.creatorId);

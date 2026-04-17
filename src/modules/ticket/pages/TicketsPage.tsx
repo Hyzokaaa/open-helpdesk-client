@@ -36,10 +36,13 @@ const COLUMNS: Column[] = [
   { field: "createdAt", label: "Created", sortable: true },
 ];
 
+type Tab = "active" | "closed";
+
 export default function TicketsPage() {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
 
+  const [tab, setTab] = useState<Tab>("active");
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(
     null,
   );
@@ -59,6 +62,11 @@ export default function TicketsPage() {
     if (!workspaceSlug) return;
     setLoading(true);
     const params: TicketFilters = { ...filters };
+    if (tab === "closed") {
+      params.status = "closed";
+    } else if (!params.status) {
+      params.excludeStatus = "closed";
+    }
     if (filterTagIds.length > 0) {
       params.tagIds = filterTagIds;
     }
@@ -74,7 +82,7 @@ export default function TicketsPage() {
 
   useEffect(() => {
     fetchTickets();
-  }, [workspaceSlug, filters, filterTagIds]);
+  }, [workspaceSlug, filters, filterTagIds, tab]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -110,7 +118,7 @@ export default function TicketsPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-gray-800">Tickets</h2>
         <Button
           size="sm"
@@ -122,22 +130,45 @@ export default function TicketsPage() {
         </Button>
       </div>
 
+      <div className="flex gap-1 mb-4">
+        <button
+          onClick={() => { setTab("active"); setFilters({ ...filters, status: undefined, page: 1 }); }}
+          className={clsx(
+            "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
+            tab === "active" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100",
+          )}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => { setTab("closed"); setFilters({ ...filters, status: undefined, page: 1 }); }}
+          className={clsx(
+            "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
+            tab === "closed" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100",
+          )}
+        >
+          Closed
+        </button>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="w-40">
-          <Select
-            options={["all", ...STATUSES]}
-            label={(s) => (s === "all" ? "All Statuses" : s)}
-            value={(s) => s === (filters.status || "all")}
-            onChange={(s) =>
-              setFilters({
-                ...filters,
-                status: s === "all" ? undefined : s,
-                page: 1,
-              })
-            }
-            placeholder="Status"
-          />
-        </div>
+        {tab === "active" && (
+          <div className="w-40">
+            <Select
+              options={["all", ...STATUSES.filter((s) => s !== "closed")]}
+              label={(s) => (s === "all" ? "All Statuses" : s)}
+              value={(s) => s === (filters.status || "all")}
+              onChange={(s) =>
+                setFilters({
+                  ...filters,
+                  status: s === "all" ? undefined : s,
+                  page: 1,
+                })
+              }
+              placeholder="Status"
+            />
+          </div>
+        )}
         <div className="w-40">
           <Select
             options={["all", ...PRIORITIES]}
