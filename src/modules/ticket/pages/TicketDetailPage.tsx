@@ -12,6 +12,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -65,6 +66,7 @@ export default function TicketDetailPage() {
   const [sendingComment, setSendingComment] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
+  const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [editName, setEditName] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [editDescription, setEditDescription] = useState("");
@@ -309,6 +311,14 @@ export default function TicketDetailPage() {
     <div className="w-full max-w-3xl">
       <DropOverlay visible={dragging} />
 
+      {lightbox && (
+        <Lightbox
+          src={lightbox.src}
+          type={lightbox.type}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+
       {confirmAction && (
         <ConfirmModal
           title={confirmAction.title}
@@ -434,11 +444,17 @@ export default function TicketDetailPage() {
               <div className="flex flex-wrap gap-3">
                 {attachments.map((a) => (
                   <div key={a.id} className="relative group">
-                    <a
-                      href={a.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block border border-gray-200 rounded-lg overflow-hidden hover:border-primary-300 transition-colors"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isImage(a.mimeType) || isVideo(a.mimeType)
+                          ? setLightbox({
+                              src: a.downloadUrl,
+                              type: isImage(a.mimeType) ? "image" : "video",
+                            })
+                          : window.open(a.downloadUrl, "_blank")
+                      }
+                      className="block border border-gray-200 rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
                     >
                       {isImage(a.mimeType) ? (
                         <img
@@ -458,7 +474,7 @@ export default function TicketDetailPage() {
                           </span>
                         </div>
                       )}
-                    </a>
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
