@@ -14,6 +14,7 @@ import { PRIORITIES, CATEGORIES } from "../domain/ticket-enums";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
+import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 
 export default function TicketCreatePage() {
   const { workspaceSlug } = useParams();
@@ -28,6 +29,7 @@ export default function TicketCreatePage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
     if (workspaceSlug) listTags(workspaceSlug).then(setTags);
@@ -92,6 +94,14 @@ export default function TicketCreatePage() {
       <h2 className="text-lg font-body-bold text-gray-800 mb-6">
         New Ticket
       </h2>
+
+      {lightbox && (
+        <Lightbox
+          src={lightbox.src}
+          type={lightbox.type}
+          onClose={() => setLightbox(null)}
+        />
+      )}
 
       <Card className="p-6">
         <form onSubmit={handleSubmit}>
@@ -165,19 +175,30 @@ export default function TicketCreatePage() {
                     key={i}
                     className="relative group border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    {isImage(file) ? (
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={file.name}
-                        className="w-24 h-24 object-cover"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 flex items-center justify-center bg-gray-50">
-                        <span className="text-exs text-gray-500 text-center px-1 break-all">
-                          {file.name}
-                        </span>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLightbox({
+                          src: URL.createObjectURL(file),
+                          type: isImage(file) ? "image" : "video",
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      {isImage(file) ? (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-24 h-24 object-cover"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 flex items-center justify-center bg-gray-50">
+                          <span className="text-exs text-gray-500 text-center px-1 break-all">
+                            {file.name}
+                          </span>
+                        </div>
+                      )}
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeFile(i)}
