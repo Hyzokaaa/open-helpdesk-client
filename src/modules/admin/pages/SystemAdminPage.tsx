@@ -8,7 +8,12 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useUser from "@modules/user/hooks/useUser";
-import { UserItem, listAllUsers, createUser } from "../services/admin.service";
+import {
+  UserItem,
+  listAllUsers,
+  createUser,
+  toggleSystemAdmin,
+} from "../services/admin.service";
 
 export default function SystemAdminPage() {
   const { user } = useUser();
@@ -19,6 +24,7 @@ export default function SystemAdminPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [creating, setCreating] = useState(false);
 
   if (!user?.isSystemAdmin) {
@@ -41,11 +47,18 @@ export default function SystemAdminPage() {
     e.preventDefault();
     setCreating(true);
     try {
-      await createUser({ email, password, firstName, lastName });
+      await createUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        isSystemAdmin: isAdmin,
+      });
       setFirstName("");
       setLastName("");
       setEmail("");
       setPassword("");
+      setIsAdmin(false);
       setShowCreate(false);
       fetchUsers();
       toast.success("User created");
@@ -54,6 +67,24 @@ export default function SystemAdminPage() {
       toast.error(error.message || "Failed to create user");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleToggleAdmin = async (targetUser: UserItem) => {
+    if (targetUser.id === user.id) {
+      toast.error("You cannot change your own admin status");
+      return;
+    }
+    try {
+      await toggleSystemAdmin(targetUser.id, !targetUser.isSystemAdmin);
+      fetchUsers();
+      toast.success(
+        targetUser.isSystemAdmin
+          ? `${targetUser.firstName} is no longer a System Admin`
+          : `${targetUser.firstName} is now a System Admin`,
+      );
+    } catch {
+      toast.error("Failed to update admin status");
     }
   };
 
@@ -108,6 +139,17 @@ export default function SystemAdminPage() {
                 />
               </FormInput>
             </div>
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isAdmin}
+                onChange={(e) => setIsAdmin(e.target.checked)}
+                className="w-4 h-4 accent-primary"
+              />
+              <span className="text-sm text-gray-600 font-body-medium">
+                System Admin
+              </span>
+            </label>
             <Button type="submit" size="sm" loading={creating}>
               Create User
             </Button>
@@ -133,14 +175,14 @@ export default function SystemAdminPage() {
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
                   Role
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-b border-gray-50"
-                >
+                <tr key={u.id} className="border-b border-gray-50">
                   <td className="px-4 py-3">
                     <span className="text-sm font-body-semibold text-gray-800">
                       {u.firstName} {u.lastName}
@@ -151,9 +193,24 @@ export default function SystemAdminPage() {
                   </td>
                   <td className="px-4 py-3">
                     {u.isSystemAdmin ? (
-                      <StatusBadge label="System Admin" color="primary" size="xs" />
+                      <StatusBadge
+                        label="System Admin"
+                        color="primary"
+                        size="xs"
+                      />
                     ) : (
                       <StatusBadge label="User" color="gray" size="xs" />
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.id !== user.id && (
+                      <Button
+                        size="xs"
+                        color={u.isSystemAdmin ? "light" : "primary-light"}
+                        onClick={() => handleToggleAdmin(u)}
+                      >
+                        {u.isSystemAdmin ? "Remove Admin" : "Make Admin"}
+                      </Button>
                     )}
                   </td>
                 </tr>

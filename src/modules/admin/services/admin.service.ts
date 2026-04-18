@@ -18,7 +18,15 @@ export async function createUser(data: {
   password: string;
   firstName: string;
   lastName: string;
+  isSystemAdmin?: boolean;
 }): Promise<{ id: string; email: string }> {
   const res = await http.post("/users", data);
   return res.data;
+}
+
+export async function toggleSystemAdmin(
+  userId: string,
+  isSystemAdmin: boolean,
+): Promise<void> {
+  await http.patch(`/users/${userId}/system-admin`, { isSystemAdmin });
 }
