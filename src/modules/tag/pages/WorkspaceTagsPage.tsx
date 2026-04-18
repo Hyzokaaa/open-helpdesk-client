@@ -8,14 +8,13 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import { Tag, listTags, createTag, deleteTag } from "../services/tag.service";
 import ColorPicker from "@modules/app/modules/ui/components/ColorPicker/ColorPicker";
-import { WorkspaceMember, listMembers } from "@modules/workspace/services/workspace.service";
-import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 
 export default function WorkspaceTagsPage() {
   const { workspaceSlug } = useParams();
-  const { user } = useUser();
+  const { can } = usePermissions(workspaceSlug);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
@@ -33,12 +32,7 @@ export default function WorkspaceTagsPage() {
 
   useEffect(() => {
     fetchTags();
-    if (workspaceSlug) listMembers(workspaceSlug).then(setMembers);
   }, [workspaceSlug]);
-
-  const isAdmin = members.some(
-    (m) => m.userId === user?.id && m.role === "admin",
-  );
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +70,7 @@ export default function WorkspaceTagsPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-gray-800">Tags</h2>
-        {isAdmin && (
+        {can(P.TAG_CREATE) && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
             {showCreate ? "Cancel" : "New Tag"}
           </Button>
@@ -127,7 +121,7 @@ export default function WorkspaceTagsPage() {
               <span className="text-sm font-body-medium text-gray-700">
                 {tag.name}
               </span>
-              {isAdmin && (
+              {can(P.TAG_DELETE) && (
                 <button
                   className="text-gray-400 hover:text-red-500 text-xs ml-1 cursor-pointer"
                   onClick={() => handleDelete(tag.id)}

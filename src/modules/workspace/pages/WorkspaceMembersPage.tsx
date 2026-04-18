@@ -16,12 +16,15 @@ import {
   removeMember,
 } from "../services/workspace.service";
 import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 
 const ROLES = ["admin", "agent", "reporter"] as const;
 
 export default function WorkspaceMembersPage() {
   const { workspaceSlug } = useParams();
   const { user } = useUser();
+  const { can } = usePermissions(workspaceSlug);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,9 +51,7 @@ export default function WorkspaceMembersPage() {
     fetchUsers();
   }, [workspaceSlug]);
 
-  const isWorkspaceAdmin = members.some(
-    (m) => m.userId === user?.id && m.role === "admin",
-  );
+  const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
 
   const availableUsers = users.filter(
     (u) => !members.some((m) => m.userId === u.id),
@@ -94,7 +95,7 @@ export default function WorkspaceMembersPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-gray-800">Members</h2>
-        {isWorkspaceAdmin && (
+        {canManageMembers && (
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? "Cancel" : "Add Member"}
           </Button>
@@ -147,7 +148,7 @@ export default function WorkspaceMembersPage() {
                 <p className="text-xs text-gray-400">{m.email}</p>
                 <StatusBadge label={m.role} color={roleColor(m.role)} size="xs" />
               </div>
-              {isWorkspaceAdmin && (
+              {canManageMembers && (
               <Button
                 size="xs"
                 color="danger"

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import clsx from "clsx";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
@@ -12,6 +13,8 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import {
   TicketDetail,
   getTicket,
@@ -61,6 +64,8 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [editDescription, setEditDescription] = useState("");
   const [confirmAction, setConfirmAction] = useState<{
@@ -126,11 +131,16 @@ export default function TicketDetailPage() {
     accept: ["image/*", "video/*"],
   });
 
-  const currentMember = members.find((m) => m.userId === user?.id);
-  const isAdmin = currentMember?.role === "admin";
-  const canManage = currentMember?.role === "admin" || currentMember?.role === "agent";
+  const { can } = usePermissions(workspaceSlug);
   const isCreator = ticket?.creatorId === user?.id;
-  const canEdit = canManage || isCreator;
+  const isClosed = ticket?.status === "closed";
+
+  const canChangeStatus = isClosed ? can(P.TICKET_CHANGE_STATUS_CLOSED) : can(P.TICKET_CHANGE_STATUS);
+  const canEditFields = isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator);
+  const canEditName = can(P.TICKET_EDIT_NAME);
+  const canAssign = can(P.TICKET_ASSIGN);
+  const canDelete = can(P.TICKET_DELETE);
+  const canEditTags = isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_TAGS) || isCreator);
 
   const assignableMembers = members.filter(
     (m) => m.role === "admin" || m.role === "agent",
@@ -139,6 +149,18 @@ export default function TicketDetailPage() {
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.userId === userId);
     return m ? `${m.firstName} ${m.lastName}` : userId;
+  };
+
+  const handleSaveName = async () => {
+    if (!workspaceSlug || !ticketId || !editName.trim()) return;
+    try {
+      await updateTicket(workspaceSlug, ticketId, { name: editName });
+      fetchTicket();
+      setEditingName(false);
+      toast.success("Name updated");
+    } catch {
+      toast.error("Failed to update name");
+    }
   };
 
   const handleSaveDescription = async () => {
@@ -300,7 +322,30 @@ export default function TicketDetailPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">{ticket.name}</h2>
+        {editingName ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={editName}
+              onChange={setEditName}
+              autoFocus
+              size="lg"
+            />
+            <Button size="xs" onClick={handleSaveName}>Save</Button>
+            <Button size="xs" color="light" onClick={() => setEditingName(false)}>Cancel</Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-body-bold text-gray-800">{ticket.name}</h2>
+            {canEditName && (
+              <button
+                onClick={() => { setEditName(ticket.name); setEditingName(true); }}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-2 mt-2">
           <StatusBadge
             label={ticket.status}
@@ -322,7 +367,7 @@ export default function TicketDetailPage() {
               <p className="text-xs font-body-medium text-gray-400 uppercase">
                 Description
               </p>
-              {canEdit && !editingDescription && (
+              {canEditFields && !editingDescription && (
                 <button
                   onClick={() => {
                     setEditDescription(ticket.description);
@@ -464,7 +509,7 @@ export default function TicketDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {canManage && (
+          {canChangeStatus && (
             <Card className="p-4">
               <FormInput label="Status" className={clsx("!mb-0")}>
                 <Select
@@ -477,7 +522,7 @@ export default function TicketDetailPage() {
             </Card>
           )}
 
-          {canEdit && (
+          {canEditFields && (
             <Card className="p-4">
               <FormInput label="Priority" className={clsx("!mb-0")}>
                 <Select
@@ -490,7 +535,7 @@ export default function TicketDetailPage() {
             </Card>
           )}
 
-          {canEdit && (
+          {canEditFields && (
             <Card className="p-4">
               <FormInput label="Category" className={clsx("!mb-0")}>
                 <Select
@@ -503,7 +548,7 @@ export default function TicketDetailPage() {
             </Card>
           )}
 
-          {isAdmin && (
+          {canAssign && (
             <Card className="p-4">
               <FormInput label="Assignee" className="!mb-0">
                 <Select
@@ -523,7 +568,7 @@ export default function TicketDetailPage() {
                 tags={workspaceTags}
                 selectedIds={ticket.tagIds}
                 onChange={handleTagsChange}
-                disabled={!canEdit}
+                disabled={!canEditTags}
               />
             </FormInput>
           </Card>
@@ -558,7 +603,7 @@ export default function TicketDetailPage() {
             </div>
           </Card>
 
-          {isAdmin && (
+          {canDelete && (
             <Button
               size="xs"
               color="danger"
