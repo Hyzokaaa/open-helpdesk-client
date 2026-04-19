@@ -39,7 +39,7 @@ function Button(
     {
       "disabled:bg-secondary bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30":
         color === "primary",
-      "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:bg-gray-100 dark:disabled:bg-gray-700 border-button":
+      "bg-surface hover:bg-surface-hover disabled:bg-surface-disabled border-button":
         color === "light",
       "bg-red-500 hover:bg-red-700 text-white": color === "danger",
       "border border-primary/20 hover:border-primary/40 hover:bg-primary/10 text-primary":
@@ -48,7 +48,7 @@ function Button(
 
     {
       "text-white": color === "primary",
-      "text-gray-600 dark:text-gray-300": color === "light",
+      "text-secondary-text": color === "light",
     },
 
     { "w-max": !full, "w-full": full },

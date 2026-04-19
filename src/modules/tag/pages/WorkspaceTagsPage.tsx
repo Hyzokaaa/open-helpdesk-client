@@ -71,7 +71,7 @@ export default function WorkspaceTagsPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">{t("tags.title")}</h2>
+        <h2 className="text-lg font-body-bold text-heading">{t("tags.title")}</h2>
         {can(P.TAG_CREATE) && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
             {showCreate ? t("tags.cancel") : t("tags.new")}
@@ -104,7 +104,7 @@ export default function WorkspaceTagsPage() {
           <Spinner width={24} />
         </div>
       ) : tags.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
+        <p className="text-sm text-muted text-center py-12">
           {t("tags.empty")}
         </p>
       ) : (
@@ -112,7 +112,7 @@ export default function WorkspaceTagsPage() {
           {tags.map((tag) => (
             <div
               key={tag.id}
-              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2"
+              className="flex items-center gap-2 bg-surface border border-border-input rounded-lg px-3 py-2"
             >
               {tag.color && (
                 <span
@@ -120,12 +120,12 @@ export default function WorkspaceTagsPage() {
                   style={{ backgroundColor: tag.color }}
                 />
               )}
-              <span className="text-sm font-body-medium text-gray-700 dark:text-gray-200">
+              <span className="text-sm font-body-medium text-body">
                 {tag.name}
               </span>
               {can(P.TAG_DELETE) && (
                 <button
-                  className="text-gray-400 dark:text-gray-500 hover:text-red-500 text-xs ml-1 cursor-pointer"
+                  className="text-subtle hover:text-red-500 text-xs ml-1 cursor-pointer"
                   onClick={() => handleDelete(tag.id)}
                 >
                   ✕

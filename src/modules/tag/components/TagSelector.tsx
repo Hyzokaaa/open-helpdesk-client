@@ -39,7 +39,7 @@ export default function TagSelector({
               "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body-medium transition-all",
               selected
                 ? "ring-2 ring-offset-1 ring-primary text-white"
-                : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500",
+                : "bg-surface border border-border-input text-secondary-text hover:border-border-hover",
               disabled ? "opacity-50" : "cursor-pointer",
             )}
             style={
@@ -59,7 +59,7 @@ export default function TagSelector({
         );
       })}
       {tags.length === 0 && (
-        <span className="text-xs text-gray-400 dark:text-gray-500">{t("common.noTagsAvailable")}</span>
+        <span className="text-xs text-subtle">{t("common.noTagsAvailable")}</span>
       )}
     </div>
   );

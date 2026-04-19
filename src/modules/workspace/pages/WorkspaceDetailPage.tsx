@@ -32,16 +32,16 @@ export default function WorkspaceDetailPage() {
 
   return (
     <div className="w-full">
-      <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100 mb-6">
+      <h2 className="text-lg font-body-bold text-heading mb-6">
         {workspace.name}
       </h2>
 
       <Card className="p-5 mb-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300">
+        <p className="text-sm text-secondary-text">
           {workspace.description || "No description"}
         </p>
         {workspace.dealerId && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+          <p className="text-xs text-subtle mt-2">
             Dealer ID: {workspace.dealerId}
           </p>
         )}

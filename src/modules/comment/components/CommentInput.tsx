@@ -198,7 +198,7 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
   return (
     <div className="relative">
       {showMentions && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full mb-1 left-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg w-64 max-h-40 overflow-auto z-50">
+        <div className="absolute bottom-full mb-1 left-0 bg-surface border border-border-input rounded-lg shadow-lg w-64 max-h-40 overflow-auto z-50">
           {filteredMembers.map((m, i) => (
             <button
               key={m.userId}
@@ -210,14 +210,14 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
               className={clsx(
                 "w-full text-left px-3 py-2 text-sm cursor-pointer",
                 i === mentionIndex
-                  ? "bg-primary-50 dark:bg-primary-950 text-primary"
-                  : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700",
+                  ? "bg-surface-active text-primary"
+                  : "text-body hover:bg-surface-hover",
               )}
             >
               <span className="font-body-semibold">
                 {m.firstName} {m.lastName}
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{m.email}</span>
+              <span className="text-xs text-subtle ml-2">{m.email}</span>
             </button>
           ))}
         </div>
@@ -235,11 +235,11 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             spellCheck={false}
-            className="w-full bg-white dark:bg-gray-800 rounded-input border-input transition-all duration-200 outline-none text-gray-700 dark:text-gray-200 shadow-input border-input-effect px-3 py-1.5 text-sm overflow-auto"
+            className="w-full bg-surface rounded-input border-input transition-all duration-200 outline-none text-body shadow-input border-input-effect px-3 py-1.5 text-sm overflow-auto"
             style={{ minHeight: "60px", maxHeight: "120px" }}
           />
           {isEmpty() && (
-            <div className="absolute top-1.5 left-3 text-sm text-gray-400 dark:text-gray-500 pointer-events-none">
+            <div className="absolute top-1.5 left-3 text-sm text-subtle pointer-events-none">
               {t("ticketDetail.commentPlaceholder")}
             </div>
           )}

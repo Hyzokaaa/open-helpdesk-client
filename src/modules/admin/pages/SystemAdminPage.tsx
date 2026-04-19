@@ -94,10 +94,10 @@ export default function SystemAdminPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">
+          <h2 className="text-lg font-body-bold text-heading">
             {t("admin.title")}
           </h2>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t("admin.subtitle")}</p>
+          <p className="text-xs text-subtle mt-0.5">{t("admin.subtitle")}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
           {showCreate ? t("admin.cancel") : t("admin.newUser")}
@@ -148,7 +148,7 @@ export default function SystemAdminPage() {
                 onChange={(e) => setIsAdmin(e.target.checked)}
                 className="w-4 h-4 accent-primary"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-300 font-body-medium">
+              <span className="text-sm text-secondary-text font-body-medium">
                 {t("admin.systemAdmin")}
               </span>
             </label>
@@ -164,34 +164,34 @@ export default function SystemAdminPage() {
           <Spinner width={24} />
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-gray-700">
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 dark:text-gray-500 uppercase">
+              <tr className="border-b border-border-card">
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
                   {t("admin.col.name")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 dark:text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
                   {t("admin.col.email")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 dark:text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
                   {t("admin.col.role")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 dark:text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
                   {t("admin.col.actions")}
                 </th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b border-gray-50 dark:border-gray-700">
+                <tr key={u.id} className="border-b border-border-row">
                   <td className="px-4 py-3">
-                    <span className="text-sm font-body-semibold text-gray-800 dark:text-gray-100">
+                    <span className="text-sm font-body-semibold text-heading">
                       {u.firstName} {u.lastName}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{u.email}</span>
+                    <span className="text-sm text-muted">{u.email}</span>
                   </td>
                   <td className="px-4 py-3">
                     {u.isSystemAdmin ? (

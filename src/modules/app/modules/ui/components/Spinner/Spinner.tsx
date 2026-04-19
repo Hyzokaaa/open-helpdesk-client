@@ -17,7 +17,7 @@ export default function Spinner({
         "border-2 rounded-full animate-spin",
         {
           "border-white/30 border-t-white": mode === "light",
-          "border-gray-200 dark:border-gray-600 border-t-gray-500 dark:border-t-gray-300": mode === "dark",
+          "border-border-input border-t-muted": mode === "dark",
         },
         className,
       )}

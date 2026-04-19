@@ -11,7 +11,7 @@ export default function DashboardLayout() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="w-full flex min-h-dvh bg-gray-50 dark:bg-gray-900">
+    <div className="w-full flex min-h-dvh bg-page">
       <Sidebar />
 
       <div className="w-full flex flex-col grow lg:pl-[240px]">

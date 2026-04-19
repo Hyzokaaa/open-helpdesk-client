@@ -17,7 +17,9 @@ const LANGUAGES = [
 const THEMES = [
   { code: "system", labelKey: "settings.themeSystem" },
   { code: "light", labelKey: "settings.themeLight" },
+  { code: "light-border", labelKey: "settings.themeLightBorder" },
   { code: "dark", labelKey: "settings.themeDark" },
+  { code: "dark-deep", labelKey: "settings.themeDarkDeep" },
 ] as const;
 
 export default function SettingsPage() {
@@ -66,7 +68,7 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full max-w-lg">
-      <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100 mb-6">{t("settings.title")}</h2>
+      <h2 className="text-lg font-body-bold text-heading mb-6">{t("settings.title")}</h2>
 
       <Card className="p-5">
         <FormInput label={t("settings.language")}>
@@ -89,18 +91,18 @@ export default function SettingsPage() {
           />
         </FormInput>
 
-        <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-body-medium mb-2">{t("settings.account")}</p>
+        <div className="border-t border-border-card pt-4 mt-2">
+          <p className="text-xs text-subtle font-body-medium mb-2">{t("settings.account")}</p>
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">{t("settings.name")}</span>
-              <span className="text-gray-700 dark:text-gray-200 font-body-medium">
+              <span className="text-muted">{t("settings.name")}</span>
+              <span className="text-body font-body-medium">
                 {user.firstName} {user.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">{t("settings.email")}</span>
-              <span className="text-gray-700 dark:text-gray-200 font-body-medium">{user.email}</span>
+              <span className="text-muted">{t("settings.email")}</span>
+              <span className="text-body font-body-medium">{user.email}</span>
             </div>
           </div>
         </div>

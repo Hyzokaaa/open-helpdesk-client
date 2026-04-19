@@ -138,7 +138,7 @@ export default function TicketsPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">{t("tickets.title")}</h2>
+        <h2 className="text-lg font-body-bold text-heading">{t("tickets.title")}</h2>
         <Button
           size="sm"
           onClick={() => setShowCreate(true)}
@@ -152,7 +152,7 @@ export default function TicketsPage() {
           onClick={() => { setTab("active"); setFilters({ ...filters, status: undefined, page: 1 }); }}
           className={clsx(
             "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-            tab === "active" ? "bg-primary text-white" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+            tab === "active" ? "bg-primary text-white" : "text-muted hover:bg-surface-hover",
           )}
         >
           {t("tickets.active")}
@@ -161,7 +161,7 @@ export default function TicketsPage() {
           onClick={() => { setTab("closed"); setFilters({ ...filters, status: undefined, page: 1 }); }}
           className={clsx(
             "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-            tab === "closed" ? "bg-primary text-white" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+            tab === "closed" ? "bg-primary text-white" : "text-muted hover:bg-surface-hover",
           )}
         >
           {t("tickets.closed")}
@@ -210,8 +210,8 @@ export default function TicketsPage() {
               className={clsx(
                 "h-max px-3 py-1 rounded-input border-input text-sm text-left cursor-pointer flex items-center gap-2 transition-all",
                 filterTagIds.length > 0
-                  ? "bg-primary-50 dark:bg-primary-950 border-primary-300 text-primary"
-                  : "bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500",
+                  ? "bg-surface-active border-primary-300 text-primary"
+                  : "bg-surface text-subtle",
               )}
             >
               <span>Tags</span>
@@ -224,8 +224,8 @@ export default function TicketsPage() {
             </button>
 
             {tagDropdownOpen && (
-              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 w-56">
-                <p className="text-exs text-gray-400 dark:text-gray-500 font-body-medium mb-2 uppercase">
+              <div className="absolute z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg p-3 w-56">
+                <p className="text-exs text-subtle font-body-medium mb-2 uppercase">
                   {t("tickets.filterByTags")}
                 </p>
                 <div className="flex flex-col gap-1.5 max-h-48 overflow-auto">
@@ -245,8 +245,8 @@ export default function TicketsPage() {
                         className={clsx(
                           "flex items-center gap-2 px-2 py-1.5 rounded text-xs font-body-medium transition-colors cursor-pointer text-left",
                           selected
-                            ? "bg-primary-50 dark:bg-primary-950 text-primary"
-                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700",
+                            ? "bg-surface-active text-primary"
+                            : "text-secondary-text hover:bg-surface-hover",
                         )}
                       >
                         <span
@@ -265,7 +265,7 @@ export default function TicketsPage() {
                       setFilterTagIds([]);
                       setFilters({ ...filters, page: 1 });
                     }}
-                    className="text-exs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 mt-2 cursor-pointer"
+                    className="text-exs text-subtle hover:text-secondary-text mt-2 cursor-pointer"
                   >
                     {t("tickets.clearAll")}
                   </button>
@@ -281,22 +281,22 @@ export default function TicketsPage() {
           <Spinner width={24} />
         </div>
       ) : !result || result.items.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
+        <p className="text-sm text-muted text-center py-12">
           {t("tickets.empty")}
         </p>
       ) : (
         <>
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-700">
+                <tr className="border-b border-border-card">
                   {COLUMNS.map((col) => (
                     <th
                       key={col.field}
                       className={clsx(
-                        "px-4 py-3 text-left text-xs font-body-semibold text-gray-400 dark:text-gray-500 uppercase",
+                        "px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase",
                         col.sortable &&
-                          "cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 select-none",
+                          "cursor-pointer hover:text-secondary-text select-none",
                       )}
                       onClick={() => col.sortable && toggleSort(col.field)}
                     >
@@ -316,11 +316,11 @@ export default function TicketsPage() {
                 {result.items.map((ticket) => (
                   <tr
                     key={ticket.id}
-                    className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                    className="border-b border-border-row hover:bg-surface-hover/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedTicketId(ticket.id)}
                   >
                     <td className="px-4 py-3">
-                      <p className="text-sm font-body-semibold text-gray-800 dark:text-gray-100 truncate max-w-xs">
+                      <p className="text-sm font-body-semibold text-heading truncate max-w-xs">
                         {ticket.name}
                       </p>
                     </td>
@@ -365,7 +365,7 @@ export default function TicketsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-muted">
                         {formatDate(ticket.createdAt)}
                       </span>
                     </td>
@@ -387,7 +387,7 @@ export default function TicketsPage() {
               >
                 {t("tickets.previous")}
               </Button>
-              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center px-2">
+              <span className="text-xs text-muted flex items-center px-2">
                 {t("tickets.page")} {result.page} {t("tickets.of")} {Math.ceil(result.total / result.limit)}
               </span>
               <Button

@@ -16,13 +16,13 @@ export function inputClass({
 }: Props): string {
   return clsx(
     "h-max",
-    disabled ? "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" : "bg-white dark:bg-gray-800",
+    disabled ? "bg-surface-disabled text-muted" : "bg-surface",
     "rounded-input",
     "border-input",
     "transition-all duration-200",
     "outline-none",
     "shadow-input",
-    "text-gray-700 dark:text-gray-200",
+    "text-body",
 
     { "border-input-effect": !disabled },
 

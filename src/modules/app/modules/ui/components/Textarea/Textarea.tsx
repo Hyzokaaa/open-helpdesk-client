@@ -22,8 +22,8 @@ export default function Textarea({
     <textarea
       placeholder={placeholder}
       className={clsx(
-        "bg-white dark:bg-gray-800 rounded-input border-input transition-all duration-200",
-        "outline-none text-gray-700 dark:text-gray-200 shadow-input w-full",
+        "bg-surface rounded-input border-input transition-all duration-200",
+        "outline-none text-body shadow-input w-full",
         { "border-input-effect": !disabled },
         {
           "px-4 py-2": size === "base" || size === "lg",

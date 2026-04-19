@@ -21,7 +21,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       getProfile()
         .then((profile) => {
           setUser(profile);
-          if (profile.theme === "light" || profile.theme === "dark") {
+          if (profile.theme === "light" || profile.theme === "light-border" || profile.theme === "dark" || profile.theme === "dark-deep") {
             setTheme(profile.theme as Theme);
           }
         })

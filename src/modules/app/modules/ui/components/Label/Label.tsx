@@ -10,7 +10,7 @@ interface Props {
 export default function Label({ children, size = "sm", required }: Props) {
   return (
     <label
-      className={clsx("text-gray-600 dark:text-gray-300 font-body-medium", {
+      className={clsx("text-secondary-text font-body-medium", {
         "text-sm": size === "sm",
         "text-base": size === "base",
         "text-xs": size === "xs",

@@ -48,21 +48,21 @@ export default function Select<T>({
         )}
         onClick={() => setOpen(!open)}
       >
-        <span className={selected ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500"}>
+        <span className={selected ? "text-body" : "text-subtle"}>
           {selected ? label(selected) : placeholder}
         </span>
-        <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">▼</span>
+        <span className="text-subtle text-xs ml-2">▼</span>
       </button>
 
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-surface border border-border-input rounded-lg shadow-lg max-h-48 overflow-auto">
           {options.map((option, i) => (
             <button
               key={i}
               type="button"
               className={clsx(
-                "w-full text-left px-3 py-2 text-sm hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors cursor-pointer text-gray-700 dark:text-gray-200",
-                { "bg-primary-50 dark:bg-primary-950 text-primary": isSelected(option) },
+                "w-full text-left px-3 py-2 text-sm hover:bg-surface-active transition-colors cursor-pointer text-body",
+                { "bg-surface-active text-primary": isSelected(option) },
               )}
               onClick={() => {
                 onChange?.(option);
