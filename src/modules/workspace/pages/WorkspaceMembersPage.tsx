@@ -18,6 +18,7 @@ import {
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 const ROLES = ["admin", "agent", "reporter"] as const;
 
@@ -25,6 +26,7 @@ export default function WorkspaceMembersPage() {
   const { workspaceSlug } = useParams();
   const { user } = useUser();
   const { can } = usePermissions(workspaceSlug);
+  const { t } = useTranslation();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function WorkspaceMembersPage() {
       setSelectedUserId(null);
       setShowAdd(false);
       fetchMembers();
-      toast.success("Member added");
+      toast.success(t("members.added"));
     } catch {
       toast.error("Failed to add member");
     } finally {
@@ -79,7 +81,7 @@ export default function WorkspaceMembersPage() {
     try {
       await removeMember(workspaceSlug, memberUserId);
       fetchMembers();
-      toast.success("Member removed");
+      toast.success(t("members.removed"));
     } catch {
       toast.error("Failed to remove member");
     }
@@ -94,10 +96,10 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">Members</h2>
+        <h2 className="text-lg font-body-bold text-gray-800">{t("members.title")}</h2>
         {canManageMembers && (
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? "Cancel" : "Add Member"}
+            {showAdd ? t("members.cancel") : t("members.add")}
           </Button>
         )}
       </div>
@@ -106,16 +108,16 @@ export default function WorkspaceMembersPage() {
         <Card className="p-5 mb-6">
           <form onSubmit={handleAdd}>
             <div className="flex gap-4">
-              <FormInput label="User" required className="flex-[3]">
+              <FormInput label={t("members.user")} required className="flex-[3]">
                 <Select
                   options={availableUsers}
                   label={(u) => `${u.firstName} ${u.lastName} (${u.email})`}
                   value={(u) => u.id === selectedUserId}
                   onChange={(u) => setSelectedUserId(u.id)}
-                  placeholder="Select a user..."
+                  placeholder={t("members.selectUser")}
                 />
               </FormInput>
-              <FormInput label="Role" required className="flex-1">
+              <FormInput label={t("members.role")} required className="flex-1">
                 <Select
                   options={[...ROLES]}
                   label={(r) => r}
@@ -136,7 +138,7 @@ export default function WorkspaceMembersPage() {
           <Spinner width={24} />
         </div>
       ) : members.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-12">No members.</p>
+        <p className="text-sm text-gray-500 text-center py-12">{t("members.empty")}</p>
       ) : (
         <div className="grid gap-2">
           {members.map((m) => (
@@ -154,7 +156,7 @@ export default function WorkspaceMembersPage() {
                 color="danger"
                 onClick={() => handleRemove(m.userId)}
               >
-                Remove
+                {t("members.remove")}
               </Button>
               )}
             </Card>

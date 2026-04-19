@@ -50,11 +50,13 @@ import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function TicketDetailPage() {
   const { workspaceSlug, ticketId } = useParams();
   const { user } = useUser();
   const navigate = useNavigate();
+  const { t, tEnum } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
@@ -222,8 +224,8 @@ export default function TicketDetailPage() {
 
   const handleDelete = () => {
     setConfirmAction({
-      title: "Delete Ticket",
-      message: "This ticket will be deleted. This action cannot be undone.",
+      title: t("ticketDetail.deleteTitle"),
+      message: t("ticketDetail.deleteMessage"),
       onConfirm: async () => {
         if (!workspaceSlug || !ticketId) return;
         try {
@@ -266,8 +268,8 @@ export default function TicketDetailPage() {
 
   const handleDeleteAttachment = (attachmentId: string) => {
     setConfirmAction({
-      title: "Delete Attachment",
-      message: "This file will be permanently deleted.",
+      title: t("ticketDetail.deleteAttachmentTitle"),
+      message: t("ticketDetail.deleteAttachmentMessage"),
       onConfirm: async () => {
         try {
           await deleteAttachment(attachmentId);
@@ -323,7 +325,7 @@ export default function TicketDetailPage() {
         <ConfirmModal
           title={confirmAction.title}
           message={confirmAction.message}
-          confirmLabel="Delete"
+          confirmLabel={t("ticketDetail.deleteConfirm")}
           danger
           onConfirm={confirmAction.onConfirm}
           onCancel={() => setConfirmAction(null)}
@@ -340,8 +342,8 @@ export default function TicketDetailPage() {
               autoFocus
               size="lg"
             />
-            <Button size="xs" onClick={handleSaveName}>Save</Button>
-            <Button size="xs" color="light" onClick={() => setEditingName(false)}>Cancel</Button>
+            <Button size="xs" onClick={handleSaveName}>{t("ticketDetail.save")}</Button>
+            <Button size="xs" color="light" onClick={() => setEditingName(false)}>{t("ticketDetail.cancel")}</Button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -351,21 +353,21 @@ export default function TicketDetailPage() {
                 onClick={() => { setEditName(ticket.name); setEditingName(true); }}
                 className="text-xs text-primary hover:underline cursor-pointer"
               >
-                Edit
+                {t("ticketDetail.edit")}
               </button>
             )}
           </div>
         )}
         <div className="flex items-center gap-2 mt-2">
           <StatusBadge
-            label={ticket.status}
+            label={tEnum("status", ticket.status)}
             color={STATUS_COLORS[ticket.status] || "gray"}
           />
           <StatusBadge
-            label={ticket.priority}
+            label={tEnum("priority", ticket.priority)}
             color={PRIORITY_COLORS[ticket.priority] || "gray"}
           />
-          <StatusBadge label={ticket.category} color="primary" size="xs" />
+          <StatusBadge label={tEnum("category", ticket.category)} color="primary" size="xs" />
         </div>
       </div>
 
@@ -375,7 +377,7 @@ export default function TicketDetailPage() {
           <Card className="p-5">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-body-medium text-gray-400 uppercase">
-                Description
+                {t("ticketDetail.description")}
               </p>
               {canEditFields && !editingDescription && (
                 <button
@@ -385,7 +387,7 @@ export default function TicketDetailPage() {
                   }}
                   className="text-xs text-primary hover:underline cursor-pointer"
                 >
-                  Edit
+                  {t("ticketDetail.edit")}
                 </button>
               )}
             </div>
@@ -398,14 +400,14 @@ export default function TicketDetailPage() {
                 />
                 <div className="flex gap-2 mt-2">
                   <Button size="xs" onClick={handleSaveDescription}>
-                    Save
+                    {t("ticketDetail.save")}
                   </Button>
                   <Button
                     size="xs"
                     color="light"
                     onClick={() => setEditingDescription(false)}
                   >
-                    Cancel
+                    {t("ticketDetail.cancel")}
                   </Button>
                 </div>
               </div>
@@ -420,7 +422,7 @@ export default function TicketDetailPage() {
           <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-body-medium text-gray-400 uppercase">
-                Attachments ({attachments.length})
+                {t("ticketDetail.attachments")} ({attachments.length})
               </p>
               <div>
                 <input
@@ -435,7 +437,7 @@ export default function TicketDetailPage() {
                   color="light"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Add file
+                  {t("ticketDetail.addFile")}
                 </Button>
               </div>
             </div>
@@ -493,7 +495,7 @@ export default function TicketDetailPage() {
           {/* Comments */}
           <div>
             <p className="text-sm font-body-semibold text-gray-700 mb-3">
-              Comments ({comments.length})
+              {t("ticketDetail.comments")} ({comments.length})
             </p>
 
             <div className="space-y-2 mb-4">
@@ -527,10 +529,10 @@ export default function TicketDetailPage() {
         <div className="space-y-4">
           {canChangeStatus && (
             <Card className="p-4">
-              <FormInput label="Status" className={clsx("!mb-0")}>
+              <FormInput label={t("ticketDetail.status")} className={clsx("!mb-0")}>
                 <Select
                   options={[...STATUSES]}
-                  label={(s) => s}
+                  label={(s) => tEnum("status", s)}
                   value={(s) => s === ticket.status}
                   onChange={handleStatusChange}
                 />
@@ -540,10 +542,10 @@ export default function TicketDetailPage() {
 
           {canEditFields && (
             <Card className="p-4">
-              <FormInput label="Priority" className={clsx("!mb-0")}>
+              <FormInput label={t("ticketDetail.priority")} className={clsx("!mb-0")}>
                 <Select
                   options={[...PRIORITIES]}
-                  label={(p) => p}
+                  label={(p) => tEnum("priority", p)}
                   value={(p) => p === ticket.priority}
                   onChange={handlePriorityChange}
                 />
@@ -553,10 +555,10 @@ export default function TicketDetailPage() {
 
           {canEditFields && (
             <Card className="p-4">
-              <FormInput label="Category" className={clsx("!mb-0")}>
+              <FormInput label={t("ticketDetail.category")} className={clsx("!mb-0")}>
                 <Select
                   options={[...CATEGORIES]}
-                  label={(c) => c}
+                  label={(c) => tEnum("category", c)}
                   value={(c) => c === ticket.category}
                   onChange={handleCategoryChange}
                 />
@@ -566,20 +568,20 @@ export default function TicketDetailPage() {
 
           {canAssign && (
             <Card className="p-4">
-              <FormInput label="Assignee" className="!mb-0">
+              <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
                 <Select
                   options={assignableMembers}
                   label={(m) => `${m.firstName} ${m.lastName}`}
                   value={(m) => m.userId === selectedAssigneeId}
                   onChange={handleAssign}
-                  placeholder="Select assignee..."
+                  placeholder={t("ticketDetail.selectAssignee")}
                 />
               </FormInput>
             </Card>
           )}
 
           <Card className="p-4">
-            <FormInput label="Tags" className="!mb-0">
+            <FormInput label={t("ticketDetail.tags")} className="!mb-0">
               <TagSelector
                 tags={workspaceTags}
                 selectedIds={ticket.tagIds}
@@ -591,18 +593,18 @@ export default function TicketDetailPage() {
 
           <Card className="p-4">
             <p className="text-xs text-gray-400 font-body-medium mb-2">
-              Details
+              {t("ticketDetail.details")}
             </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-500">Creator</span>
+                <span className="text-gray-500">{t("ticketDetail.creator")}</span>
                 <span className="text-gray-700 font-body-medium">
                   {getMemberName(ticket.creatorId)}
                 </span>
               </div>
               {ticket.assigneeId && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Assignee</span>
+                  <span className="text-gray-500">{t("ticketDetail.assignee")}</span>
                   <span className="text-gray-700 font-body-medium">
                     {getMemberName(ticket.assigneeId)}
                   </span>
@@ -610,7 +612,7 @@ export default function TicketDetailPage() {
               )}
               {ticket.resolvedAt && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Resolved</span>
+                  <span className="text-gray-500">{t("ticketDetail.resolved")}</span>
                   <span className="text-gray-700 font-body-medium">
                     {new Date(ticket.resolvedAt).toLocaleDateString()}
                   </span>
@@ -626,7 +628,7 @@ export default function TicketDetailPage() {
               full
               onClick={handleDelete}
             >
-              Delete Ticket
+              {t("ticketDetail.deleteTicket")}
             </Button>
           )}
         </div>

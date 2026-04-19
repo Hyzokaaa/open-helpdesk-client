@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface NavItem {
   label: string;
@@ -11,17 +12,18 @@ export default function Sidebar() {
   const location = useLocation();
   const { workspaceSlug } = useParams();
   const { user } = useUser();
+  const { t } = useTranslation();
 
   const mainNav: NavItem[] = [
-    { label: "Workspaces", path: "/dashboard/workspaces" },
-    { label: "Settings", path: "/dashboard/settings" },
+    { label: t("sidebar.workspaces"), path: "/dashboard/workspaces" },
+    { label: t("sidebar.settings"), path: "/dashboard/settings" },
   ];
 
   const workspaceNav: NavItem[] = workspaceSlug
     ? [
-        { label: "Tickets", path: `/dashboard/workspaces/${workspaceSlug}/tickets` },
-        { label: "Members", path: `/dashboard/workspaces/${workspaceSlug}/members` },
-        { label: "Tags", path: `/dashboard/workspaces/${workspaceSlug}/tags` },
+        { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${workspaceSlug}/tickets` },
+        { label: t("sidebar.members"), path: `/dashboard/workspaces/${workspaceSlug}/members` },
+        { label: t("sidebar.tags"), path: `/dashboard/workspaces/${workspaceSlug}/tags` },
       ]
     : [];
 
@@ -56,7 +58,7 @@ export default function Sidebar() {
           <>
             <div className="border-t border-gray-100 my-3" />
             <p className="px-3 text-exs text-gray-400 font-body-medium uppercase mb-1">
-              Workspace
+              {t("sidebar.workspace")}
             </p>
             {workspaceNav.map((item) => (
               <Link
@@ -79,7 +81,7 @@ export default function Sidebar() {
           <>
             <div className="border-t border-gray-100 my-3" />
             <p className="px-3 text-exs text-gray-400 font-body-medium uppercase mb-1">
-              System
+              {t("sidebar.system")}
             </p>
             <Link
               to="/dashboard/admin"
@@ -90,7 +92,7 @@ export default function Sidebar() {
                   : "text-gray-600 hover:bg-gray-50",
               )}
             >
-              Administration
+              {t("sidebar.administration")}
             </Link>
           </>
         )}

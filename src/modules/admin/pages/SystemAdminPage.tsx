@@ -14,9 +14,11 @@ import {
   createUser,
   toggleSystemAdmin,
 } from "../services/admin.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function SystemAdminPage() {
   const { user } = useUser();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -61,7 +63,7 @@ export default function SystemAdminPage() {
       setIsAdmin(false);
       setShowCreate(false);
       fetchUsers();
-      toast.success("User created");
+      toast.success(t("admin.userCreated"));
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || "Failed to create user");
@@ -93,12 +95,12 @@ export default function SystemAdminPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-body-bold text-gray-800">
-            System Administration
+            {t("admin.title")}
           </h2>
-          <p className="text-xs text-gray-400 mt-0.5">Manage users</p>
+          <p className="text-xs text-gray-400 mt-0.5">{t("admin.subtitle")}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-          {showCreate ? "Cancel" : "New User"}
+          {showCreate ? t("admin.cancel") : t("admin.newUser")}
         </Button>
       </div>
 
@@ -106,14 +108,14 @@ export default function SystemAdminPage() {
         <Card className="p-5 mb-6">
           <form onSubmit={handleCreate}>
             <div className="flex gap-4">
-              <FormInput label="First Name" required className="flex-1">
+              <FormInput label={t("admin.firstName")} required className="flex-1">
                 <Input
                   placeholder="John"
                   value={firstName}
                   onChange={setFirstName}
                 />
               </FormInput>
-              <FormInput label="Last Name" required className="flex-1">
+              <FormInput label={t("admin.lastName")} required className="flex-1">
                 <Input
                   placeholder="Doe"
                   value={lastName}
@@ -122,7 +124,7 @@ export default function SystemAdminPage() {
               </FormInput>
             </div>
             <div className="flex gap-4">
-              <FormInput label="Email" required className="flex-1">
+              <FormInput label={t("admin.email")} required className="flex-1">
                 <Input
                   type="email"
                   placeholder="user@example.com"
@@ -130,10 +132,10 @@ export default function SystemAdminPage() {
                   onChange={setEmail}
                 />
               </FormInput>
-              <FormInput label="Password" required className="flex-1">
+              <FormInput label={t("admin.password")} required className="flex-1">
                 <Input
                   type="password"
-                  placeholder="Min. 6 characters"
+                  placeholder={t("admin.passwordPlaceholder")}
                   value={password}
                   onChange={setPassword}
                 />
@@ -147,11 +149,11 @@ export default function SystemAdminPage() {
                 className="w-4 h-4 accent-primary"
               />
               <span className="text-sm text-gray-600 font-body-medium">
-                System Admin
+                {t("admin.systemAdmin")}
               </span>
             </label>
             <Button type="submit" size="sm" loading={creating}>
-              Create User
+              {t("admin.createUser")}
             </Button>
           </form>
         </Card>
@@ -167,16 +169,16 @@ export default function SystemAdminPage() {
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
-                  Name
+                  {t("admin.col.name")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
-                  Email
+                  {t("admin.col.email")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
-                  Role
+                  {t("admin.col.role")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-gray-400 uppercase">
-                  Actions
+                  {t("admin.col.actions")}
                 </th>
               </tr>
             </thead>
@@ -194,12 +196,12 @@ export default function SystemAdminPage() {
                   <td className="px-4 py-3">
                     {u.isSystemAdmin ? (
                       <StatusBadge
-                        label="System Admin"
+                        label={t("admin.systemAdmin")}
                         color="primary"
                         size="xs"
                       />
                     ) : (
-                      <StatusBadge label="User" color="gray" size="xs" />
+                      <StatusBadge label={t("admin.user")} color="gray" size="xs" />
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -209,7 +211,7 @@ export default function SystemAdminPage() {
                         color={u.isSystemAdmin ? "light" : "primary-light"}
                         onClick={() => handleToggleAdmin(u)}
                       >
-                        {u.isSystemAdmin ? "Remove Admin" : "Make Admin"}
+                        {u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin")}
                       </Button>
                     )}
                   </td>

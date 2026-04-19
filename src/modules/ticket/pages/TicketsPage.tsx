@@ -20,20 +20,21 @@ import {
 } from "../domain/ticket-enums";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface Column {
   field: string;
-  label: string;
+  labelKey: "tickets.col.name" | "tickets.col.category" | "tickets.col.priority" | "tickets.col.status" | "tickets.col.tags" | "tickets.col.created";
   sortable: boolean;
 }
 
 const COLUMNS: Column[] = [
-  { field: "name", label: "Name", sortable: true },
-  { field: "category", label: "Category", sortable: true },
-  { field: "priority", label: "Priority", sortable: true },
-  { field: "status", label: "Status", sortable: true },
-  { field: "tags", label: "Tags", sortable: false },
-  { field: "createdAt", label: "Created", sortable: true },
+  { field: "name", labelKey: "tickets.col.name", sortable: true },
+  { field: "category", labelKey: "tickets.col.category", sortable: true },
+  { field: "priority", labelKey: "tickets.col.priority", sortable: true },
+  { field: "status", labelKey: "tickets.col.status", sortable: true },
+  { field: "tags", labelKey: "tickets.col.tags", sortable: false },
+  { field: "createdAt", labelKey: "tickets.col.created", sortable: true },
 ];
 
 type Tab = "active" | "closed";
@@ -41,6 +42,7 @@ type Tab = "active" | "closed";
 export default function TicketsPage() {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
+  const { t, tEnum } = useTranslation();
 
   const [tab, setTab] = useState<Tab>("active");
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(
@@ -119,14 +121,14 @@ export default function TicketsPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-body-bold text-gray-800">Tickets</h2>
+        <h2 className="text-lg font-body-bold text-gray-800">{t("tickets.title")}</h2>
         <Button
           size="sm"
           onClick={() =>
             navigate(`/dashboard/workspaces/${workspaceSlug}/tickets/new`)
           }
         >
-          New Ticket
+          {t("tickets.new")}
         </Button>
       </div>
 
@@ -138,7 +140,7 @@ export default function TicketsPage() {
             tab === "active" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100",
           )}
         >
-          Active
+          {t("tickets.active")}
         </button>
         <button
           onClick={() => { setTab("closed"); setFilters({ ...filters, status: undefined, page: 1 }); }}
@@ -147,7 +149,7 @@ export default function TicketsPage() {
             tab === "closed" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100",
           )}
         >
-          Closed
+          {t("tickets.closed")}
         </button>
       </div>
 
@@ -156,7 +158,7 @@ export default function TicketsPage() {
           <div className="w-40">
             <Select
               options={["all", ...STATUSES.filter((s) => s !== "closed")]}
-              label={(s) => (s === "all" ? "All Statuses" : s)}
+              label={(s) => (s === "all" ? t("tickets.allStatuses") : tEnum("status", s))}
               value={(s) => s === (filters.status || "all")}
               onChange={(s) =>
                 setFilters({
@@ -172,7 +174,7 @@ export default function TicketsPage() {
         <div className="w-40">
           <Select
             options={["all", ...PRIORITIES]}
-            label={(p) => (p === "all" ? "All Priorities" : p)}
+            label={(p) => (p === "all" ? t("tickets.allPriorities") : tEnum("priority", p))}
             value={(p) => p === (filters.priority || "all")}
             onChange={(p) =>
               setFilters({
@@ -209,7 +211,7 @@ export default function TicketsPage() {
             {tagDropdownOpen && (
               <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-56">
                 <p className="text-exs text-gray-400 font-body-medium mb-2 uppercase">
-                  Filter by tags
+                  {t("tickets.filterByTags")}
                 </p>
                 <div className="flex flex-col gap-1.5 max-h-48 overflow-auto">
                   {tags.map((tag) => {
@@ -250,7 +252,7 @@ export default function TicketsPage() {
                     }}
                     className="text-exs text-gray-400 hover:text-gray-600 mt-2 cursor-pointer"
                   >
-                    Clear all
+                    {t("tickets.clearAll")}
                   </button>
                 )}
               </div>
@@ -265,7 +267,7 @@ export default function TicketsPage() {
         </div>
       ) : !result || result.items.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-12">
-          No tickets found.
+          {t("tickets.empty")}
         </p>
       ) : (
         <>
@@ -284,7 +286,7 @@ export default function TicketsPage() {
                       onClick={() => col.sortable && toggleSort(col.field)}
                     >
                       <span className="flex items-center gap-1">
-                        {col.label}
+                        {t(col.labelKey)}
                         {filters.sortBy === col.field && (
                           <span className="text-primary">
                             {filters.sortOrder === "ASC" ? "↑" : "↓"}
@@ -313,21 +315,21 @@ export default function TicketsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge
-                        label={ticket.category}
+                        label={tEnum("category", ticket.category)}
                         color={CATEGORY_COLORS[ticket.category] || "gray"}
                         size="xs"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge
-                        label={ticket.priority}
+                        label={tEnum("priority", ticket.priority)}
                         color={PRIORITY_COLORS[ticket.priority] || "gray"}
                         size="xs"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge
-                        label={ticket.status}
+                        label={tEnum("status", ticket.status)}
                         color={STATUS_COLORS[ticket.status] || "gray"}
                         size="xs"
                       />
@@ -372,10 +374,10 @@ export default function TicketsPage() {
                   setFilters({ ...filters, page: (filters.page ?? 1) - 1 })
                 }
               >
-                Previous
+                {t("tickets.previous")}
               </Button>
               <span className="text-xs text-gray-500 flex items-center px-2">
-                Page {result.page} of {Math.ceil(result.total / result.limit)}
+                {t("tickets.page")} {result.page} {t("tickets.of")} {Math.ceil(result.total / result.limit)}
               </span>
               <Button
                 size="xs"
@@ -388,7 +390,7 @@ export default function TicketsPage() {
                   setFilters({ ...filters, page: (filters.page ?? 1) + 1 })
                 }
               >
-                Next
+                {t("tickets.next")}
               </Button>
             </div>
           )}

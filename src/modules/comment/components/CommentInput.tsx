@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface Props {
   members: WorkspaceMember[];
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function CommentInput({ members, loading, onSubmit }: Props) {
+  const { t } = useTranslation();
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -238,7 +240,7 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
           />
           {isEmpty() && (
             <div className="absolute top-1.5 left-3 text-sm text-gray-400 pointer-events-none">
-              Write a comment... Use @ to mention
+              {t("ticketDetail.commentPlaceholder")}
             </div>
           )}
         </div>
@@ -248,7 +250,7 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
           onClick={handleSubmit}
           className="self-end"
         >
-          Send
+          {t("ticketDetail.send")}
         </Button>
       </div>
     </div>

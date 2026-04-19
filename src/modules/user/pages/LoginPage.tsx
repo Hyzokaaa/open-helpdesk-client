@@ -10,10 +10,12 @@ import {
   LocalStorage,
 } from "@modules/app/domain/core/local-storage";
 import useUser from "../hooks/useUser";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { setUser } = useUser();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +35,7 @@ export default function LoginPage() {
       navigate("/dashboard");
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || "Login failed");
+      toast.error(error.message || t("login.failed"));
     } finally {
       setLoading(false);
     }
@@ -44,12 +46,12 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-card border-card p-8">
           <h1 className="text-xl font-body-bold text-gray-800 mb-1">
-            DealerNode Helpdesk
+            {t("login.title")}
           </h1>
-          <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
+          <p className="text-sm text-gray-500 mb-6">{t("login.subtitle")}</p>
 
           <form onSubmit={handleSubmit}>
-            <FormInput label="Email" required>
+            <FormInput label={t("login.email")} required>
               <Input
                 type="email"
                 placeholder="email@example.com"
@@ -58,7 +60,7 @@ export default function LoginPage() {
               />
             </FormInput>
 
-            <FormInput label="Password" required>
+            <FormInput label={t("login.password")} required>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -68,7 +70,7 @@ export default function LoginPage() {
             </FormInput>
 
             <Button type="submit" full loading={loading} className="mt-2">
-              Sign In
+              {t("login.signIn")}
             </Button>
           </form>
 

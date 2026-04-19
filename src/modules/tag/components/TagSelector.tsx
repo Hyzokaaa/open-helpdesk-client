@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { Tag } from "../services/tag.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface Props {
   tags: Tag[];
@@ -14,6 +15,7 @@ export default function TagSelector({
   onChange,
   disabled = false,
 }: Props) {
+  const { t } = useTranslation();
   const toggle = (id: string) => {
     if (disabled) return;
     if (selectedIds.includes(id)) {
@@ -57,7 +59,7 @@ export default function TagSelector({
         );
       })}
       {tags.length === 0 && (
-        <span className="text-xs text-gray-400">No tags available</span>
+        <span className="text-xs text-gray-400">{t("common.noTagsAvailable")}</span>
       )}
     </div>
   );

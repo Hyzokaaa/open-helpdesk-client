@@ -10,10 +10,12 @@ import { Tag, listTags, createTag, deleteTag } from "../services/tag.service";
 import ColorPicker from "@modules/app/modules/ui/components/ColorPicker/ColorPicker";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function WorkspaceTagsPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
+  const { t } = useTranslation();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -47,7 +49,7 @@ export default function WorkspaceTagsPage() {
       setColor("");
       setShowCreate(false);
       fetchTags();
-      toast.success("Tag created");
+      toast.success(t("tags.created"));
     } catch {
       toast.error("Failed to create tag");
     } finally {
@@ -60,7 +62,7 @@ export default function WorkspaceTagsPage() {
     try {
       await deleteTag(workspaceSlug, tagId);
       fetchTags();
-      toast.success("Tag deleted");
+      toast.success(t("tags.deleted"));
     } catch {
       toast.error("Failed to delete tag");
     }
@@ -69,10 +71,10 @@ export default function WorkspaceTagsPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">Tags</h2>
+        <h2 className="text-lg font-body-bold text-gray-800">{t("tags.title")}</h2>
         {can(P.TAG_CREATE) && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? "Cancel" : "New Tag"}
+            {showCreate ? t("tags.cancel") : t("tags.new")}
           </Button>
         )}
       </div>
@@ -80,18 +82,18 @@ export default function WorkspaceTagsPage() {
       {showCreate && (
         <Card className="p-5 mb-6">
           <form onSubmit={handleCreate}>
-            <FormInput label="Name" required>
+            <FormInput label={t("tags.name")} required>
               <Input
                 placeholder="Tag name"
                 value={name}
                 onChange={setName}
               />
             </FormInput>
-            <FormInput label="Color">
+            <FormInput label={t("tags.color")}>
               <ColorPicker value={color || null} onChange={setColor} />
             </FormInput>
             <Button type="submit" size="sm" loading={creating}>
-              Create
+              {t("tags.create")}
             </Button>
           </form>
         </Card>
@@ -103,7 +105,7 @@ export default function WorkspaceTagsPage() {
         </div>
       ) : tags.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-12">
-          No tags yet.
+          {t("tags.empty")}
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">

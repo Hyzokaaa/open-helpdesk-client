@@ -13,10 +13,12 @@ import {
   createWorkspace,
 } from "../services/workspace.service";
 import useUser from "@modules/user/hooks/useUser";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function WorkspacesPage() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { t } = useTranslation();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -45,7 +47,7 @@ export default function WorkspacesPage() {
       setDescription("");
       setShowCreate(false);
       fetchWorkspaces();
-      toast.success("Workspace created");
+      toast.success(t("workspaces.created"));
     } catch {
       toast.error("Failed to create workspace");
     } finally {
@@ -56,10 +58,10 @@ export default function WorkspacesPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">Workspaces</h2>
+        <h2 className="text-lg font-body-bold text-gray-800">{t("workspaces.title")}</h2>
         {user?.isSystemAdmin && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? "Cancel" : "New Workspace"}
+            {showCreate ? t("workspaces.cancel") : t("workspaces.new")}
           </Button>
         )}
       </div>
@@ -68,23 +70,23 @@ export default function WorkspacesPage() {
         <Card className="p-5 mb-6">
           <form onSubmit={handleCreate}>
             <div className="flex gap-4">
-              <FormInput label="Name" required className="flex-1">
+              <FormInput label={t("workspaces.name")} required className="flex-1">
                 <Input
-                  placeholder="Workspace name"
+                  placeholder={t("workspaces.namePlaceholder")}
                   value={name}
                   onChange={setName}
                 />
               </FormInput>
-              <FormInput label="Description" className="flex-1">
+              <FormInput label={t("workspaces.description")} className="flex-1">
                 <Input
-                  placeholder="Optional description"
+                  placeholder={t("workspaces.descriptionPlaceholder")}
                   value={description}
                   onChange={setDescription}
                 />
               </FormInput>
             </div>
             <Button type="submit" size="sm" loading={creating}>
-              Create
+              {t("workspaces.create")}
             </Button>
           </form>
         </Card>
@@ -96,7 +98,7 @@ export default function WorkspacesPage() {
         </div>
       ) : workspaces.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-12">
-          No workspaces yet. Create one to get started.
+          {t("workspaces.empty")}
         </p>
       ) : (
         <div className="grid gap-3">

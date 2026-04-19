@@ -1,8 +1,10 @@
 import useUser from "@modules/user/hooks/useUser";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function Navbar() {
   const { user, signOut } = useUser();
+  const { t } = useTranslation();
 
   return (
     <header className="w-full border-b border-gray-100 bg-white px-6 md:px-8">
@@ -16,7 +18,7 @@ export default function Navbar() {
             </span>
           )}
           <Button size="xs" color="light" onClick={signOut}>
-            Sign Out
+            {t("nav.signOut")}
           </Button>
         </div>
       </div>

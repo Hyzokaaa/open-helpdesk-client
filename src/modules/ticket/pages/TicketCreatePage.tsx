@@ -15,10 +15,12 @@ import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function TicketCreatePage() {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
+  const { t, tEnum } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -74,7 +76,7 @@ export default function TicketCreatePage() {
         await uploadToTicket(workspaceSlug, res.id, file);
       }
 
-      toast.success("Ticket created");
+      toast.success(t("ticketCreate.success"));
       navigate(
         `/dashboard/workspaces/${workspaceSlug}/tickets/${res.id}`,
       );
@@ -92,7 +94,7 @@ export default function TicketCreatePage() {
       <DropOverlay visible={dragging} />
 
       <h2 className="text-lg font-body-bold text-gray-800 mb-6">
-        New Ticket
+        {t("ticketCreate.title")}
       </h2>
 
       {lightbox && (
@@ -105,17 +107,17 @@ export default function TicketCreatePage() {
 
       <Card className="p-6">
         <form onSubmit={handleSubmit}>
-          <FormInput label="Title" required>
+          <FormInput label={t("ticketCreate.name")} required>
             <Input
-              placeholder="Brief description of the issue"
+              placeholder={t("ticketCreate.namePlaceholder")}
               value={name}
               onChange={setName}
             />
           </FormInput>
 
-          <FormInput label="Description" required>
+          <FormInput label={t("ticketCreate.description")} required>
             <Textarea
-              placeholder="Provide details about the issue..."
+              placeholder={t("ticketCreate.descriptionPlaceholder")}
               value={description}
               onChange={setDescription}
               height={150}
@@ -123,30 +125,30 @@ export default function TicketCreatePage() {
           </FormInput>
 
           <div className="flex gap-4">
-            <FormInput label="Priority" required className="flex-1">
+            <FormInput label={t("ticketCreate.priority")} required className="flex-1">
               <Select
                 options={[...PRIORITIES]}
-                label={(p) => p}
+                label={(p) => tEnum("priority", p)}
                 value={(p) => p === priority}
                 onChange={setPriority}
               />
             </FormInput>
 
-            <FormInput label="Category" required className="flex-1">
+            <FormInput label={t("ticketCreate.category")} required className="flex-1">
               <Select
                 options={[...CATEGORIES]}
-                label={(c) => c}
+                label={(c) => tEnum("category", c)}
                 value={(c) => c === category}
                 onChange={setCategory}
               />
             </FormInput>
           </div>
 
-          <FormInput label="Tags">
+          <FormInput label={t("ticketCreate.tags")}>
             <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
           </FormInput>
 
-          <FormInput label="Attachments">
+          <FormInput label={t("ticketCreate.attachments")}>
             <div>
               <input
                 id="ticket-files"
@@ -161,10 +163,10 @@ export default function TicketCreatePage() {
                 htmlFor="ticket-files"
                 className="inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-body-semibold rounded-button border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 cursor-pointer transition-all"
               >
-                Add files
+                {t("ticketCreate.addFiles")}
               </label>
               <span className="text-exs text-gray-400 ml-2">
-                or paste / drag & drop
+                {t("ticketCreate.pasteOrDrag")}
               </span>
             </div>
 
@@ -214,7 +216,7 @@ export default function TicketCreatePage() {
 
           <div className="flex gap-3 mt-2">
             <Button type="submit" loading={loading}>
-              Create Ticket
+              {t("ticketCreate.submit")}
             </Button>
             <Button
               color="light"
@@ -222,7 +224,7 @@ export default function TicketCreatePage() {
                 navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`)
               }
             >
-              Cancel
+              {t("ticketCreate.cancel")}
             </Button>
           </div>
         </form>
