@@ -52,8 +52,16 @@ import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-export default function TicketDetailPage() {
-  const { workspaceSlug, ticketId } = useParams();
+interface Props {
+  workspaceSlugProp?: string;
+  ticketIdProp?: string;
+  onClose?: () => void;
+}
+
+export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onClose }: Props = {}) {
+  const params = useParams();
+  const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
+  const ticketId = ticketIdProp || params.ticketId;
   const { user } = useUser();
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
@@ -231,7 +239,8 @@ export default function TicketDetailPage() {
         try {
           await deleteTicket(workspaceSlug, ticketId);
           toast.success("Ticket deleted");
-          navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`);
+          if (onClose) onClose();
+          else navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`);
         } catch {
           toast.error("Failed to delete ticket");
         } finally {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -21,6 +21,10 @@ import {
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import TicketDetailPage from "./TicketDetailPage";
+import TicketCreatePage from "./TicketCreatePage";
 
 interface Column {
   field: string;
@@ -50,6 +54,19 @@ export default function TicketsPage() {
   );
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createDirty, setCreateDirty] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
+
+  const handleCreateClose = useCallback(() => {
+    if (createDirty) {
+      setShowDiscard(true);
+    } else {
+      setShowCreate(false);
+      setCreateDirty(false);
+    }
+  }, [createDirty]);
   const [filters, setFilters] = useState<TicketFilters>({
     page: 1,
     limit: 20,
@@ -124,9 +141,7 @@ export default function TicketsPage() {
         <h2 className="text-lg font-body-bold text-gray-800">{t("tickets.title")}</h2>
         <Button
           size="sm"
-          onClick={() =>
-            navigate(`/dashboard/workspaces/${workspaceSlug}/tickets/new`)
-          }
+          onClick={() => setShowCreate(true)}
         >
           {t("tickets.new")}
         </Button>
@@ -302,11 +317,7 @@ export default function TicketsPage() {
                   <tr
                     key={ticket.id}
                     className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() =>
-                      navigate(
-                        `/dashboard/workspaces/${workspaceSlug}/tickets/${ticket.id}`,
-                      )
-                    }
+                    onClick={() => setSelectedTicketId(ticket.id)}
                   >
                     <td className="px-4 py-3">
                       <p className="text-sm font-body-semibold text-gray-800 truncate max-w-xs">
@@ -395,6 +406,47 @@ export default function TicketsPage() {
             </div>
           )}
         </>
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => {
+            setShowDiscard(false);
+            setShowCreate(false);
+            setCreateDirty(false);
+          }}
+          onCancel={() => setShowDiscard(false)}
+        />
+      )}
+
+      {showCreate && workspaceSlug && (
+        <Sheet onClose={handleCreateClose}>
+          <TicketCreatePage
+            workspaceSlugProp={workspaceSlug}
+            onCreated={(id) => {
+              setShowCreate(false);
+              setCreateDirty(false);
+              if (id) setSelectedTicketId(id);
+              fetchTickets();
+            }}
+            onClose={handleCreateClose}
+            onDirtyChange={setCreateDirty}
+          />
+        </Sheet>
+      )}
+
+      {selectedTicketId && workspaceSlug && (
+        <Sheet onClose={() => { setSelectedTicketId(null); fetchTickets(); }}>
+          <TicketDetailPage
+            workspaceSlugProp={workspaceSlug}
+            ticketIdProp={selectedTicketId}
+            onClose={() => { setSelectedTicketId(null); fetchTickets(); }}
+          />
+        </Sheet>
       )}
     </div>
   );
