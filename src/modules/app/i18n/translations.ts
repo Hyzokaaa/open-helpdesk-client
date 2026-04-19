@@ -155,6 +155,9 @@ const translations = {
   "admin.removeAdmin": { en: "Remove Admin", es: "Quitar Admin" },
   "admin.user": { en: "User", es: "Usuario" },
 
+  // Network
+  "network.connectionLost": { en: "Connection lost. Check your internet and try again.", es: "Conexión perdida. Revisa tu internet e intenta de nuevo." },
+
   // Common
   "common.confirm": { en: "Confirm", es: "Confirmar" },
   "common.cancel": { en: "Cancel", es: "Cancelar" },
@@ -193,3 +196,10 @@ const translations = {
 
 export type TranslationKey = keyof typeof translations;
 export default translations;
+
+export function t(key: TranslationKey, lang?: string): string {
+  const l = lang || localStorage.getItem("language") || "en";
+  const entry = translations[key];
+  if (!entry) return key;
+  return (entry as Record<string, string>)[l] || (entry as Record<string, string>)["en"] || key;
+}

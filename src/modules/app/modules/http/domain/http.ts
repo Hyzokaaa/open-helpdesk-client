@@ -1,5 +1,7 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 import { API_URL } from "@modules/app/domain/constants/env";
+import { t } from "@modules/app/i18n/translations";
 import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
@@ -35,15 +37,19 @@ http.interceptors.response.use(
         message:
           error.response.data?.message ||
           error.response.statusText ||
-          "Error en la petición",
+          "Request error",
         status: error.response.status,
       };
       return Promise.reject(e);
     }
 
+    toast.error(t("network.connectionLost"), {
+      toastId: "network-error",
+    });
+
     return Promise.reject({
-      message: "No se pudo conectar al servidor",
-      status: 500,
+      message: t("network.connectionLost"),
+      status: 0,
     } as HttpResponseError);
   },
 );

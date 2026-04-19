@@ -21,6 +21,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       getProfile()
         .then((profile) => {
           setUser(profile);
+          LocalStorage.set(LOCAL_STORAGE_KEY.LANGUAGE, profile.language);
           if (profile.theme === "light" || profile.theme === "light-border" || profile.theme === "dark" || profile.theme === "dark-deep") {
             setTheme(profile.theme as Theme);
           }

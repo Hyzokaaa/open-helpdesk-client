@@ -7,6 +7,7 @@ import useUser from "../hooks/useUser";
 import useTheme from "@modules/app/hooks/useTheme";
 import { Theme } from "@modules/app/context/theme-context";
 import { updateLanguage, updateTheme } from "../services/auth.service";
+import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 const LANGUAGES = [
@@ -35,6 +36,7 @@ export default function SettingsPage() {
     try {
       await updateLanguage(lang.code);
       setUser({ ...user, language: lang.code });
+      LocalStorage.set(LOCAL_STORAGE_KEY.LANGUAGE, lang.code);
       toast.success(
         lang.code === "es"
           ? "Idioma actualizado"
