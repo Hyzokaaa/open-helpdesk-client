@@ -29,6 +29,11 @@ interface ProfileResponse {
   lastName: string;
   isActive: boolean;
   isSystemAdmin: boolean;
+  language: string;
+}
+
+export async function updateLanguage(language: string): Promise<void> {
+  await http.patch("/users/me/language", { language });
 }
 
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {

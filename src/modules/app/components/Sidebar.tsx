@@ -14,6 +14,7 @@ export default function Sidebar() {
 
   const mainNav: NavItem[] = [
     { label: "Workspaces", path: "/dashboard/workspaces" },
+    { label: "Settings", path: "/dashboard/settings" },
   ];
 
   const workspaceNav: NavItem[] = workspaceSlug

@@ -5,4 +5,5 @@ export interface AuthUser {
   lastName: string;
   isActive: boolean;
   isSystemAdmin: boolean;
+  language: string;
 }

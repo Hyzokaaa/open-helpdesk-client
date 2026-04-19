@@ -11,6 +11,7 @@ import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import SystemAdminPage from "@modules/admin/pages/SystemAdminPage";
+import SettingsPage from "@modules/user/pages/SettingsPage";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
             <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="admin" element={<SystemAdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
