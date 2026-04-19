@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ThemeProvider } from "@modules/app/context/ThemeProvider";
+import useTheme from "@modules/app/hooks/useTheme";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
@@ -13,11 +15,17 @@ import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import SystemAdminPage from "@modules/admin/pages/SystemAdminPage";
 import SettingsPage from "@modules/user/pages/SettingsPage";
 
+function ThemedToast() {
+  const { theme } = useTheme();
+  return <ToastContainer position="top-right" autoClose={3000} theme={theme} />;
+}
+
 export default function App() {
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <UserProvider>
-        <ToastContainer position="top-right" autoClose={3000} />
+        <ThemedToast />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
@@ -36,5 +44,6 @@ export default function App() {
         </Routes>
       </UserProvider>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }

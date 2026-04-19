@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: "Plus Jakarta Sans Regular";
   src: url("./assets/fonts/PlusJakartaSans-Regular.ttf");
@@ -54,7 +56,7 @@
 
 @layer base {
   .border-input {
-    @apply border border-gray-200;
+    @apply border border-gray-200 dark:border-gray-600;
   }
 
   .border-input-effect {
@@ -62,14 +64,14 @@
   }
 
   .border-card {
-    @apply border border-gray-100;
+    @apply border border-gray-100 dark:border-gray-700;
   }
 
   .border-card-effect {
-    @apply hover:border-gray-200 hover:shadow-sm;
+    @apply hover:border-gray-200 hover:shadow-sm dark:hover:border-gray-600;
   }
 
   .border-button {
-    @apply border border-gray-200;
+    @apply border border-gray-200 dark:border-gray-600;
   }
 }

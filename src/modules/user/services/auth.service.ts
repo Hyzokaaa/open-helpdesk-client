@@ -30,10 +30,15 @@ interface ProfileResponse {
   isActive: boolean;
   isSystemAdmin: boolean;
   language: string;
+  theme: string;
 }
 
 export async function updateLanguage(language: string): Promise<void> {
   await http.patch("/users/me/language", { language });
+}
+
+export async function updateTheme(theme: string): Promise<void> {
+  await http.patch("/users/me/theme", { theme });
 }
 
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {

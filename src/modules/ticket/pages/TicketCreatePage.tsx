@@ -116,7 +116,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
     <div className="w-full max-w-2xl">
       <DropOverlay visible={dragging} />
 
-      <h2 className="text-lg font-body-bold text-gray-800 mb-6">
+      <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100 mb-6">
         {t("ticketCreate.title")}
       </h2>
 
@@ -184,11 +184,11 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
               />
               <label
                 htmlFor="ticket-files"
-                className="inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-body-semibold rounded-button border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 cursor-pointer transition-all"
+                className="inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-body-semibold rounded-button border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
               >
                 {t("ticketCreate.addFiles")}
               </label>
-              <span className="text-exs text-gray-400 ml-2">
+              <span className="text-exs text-gray-400 dark:text-gray-500 ml-2">
                 {t("ticketCreate.pasteOrDrag")}
               </span>
             </div>
@@ -198,7 +198,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
                 {files.map((file, i) => (
                   <div
                     key={i}
-                    className="relative group border border-gray-200 rounded-lg overflow-hidden"
+                    className="relative group border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden"
                   >
                     <button
                       type="button"
@@ -217,8 +217,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
                           className="w-24 h-24 object-cover"
                         />
                       ) : (
-                        <div className="w-24 h-24 flex items-center justify-center bg-gray-50">
-                          <span className="text-exs text-gray-500 text-center px-1 break-all">
+                        <div className="w-24 h-24 flex items-center justify-center bg-gray-50 dark:bg-gray-700">
+                          <span className="text-exs text-gray-500 dark:text-gray-400 text-center px-1 break-all">
                             {file.name}
                           </span>
                         </div>

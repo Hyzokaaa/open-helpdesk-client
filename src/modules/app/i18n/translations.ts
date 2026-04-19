@@ -1,6 +1,8 @@
 const translations = {
   // Navbar
   "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
+  "nav.lightMode": { en: "Light", es: "Claro" },
+  "nav.darkMode": { en: "Dark", es: "Oscuro" },
 
   // Sidebar
   "sidebar.workspaces": { en: "Workspaces", es: "Espacios" },
@@ -123,6 +125,10 @@ const translations = {
   // Settings
   "settings.title": { en: "Settings", es: "Configuración" },
   "settings.language": { en: "Language", es: "Idioma" },
+  "settings.theme": { en: "Theme", es: "Tema" },
+  "settings.themeSystem": { en: "System", es: "Sistema" },
+  "settings.themeLight": { en: "Light", es: "Claro" },
+  "settings.themeDark": { en: "Dark", es: "Oscuro" },
   "settings.account": { en: "Account", es: "Cuenta" },
   "settings.name": { en: "Name", es: "Nombre" },
   "settings.email": { en: "Email", es: "Correo" },

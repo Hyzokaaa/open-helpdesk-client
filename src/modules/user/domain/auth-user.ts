@@ -6,4 +6,5 @@ export interface AuthUser {
   isActive: boolean;
   isSystemAdmin: boolean;
   language: string;
+  theme: string;
 }

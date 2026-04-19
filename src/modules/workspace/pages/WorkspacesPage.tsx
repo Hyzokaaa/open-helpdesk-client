@@ -58,7 +58,7 @@ export default function WorkspacesPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">{t("workspaces.title")}</h2>
+        <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">{t("workspaces.title")}</h2>
         {user?.isSystemAdmin && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
             {showCreate ? t("workspaces.cancel") : t("workspaces.new")}
@@ -97,7 +97,7 @@ export default function WorkspacesPage() {
           <Spinner width={24} />
         </div>
       ) : workspaces.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-12">
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
           {t("workspaces.empty")}
         </p>
       ) : (
@@ -109,11 +109,11 @@ export default function WorkspacesPage() {
               onClick={() => navigate(`/dashboard/workspaces/${ws.slug}/tickets`)}
             >
               <div>
-                <p className="text-sm font-body-semibold text-gray-800">
+                <p className="text-sm font-body-semibold text-gray-800 dark:text-gray-100">
                   {ws.name}
                 </p>
                 {ws.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {ws.description}
                   </p>
                 )}

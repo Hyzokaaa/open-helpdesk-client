@@ -356,7 +356,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-body-bold text-gray-800">{ticket.name}</h2>
+            <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">{ticket.name}</h2>
             {canEditName && (
               <button
                 onClick={() => { setEditName(ticket.name); setEditingName(true); }}
@@ -385,7 +385,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         <div className="lg:col-span-2 space-y-4">
           <Card className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-body-medium text-gray-400 uppercase">
+              <p className="text-xs font-body-medium text-gray-400 dark:text-gray-500 uppercase">
                 {t("ticketDetail.description")}
               </p>
               {canEditFields && !editingDescription && (
@@ -421,7 +421,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+              <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
                 {ticket.description}
               </p>
             )}
@@ -430,7 +430,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           {/* Attachments */}
           <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-body-medium text-gray-400 uppercase">
+              <p className="text-xs font-body-medium text-gray-400 dark:text-gray-500 uppercase">
                 {t("ticketDetail.attachments")} ({attachments.length})
               </p>
               <div>
@@ -465,7 +465,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             })
                           : window.open(a.downloadUrl, "_blank")
                       }
-                      className="block border border-gray-200 rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
+                      className="block border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
                     >
                       {isImage(a.mimeType) ? (
                         <img
@@ -479,8 +479,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                           className="w-32 h-32 object-cover"
                         />
                       ) : (
-                        <div className="w-32 h-32 flex items-center justify-center bg-gray-50">
-                          <span className="text-exs text-gray-500 text-center px-2 break-all">
+                        <div className="w-32 h-32 flex items-center justify-center bg-gray-50 dark:bg-gray-700">
+                          <span className="text-exs text-gray-500 dark:text-gray-400 text-center px-2 break-all">
                             {a.originalName}
                           </span>
                         </div>
@@ -503,18 +503,18 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
           {/* Comments */}
           <div>
-            <p className="text-sm font-body-semibold text-gray-700 mb-3">
+            <p className="text-sm font-body-semibold text-gray-700 dark:text-gray-200 mb-3">
               {t("ticketDetail.comments")} ({comments.length})
             </p>
 
             <div className="space-y-2 mb-4">
               {comments.map((c) => (
                 <Card key={c.id} className="p-4">
-                  <p className="text-exs text-gray-400 mb-1">
+                  <p className="text-exs text-gray-400 dark:text-gray-500 mb-1">
                     {getMemberName(c.authorId)}
                   </p>
                   <p
-                    className="text-sm text-gray-700"
+                    className="text-sm text-gray-700 dark:text-gray-200"
                     dangerouslySetInnerHTML={{
                       __html: c.content.replace(
                         /@\[([^\]]+)\]\([^)]+\)/g,
@@ -601,28 +601,28 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           </Card>
 
           <Card className="p-4">
-            <p className="text-xs text-gray-400 font-body-medium mb-2">
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-body-medium mb-2">
               {t("ticketDetail.details")}
             </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-500">{t("ticketDetail.creator")}</span>
-                <span className="text-gray-700 font-body-medium">
+                <span className="text-gray-500 dark:text-gray-400">{t("ticketDetail.creator")}</span>
+                <span className="text-gray-700 dark:text-gray-200 font-body-medium">
                   {getMemberName(ticket.creatorId)}
                 </span>
               </div>
               {ticket.assigneeId && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t("ticketDetail.assignee")}</span>
-                  <span className="text-gray-700 font-body-medium">
+                  <span className="text-gray-500 dark:text-gray-400">{t("ticketDetail.assignee")}</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-body-medium">
                     {getMemberName(ticket.assigneeId)}
                   </span>
                 </div>
               )}
               {ticket.resolvedAt && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t("ticketDetail.resolved")}</span>
-                  <span className="text-gray-700 font-body-medium">
+                  <span className="text-gray-500 dark:text-gray-400">{t("ticketDetail.resolved")}</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-body-medium">
                     {new Date(ticket.resolvedAt).toLocaleDateString()}
                   </span>
                 </div>

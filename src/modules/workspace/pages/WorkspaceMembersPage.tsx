@@ -96,7 +96,7 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-gray-800">{t("members.title")}</h2>
+        <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100">{t("members.title")}</h2>
         {canManageMembers && (
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? t("members.cancel") : t("members.add")}
@@ -138,16 +138,16 @@ export default function WorkspaceMembersPage() {
           <Spinner width={24} />
         </div>
       ) : members.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-12">{t("members.empty")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">{t("members.empty")}</p>
       ) : (
         <div className="grid gap-2">
           {members.map((m) => (
             <Card key={m.id} className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-x-3">
-                <p className="text-sm font-body-semibold text-gray-700">
+                <p className="text-sm font-body-semibold text-gray-700 dark:text-gray-200">
                   {m.firstName} {m.lastName}
                 </p>
-                <p className="text-xs text-gray-400">{m.email}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{m.email}</p>
                 <StatusBadge label={m.role} color={roleColor(m.role)} size="xs" />
               </div>
               {canManageMembers && (

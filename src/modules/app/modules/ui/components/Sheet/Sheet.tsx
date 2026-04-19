@@ -33,11 +33,11 @@ export default function Sheet({ children, onClose }: Props) {
     >
       <div
         ref={sheetRef}
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto mx-4 my-4"
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto mx-4 my-4"
       >
         <button
           onClick={onClose}
-          className="sticky top-3 float-right mr-3 mt-1 text-gray-400 hover:text-gray-600 text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer z-20"
+          className="sticky top-3 float-right mr-3 mt-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer z-20"
         >
           ✕
         </button>

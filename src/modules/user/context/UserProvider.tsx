@@ -6,17 +6,25 @@ import {
   LocalStorage,
 } from "@modules/app/domain/core/local-storage";
 import { getProfile } from "../services/auth.service";
+import useTheme from "@modules/app/hooks/useTheme";
+import { Theme } from "@modules/app/context/theme-context";
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     const token = LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
 
     if (token) {
       getProfile()
-        .then((profile) => setUser(profile))
+        .then((profile) => {
+          setUser(profile);
+          if (profile.theme === "light" || profile.theme === "dark") {
+            setTheme(profile.theme as Theme);
+          }
+        })
         .catch(() => {
           LocalStorage.remove(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
           setUser(null);

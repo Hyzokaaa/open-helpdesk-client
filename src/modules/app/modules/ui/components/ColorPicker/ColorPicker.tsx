@@ -22,7 +22,7 @@ export default function ColorPicker({ value, onChange }: Props) {
           className={clsx(
             "w-6 h-6 rounded-full cursor-pointer transition-all",
             value === color
-              ? "ring-2 ring-offset-2 ring-primary scale-110"
+              ? "ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-primary scale-110"
               : "hover:scale-110",
           )}
           style={{ backgroundColor: color }}

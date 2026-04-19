@@ -32,13 +32,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gray-50">
+    <div className="min-h-dvh flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-card border-card p-8">
-          <h1 className="text-xl font-body-bold text-gray-800 mb-1">
+        <div className="bg-white dark:bg-gray-800 rounded-card border-card p-8">
+          <h1 className="text-xl font-body-bold text-gray-800 dark:text-gray-100 mb-1">
             Create Account
           </h1>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Join DealerNode Helpdesk
           </p>
 
@@ -83,7 +83,7 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <p className="text-xs text-gray-500 text-center mt-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
             Already have an account?{" "}
             <Link to="/login" className="text-primary hover:underline">
               Sign In

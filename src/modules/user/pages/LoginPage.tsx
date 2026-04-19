@@ -42,13 +42,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gray-50">
+    <div className="min-h-dvh flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-card border-card p-8">
-          <h1 className="text-xl font-body-bold text-gray-800 mb-1">
+        <div className="bg-white dark:bg-gray-800 rounded-card border-card p-8">
+          <h1 className="text-xl font-body-bold text-gray-800 dark:text-gray-100 mb-1">
             {t("login.title")}
           </h1>
-          <p className="text-sm text-gray-500 mb-6">{t("login.subtitle")}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t("login.subtitle")}</p>
 
           <form onSubmit={handleSubmit}>
             <FormInput label={t("login.email")} required>

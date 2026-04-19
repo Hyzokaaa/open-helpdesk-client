@@ -4,7 +4,9 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useUser from "../hooks/useUser";
-import { updateLanguage } from "../services/auth.service";
+import useTheme from "@modules/app/hooks/useTheme";
+import { Theme } from "@modules/app/context/theme-context";
+import { updateLanguage, updateTheme } from "../services/auth.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 const LANGUAGES = [
@@ -12,8 +14,15 @@ const LANGUAGES = [
   { code: "es", label: "Español" },
 ] as const;
 
+const THEMES = [
+  { code: "system", labelKey: "settings.themeSystem" },
+  { code: "light", labelKey: "settings.themeLight" },
+  { code: "dark", labelKey: "settings.themeDark" },
+] as const;
+
 export default function SettingsPage() {
   const { user, setUser } = useUser();
+  const { setTheme } = useTheme();
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
 
@@ -36,9 +45,28 @@ export default function SettingsPage() {
     }
   };
 
+  const handleThemeChange = async (option: { code: string; labelKey: string }) => {
+    setSaving(true);
+    try {
+      await updateTheme(option.code);
+      setUser({ ...user, theme: option.code });
+
+      if (option.code === "system") {
+        const resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        setTheme(resolved as Theme);
+      } else {
+        setTheme(option.code as Theme);
+      }
+    } catch {
+      toast.error("Failed to update theme");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-lg">
-      <h2 className="text-lg font-body-bold text-gray-800 mb-6">{t("settings.title")}</h2>
+      <h2 className="text-lg font-body-bold text-gray-800 dark:text-gray-100 mb-6">{t("settings.title")}</h2>
 
       <Card className="p-5">
         <FormInput label={t("settings.language")}>
@@ -51,18 +79,28 @@ export default function SettingsPage() {
           />
         </FormInput>
 
-        <div className="border-t border-gray-100 pt-4 mt-2">
-          <p className="text-xs text-gray-400 font-body-medium mb-2">{t("settings.account")}</p>
+        <FormInput label={t("settings.theme")}>
+          <Select
+            options={[...THEMES]}
+            label={(o) => t(o.labelKey)}
+            value={(o) => o.code === user.theme}
+            onChange={handleThemeChange}
+            disabled={saving}
+          />
+        </FormInput>
+
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-body-medium mb-2">{t("settings.account")}</p>
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">{t("settings.name")}</span>
-              <span className="text-gray-700 font-body-medium">
+              <span className="text-gray-500 dark:text-gray-400">{t("settings.name")}</span>
+              <span className="text-gray-700 dark:text-gray-200 font-body-medium">
                 {user.firstName} {user.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">{t("settings.email")}</span>
-              <span className="text-gray-700 font-body-medium">{user.email}</span>
+              <span className="text-gray-500 dark:text-gray-400">{t("settings.email")}</span>
+              <span className="text-gray-700 dark:text-gray-200 font-body-medium">{user.email}</span>
             </div>
           </div>
         </div>
