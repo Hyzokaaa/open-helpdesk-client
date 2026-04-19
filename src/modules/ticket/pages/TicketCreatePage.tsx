@@ -17,8 +17,16 @@ import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-export default function TicketCreatePage() {
-  const { workspaceSlug } = useParams();
+interface Props {
+  workspaceSlugProp?: string;
+  onCreated?: (ticketId: string) => void;
+  onClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
+}
+
+export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose, onDirtyChange }: Props = {}) {
+  const params = useParams();
+  const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +40,17 @@ export default function TicketCreatePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
+
+  const isDirty = name.trim() !== "" || description.trim() !== "" || files.length > 0 || tagIds.length > 0;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  const handleCancel = () => {
+    if (onClose) onClose();
+    else navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`);
+  };
 
   useEffect(() => {
     if (workspaceSlug) listTags(workspaceSlug).then(setTags);
@@ -77,9 +96,13 @@ export default function TicketCreatePage() {
       }
 
       toast.success(t("ticketCreate.success"));
-      navigate(
-        `/dashboard/workspaces/${workspaceSlug}/tickets/${res.id}`,
-      );
+      if (onCreated) {
+        onCreated(res.id);
+      } else {
+        navigate(
+          `/dashboard/workspaces/${workspaceSlug}/tickets/${res.id}`,
+        );
+      }
     } catch {
       toast.error("Failed to create ticket");
     } finally {
@@ -220,8 +243,7 @@ export default function TicketCreatePage() {
             </Button>
             <Button
               color="light"
-              onClick={() =>
-                navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`)
+              onClick={handleCancel
               }
             >
               {t("ticketCreate.cancel")}

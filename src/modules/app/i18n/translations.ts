@@ -153,6 +153,11 @@ const translations = {
   "common.delete": { en: "Delete", es: "Eliminar" },
   "common.noTagsAvailable": { en: "No tags available", es: "Sin etiquetas disponibles" },
 
+  // Discard confirmation
+  "discard.title": { en: "Discard changes?", es: "¿Descartar cambios?" },
+  "discard.message": { en: "You have unsaved changes. If you leave, your data will be lost.", es: "Tienes cambios sin guardar. Si sales, se perderán los datos." },
+  "discard.confirm": { en: "Discard", es: "Descartar" },
+
   // Drop overlay
   "drop.title": { en: "Drop files here", es: "Suelta los archivos aquí" },
   "drop.subtitle": { en: "Images and videos", es: "Imágenes y videos" },
