@@ -3,11 +3,13 @@ import { toast } from "react-toastify";
 import clsx from "clsx";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
+import Input from "@modules/app/modules/ui/components/Input/Input";
+import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useUser from "../hooks/useUser";
 import useTheme from "@modules/app/hooks/useTheme";
 import { Theme } from "@modules/app/context/theme-context";
-import { updateLanguage, updateTheme } from "../services/auth.service";
+import { updateLanguage, updateName, updateTheme } from "../services/auth.service";
 import {
   getPreferences,
   updatePreferences,
@@ -42,12 +44,38 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     getPreferences().then(setPrefs);
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+    }
+  }, [user]);
+
   if (!user) return null;
+
+  const nameChanged = firstName !== user.firstName || lastName !== user.lastName;
+  const nameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
+
+  const handleSaveName = async () => {
+    if (!nameValid) return;
+    setSavingName(true);
+    try {
+      await updateName(firstName.trim(), lastName.trim());
+      setUser({ ...user, firstName: firstName.trim(), lastName: lastName.trim() });
+    } catch {
+      toast.error("Failed to update name");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleLanguageChange = async (lang: { code: string; label: string }) => {
     setSaving(true);
@@ -125,7 +153,43 @@ export default function SettingsPage() {
     <div className="w-full max-w-lg">
       <h2 className="text-lg font-body-bold text-heading mb-6">{t("settings.title")}</h2>
 
+      {/* Account */}
       <Card className="p-5">
+        <p className="text-sm font-body-semibold text-heading mb-4">
+          {t("settings.account")}
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <FormInput label={t("settings.firstName")}>
+            <Input value={firstName} onChange={setFirstName} size="sm" />
+          </FormInput>
+          <FormInput label={t("settings.lastName")}>
+            <Input value={lastName} onChange={setLastName} size="sm" />
+          </FormInput>
+        </div>
+
+        {nameChanged && (
+          <Button
+            size="xs"
+            color="primary"
+            onClick={handleSaveName}
+            disabled={!nameValid}
+            loading={savingName}
+          >
+            {t("settings.save")}
+          </Button>
+        )}
+
+        <div className="mt-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted">{t("settings.email")}</span>
+            <span className="text-body font-body-medium">{user.email}</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Language & Theme */}
+      <Card className="p-5 mt-4">
         <FormInput label={t("settings.language")}>
           <Select
             options={[...LANGUAGES]}
@@ -145,24 +209,9 @@ export default function SettingsPage() {
             disabled={saving}
           />
         </FormInput>
-
-        <div className="border-t border-border-card pt-4 mt-2">
-          <p className="text-xs text-subtle font-body-medium mb-2">{t("settings.account")}</p>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted">{t("settings.name")}</span>
-              <span className="text-body font-body-medium">
-                {user.firstName} {user.lastName}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">{t("settings.email")}</span>
-              <span className="text-body font-body-medium">{user.email}</span>
-            </div>
-          </div>
-        </div>
       </Card>
 
+      {/* Notifications */}
       {prefs && (
         <Card className="p-5 mt-4">
           <p className="text-sm font-body-semibold text-heading mb-5">
@@ -171,7 +220,6 @@ export default function SettingsPage() {
 
           {/* Channels */}
           <div className="grid grid-cols-2 gap-3 mb-5">
-            {/* Email channel */}
             <button
               type="button"
               onClick={() => handlePrefChange("emailEnabled", !prefs.emailEnabled)}
@@ -196,7 +244,6 @@ export default function SettingsPage() {
               </p>
             </button>
 
-            {/* In-app channel */}
             <button
               type="button"
               onClick={() => handlePrefChange("inAppEnabled", !prefs.inAppEnabled)}
@@ -229,7 +276,6 @@ export default function SettingsPage() {
                 {t("notifications.events")}
               </p>
 
-              {/* Header */}
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="flex-1" />
                 {prefs.emailEnabled && (
@@ -244,7 +290,6 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {/* Rows */}
               <div className="rounded-lg border border-border-card divide-y divide-border-card">
                 {EVENT_KEYS.map(({ key, labelKey }) => (
                   <div key={key} className="flex items-center gap-2 px-3 py-2.5">

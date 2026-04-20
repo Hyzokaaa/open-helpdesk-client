@@ -132,8 +132,11 @@ const translations = {
   "settings.themeDark": { en: "Dark", es: "Oscuro" },
   "settings.themeDarkDeep": { en: "Dark Deep", es: "Oscuro Profundo" },
   "settings.account": { en: "Account", es: "Cuenta" },
+  "settings.firstName": { en: "First name", es: "Nombre" },
+  "settings.lastName": { en: "Last name", es: "Apellido" },
   "settings.name": { en: "Name", es: "Nombre" },
   "settings.email": { en: "Email", es: "Correo" },
+  "settings.save": { en: "Save", es: "Guardar" },
 
   // Admin
   "admin.title": { en: "System Administration", es: "Administración del Sistema" },

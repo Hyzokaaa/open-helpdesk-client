@@ -33,6 +33,10 @@ interface ProfileResponse {
   theme: string;
 }
 
+export async function updateName(firstName: string, lastName: string): Promise<void> {
+  await http.patch("/users/me/name", { firstName, lastName });
+}
+
 export async function updateLanguage(language: string): Promise<void> {
   await http.patch("/users/me/language", { language });
 }
