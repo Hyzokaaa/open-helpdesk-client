@@ -169,6 +169,21 @@ const translations = {
   "discard.message": { en: "You have unsaved changes. If you leave, your data will be lost.", es: "Tienes cambios sin guardar. Si sales, se perderán los datos." },
   "discard.confirm": { en: "Discard", es: "Descartar" },
 
+  // Notifications
+  "notifications.title": { en: "Notifications", es: "Notificaciones" },
+  "notifications.markAllRead": { en: "Mark all as read", es: "Marcar todo como leído" },
+  "notifications.empty": { en: "No notifications", es: "Sin notificaciones" },
+  "notifications.preferences": { en: "Notifications", es: "Notificaciones" },
+  "notifications.emailEnabled": { en: "Email", es: "Email" },
+  "notifications.emailDesc": { en: "Receive notifications via email", es: "Recibir notificaciones por email" },
+  "notifications.inAppEnabled": { en: "In-app", es: "En la app" },
+  "notifications.inAppDesc": { en: "See notifications in the bell icon", es: "Ver notificaciones en el icono de campana" },
+  "notifications.ticketCreated": { en: "New ticket", es: "Nuevo ticket" },
+  "notifications.ticketAssigned": { en: "Assigned to me", es: "Asignado a mí" },
+  "notifications.statusChanged": { en: "Status change", es: "Cambio de estado" },
+  "notifications.commentCreated": { en: "New comment", es: "Nuevo comentario" },
+  "notifications.events": { en: "Notify me about", es: "Notificarme sobre" },
+
   // Drop overlay
   "drop.title": { en: "Drop files here", es: "Suelta los archivos aquí" },
   "drop.subtitle": { en: "Images and videos", es: "Imágenes y videos" },

@@ -1,6 +1,7 @@
 import useUser from "@modules/user/hooks/useUser";
 import useTheme from "@modules/app/hooks/useTheme";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import NotificationBell from "@modules/notification/components/NotificationBell";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { updateTheme } from "@modules/user/services/auth.service";
 
@@ -31,6 +32,7 @@ export default function Navbar() {
               {user.firstName} {user.lastName}
             </span>
           )}
+          <NotificationBell />
           <button
             onClick={handleToggleTheme}
             className="w-8 h-8 flex items-center justify-center rounded-button border border-border-input bg-surface hover:bg-surface-hover transition-all duration-300 cursor-pointer text-muted hover:text-body"
