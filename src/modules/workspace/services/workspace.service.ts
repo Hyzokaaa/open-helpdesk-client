@@ -13,7 +13,6 @@ export interface WorkspaceDetail {
   name: string;
   slug: string;
   description: string;
-  dealerId: string | null;
 }
 
 export interface WorkspaceMember {

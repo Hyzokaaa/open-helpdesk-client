@@ -40,11 +40,6 @@ export default function WorkspaceDetailPage() {
         <p className="text-sm text-secondary-text">
           {workspace.description || "No description"}
         </p>
-        {workspace.dealerId && (
-          <p className="text-xs text-subtle mt-2">
-            Dealer ID: {workspace.dealerId}
-          </p>
-        )}
       </Card>
 
       <div className="flex gap-3">
