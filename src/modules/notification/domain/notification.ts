@@ -19,4 +19,5 @@ export interface NotificationPreferences {
   inAppTicketAssigned: boolean;
   inAppStatusChanged: boolean;
   inAppCommentCreated: boolean;
+  bellUnreadOnly: boolean;
 }

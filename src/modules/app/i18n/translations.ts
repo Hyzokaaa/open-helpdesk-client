@@ -132,6 +132,7 @@ const translations = {
   "settings.themeDark": { en: "Dark", es: "Oscuro" },
   "settings.themeDarkDeep": { en: "Dark Deep", es: "Oscuro Profundo" },
   "settings.account": { en: "Account", es: "Cuenta" },
+  "settings.preferences": { en: "Preferences", es: "Preferencias" },
   "settings.firstName": { en: "First name", es: "Nombre" },
   "settings.lastName": { en: "Last name", es: "Apellido" },
   "settings.name": { en: "Name", es: "Nombre" },
@@ -186,6 +187,10 @@ const translations = {
   "notifications.statusChanged": { en: "Status change", es: "Cambio de estado" },
   "notifications.commentCreated": { en: "New comment", es: "Nuevo comentario" },
   "notifications.events": { en: "Notify me about", es: "Notificarme sobre" },
+  "notifications.viewAll": { en: "View all notifications", es: "Ver todas las notificaciones" },
+  "notifications.filterAll": { en: "All", es: "Todas" },
+  "notifications.filterUnread": { en: "Unread", es: "No leídas" },
+  "notifications.bellUnreadOnly": { en: "Show only unread in bell", es: "Mostrar solo no leídas en la campana" },
 
   // Drop overlay
   "drop.title": { en: "Drop files here", es: "Suelta los archivos aquí" },

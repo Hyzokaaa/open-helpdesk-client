@@ -5,17 +5,12 @@ import { Notification } from "../domain/notification";
 import {
   getNotifications,
   getUnreadCount,
+  getPreferences,
   markAsRead,
   markAllAsRead,
 } from "../services/notification.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
-
-const TYPE_ICONS: Record<string, string> = {
-  "ticket-created": "+",
-  "ticket-assigned": "@",
-  "status-changed": "~",
-  "comment-created": "#",
-};
+import NotificationIcon from "./NotificationIcon";
 
 export default function NotificationBell() {
   const navigate = useNavigate();
@@ -23,6 +18,7 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const bellUnreadOnly = useRef(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const fetchCount = useCallback(async () => {
@@ -36,7 +32,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await getNotifications();
+      const res = await getNotifications(bellUnreadOnly.current);
       setNotifications(res.notifications);
       setUnreadCount(res.unreadCount);
     } catch {
@@ -51,9 +47,14 @@ export default function NotificationBell() {
     return () => clearInterval(interval);
   }, [fetchCount]);
 
-  // Fetch full list when dropdown opens
+  // Reload prefs + notifications when dropdown opens
   useEffect(() => {
-    if (open) fetchNotifications();
+    if (open) {
+      getPreferences().then((p) => {
+        bellUnreadOnly.current = p.bellUnreadOnly;
+        fetchNotifications();
+      });
+    }
   }, [open, fetchNotifications]);
 
   // Close on outside click
@@ -77,9 +78,7 @@ export default function NotificationBell() {
     }
     setOpen(false);
     if (n.ticketId) {
-      navigate(
-        `/dashboard/workspaces/${n.workspaceSlug}/tickets`,
-      );
+      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets`);
     }
   };
 
@@ -159,9 +158,7 @@ export default function NotificationBell() {
                       : "bg-surface-active hover:bg-surface-hover",
                   )}
                 >
-                  <span className="text-exs text-subtle font-body-bold w-4 shrink-0 mt-0.5">
-                    {TYPE_ICONS[n.type] || "?"}
-                  </span>
+                  <NotificationIcon type={n.type} />
                   <div className="flex-1 min-w-0">
                     <p
                       className={clsx(
@@ -182,6 +179,13 @@ export default function NotificationBell() {
               ))
             )}
           </div>
+
+          <button
+            onClick={() => { setOpen(false); navigate("/dashboard/notifications"); }}
+            className="w-full text-center py-2.5 text-exs text-primary hover:bg-surface-hover cursor-pointer border-t border-border-card"
+          >
+            {t("notifications.viewAll")}
+          </button>
         </div>
       )}
     </div>

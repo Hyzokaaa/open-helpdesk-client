@@ -190,6 +190,10 @@ export default function SettingsPage() {
 
       {/* Language & Theme */}
       <Card className="p-5 mt-4">
+        <p className="text-sm font-body-semibold text-heading mb-4">
+          {t("settings.preferences")}
+        </p>
+
         <FormInput label={t("settings.language")}>
           <Select
             options={[...LANGUAGES]}
@@ -268,6 +272,18 @@ export default function SettingsPage() {
               </p>
             </button>
           </div>
+
+          {prefs.inAppEnabled && (
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-xs text-body">
+                {t("notifications.bellUnreadOnly")}
+              </span>
+              <Toggle
+                checked={prefs.bellUnreadOnly}
+                onChange={(v) => handlePrefChange("bellUnreadOnly", v)}
+              />
+            </div>
+          )}
 
           {/* Event matrix */}
           {(prefs.emailEnabled || prefs.inAppEnabled) && (

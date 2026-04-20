@@ -14,10 +14,12 @@ import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import SystemAdminPage from "@modules/admin/pages/SystemAdminPage";
 import SettingsPage from "@modules/user/pages/SettingsPage";
+import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
-  return <ToastContainer position="top-right" autoClose={3000} theme={theme} />;
+  const toastTheme = theme.startsWith("dark") ? "dark" : "light";
+  return <ToastContainer position="top-right" autoClose={3000} theme={toastTheme} />;
 }
 
 export default function App() {
@@ -37,6 +39,7 @@ export default function App() {
             <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
             <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="admin" element={<SystemAdminPage />} />
           </Route>
