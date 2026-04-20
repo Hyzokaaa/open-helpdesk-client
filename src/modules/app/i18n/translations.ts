@@ -15,7 +15,7 @@ const translations = {
   "sidebar.administration": { en: "Administration", es: "Administración" },
 
   // Login
-  "login.title": { en: "DealerNode Helpdesk", es: "DealerNode Helpdesk" },
+  "login.title": { en: "Open Helpdesk", es: "Open Helpdesk" },
   "login.subtitle": { en: "Sign in to your account", es: "Inicia sesión en tu cuenta" },
   "login.email": { en: "Email", es: "Correo electrónico" },
   "login.password": { en: "Password", es: "Contraseña" },

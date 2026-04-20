@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { register } from "../services/auth.service";
+import { APP_NAME } from "@modules/app/domain/constants/env";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function RegisterPage() {
             Create Account
           </h1>
           <p className="text-sm text-muted mb-6">
-            Join DealerNode Helpdesk
+            Join {APP_NAME}
           </p>
 
           <form onSubmit={handleSubmit}>

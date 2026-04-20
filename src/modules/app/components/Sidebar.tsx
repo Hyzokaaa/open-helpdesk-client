@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { APP_NAME } from "@modules/app/domain/constants/env";
 
 interface NavItem {
   label: string;
@@ -41,9 +42,8 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-dvh w-[240px] bg-surface border-r border-border-card hidden lg:flex flex-col z-40">
       <div className="px-5 py-5 border-b border-border-card">
         <h1 className="text-base font-body-bold text-primary">
-          DealerNode
+          {APP_NAME}
         </h1>
-        <p className="text-exs text-subtle font-body-medium">Helpdesk</p>
       </div>
 
       <nav className="flex flex-col px-3 py-4 gap-y-1 flex-1 overflow-auto">

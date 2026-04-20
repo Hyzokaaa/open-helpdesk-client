@@ -11,6 +11,7 @@ import {
 } from "@modules/app/domain/core/local-storage";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { APP_NAME } from "@modules/app/domain/constants/env";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-card border-card p-8">
           <h1 className="text-xl font-body-bold text-heading mb-1">
-            {t("login.title")}
+            {APP_NAME}
           </h1>
           <p className="text-sm text-muted mb-6">{t("login.subtitle")}</p>
 
