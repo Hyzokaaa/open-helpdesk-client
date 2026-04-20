@@ -2,7 +2,7 @@ import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { APP_NAME } from "@modules/app/domain/constants/env";
+import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 
 interface NavItem {
   label: string;
@@ -44,6 +44,11 @@ export default function Sidebar() {
         <h1 className="text-base font-body-bold text-primary">
           {APP_NAME}
         </h1>
+        {APP_SUBTITLE && (
+          <p className="text-exs text-subtle font-body-medium">
+            {APP_SUBTITLE}
+          </p>
+        )}
       </div>
 
       <nav className="flex flex-col px-3 py-4 gap-y-1 flex-1 overflow-auto">
