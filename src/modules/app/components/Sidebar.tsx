@@ -34,7 +34,7 @@ export default function Sidebar() {
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${workspaceSlug}/tickets` },
         { label: t("sidebar.members"), path: `/dashboard/workspaces/${workspaceSlug}/members` },
         { label: t("sidebar.tags"), path: `/dashboard/workspaces/${workspaceSlug}/tags` },
-        { label: t("sidebar.settings"), path: `/dashboard/workspaces/${workspaceSlug}/settings` },
+        ...(user?.isSystemAdmin ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${workspaceSlug}/settings` }] : []),
       ]
     : [];
 
