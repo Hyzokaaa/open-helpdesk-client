@@ -17,7 +17,13 @@ export default function Sidebar() {
 
   const mainNav: NavItem[] = [
     { label: t("sidebar.workspaces"), path: "/dashboard/workspaces" },
-    { label: t("sidebar.settings"), path: "/dashboard/settings" },
+  ];
+
+  const settingsNav: NavItem[] = [
+    { label: t("settings.account"), path: "/dashboard/settings/account" },
+    { label: t("settings.security"), path: "/dashboard/settings/security" },
+    { label: t("settings.preferences"), path: "/dashboard/settings/preferences" },
+    { label: t("notifications.preferences"), path: "/dashboard/settings/notifications" },
   ];
 
   const workspaceNav: NavItem[] = workspaceSlug
@@ -29,6 +35,7 @@ export default function Sidebar() {
     : [];
 
   const isActive = (path: string) => location.pathname === path;
+  const isSettingsActive = location.pathname.startsWith("/dashboard/settings");
 
   const linkClass = (active: boolean) =>
     clsx(
@@ -61,6 +68,32 @@ export default function Sidebar() {
             {item.label}
           </Link>
         ))}
+
+        <Link
+          to="/dashboard/settings/account"
+          className={linkClass(isSettingsActive)}
+        >
+          {t("sidebar.settings")}
+        </Link>
+
+        {isSettingsActive && (
+          <div className="ml-3 flex flex-col gap-y-0.5">
+            {settingsNav.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={clsx(
+                  "px-3 py-1.5 rounded-lg text-xs font-body-medium transition-colors",
+                  isActive(item.path)
+                    ? "text-primary"
+                    : "text-secondary-text hover:text-primary",
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {workspaceNav.length > 0 && (
           <>

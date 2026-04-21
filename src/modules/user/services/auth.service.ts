@@ -45,6 +45,10 @@ export async function updateTheme(theme: string): Promise<void> {
   await http.patch("/users/me/theme", { theme });
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await http.patch("/users/me/password", { currentPassword, newPassword });
+}
+
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
   const res = await http.post<RegisterResponse>("/auth/register", data);
   return res.data;

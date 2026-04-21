@@ -13,7 +13,10 @@ import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import SystemAdminPage from "@modules/admin/pages/SystemAdminPage";
-import SettingsPage from "@modules/user/pages/SettingsPage";
+import AccountSection from "@modules/user/components/AccountSection";
+import PasswordSection from "@modules/user/components/PasswordSection";
+import PreferencesSection from "@modules/user/components/PreferencesSection";
+import NotificationsSection from "@modules/user/components/NotificationsSection";
 import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 
 function ThemedToast() {
@@ -40,7 +43,11 @@ export default function App() {
             <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
             <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings" element={<Navigate to="account" replace />} />
+            <Route path="settings/account" element={<AccountSection />} />
+            <Route path="settings/security" element={<PasswordSection />} />
+            <Route path="settings/preferences" element={<PreferencesSection />} />
+            <Route path="settings/notifications" element={<NotificationsSection />} />
             <Route path="admin" element={<SystemAdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />

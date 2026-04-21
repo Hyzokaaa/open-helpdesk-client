@@ -138,6 +138,16 @@ const translations = {
   "settings.name": { en: "Name", es: "Nombre" },
   "settings.email": { en: "Email", es: "Correo" },
   "settings.save": { en: "Save", es: "Guardar" },
+  "settings.security": { en: "Security", es: "Seguridad" },
+  "settings.password": { en: "Change Password", es: "Cambiar Contraseña" },
+  "settings.currentPassword": { en: "Current password", es: "Contraseña actual" },
+  "settings.newPassword": { en: "New password", es: "Nueva contraseña" },
+  "settings.confirmPassword": { en: "Confirm new password", es: "Confirmar nueva contraseña" },
+  "settings.passwordMismatch": { en: "Passwords do not match", es: "Las contraseñas no coinciden" },
+  "settings.passwordUpdated": { en: "Password updated", es: "Contraseña actualizada" },
+  "settings.passwordError": { en: "Failed to update password", es: "Error al cambiar contraseña" },
+  "settings.changePassword": { en: "Update Password", es: "Actualizar Contraseña" },
+  "settings.cancel": { en: "Cancel", es: "Cancelar" },
 
   // Admin
   "admin.title": { en: "System Administration", es: "Administración del Sistema" },
