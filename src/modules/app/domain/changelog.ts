@@ -67,6 +67,10 @@ export const changelog: ChangelogVersion[] = [
             en: "Admin panel with user and workspace management tables",
             es: "Panel de administración con tablas de gestión de usuarios y espacios",
           },
+          {
+            en: "Confirmation modals for all admin actions (promote, demote, activate, deactivate)",
+            es: "Modales de confirmación para todas las acciones de administración (promover, degradar, activar, desactivar)",
+          },
         ],
       },
       {

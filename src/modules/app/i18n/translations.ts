@@ -222,6 +222,10 @@ const translations = {
   "admin.col.description": { en: "Description", es: "Descripción" },
   "admin.col.status": { en: "Status", es: "Estado" },
   "admin.active": { en: "Active", es: "Activo" },
+  "admin.confirmMakeAdmin": { en: "Are you sure you want to make {name} a System Admin? They will have full access to all workspaces and system settings.", es: "¿Estás seguro de hacer a {name} Administrador del Sistema? Tendrá acceso completo a todos los espacios y configuraciones del sistema." },
+  "admin.confirmRemoveAdmin": { en: "Are you sure you want to remove {name} as System Admin? They will lose access to system administration.", es: "¿Estás seguro de quitar a {name} como Administrador del Sistema? Perderá acceso a la administración del sistema." },
+  "admin.confirmDeactivate": { en: "Are you sure you want to deactivate {name}? They will no longer be able to log in.", es: "¿Estás seguro de desactivar a {name}? Ya no podrá iniciar sesión." },
+  "admin.confirmActivate": { en: "Are you sure you want to reactivate {name}?", es: "¿Estás seguro de reactivar a {name}?" },
 
   // Network
   "network.connectionLost": { en: "Connection lost. Check your internet and try again.", es: "Conexión perdida. Revisa tu internet e intenta de nuevo." },

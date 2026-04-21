@@ -48,6 +48,8 @@ export default function SystemAdminPage() {
   const [creatingWs, setCreatingWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState<string | null>(null);
   const [editingWsSlug, setEditingWsSlug] = useState<string | null>(null);
+  const [confirmToggleAdmin, setConfirmToggleAdmin] = useState<UserItem | null>(null);
+  const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
 
   if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
@@ -75,17 +77,17 @@ export default function SystemAdminPage() {
   };
 
   const handleToggleAdmin = async (target: UserItem) => {
-    if (target.id === user.id) return;
     try {
       await toggleSystemAdmin(target.id, !target.isSystemAdmin);
+      setConfirmToggleAdmin(null);
       fetchData();
     } catch { toast.error("Failed to update admin status"); }
   };
 
   const handleToggleActive = async (target: UserItem) => {
-    if (target.id === user.id) return;
     try {
       await toggleUserActive(target.id, !target.isActive);
+      setConfirmToggleActive(null);
       fetchData();
     } catch { toast.error("Failed to update user status"); }
   };
@@ -131,6 +133,28 @@ export default function SystemAdminPage() {
         <Sheet onClose={() => { setEditingWsSlug(null); fetchData(); }}>
           <WorkspaceSettingsPage workspaceSlugProp={editingWsSlug} onClose={() => { setEditingWsSlug(null); fetchData(); }} />
         </Sheet>
+      )}
+
+      {confirmToggleAdmin && (
+        <ConfirmModal
+          title={confirmToggleAdmin.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin")}
+          message={t(confirmToggleAdmin.isSystemAdmin ? "admin.confirmRemoveAdmin" : "admin.confirmMakeAdmin").replace("{name}", `${confirmToggleAdmin.firstName} ${confirmToggleAdmin.lastName}`)}
+          confirmLabel={confirmToggleAdmin.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin")}
+          danger={confirmToggleAdmin.isSystemAdmin}
+          onConfirm={() => handleToggleAdmin(confirmToggleAdmin)}
+          onCancel={() => setConfirmToggleAdmin(null)}
+        />
+      )}
+
+      {confirmToggleActive && (
+        <ConfirmModal
+          title={confirmToggleActive.isActive ? t("admin.deactivate") : t("admin.activate")}
+          message={t(confirmToggleActive.isActive ? "admin.confirmDeactivate" : "admin.confirmActivate").replace("{name}", `${confirmToggleActive.firstName} ${confirmToggleActive.lastName}`)}
+          confirmLabel={confirmToggleActive.isActive ? t("admin.deactivate") : t("admin.activate")}
+          danger={confirmToggleActive.isActive}
+          onConfirm={() => handleToggleActive(confirmToggleActive)}
+          onCancel={() => setConfirmToggleActive(null)}
+        />
       )}
 
       <h2 className="text-lg font-body-bold text-heading mb-6">{t("admin.title")}</h2>
@@ -200,10 +224,10 @@ export default function SystemAdminPage() {
                 <td className="px-4 py-3">
                   {u.id !== user.id && (
                     <div className="flex gap-2">
-                      <Button size="xs" color={u.isSystemAdmin ? "light" : "primary-light"} onClick={() => handleToggleAdmin(u)}>
+                      <Button size="xs" color={u.isSystemAdmin ? "light" : "primary-light"} onClick={() => setConfirmToggleAdmin(u)}>
                         {u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin")}
                       </Button>
-                      <Button size="xs" color={u.isActive ? "danger" : "primary-light"} onClick={() => handleToggleActive(u)}>
+                      <Button size="xs" color={u.isActive ? "danger" : "primary-light"} onClick={() => setConfirmToggleActive(u)}>
                         {u.isActive ? t("admin.deactivate") : t("admin.activate")}
                       </Button>
                     </div>
