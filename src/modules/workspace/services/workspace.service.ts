@@ -72,6 +72,26 @@ export async function addMember(
   return res.data;
 }
 
+export async function updateWorkspace(
+  slug: string,
+  data: { name?: string; description?: string },
+): Promise<{ id: string; name: string; slug: string; description: string }> {
+  const res = await http.patch(`/workspaces/${slug}`, data);
+  return res.data;
+}
+
+export async function deleteWorkspace(slug: string): Promise<void> {
+  await http.delete(`/workspaces/${slug}`);
+}
+
+export async function changeMemberRole(
+  slug: string,
+  userId: string,
+  role: string,
+): Promise<void> {
+  await http.patch(`/workspaces/${slug}/members/${userId}/role`, { role });
+}
+
 export async function removeMember(
   slug: string,
   userId: string,

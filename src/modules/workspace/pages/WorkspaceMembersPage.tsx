@@ -14,6 +14,7 @@ import {
   listUsers,
   addMember,
   removeMember,
+  changeMemberRole,
 } from "../services/workspace.service";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -87,6 +88,28 @@ export default function WorkspaceMembersPage() {
     }
   };
 
+  const handleRoleChange = async (memberUserId: string, newRole: string) => {
+    if (!workspaceSlug) return;
+    try {
+      await changeMemberRole(workspaceSlug, memberUserId, newRole);
+      fetchMembers();
+      toast.success(t("members.roleUpdated"));
+    } catch {
+      toast.error(t("members.roleError"));
+    }
+  };
+
+  const canEditRole = (member: WorkspaceMember) => {
+    if (!canManageMembers) return false;
+    if (user?.isSystemAdmin) return true;
+    return member.role !== "admin";
+  };
+
+  const availableRoles = (member: WorkspaceMember) => {
+    if (user?.isSystemAdmin) return ROLES;
+    return ROLES.filter((r) => r !== "admin");
+  };
+
   const roleColor = (r: string) => {
     if (r === "admin") return "primary" as const;
     if (r === "agent") return "blue" as const;
@@ -148,7 +171,19 @@ export default function WorkspaceMembersPage() {
                   {m.firstName} {m.lastName}
                 </p>
                 <p className="text-xs text-subtle">{m.email}</p>
-                <StatusBadge label={m.role} color={roleColor(m.role)} size="xs" />
+                {canEditRole(m) ? (
+                  <select
+                    value={m.role}
+                    onChange={(e) => handleRoleChange(m.userId, e.target.value)}
+                    className="text-xs border border-border-input rounded-md px-2 py-1 bg-surface text-body cursor-pointer"
+                  >
+                    {availableRoles(m).map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <StatusBadge label={m.role} color={roleColor(m.role)} size="xs" />
+                )}
               </div>
               {canManageMembers && (
               <Button

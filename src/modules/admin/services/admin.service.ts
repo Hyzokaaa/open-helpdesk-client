@@ -6,6 +6,7 @@ export interface UserItem {
   firstName: string;
   lastName: string;
   isSystemAdmin: boolean;
+  isActive: boolean;
 }
 
 export async function listAllUsers(): Promise<UserItem[]> {
@@ -29,4 +30,11 @@ export async function toggleSystemAdmin(
   isSystemAdmin: boolean,
 ): Promise<void> {
   await http.patch(`/users/${userId}/system-admin`, { isSystemAdmin });
+}
+
+export async function toggleUserActive(
+  userId: string,
+  isActive: boolean,
+): Promise<void> {
+  await http.patch(`/users/${userId}/active`, { isActive });
 }
