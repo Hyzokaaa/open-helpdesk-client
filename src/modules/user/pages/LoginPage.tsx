@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -75,6 +75,11 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          <div className="text-center mt-4">
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              {t("login.forgotPassword")}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

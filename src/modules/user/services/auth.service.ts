@@ -49,6 +49,14 @@ export async function changePassword(currentPassword: string, newPassword: strin
   await http.patch("/users/me/password", { currentPassword, newPassword });
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await http.post("/auth/forgot-password", { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await http.post("/auth/reset-password", { token, newPassword });
+}
+
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
   const res = await http.post<RegisterResponse>("/auth/register", data);
   return res.data;

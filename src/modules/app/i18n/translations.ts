@@ -1,4 +1,8 @@
 const translations = {
+  // Changelog
+  "changelog.title": { en: "Changelog", es: "Registro de cambios" },
+  "sidebar.changelog": { en: "Changelog", es: "Cambios" },
+
   // Navbar
   "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
   "nav.lightMode": { en: "Light", es: "Claro" },
@@ -21,6 +25,20 @@ const translations = {
   "login.password": { en: "Password", es: "Contraseña" },
   "login.signIn": { en: "Sign In", es: "Iniciar Sesión" },
   "login.failed": { en: "Login failed", es: "Error al iniciar sesión" },
+  "login.forgotPassword": { en: "Forgot your password?", es: "¿Olvidaste tu contraseña?" },
+
+  // Forgot password
+  "forgot.subtitle": { en: "Enter your email to reset your password", es: "Ingresa tu correo para restablecer tu contraseña" },
+  "forgot.submit": { en: "Send Reset Link", es: "Enviar Enlace" },
+  "forgot.sent": { en: "If an account with that email exists, we've sent a password reset link. Check your inbox.", es: "Si existe una cuenta con ese correo, hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja." },
+  "forgot.backToLogin": { en: "Back to login", es: "Volver al inicio de sesión" },
+
+  // Reset password
+  "reset.subtitle": { en: "Enter your new password", es: "Ingresa tu nueva contraseña" },
+  "reset.submit": { en: "Reset Password", es: "Restablecer Contraseña" },
+  "reset.success": { en: "Your password has been reset. You can now sign in.", es: "Tu contraseña ha sido restablecida. Ya puedes iniciar sesión." },
+  "reset.error": { en: "Invalid or expired reset link", es: "Enlace inválido o expirado" },
+  "reset.invalidToken": { en: "Invalid or missing reset token", es: "Token de restablecimiento inválido o ausente" },
 
   // Workspaces
   "workspaces.title": { en: "Workspaces", es: "Espacios de trabajo" },
@@ -33,6 +51,30 @@ const translations = {
   "workspaces.create": { en: "Create", es: "Crear" },
   "workspaces.empty": { en: "No workspaces yet. Create one to get started.", es: "No hay espacios de trabajo. Crea uno para comenzar." },
   "workspaces.created": { en: "Workspace created", es: "Espacio creado" },
+  "workspaces.edit": { en: "Edit", es: "Editar" },
+  "workspaces.delete": { en: "Delete", es: "Eliminar" },
+  "workspaces.updated": { en: "Workspace updated", es: "Espacio actualizado" },
+  "workspaces.updateError": { en: "Failed to update workspace", es: "Error al actualizar espacio" },
+  "workspaces.deleted": { en: "Workspace deleted", es: "Espacio eliminado" },
+  "workspaces.deleteError": { en: "Failed to delete workspace", es: "Error al eliminar espacio" },
+  "workspaces.deleteTitle": { en: "Delete Workspace", es: "Eliminar Espacio" },
+  "workspaces.deleteMessage": { en: "This will permanently delete this workspace and all its data. This action cannot be undone.", es: "Esto eliminará permanentemente este espacio y todos sus datos. Esta acción no se puede deshacer." },
+  "workspaces.deleteConfirm": { en: "Delete", es: "Eliminar" },
+
+  // Workspace Settings
+  "workspaceSettings.general": { en: "General", es: "General" },
+  "workspaceSettings.updated": { en: "Workspace updated", es: "Espacio actualizado" },
+  "workspaceSettings.updateError": { en: "Failed to update workspace", es: "Error al actualizar espacio" },
+  "workspaceSettings.deleted": { en: "Workspace deleted", es: "Espacio eliminado" },
+  "workspaceSettings.deleteError": { en: "Failed to delete workspace", es: "Error al eliminar espacio" },
+  "workspaceSettings.dangerZone": { en: "Danger Zone", es: "Zona de Peligro" },
+  "workspaceSettings.dangerDescription": { en: "Deleting a workspace is permanent and cannot be undone. All tickets, comments, attachments, tags, and member associations will be permanently removed.", es: "Eliminar un espacio de trabajo es permanente y no se puede deshacer. Todos los tickets, comentarios, archivos adjuntos, etiquetas y asociaciones de miembros serán eliminados permanentemente." },
+  "workspaceSettings.deleteWorkspace": { en: "Delete this workspace", es: "Eliminar este espacio" },
+  "workspaceSettings.deleteTitle": { en: "Delete Workspace", es: "Eliminar Espacio" },
+  "workspaceSettings.deleteMessage": { en: "Are you sure? This will permanently delete this workspace and ALL its data (tickets, comments, attachments, tags, members). This action is irreversible.", es: "¿Estás seguro? Esto eliminará permanentemente este espacio y TODOS sus datos (tickets, comentarios, archivos adjuntos, etiquetas, miembros). Esta acción es irreversible." },
+  "workspaceSettings.deleteConfirm": { en: "Delete permanently", es: "Eliminar permanentemente" },
+  "workspaceSettings.noPermission": { en: "Only system admins can manage workspace settings.", es: "Solo los administradores del sistema pueden gestionar la configuración del espacio." },
+  "workspaceSettings.info": { en: "Information", es: "Información" },
 
   // Members
   "members.title": { en: "Members", es: "Miembros" },
@@ -45,6 +87,8 @@ const translations = {
   "members.removed": { en: "Member removed", es: "Miembro eliminado" },
   "members.remove": { en: "Remove", es: "Eliminar" },
   "members.empty": { en: "No members.", es: "Sin miembros." },
+  "members.roleUpdated": { en: "Role updated", es: "Rol actualizado" },
+  "members.roleError": { en: "Failed to update role", es: "Error al actualizar rol" },
 
   // Tags
   "tags.title": { en: "Tags", es: "Etiquetas" },
@@ -168,6 +212,16 @@ const translations = {
   "admin.makeAdmin": { en: "Make Admin", es: "Hacer Admin" },
   "admin.removeAdmin": { en: "Remove Admin", es: "Quitar Admin" },
   "admin.user": { en: "User", es: "Usuario" },
+  "admin.passwordPlaceholder": { en: "Min 6 characters", es: "Mín 6 caracteres" },
+  "admin.manageUsers": { en: "Manage Users", es: "Gestionar Usuarios" },
+  "admin.manageWorkspaces": { en: "Manage Workspaces", es: "Gestionar Espacios" },
+  "admin.deactivate": { en: "Deactivate", es: "Desactivar" },
+  "admin.activate": { en: "Activate", es: "Activar" },
+  "admin.inactive": { en: "Inactive", es: "Inactivo" },
+  "admin.col.slug": { en: "Slug", es: "Slug" },
+  "admin.col.description": { en: "Description", es: "Descripción" },
+  "admin.col.status": { en: "Status", es: "Estado" },
+  "admin.active": { en: "Active", es: "Activo" },
 
   // Network
   "network.connectionLost": { en: "Connection lost. Check your internet and try again.", es: "Conexión perdida. Revisa tu internet e intenta de nuevo." },
@@ -205,9 +259,6 @@ const translations = {
   // Drop overlay
   "drop.title": { en: "Drop files here", es: "Suelta los archivos aquí" },
   "drop.subtitle": { en: "Images and videos", es: "Imágenes y videos" },
-
-  // Admin placeholders
-  "admin.passwordPlaceholder": { en: "Min. 6 characters", es: "Mín. 6 caracteres" },
 
   // Enums - Priorities
   "enum.priority.low": { en: "Low", es: "Baja" },

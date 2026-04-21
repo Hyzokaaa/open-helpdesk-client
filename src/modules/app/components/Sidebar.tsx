@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
+import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 
 interface NavItem {
   label: string;
@@ -14,10 +16,11 @@ export default function Sidebar() {
   const { workspaceSlug } = useParams();
   const { user } = useUser();
   const { t } = useTranslation();
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
-  const mainNav: NavItem[] = [
-    { label: t("sidebar.workspaces"), path: "/dashboard/workspaces" },
-  ];
+  useEffect(() => {
+    if (user) listWorkspaces().then(setWorkspaces);
+  }, [user?.id]);
 
   const settingsNav: NavItem[] = [
     { label: t("settings.account"), path: "/dashboard/settings/account" },
@@ -31,11 +34,13 @@ export default function Sidebar() {
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${workspaceSlug}/tickets` },
         { label: t("sidebar.members"), path: `/dashboard/workspaces/${workspaceSlug}/members` },
         { label: t("sidebar.tags"), path: `/dashboard/workspaces/${workspaceSlug}/tags` },
+        { label: t("sidebar.settings"), path: `/dashboard/workspaces/${workspaceSlug}/settings` },
       ]
     : [];
 
   const isActive = (path: string) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith("/dashboard/settings");
+  const isWorkspacesActive = location.pathname.startsWith("/dashboard/workspaces");
 
   const linkClass = (active: boolean) =>
     clsx(
@@ -43,6 +48,14 @@ export default function Sidebar() {
       active
         ? "bg-surface-active text-primary"
         : "text-secondary-text hover:bg-surface-hover",
+    );
+
+  const subLinkClass = (active: boolean) =>
+    clsx(
+      "px-3 py-1.5 rounded-lg text-xs font-body-medium transition-colors",
+      active
+        ? "text-primary"
+        : "text-secondary-text hover:text-primary",
     );
 
   return (
@@ -59,42 +72,29 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-col px-3 py-4 gap-y-1 flex-1 overflow-auto">
-        {mainNav.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={linkClass(isActive(item.path))}
-          >
-            {item.label}
-          </Link>
-        ))}
-
+        {/* Workspaces */}
         <Link
-          to="/dashboard/settings/account"
-          className={linkClass(isSettingsActive)}
+          to={workspaces.length > 0 ? `/dashboard/workspaces/${workspaces[0].slug}/tickets` : "/dashboard/settings/account"}
+          className={linkClass(isWorkspacesActive)}
         >
-          {t("sidebar.settings")}
+          {t("sidebar.workspaces")}
         </Link>
 
-        {isSettingsActive && (
+        {isWorkspacesActive && workspaces.length > 0 && (
           <div className="ml-3 flex flex-col gap-y-0.5">
-            {settingsNav.map((item) => (
+            {workspaces.map((ws) => (
               <Link
-                key={item.path}
-                to={item.path}
-                className={clsx(
-                  "px-3 py-1.5 rounded-lg text-xs font-body-medium transition-colors",
-                  isActive(item.path)
-                    ? "text-primary"
-                    : "text-secondary-text hover:text-primary",
-                )}
+                key={ws.id}
+                to={`/dashboard/workspaces/${ws.slug}/tickets`}
+                className={subLinkClass(workspaceSlug === ws.slug)}
               >
-                {item.label}
+                {ws.name}
               </Link>
             ))}
           </div>
         )}
 
+        {/* Workspace nav (when inside a workspace) */}
         {workspaceNav.length > 0 && (
           <>
             <div className="border-t border-border-card my-3" />
@@ -113,6 +113,30 @@ export default function Sidebar() {
           </>
         )}
 
+        {/* Settings */}
+        <div className="border-t border-border-card my-3" />
+        <Link
+          to="/dashboard/settings/account"
+          className={linkClass(isSettingsActive)}
+        >
+          {t("sidebar.settings")}
+        </Link>
+
+        {isSettingsActive && (
+          <div className="ml-3 flex flex-col gap-y-0.5">
+            {settingsNav.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={subLinkClass(isActive(item.path))}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* System admin */}
         {user?.isSystemAdmin && (
           <>
             <div className="border-t border-border-card my-3" />
@@ -127,6 +151,16 @@ export default function Sidebar() {
             </Link>
           </>
         )}
+
+        {/* Changelog */}
+        <div className="mt-auto pt-3 border-t border-border-card">
+          <Link
+            to="/dashboard/changelog"
+            className={linkClass(isActive("/dashboard/changelog"))}
+          >
+            {t("sidebar.changelog")}
+          </Link>
+        </div>
       </nav>
     </aside>
   );

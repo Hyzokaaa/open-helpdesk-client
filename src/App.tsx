@@ -5,8 +5,10 @@ import { ThemeProvider } from "@modules/app/context/ThemeProvider";
 import useTheme from "@modules/app/hooks/useTheme";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
+import ForgotPasswordPage from "@modules/user/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
-import WorkspacesPage from "@modules/workspace/pages/WorkspacesPage";
+import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import WorkspaceMembersPage from "@modules/workspace/pages/WorkspaceMembersPage";
 import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
@@ -18,6 +20,7 @@ import PasswordSection from "@modules/user/components/PasswordSection";
 import PreferencesSection from "@modules/user/components/PreferencesSection";
 import NotificationsSection from "@modules/user/components/NotificationsSection";
 import NotificationsPage from "@modules/notification/pages/NotificationsPage";
+import ChangelogPage from "@modules/app/pages/ChangelogPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -33,10 +36,12 @@ export default function App() {
         <ThemedToast />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="workspaces" replace />} />
-            <Route path="workspaces" element={<WorkspacesPage />} />
+            <Route index element={<Navigate to="settings/account" replace />} />
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
+            <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
             <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
@@ -48,6 +53,7 @@ export default function App() {
             <Route path="settings/security" element={<PasswordSection />} />
             <Route path="settings/preferences" element={<PreferencesSection />} />
             <Route path="settings/notifications" element={<NotificationsSection />} />
+            <Route path="changelog" element={<ChangelogPage />} />
             <Route path="admin" element={<SystemAdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
