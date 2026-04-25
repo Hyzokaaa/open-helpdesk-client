@@ -11,12 +11,14 @@ import {
 } from "@modules/app/domain/core/local-storage";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
 import { APP_NAME } from "@modules/app/domain/constants/env";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { setUser } = useUser();
   const { t } = useTranslation();
+  const { saasMode } = useConfig();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,10 +77,15 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-4 flex flex-col gap-2">
             <Link to="/forgot-password" className="text-xs text-primary hover:underline">
               {t("login.forgotPassword")}
             </Link>
+            {saasMode && (
+              <Link to="/signup" className="text-xs text-primary hover:underline">
+                {t("login.noAccount")}
+              </Link>
+            )}
           </div>
         </div>
       </div>

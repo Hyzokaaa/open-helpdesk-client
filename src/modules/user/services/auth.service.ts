@@ -1,16 +1,23 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { AuthUser } from "../domain/auth-user";
 
-interface RegisterRequest {
+interface SignupRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
+  workspaceName: string;
 }
 
-interface RegisterResponse {
-  id: string;
-  email: string;
+interface SignupResponse {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isEmailVerified: boolean;
+  };
 }
 
 interface LoginRequest {
@@ -29,6 +36,7 @@ interface ProfileResponse {
   lastName: string;
   isActive: boolean;
   isSystemAdmin: boolean;
+  isEmailVerified: boolean;
   language: string;
   theme: string;
 }
@@ -57,9 +65,17 @@ export async function resetPassword(token: string, newPassword: string): Promise
   await http.post("/auth/reset-password", { token, newPassword });
 }
 
-export async function register(data: RegisterRequest): Promise<RegisterResponse> {
-  const res = await http.post<RegisterResponse>("/auth/register", data);
+export async function signup(data: SignupRequest): Promise<SignupResponse> {
+  const res = await http.post<SignupResponse>("/auth/signup", data);
   return res.data;
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+  await http.post("/auth/verify-email", { token });
+}
+
+export async function resendVerification(): Promise<void> {
+  await http.post("/auth/resend-verification");
 }
 
 export async function login(data: LoginRequest): Promise<LoginResponse> {
