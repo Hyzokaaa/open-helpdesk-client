@@ -33,6 +33,15 @@ http.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error) && error.response) {
+      if (
+        error.response.status === 403 &&
+        error.response.data?.message === "Email not verified"
+      ) {
+        toast.warning(t("verification.banner"), {
+          toastId: "email-not-verified",
+        });
+      }
+
       const e: HttpResponseError = {
         message:
           error.response.data?.message ||
