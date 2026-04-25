@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { verifyEmail } from "../services/auth.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { APP_NAME } from "@modules/app/domain/constants/env";
+import Button from "@modules/app/modules/ui/components/Button/Button";
 
 export default function VerifyEmailPage() {
   const { t } = useTranslation();
@@ -22,33 +22,50 @@ export default function VerifyEmailPage() {
       .catch(() => setStatus("error"));
   }, [token]);
 
+  const handleGoToDashboard = () => {
+    window.location.href = "/dashboard";
+  };
+
   return (
     <div className="min-h-dvh flex items-center justify-center bg-page">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm px-4">
         <div className="bg-surface rounded-card border-card p-8 text-center">
-          <h1 className="text-xl font-body-bold text-heading mb-4">
-            {APP_NAME}
-          </h1>
-
           {status === "loading" && (
             <p className="text-sm text-muted">{t("verification.verifying")}</p>
           )}
 
           {status === "success" && (
             <>
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-emerald-600 dark:text-emerald-400"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
               <p className="text-sm text-body mb-4">{t("verification.success")}</p>
-              <Link to="/dashboard" className="text-sm text-primary hover:underline">
+              <Button onClick={handleGoToDashboard} full color="primary">
                 {t("verification.goToDashboard")}
-              </Link>
+              </Button>
             </>
           )}
 
           {status === "error" && (
             <>
               <p className="text-sm text-body mb-4">{t("verification.error")}</p>
-              <Link to="/login" className="text-sm text-primary hover:underline">
+              <Button onClick={() => { window.location.href = "/login"; }} full color="light">
                 {t("verification.goToLogin")}
-              </Link>
+              </Button>
             </>
           )}
         </div>

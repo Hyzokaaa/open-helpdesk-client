@@ -10,13 +10,13 @@ export default function DashboardLayout() {
 
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.isEmailVerified) return <EmailVerificationBanner />;
 
   return (
     <div className="w-full flex min-h-dvh bg-page">
       <Sidebar />
 
       <div className="w-full flex flex-col grow lg:pl-[240px]">
-        {!user.isEmailVerified && <EmailVerificationBanner />}
         <Navbar />
 
         <div className="flex flex-col items-center px-6 md:px-8 w-full">
