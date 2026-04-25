@@ -2,9 +2,12 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider } from "@modules/app/context/ThemeProvider";
+import { ConfigProvider } from "@modules/app/context/ConfigProvider";
 import useTheme from "@modules/app/hooks/useTheme";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
+import SignupPage from "@modules/user/pages/SignupPage";
+import VerifyEmailPage from "@modules/user/pages/VerifyEmailPage";
 import ForgotPasswordPage from "@modules/user/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
@@ -31,11 +34,14 @@ function ThemedToast() {
 export default function App() {
   return (
     <ThemeProvider>
+    <ConfigProvider>
     <BrowserRouter>
       <UserProvider>
         <ThemedToast />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
@@ -60,6 +66,7 @@ export default function App() {
         </Routes>
       </UserProvider>
     </BrowserRouter>
+    </ConfigProvider>
     </ThemeProvider>
   );
 }

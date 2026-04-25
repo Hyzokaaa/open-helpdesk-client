@@ -26,6 +26,31 @@ const translations = {
   "login.signIn": { en: "Sign In", es: "Iniciar Sesión" },
   "login.failed": { en: "Login failed", es: "Error al iniciar sesión" },
   "login.forgotPassword": { en: "Forgot your password?", es: "¿Olvidaste tu contraseña?" },
+  "login.noAccount": { en: "Don't have an account? Sign up", es: "¿No tienes cuenta? Regístrate" },
+
+  // Signup
+  "signup.subtitle": { en: "Create your account", es: "Crea tu cuenta" },
+  "signup.firstName": { en: "First name", es: "Nombre" },
+  "signup.lastName": { en: "Last name", es: "Apellido" },
+  "signup.email": { en: "Email", es: "Correo electrónico" },
+  "signup.password": { en: "Password", es: "Contraseña" },
+  "signup.workspaceName": { en: "Workspace name", es: "Nombre del espacio" },
+  "signup.workspacePlaceholder": { en: "My Company", es: "Mi Empresa" },
+  "signup.submit": { en: "Create Account", es: "Crear Cuenta" },
+  "signup.failed": { en: "Signup failed", es: "Error al registrarse" },
+  "signup.hasAccount": { en: "Already have an account? Sign in", es: "¿Ya tienes cuenta? Inicia sesión" },
+
+  // Email verification
+  "verification.verifying": { en: "Verifying your email...", es: "Verificando tu correo..." },
+  "verification.success": { en: "Your email has been verified!", es: "¡Tu correo ha sido verificado!" },
+  "verification.error": { en: "Invalid or expired verification link.", es: "Enlace de verificación inválido o expirado." },
+  "verification.goToDashboard": { en: "Go to dashboard", es: "Ir al panel" },
+  "verification.goToLogin": { en: "Go to login", es: "Ir al inicio de sesión" },
+  "verification.banner": { en: "Please verify your email to access all features.", es: "Verifica tu correo para acceder a todas las funciones." },
+  "verification.resend": { en: "Resend verification email", es: "Reenviar correo de verificación" },
+  "verification.sending": { en: "Sending...", es: "Enviando..." },
+  "verification.resent": { en: "Verification email sent!", es: "¡Correo de verificación enviado!" },
+  "verification.resendFailed": { en: "Failed to resend verification email", es: "Error al reenviar correo de verificación" },
 
   // Forgot password
   "forgot.subtitle": { en: "Enter your email to reset your password", es: "Ingresa tu correo para restablecer tu contraseña" },

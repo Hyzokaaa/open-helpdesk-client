@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
+import EmailVerificationBanner from "@modules/user/components/EmailVerificationBanner";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
@@ -15,6 +16,7 @@ export default function DashboardLayout() {
       <Sidebar />
 
       <div className="w-full flex flex-col grow lg:pl-[240px]">
+        {!user.isEmailVerified && <EmailVerificationBanner />}
         <Navbar />
 
         <div className="flex flex-col items-center px-6 md:px-8 w-full">
