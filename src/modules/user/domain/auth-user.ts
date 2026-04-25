@@ -5,6 +5,7 @@ export interface AuthUser {
   lastName: string;
   isActive: boolean;
   isSystemAdmin: boolean;
+  isEmailVerified: boolean;
   language: string;
   theme: string;
 }
