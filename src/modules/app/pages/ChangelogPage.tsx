@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import { changelog } from "../domain/changelog";
+import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import { getChangelog, type ChangelogVersion } from "../services/changelog.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useUser from "@modules/user/hooks/useUser";
 
@@ -8,6 +10,16 @@ export default function ChangelogPage() {
   const { t } = useTranslation();
   const { user } = useUser();
   const lang = (user?.language === "es" ? "es" : "en") as "en" | "es";
+  const [changelog, setChangelog] = useState<ChangelogVersion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getChangelog()
+      .then(setChangelog)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
 
   return (
     <div className="w-full max-w-2xl">
