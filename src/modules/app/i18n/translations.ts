@@ -314,7 +314,7 @@ const translations = {
   "billing.current": { en: "Current", es: "Actual" },
   "billing.workspaces": { en: "Workspaces", es: "Espacios" },
   "billing.agents": { en: "Agents per workspace", es: "Agentes por espacio" },
-  "billing.tickets": { en: "Tickets per month", es: "Tickets por mes" },
+  "billing.tickets": { en: "Tickets", es: "Tickets" },
   "billing.unlimited": { en: "Unlimited", es: "Ilimitado" },
   "billing.pricing": { en: "Pricing", es: "Precios" },
   "billing.pricingSubtitle": { en: "Choose the plan that fits your needs", es: "Elige el plan que se adapte a tus necesidades" },
