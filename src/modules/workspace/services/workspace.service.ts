@@ -6,6 +6,7 @@ export interface Workspace {
   slug: string;
   description: string;
   role: string;
+  ownerName?: string;
 }
 
 export interface WorkspaceDetail {

@@ -24,6 +24,8 @@ import PreferencesSection from "@modules/user/components/PreferencesSection";
 import NotificationsSection from "@modules/user/components/NotificationsSection";
 import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
+import PricingPage from "@modules/billing/pages/PricingPage";
+import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -60,6 +62,8 @@ export default function App() {
             <Route path="settings/preferences" element={<PreferencesSection />} />
             <Route path="settings/notifications" element={<NotificationsSection />} />
             <Route path="changelog" element={<ChangelogPage />} />
+            <Route path="settings/billing" element={<SubscriptionPage />} />
+            <Route path="settings/pricing" element={<PricingPage />} />
             <Route path="admin" element={<SystemAdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />

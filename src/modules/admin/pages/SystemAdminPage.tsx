@@ -11,6 +11,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import useUser from "@modules/user/hooks/useUser";
+import useConfig from "@modules/app/hooks/useConfig";
 import {
   UserItem,
   listAllUsers,
@@ -24,10 +25,16 @@ import {
   createWorkspace,
   deleteWorkspace,
 } from "@modules/workspace/services/workspace.service";
+import {
+  getPlans,
+  adminUpdateSubscription,
+  type Plan,
+} from "@modules/billing/services/billing.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function SystemAdminPage() {
   const { user } = useUser();
+  const { saasMode } = useConfig();
   const { t } = useTranslation();
 
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -50,14 +57,20 @@ export default function SystemAdminPage() {
   const [editingWsSlug, setEditingWsSlug] = useState<string | null>(null);
   const [confirmToggleAdmin, setConfirmToggleAdmin] = useState<UserItem | null>(null);
   const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
 
   if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
-  const fetchData = () => {
+  const fetchData = async () => {
     setLoading(true);
-    Promise.all([listAllUsers(), listWorkspaces()])
-      .then(([u, w]) => { setUsers(u); setWorkspaces(w); })
-      .finally(() => setLoading(false));
+    try {
+      const [u, w] = await Promise.all([listAllUsers(), listWorkspaces()]);
+      setUsers(u);
+      setWorkspaces(w);
+      if (saasMode) setPlans(await getPlans());
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -90,6 +103,15 @@ export default function SystemAdminPage() {
       setConfirmToggleActive(null);
       fetchData();
     } catch { toast.error("Failed to update user status"); }
+  };
+
+  const handleChangePlan = async (userId: string, planId: string) => {
+    try {
+      await adminUpdateSubscription(userId, { planId, status: "active" });
+      toast.success(t("billing.planUpdated"));
+    } catch {
+      toast.error(t("billing.planError"));
+    }
   };
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
@@ -203,6 +225,7 @@ export default function SystemAdminPage() {
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.role")}</th>
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.status")}</th>
+              {saasMode && <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.plan")}</th>}
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[220px]">{t("admin.col.actions")}</th>
             </tr>
           </thead>
@@ -221,6 +244,20 @@ export default function SystemAdminPage() {
                     ? <StatusBadge label={t("admin.active")} color="green" size="xs" />
                     : <StatusBadge label={t("admin.inactive")} color="gray" size="xs" />}
                 </td>
+                {saasMode && (
+                  <td className="px-4 py-3">
+                    <select
+                      className="text-xs bg-surface border border-border-input rounded px-2 py-1 text-body"
+                      defaultValue=""
+                      onChange={(e) => { if (e.target.value) handleChangePlan(u.id, e.target.value); e.target.value = ""; }}
+                    >
+                      <option value="" disabled>—</option>
+                      {plans.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                )}
                 <td className="px-4 py-3">
                   {u.id !== user.id && (
                     <div className="flex gap-2">
@@ -270,6 +307,7 @@ export default function SystemAdminPage() {
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.name")}</th>
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.slug")}</th>
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.description")}</th>
+              <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.owner")}</th>
               <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[220px]">{t("admin.col.actions")}</th>
             </tr>
           </thead>
@@ -279,6 +317,7 @@ export default function SystemAdminPage() {
                 <td className="px-4 py-3"><span className="text-sm font-body-semibold text-heading">{ws.name}</span></td>
                 <td className="px-4 py-3"><span className="text-sm text-muted">{ws.slug}</span></td>
                 <td className="px-4 py-3"><span className="text-sm text-muted">{ws.description || "-"}</span></td>
+                <td className="px-4 py-3"><span className="text-sm text-muted">{ws.ownerName || "-"}</span></td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                   <Button size="xs" color="light" onClick={() => setEditingWsSlug(ws.slug)}>
@@ -292,7 +331,7 @@ export default function SystemAdminPage() {
               </tr>
             ))}
             {workspaces.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted">{t("workspaces.empty")}</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-muted">{t("workspaces.empty")}</td></tr>
             )}
           </tbody>
         </table>

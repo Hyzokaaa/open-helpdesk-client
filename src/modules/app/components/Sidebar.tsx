@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
+import useConfig from "@modules/app/hooks/useConfig";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
@@ -15,6 +16,7 @@ export default function Sidebar() {
   const location = useLocation();
   const { workspaceSlug } = useParams();
   const { user } = useUser();
+  const { saasMode } = useConfig();
   const { t } = useTranslation();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
@@ -27,6 +29,7 @@ export default function Sidebar() {
     { label: t("settings.security"), path: "/dashboard/settings/security" },
     { label: t("settings.preferences"), path: "/dashboard/settings/preferences" },
     { label: t("notifications.preferences"), path: "/dashboard/settings/notifications" },
+    ...(saasMode ? [{ label: t("sidebar.billing"), path: "/dashboard/settings/billing" }] : []),
   ];
 
   const workspaceNav: NavItem[] = workspaceSlug

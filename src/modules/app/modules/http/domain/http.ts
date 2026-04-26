@@ -42,6 +42,16 @@ http.interceptors.response.use(
         });
       }
 
+      if (
+        error.response.status === 403 &&
+        typeof error.response.data?.message === "string" &&
+        error.response.data.message.includes("Upgrade")
+      ) {
+        toast.warning(error.response.data.message, {
+          toastId: "plan-limit",
+        });
+      }
+
       const e: HttpResponseError = {
         message:
           error.response.data?.message ||
