@@ -231,6 +231,7 @@ const translations = {
   "admin.email": { en: "Email", es: "Correo" },
   "admin.password": { en: "Password", es: "Contraseña" },
   "admin.systemAdmin": { en: "System Admin", es: "Admin del Sistema" },
+  "admin.emailVerified": { en: "Email Verified", es: "Email Verificado" },
   "admin.createUser": { en: "Create User", es: "Crear Usuario" },
   "admin.userCreated": { en: "User created", es: "Usuario creado" },
   "admin.col.name": { en: "Name", es: "Nombre" },

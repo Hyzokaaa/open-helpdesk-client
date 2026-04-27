@@ -20,6 +20,7 @@ export async function createUser(data: {
   firstName: string;
   lastName: string;
   isSystemAdmin?: boolean;
+  isEmailVerified?: boolean;
 }): Promise<{ id: string; email: string }> {
   const res = await http.post("/users", data);
   return res.data;

@@ -47,6 +47,7 @@ export default function SystemAdminPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [showCreateWs, setShowCreateWs] = useState(false);
@@ -79,8 +80,8 @@ export default function SystemAdminPage() {
     e.preventDefault();
     setCreatingUser(true);
     try {
-      await createUser({ email, password, firstName, lastName, isSystemAdmin: isAdmin });
-      setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setIsAdmin(false);
+      await createUser({ email, password, firstName, lastName, isSystemAdmin: isAdmin, isEmailVerified });
+      setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setIsAdmin(false); setIsEmailVerified(true);
       setShowCreateUser(false);
       fetchData();
       toast.success(t("admin.userCreated"));
@@ -208,10 +209,16 @@ export default function SystemAdminPage() {
                 <Input type="password" placeholder={t("admin.passwordPlaceholder")} value={password} onChange={setPassword} />
               </FormInput>
             </div>
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-              <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} className="w-4 h-4 accent-primary" />
-              <span className="text-sm text-secondary-text font-body-medium">{t("admin.systemAdmin")}</span>
-            </label>
+            <div className="flex gap-6 mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} className="w-4 h-4 accent-primary" />
+                <span className="text-sm text-secondary-text font-body-medium">{t("admin.systemAdmin")}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={isEmailVerified} onChange={(e) => setIsEmailVerified(e.target.checked)} className="w-4 h-4 accent-primary" />
+                <span className="text-sm text-secondary-text font-body-medium">{t("admin.emailVerified")}</span>
+              </label>
+            </div>
             <Button type="submit" size="sm" loading={creatingUser}>{t("admin.createUser")}</Button>
           </form>
         </Card>
