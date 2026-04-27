@@ -41,8 +41,8 @@ export default function AdminWorkspacesPage() {
   const columns = [
     { key: "name", label: t("admin.col.name"), sortable: true, sortField: "name" },
     { key: "slug", label: t("admin.col.slug"), sortable: true, sortField: "slug" },
-    { key: "description", label: t("admin.col.description") },
-    { key: "owner", label: t("admin.col.owner") },
+    { key: "description", label: t("admin.col.description"), sortable: true, sortField: "description" },
+    { key: "owner", label: t("admin.col.owner"), sortable: true, sortField: "ownerName" },
     { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
 

@@ -23,7 +23,6 @@ import {
 } from "../services/admin.service";
 import {
   getPlans,
-  getUserPlans,
   adminUpdateSubscription,
   type Plan,
 } from "@modules/billing/services/billing.service";
@@ -63,7 +62,7 @@ export default function AdminUsersPage() {
     { key: "email", label: t("admin.col.email"), sortable: true, sortField: "email" },
     { key: "role", label: t("admin.col.role"), sortable: true, sortField: "isSystemAdmin" },
     { key: "status", label: t("admin.col.status"), sortable: true, sortField: "isActive" },
-    ...(saasMode ? [{ key: "plan", label: t("admin.col.plan") }] : []),
+    ...(saasMode ? [{ key: "plan", label: t("admin.col.plan"), sortable: true, sortField: "planId" }] : []),
     { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
 
@@ -84,9 +83,13 @@ export default function AdminUsersPage() {
       const u = await listAllUsers({ sortBy, sortOrder });
       setUsers(u);
       if (saasMode) {
-        const [p, up] = await Promise.all([getPlans(), getUserPlans()]);
+        const p = await getPlans();
         setPlans(p);
-        setUserPlans(up);
+        const planMap: Record<string, string> = {};
+        for (const user of u) {
+          if (user.planId) planMap[user.id] = user.planId;
+        }
+        setUserPlans(planMap);
       }
     } finally {
       setLoading(false);

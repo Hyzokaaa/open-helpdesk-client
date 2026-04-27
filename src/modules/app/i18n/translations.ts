@@ -17,6 +17,7 @@ const translations = {
   "sidebar.tags": { en: "Tags", es: "Etiquetas" },
   "sidebar.system": { en: "System", es: "Sistema" },
   "sidebar.administration": { en: "Administration", es: "Administración" },
+  "sidebar.selectWorkspace": { en: "Select workspace", es: "Seleccionar espacio" },
   "sidebar.adminUsers": { en: "Users", es: "Usuarios" },
   "sidebar.adminWorkspaces": { en: "Workspaces", es: "Espacios" },
 
@@ -81,6 +82,16 @@ const translations = {
   "workspaces.create": { en: "Create", es: "Crear" },
   "workspaces.empty": { en: "No workspaces yet. Create one to get started.", es: "No hay espacios de trabajo. Crea uno para comenzar." },
   "workspaces.created": { en: "Workspace created", es: "Espacio creado" },
+  "workspaces.newWorkspace": { en: "New Workspace", es: "Nuevo Espacio" },
+  "workspaces.createError": { en: "Failed to create workspace", es: "Error al crear el espacio" },
+  "workspaces.emptyHome": { en: "You don't have any workspaces yet", es: "Aún no tienes espacios de trabajo" },
+  "workspaces.createFirst": { en: "Create your first workspace", es: "Crea tu primer espacio" },
+  "workspaces.noDescription": { en: "No description", es: "Sin descripción" },
+
+  // Roles
+  "enum.role.admin": { en: "Admin", es: "Admin" },
+  "enum.role.agent": { en: "Agent", es: "Agente" },
+  "enum.role.reporter": { en: "Reporter", es: "Reportero" },
   "workspaces.edit": { en: "Edit", es: "Editar" },
   "workspaces.delete": { en: "Delete", es: "Eliminar" },
   "workspaces.updated": { en: "Workspace updated", es: "Espacio actualizado" },

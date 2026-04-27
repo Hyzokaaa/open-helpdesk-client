@@ -7,6 +7,7 @@ export interface UserItem {
   lastName: string;
   isSystemAdmin: boolean;
   isActive: boolean;
+  planId?: string;
 }
 
 export async function listAllUsers(sort?: {

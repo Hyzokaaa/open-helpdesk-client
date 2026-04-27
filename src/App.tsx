@@ -17,6 +17,8 @@ import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
+import WorkspacesPage from "@modules/workspace/pages/WorkspacesPage";
+import WorkspaceCreatePage from "@modules/workspace/pages/WorkspaceCreatePage";
 import AdminUsersPage from "@modules/admin/pages/AdminUsersPage";
 import AdminWorkspacesPage from "@modules/admin/pages/AdminWorkspacesPage";
 import AccountSection from "@modules/user/components/AccountSection";
@@ -48,7 +50,8 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="settings/account" replace />} />
+            <Route index element={<WorkspacesPage />} />
+            <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
             <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
