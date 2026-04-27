@@ -9,8 +9,11 @@ export interface UserItem {
   isActive: boolean;
 }
 
-export async function listAllUsers(): Promise<UserItem[]> {
-  const res = await http.get<UserItem[]>("/users");
+export async function listAllUsers(sort?: {
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}): Promise<UserItem[]> {
+  const res = await http.get<UserItem[]>("/users", { params: sort });
   return res.data;
 }
 

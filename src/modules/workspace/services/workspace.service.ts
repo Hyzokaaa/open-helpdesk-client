@@ -37,8 +37,11 @@ export async function listUsers(): Promise<UserListItem[]> {
   return res.data;
 }
 
-export async function listWorkspaces(): Promise<Workspace[]> {
-  const res = await http.get<Workspace[]>("/workspaces");
+export async function listWorkspaces(sort?: {
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}): Promise<Workspace[]> {
+  const res = await http.get<Workspace[]>("/workspaces", { params: sort });
   return res.data;
 }
 

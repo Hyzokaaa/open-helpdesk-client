@@ -28,6 +28,8 @@ export default function AdminWorkspacesPage() {
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const [showCreateWs, setShowCreateWs] = useState(false);
   const [wsName, setWsName] = useState("");
@@ -37,12 +39,21 @@ export default function AdminWorkspacesPage() {
   const [editingWsSlug, setEditingWsSlug] = useState<string | null>(null);
 
   const columns = [
-    { key: "name", label: t("admin.col.name") },
-    { key: "slug", label: t("admin.col.slug") },
+    { key: "name", label: t("admin.col.name"), sortable: true, sortField: "name" },
+    { key: "slug", label: t("admin.col.slug"), sortable: true, sortField: "slug" },
     { key: "description", label: t("admin.col.description") },
     { key: "owner", label: t("admin.col.owner") },
     { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
+
+  const toggleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
+    } else {
+      setSortBy(field);
+      setSortOrder("ASC");
+    }
+  };
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(columns.map((c) => c.key));
 
@@ -51,14 +62,14 @@ export default function AdminWorkspacesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const w = await listWorkspaces();
+      const w = await listWorkspaces({ sortBy, sortOrder });
       setWorkspaces(w);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [sortBy, sortOrder]);
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,8 +144,19 @@ export default function AdminWorkspacesPage() {
             <SortableContext items={order} strategy={horizontalListSortingStrategy}>
             <tr className="border-b border-border-card bg-surface-hover">
               {reorder(columns).map((col) => (
-                <SortableTh key={col.key} id={col.key} width={col.width}>
+                <SortableTh
+                  key={col.key}
+                  id={col.key}
+                  width={col.width}
+                  sortable={col.sortable}
+                  onClick={() => col.sortable && col.sortField && toggleSort(col.sortField)}
+                >
                   {col.label}
+                  {col.sortField && sortBy === col.sortField && (
+                    <span className="text-primary">
+                      {sortOrder === "ASC" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </SortableTh>
               ))}
             </tr>

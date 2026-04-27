@@ -36,6 +36,8 @@ export default function AdminUsersPage() {
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -57,20 +59,29 @@ export default function AdminUsersPage() {
   const { order, handleDragEnd, reorder } = useColumnDrag(columnKeys);
 
   const columns = [
-    { key: "name", label: t("admin.col.name") },
-    { key: "email", label: t("admin.col.email") },
-    { key: "role", label: t("admin.col.role") },
-    { key: "status", label: t("admin.col.status") },
+    { key: "name", label: t("admin.col.name"), sortable: true, sortField: "firstName" },
+    { key: "email", label: t("admin.col.email"), sortable: true, sortField: "email" },
+    { key: "role", label: t("admin.col.role"), sortable: true, sortField: "isSystemAdmin" },
+    { key: "status", label: t("admin.col.status"), sortable: true, sortField: "isActive" },
     ...(saasMode ? [{ key: "plan", label: t("admin.col.plan") }] : []),
     { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
+
+  const toggleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
+    } else {
+      setSortBy(field);
+      setSortOrder("ASC");
+    }
+  };
 
   if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const u = await listAllUsers();
+      const u = await listAllUsers({ sortBy, sortOrder });
       setUsers(u);
       if (saasMode) {
         const [p, up] = await Promise.all([getPlans(), getUserPlans()]);
@@ -82,7 +93,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [sortBy, sortOrder]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,8 +209,19 @@ export default function AdminUsersPage() {
             <SortableContext items={order} strategy={horizontalListSortingStrategy}>
             <tr className="border-b border-border-card bg-surface-hover">
               {reorder(columns).map((col) => (
-                <SortableTh key={col.key} id={col.key} width={col.width}>
+                <SortableTh
+                  key={col.key}
+                  id={col.key}
+                  width={col.width}
+                  sortable={col.sortable}
+                  onClick={() => col.sortable && col.sortField && toggleSort(col.sortField)}
+                >
                   {col.label}
+                  {col.sortField && sortBy === col.sortField && (
+                    <span className="text-primary">
+                      {sortOrder === "ASC" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </SortableTh>
               ))}
             </tr>
