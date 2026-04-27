@@ -44,6 +44,7 @@ export default function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith("/dashboard/settings");
   const isWorkspacesActive = location.pathname.startsWith("/dashboard/workspaces");
+  const isAdminActive = location.pathname.startsWith("/dashboard/admin");
 
   const linkClass = (active: boolean) =>
     clsx(
@@ -147,11 +148,28 @@ export default function Sidebar() {
               {t("sidebar.system")}
             </p>
             <Link
-              to="/dashboard/admin"
-              className={linkClass(isActive("/dashboard/admin"))}
+              to="/dashboard/admin/users"
+              className={linkClass(isAdminActive)}
             >
               {t("sidebar.administration")}
             </Link>
+
+            {isAdminActive && (
+              <div className="ml-3 flex flex-col gap-y-0.5">
+                <Link
+                  to="/dashboard/admin/users"
+                  className={subLinkClass(isActive("/dashboard/admin/users"))}
+                >
+                  {t("sidebar.adminUsers")}
+                </Link>
+                <Link
+                  to="/dashboard/admin/workspaces"
+                  className={subLinkClass(isActive("/dashboard/admin/workspaces"))}
+                >
+                  {t("sidebar.adminWorkspaces")}
+                </Link>
+              </div>
+            )}
           </>
         )}
 

@@ -17,7 +17,8 @@ import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
-import SystemAdminPage from "@modules/admin/pages/SystemAdminPage";
+import AdminUsersPage from "@modules/admin/pages/AdminUsersPage";
+import AdminWorkspacesPage from "@modules/admin/pages/AdminWorkspacesPage";
 import AccountSection from "@modules/user/components/AccountSection";
 import PasswordSection from "@modules/user/components/PasswordSection";
 import PreferencesSection from "@modules/user/components/PreferencesSection";
@@ -64,7 +65,9 @@ export default function App() {
             <Route path="changelog" element={<ChangelogPage />} />
             <Route path="settings/billing" element={<SubscriptionPage />} />
             <Route path="settings/pricing" element={<PricingPage />} />
-            <Route path="admin" element={<SystemAdminPage />} />
+            <Route path="admin" element={<Navigate to="users" replace />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
+            <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

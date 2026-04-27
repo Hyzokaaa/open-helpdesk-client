@@ -17,6 +17,8 @@ const translations = {
   "sidebar.tags": { en: "Tags", es: "Etiquetas" },
   "sidebar.system": { en: "System", es: "Sistema" },
   "sidebar.administration": { en: "Administration", es: "Administración" },
+  "sidebar.adminUsers": { en: "Users", es: "Usuarios" },
+  "sidebar.adminWorkspaces": { en: "Workspaces", es: "Espacios" },
 
   // Login
   "login.title": { en: "Open Helpdesk", es: "Open Helpdesk" },
