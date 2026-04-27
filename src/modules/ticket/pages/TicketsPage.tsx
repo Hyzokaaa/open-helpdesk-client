@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import useColumnDrag from "@modules/shared/hooks/useColumnDrag";
+import SortableTh from "@modules/app/modules/ui/components/SortableTh/SortableTh";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
@@ -27,18 +31,18 @@ import TicketDetailPage from "./TicketDetailPage";
 import TicketCreatePage from "./TicketCreatePage";
 
 interface Column {
-  field: string;
+  key: string;
   labelKey: "tickets.col.name" | "tickets.col.category" | "tickets.col.priority" | "tickets.col.status" | "tickets.col.tags" | "tickets.col.created";
   sortable: boolean;
 }
 
 const COLUMNS: Column[] = [
-  { field: "name", labelKey: "tickets.col.name", sortable: true },
-  { field: "category", labelKey: "tickets.col.category", sortable: true },
-  { field: "priority", labelKey: "tickets.col.priority", sortable: true },
-  { field: "status", labelKey: "tickets.col.status", sortable: true },
-  { field: "tags", labelKey: "tickets.col.tags", sortable: false },
-  { field: "createdAt", labelKey: "tickets.col.created", sortable: true },
+  { key: "name", labelKey: "tickets.col.name", sortable: true },
+  { key: "category", labelKey: "tickets.col.category", sortable: true },
+  { key: "priority", labelKey: "tickets.col.priority", sortable: true },
+  { key: "status", labelKey: "tickets.col.status", sortable: true },
+  { key: "tags", labelKey: "tickets.col.tags", sortable: false },
+  { key: "createdAt", labelKey: "tickets.col.created", sortable: true },
 ];
 
 type Tab = "active" | "closed";
@@ -76,6 +80,8 @@ export default function TicketsPage() {
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
   const tagDropdownRef = useRef<HTMLDivElement>(null);
+  const sensors = useSensors(useSensor(PointerSensor));
+  const { order, handleDragEnd, reorder } = useColumnDrag(COLUMNS.map((c) => c.key));
 
   const fetchTickets = () => {
     if (!workspaceSlug) return;
@@ -286,31 +292,29 @@ export default function TicketsPage() {
         </p>
       ) : (
         <>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border-card">
-                  {COLUMNS.map((col) => (
-                    <th
-                      key={col.field}
-                      className={clsx(
-                        "px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase",
-                        col.sortable &&
-                          "cursor-pointer hover:text-secondary-text select-none",
-                      )}
-                      onClick={() => col.sortable && toggleSort(col.field)}
+                <SortableContext items={order} strategy={horizontalListSortingStrategy}>
+                <tr className="border-b border-border-card bg-surface-hover">
+                  {reorder(COLUMNS).map((col) => (
+                    <SortableTh
+                      key={col.key}
+                      id={col.key}
+                      sortable={col.sortable}
+                      onClick={() => col.sortable && toggleSort(col.key)}
                     >
-                      <span className="flex items-center gap-1">
-                        {t(col.labelKey)}
-                        {filters.sortBy === col.field && (
-                          <span className="text-primary">
-                            {filters.sortOrder === "ASC" ? "↑" : "↓"}
-                          </span>
-                        )}
-                      </span>
-                    </th>
+                      {t(col.labelKey)}
+                      {filters.sortBy === col.key && (
+                        <span className="text-primary">
+                          {filters.sortOrder === "ASC" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </SortableTh>
                   ))}
                 </tr>
+                </SortableContext>
               </thead>
               <tbody>
                 {result.items.map((ticket) => (
@@ -319,61 +323,64 @@ export default function TicketsPage() {
                     className="border-b border-border-row hover:bg-surface-hover/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedTicketId(ticket.id)}
                   >
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-body-semibold text-heading truncate max-w-xs">
-                        {ticket.name}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge
-                        label={tEnum("category", ticket.category)}
-                        color={CATEGORY_COLORS[ticket.category] || "gray"}
-                        size="xs"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge
-                        label={tEnum("priority", ticket.priority)}
-                        color={PRIORITY_COLORS[ticket.priority] || "gray"}
-                        size="xs"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge
-                        label={tEnum("status", ticket.status)}
-                        color={STATUS_COLORS[ticket.status] || "gray"}
-                        size="xs"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {ticket.tagIds.map((tagId) => {
-                          const tag = tagMap.get(tagId);
-                          if (!tag) return null;
-                          return (
-                            <span
-                              key={tagId}
-                              className="px-1.5 py-0.5 rounded text-exs font-body-medium text-white"
-                              style={{
-                                backgroundColor: tag.color || "#6366f1",
-                              }}
-                            >
-                              {tag.name}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-muted">
-                        {formatDate(ticket.createdAt)}
-                      </span>
-                    </td>
+                    {reorder(COLUMNS).map((col) => (
+                      <td key={col.key} className="px-4 py-3">
+                        {col.key === "name" && (
+                          <p className="text-sm font-body-semibold text-heading truncate max-w-xs">
+                            {ticket.name}
+                          </p>
+                        )}
+                        {col.key === "category" && (
+                          <StatusBadge
+                            label={tEnum("category", ticket.category)}
+                            color={CATEGORY_COLORS[ticket.category] || "gray"}
+                            size="xs"
+                          />
+                        )}
+                        {col.key === "priority" && (
+                          <StatusBadge
+                            label={tEnum("priority", ticket.priority)}
+                            color={PRIORITY_COLORS[ticket.priority] || "gray"}
+                            size="xs"
+                          />
+                        )}
+                        {col.key === "status" && (
+                          <StatusBadge
+                            label={tEnum("status", ticket.status)}
+                            color={STATUS_COLORS[ticket.status] || "gray"}
+                            size="xs"
+                          />
+                        )}
+                        {col.key === "tags" && (
+                          <div className="flex flex-wrap gap-1">
+                            {ticket.tagIds.map((tagId) => {
+                              const tag = tagMap.get(tagId);
+                              if (!tag) return null;
+                              return (
+                                <span
+                                  key={tagId}
+                                  className="px-1.5 py-0.5 rounded text-exs font-body-medium text-white"
+                                  style={{ backgroundColor: tag.color || "#6366f1" }}
+                                >
+                                  {tag.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {col.key === "createdAt" && (
+                          <span className="text-xs text-muted">
+                            {formatDate(ticket.createdAt)}
+                          </span>
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          </DndContext>
 
           {result.total > result.limit && (
             <div className="flex justify-center gap-2 mt-6">
@@ -448,6 +455,7 @@ export default function TicketsPage() {
           />
         </Sheet>
       )}
+
     </div>
   );
 }
