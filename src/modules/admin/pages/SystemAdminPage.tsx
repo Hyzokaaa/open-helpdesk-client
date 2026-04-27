@@ -27,6 +27,7 @@ import {
 } from "@modules/workspace/services/workspace.service";
 import {
   getPlans,
+  getUserPlans,
   adminUpdateSubscription,
   type Plan,
 } from "@modules/billing/services/billing.service";
@@ -59,6 +60,7 @@ export default function SystemAdminPage() {
   const [confirmToggleAdmin, setConfirmToggleAdmin] = useState<UserItem | null>(null);
   const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [userPlans, setUserPlans] = useState<Record<string, string>>({});
 
   if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
@@ -68,7 +70,11 @@ export default function SystemAdminPage() {
       const [u, w] = await Promise.all([listAllUsers(), listWorkspaces()]);
       setUsers(u);
       setWorkspaces(w);
-      if (saasMode) setPlans(await getPlans());
+      if (saasMode) {
+        const [p, up] = await Promise.all([getPlans(), getUserPlans()]);
+        setPlans(p);
+        setUserPlans(up);
+      }
     } finally {
       setLoading(false);
     }
@@ -110,6 +116,7 @@ export default function SystemAdminPage() {
     try {
       await adminUpdateSubscription(userId, { planId, status: "active" });
       toast.success(t("billing.planUpdated"));
+      setUserPlans((prev) => ({ ...prev, [userId]: planId }));
     } catch {
       toast.error(t("billing.planError"));
     }
@@ -255,8 +262,8 @@ export default function SystemAdminPage() {
                   <td className="px-4 py-3">
                     <select
                       className="text-xs bg-surface border border-border-input rounded px-2 py-1 text-body"
-                      defaultValue=""
-                      onChange={(e) => { if (e.target.value) handleChangePlan(u.id, e.target.value); e.target.value = ""; }}
+                      value={userPlans[u.id] ?? ""}
+                      onChange={(e) => { if (e.target.value) handleChangePlan(u.id, e.target.value); }}
                     >
                       <option value="" disabled>—</option>
                       {plans.map((p) => (

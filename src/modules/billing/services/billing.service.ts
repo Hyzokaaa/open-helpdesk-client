@@ -40,6 +40,15 @@ export async function subscribe(data: {
   return res.data;
 }
 
+export async function getUserPlans(): Promise<Record<string, string>> {
+  try {
+    const res = await http.get<Record<string, string>>("/billing/admin/user-plans");
+    return res.data;
+  } catch {
+    return {};
+  }
+}
+
 export async function adminUpdateSubscription(
   userId: string,
   data: { planId?: string; billingCycle?: string; status?: string },
