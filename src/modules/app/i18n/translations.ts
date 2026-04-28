@@ -258,6 +258,8 @@ const translations = {
   "admin.passwordPlaceholder": { en: "Min 6 characters", es: "Mín 6 caracteres" },
   "admin.manageUsers": { en: "Manage Users", es: "Gestionar Usuarios" },
   "admin.manageWorkspaces": { en: "Manage Workspaces", es: "Gestionar Espacios" },
+  "admin.changePlan": { en: "Change plan", es: "Cambiar plan" },
+  "admin.confirm": { en: "Confirm", es: "Confirmar" },
   "admin.deactivate": { en: "Deactivate", es: "Desactivar" },
   "admin.activate": { en: "Activate", es: "Activar" },
   "admin.inactive": { en: "Inactive", es: "Inactivo" },

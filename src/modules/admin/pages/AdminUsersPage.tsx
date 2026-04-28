@@ -6,6 +6,7 @@ import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortabl
 import useColumnDrag from "@modules/shared/hooks/useColumnDrag";
 import SortableTh from "@modules/app/modules/ui/components/SortableTh/SortableTh";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
@@ -49,11 +50,13 @@ export default function AdminUsersPage() {
 
   const [confirmToggleAdmin, setConfirmToggleAdmin] = useState<UserItem | null>(null);
   const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
+  const [changePlanUser, setChangePlanUser] = useState<UserItem | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [plans, setPlans] = useState<Plan[]>([]);
   const [userPlans, setUserPlans] = useState<Record<string, string>>({});
 
   const baseKeys = ["name", "email", "role", "status"];
-  const columnKeys = saasMode ? [...baseKeys, "plan", "actions"] : [...baseKeys, "actions"];
+  const columnKeys = saasMode ? [...baseKeys, "plan"] : baseKeys;
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(columnKeys);
 
@@ -63,7 +66,6 @@ export default function AdminUsersPage() {
     { key: "role", label: t("admin.col.role"), sortable: true, sortField: "isSystemAdmin" },
     { key: "status", label: t("admin.col.status"), sortable: true, sortField: "isActive" },
     ...(saasMode ? [{ key: "plan", label: t("admin.col.plan"), sortable: true, sortField: "planId" }] : []),
-    { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
 
   const toggleSort = (field: string) => {
@@ -164,6 +166,55 @@ export default function AdminUsersPage() {
         />
       )}
 
+      {changePlanUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setChangePlanUser(null)}
+        >
+          <div
+            className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-body-bold text-heading mb-1">
+              {t("admin.changePlan")}
+            </h3>
+            <p className="text-sm text-muted mb-4">
+              {changePlanUser.firstName} {changePlanUser.lastName}
+            </p>
+            <div className="flex flex-col gap-1.5 mb-6">
+              {plans.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlanId(p.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${
+                    selectedPlanId === p.id
+                      ? "bg-surface-active text-primary border border-primary/30"
+                      : "text-secondary-text hover:bg-surface-hover border border-transparent"
+                  }`}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" color="light" onClick={() => setChangePlanUser(null)}>
+                {t("admin.cancel")}
+              </Button>
+              <Button
+                size="sm"
+                disabled={!selectedPlanId || selectedPlanId === userPlans[changePlanUser.id]}
+                onClick={async () => {
+                  await handleChangePlan(changePlanUser.id, selectedPlanId);
+                  setChangePlanUser(null);
+                }}
+              >
+                {t("admin.confirm")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("admin.manageUsers")}</h2>
         <Button size="sm" onClick={() => setShowCreateUser(!showCreateUser)}>
@@ -215,7 +266,6 @@ export default function AdminUsersPage() {
                 <SortableTh
                   key={col.key}
                   id={col.key}
-                  width={col.width}
                   sortable={col.sortable}
                   onClick={() => col.sortable && col.sortField && toggleSort(col.sortField)}
                 >
@@ -227,6 +277,7 @@ export default function AdminUsersPage() {
                   )}
                 </SortableTh>
               ))}
+              <th className="px-2 py-3 bg-surface-hover sticky right-0 w-10" />
             </tr>
             </SortableContext>
           </thead>
@@ -252,29 +303,31 @@ export default function AdminUsersPage() {
                         : <StatusBadge label={t("admin.inactive")} color="gray" size="xs" />
                     )}
                     {col.key === "plan" && (
-                      <select
-                        className="text-xs bg-surface border border-border-input rounded px-2 py-1 text-body"
-                        value={userPlans[u.id] ?? ""}
-                        onChange={(e) => { if (e.target.value) handleChangePlan(u.id, e.target.value); }}
-                      >
-                        <option value="" disabled>—</option>
-                        {plans.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                    )}
-                    {col.key === "actions" && u.id !== user.id && (
-                      <div className="flex gap-2">
-                        <Button size="xs" color={u.isSystemAdmin ? "light" : "primary-light"} onClick={() => setConfirmToggleAdmin(u)}>
-                          {u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin")}
-                        </Button>
-                        <Button size="xs" color={u.isActive ? "danger" : "primary-light"} onClick={() => setConfirmToggleActive(u)}>
-                          {u.isActive ? t("admin.deactivate") : t("admin.activate")}
-                        </Button>
-                      </div>
+                      <span className="text-sm text-muted">
+                        {plans.find((p) => p.id === userPlans[u.id])?.name ?? "—"}
+                      </span>
                     )}
                   </td>
                 ))}
+                <td className="px-2 py-3 sticky right-0 bg-surface">
+                  {u.id !== user.id && (
+                    <ActionMenu items={[
+                      {
+                        label: u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin"),
+                        onClick: () => setConfirmToggleAdmin(u),
+                      },
+                      ...(saasMode ? [{
+                        label: t("admin.changePlan"),
+                        onClick: () => { setChangePlanUser(u); setSelectedPlanId(userPlans[u.id] ?? ""); },
+                      }] : []),
+                      {
+                        label: u.isActive ? t("admin.deactivate") : t("admin.activate"),
+                        onClick: () => setConfirmToggleActive(u),
+                        danger: u.isActive,
+                      },
+                    ]} />
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

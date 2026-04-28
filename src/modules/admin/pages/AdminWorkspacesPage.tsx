@@ -6,6 +6,7 @@ import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortabl
 import useColumnDrag from "@modules/shared/hooks/useColumnDrag";
 import SortableTh from "@modules/app/modules/ui/components/SortableTh/SortableTh";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
@@ -43,7 +44,6 @@ export default function AdminWorkspacesPage() {
     { key: "slug", label: t("admin.col.slug"), sortable: true, sortField: "slug" },
     { key: "description", label: t("admin.col.description"), sortable: true, sortField: "description" },
     { key: "owner", label: t("admin.col.owner"), sortable: true, sortField: "ownerName" },
-    { key: "actions", label: t("admin.col.actions"), width: "220px" },
   ];
 
   const toggleSort = (field: string) => {
@@ -147,7 +147,6 @@ export default function AdminWorkspacesPage() {
                 <SortableTh
                   key={col.key}
                   id={col.key}
-                  width={col.width}
                   sortable={col.sortable}
                   onClick={() => col.sortable && col.sortField && toggleSort(col.sortField)}
                 >
@@ -159,6 +158,7 @@ export default function AdminWorkspacesPage() {
                   )}
                 </SortableTh>
               ))}
+              <th className="px-2 py-3 bg-surface-hover sticky right-0 w-10" />
             </tr>
             </SortableContext>
           </thead>
@@ -179,22 +179,25 @@ export default function AdminWorkspacesPage() {
                     {col.key === "owner" && (
                       <span className="text-sm text-muted">{ws.ownerName || "-"}</span>
                     )}
-                    {col.key === "actions" && (
-                      <div className="flex gap-2">
-                        <Button size="xs" color="light" onClick={() => setEditingWsSlug(ws.slug)}>
-                          {t("workspaces.edit")}
-                        </Button>
-                        <Button size="xs" color="danger" onClick={() => setConfirmDeleteWs(ws.slug)}>
-                          {t("workspaces.delete")}
-                        </Button>
-                      </div>
-                    )}
                   </td>
                 ))}
+                <td className="px-2 py-3 sticky right-0 bg-surface">
+                  <ActionMenu items={[
+                    {
+                      label: t("workspaces.edit"),
+                      onClick: () => setEditingWsSlug(ws.slug),
+                    },
+                    {
+                      label: t("workspaces.delete"),
+                      onClick: () => setConfirmDeleteWs(ws.slug),
+                      danger: true,
+                    },
+                  ]} />
+                </td>
               </tr>
             ))}
             {workspaces.length === 0 && (
-              <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-muted">{t("workspaces.empty")}</td></tr>
+              <tr><td colSpan={columns.length + 1} className="px-4 py-8 text-center text-sm text-muted">{t("workspaces.empty")}</td></tr>
             )}
           </tbody>
         </table>
