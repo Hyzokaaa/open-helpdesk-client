@@ -84,6 +84,7 @@ const translations = {
   "workspaces.created": { en: "Workspace created", es: "Espacio creado" },
   "workspaces.newWorkspace": { en: "New Workspace", es: "Nuevo Espacio" },
   "workspaces.createError": { en: "Failed to create workspace", es: "Error al crear el espacio" },
+  "billing.yearlyDiscount": { en: "Save 2 months", es: "Ahorra 2 meses" },
   "workspaces.emptyHome": { en: "You don't have any workspaces yet", es: "Aún no tienes espacios de trabajo" },
   "workspaces.createFirst": { en: "Create your first workspace", es: "Crea tu primer espacio" },
   "workspaces.noDescription": { en: "No description", es: "Sin descripción" },

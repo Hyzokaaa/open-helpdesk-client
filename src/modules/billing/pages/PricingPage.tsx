@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { getPlans, getSubscription, type Plan, type Subscription } from "../services/billing.service";
 
@@ -9,7 +10,8 @@ export default function PricingPage() {
   const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [yearly, setYearly] = useState(false);
+  const [billing, setBilling] = useState<"left" | "right">("left");
+  const yearly = billing === "right";
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,25 +42,14 @@ export default function PricingPage() {
         <p className="text-sm text-muted mt-1">{t("billing.pricingSubtitle")}</p>
       </div>
 
-      <div className="flex items-center gap-3 mb-8">
-        <span className={clsx("text-sm font-body-medium", !yearly ? "text-heading" : "text-muted")}>
-          {t("billing.monthly")}
-        </span>
-        <button
-          onClick={() => setYearly(!yearly)}
-          className={clsx(
-            "relative w-11 h-6 rounded-full transition-colors",
-            yearly ? "bg-primary" : "bg-gray-300 dark:bg-gray-600",
-          )}
-        >
-          <span className={clsx(
-            "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
-            yearly ? "translate-x-5.5" : "translate-x-0.5",
-          )} />
-        </button>
-        <span className={clsx("text-sm font-body-medium", yearly ? "text-heading" : "text-muted")}>
-          {t("billing.yearly")}
-        </span>
+      <div className="flex items-center mb-8">
+        <Toggle
+          left={t("billing.monthly")}
+          right={t("billing.yearly")}
+          active={billing}
+          onChange={setBilling}
+          badge={yearly ? t("billing.yearlyDiscount") : undefined}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
