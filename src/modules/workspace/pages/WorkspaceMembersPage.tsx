@@ -3,10 +3,12 @@ import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import {
   WorkspaceMember,
   UserListItem,
@@ -16,6 +18,12 @@ import {
   removeMember,
   changeMemberRole,
 } from "../services/workspace.service";
+import {
+  InvitationItem,
+  createInvitation,
+  listInvitations,
+  cancelInvitation,
+} from "../services/invitation.service";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -30,11 +38,17 @@ export default function WorkspaceMembersPage() {
   const { t } = useTranslation();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [users, setUsers] = useState<UserListItem[]>([]);
+  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [role, setRole] = useState<string>("reporter");
   const [adding, setAdding] = useState(false);
+
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<string>("reporter");
+  const [inviting, setInviting] = useState(false);
 
   const fetchMembers = () => {
     if (!workspaceSlug) return;
@@ -49,9 +63,15 @@ export default function WorkspaceMembersPage() {
     listUsers().then(setUsers);
   };
 
+  const fetchInvitations = () => {
+    if (!workspaceSlug) return;
+    listInvitations(workspaceSlug).then(setInvitations);
+  };
+
   useEffect(() => {
     fetchMembers();
     fetchUsers();
+    fetchInvitations();
   }, [workspaceSlug]);
 
   const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
@@ -74,6 +94,34 @@ export default function WorkspaceMembersPage() {
       toast.error("Failed to add member");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!workspaceSlug || !inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      await createInvitation(workspaceSlug, { email: inviteEmail.trim(), role: inviteRole });
+      setInviteEmail("");
+      setShowInvite(false);
+      fetchInvitations();
+      toast.success(t("invitations.sent"));
+    } catch {
+      toast.error(t("invitations.sendError"));
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleCancelInvitation = async (id: string) => {
+    if (!workspaceSlug) return;
+    try {
+      await cancelInvitation(workspaceSlug, id);
+      fetchInvitations();
+      toast.success(t("invitations.cancelled"));
+    } catch {
+      toast.error(t("invitations.cancelError"));
     }
   };
 
@@ -105,7 +153,7 @@ export default function WorkspaceMembersPage() {
     return member.role !== "admin";
   };
 
-  const availableRoles = (member: WorkspaceMember) => {
+  const availableRoles = (_member: WorkspaceMember) => {
     if (user?.isSystemAdmin) return ROLES;
     return ROLES.filter((r) => r !== "admin");
   };
@@ -121,9 +169,14 @@ export default function WorkspaceMembersPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-heading">{t("members.title")}</h2>
         {canManageMembers && (
-          <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? t("members.cancel") : t("members.add")}
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" color="light" onClick={() => { setShowAdd(!showAdd); setShowInvite(false); }}>
+              {showAdd ? t("members.cancel") : t("members.add")}
+            </Button>
+            <Button size="sm" onClick={() => { setShowInvite(!showInvite); setShowAdd(false); }}>
+              {showInvite ? t("members.cancel") : t("invitations.invite")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -150,7 +203,35 @@ export default function WorkspaceMembersPage() {
               </FormInput>
             </div>
             <Button type="submit" size="sm" loading={adding} disabled={!selectedUserId}>
-              Add
+              {t("members.add")}
+            </Button>
+          </form>
+        </Card>
+      )}
+
+      {showInvite && (
+        <Card className="p-5 mb-6">
+          <form onSubmit={handleInvite}>
+            <div className="flex gap-4">
+              <FormInput label={t("invitations.email")} required className="flex-[3]">
+                <Input
+                  type="email"
+                  placeholder="user@example.com"
+                  value={inviteEmail}
+                  onChange={setInviteEmail}
+                />
+              </FormInput>
+              <FormInput label={t("members.role")} required className="flex-1">
+                <Select
+                  options={[...ROLES]}
+                  label={(r) => r}
+                  value={(r) => r === inviteRole}
+                  onChange={(r) => setInviteRole(r)}
+                />
+              </FormInput>
+            </div>
+            <Button type="submit" size="sm" loading={inviting} disabled={!inviteEmail.trim()}>
+              {t("invitations.send")}
             </Button>
           </form>
         </Card>
@@ -186,16 +267,42 @@ export default function WorkspaceMembersPage() {
                 )}
               </div>
               {canManageMembers && (
-              <Button
-                size="xs"
-                color="danger"
-                onClick={() => handleRemove(m.userId)}
-              >
-                {t("members.remove")}
-              </Button>
+                <ActionMenu items={[
+                  {
+                    label: t("members.remove"),
+                    onClick: () => handleRemove(m.userId),
+                    danger: true,
+                  },
+                ]} />
               )}
             </Card>
           ))}
+        </div>
+      )}
+
+      {canManageMembers && invitations.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-body-bold text-heading mb-3">{t("invitations.pending")}</h3>
+          <div className="grid gap-2">
+            {invitations.map((inv) => (
+              <Card key={inv.id} className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-x-3">
+                  <p className="text-sm font-body-medium text-body">{inv.email}</p>
+                  <StatusBadge label={inv.role} color={roleColor(inv.role)} size="xs" />
+                  <span className="text-exs text-subtle">
+                    {t("invitations.expires")} {new Date(inv.expiresAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <ActionMenu items={[
+                  {
+                    label: t("invitations.cancel"),
+                    onClick: () => handleCancelInvitation(inv.id),
+                    danger: true,
+                  },
+                ]} />
+              </Card>
+            ))}
+          </div>
         </div>
       )}
     </div>

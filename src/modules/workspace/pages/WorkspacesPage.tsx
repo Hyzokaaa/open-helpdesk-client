@@ -29,12 +29,14 @@ export default function WorkspacesPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-heading">{t("workspaces.title")}</h2>
-        <Link
-          to="/dashboard/workspaces/new"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-button text-xs font-body-semibold text-white bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
-        >
-          {t("workspaces.new")}
-        </Link>
+        {workspaces.length > 0 && (
+          <Link
+            to="/dashboard/workspaces/new"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-button text-xs font-body-semibold text-white bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
+          >
+            {t("workspaces.new")}
+          </Link>
+        )}
       </div>
 
       {workspaces.length === 0 ? (

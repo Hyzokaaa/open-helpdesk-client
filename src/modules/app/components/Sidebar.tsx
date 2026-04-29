@@ -122,23 +122,26 @@ export default function Sidebar() {
       {/* Workspace switcher */}
       <div ref={wsSwitcherRef} className="relative">
         <button
-          onClick={() => workspaces.length > 0 && setWsSwitcherOpen(!wsSwitcherOpen)}
+          onClick={() => workspaces.length > 0 ? setWsSwitcherOpen(!wsSwitcherOpen) : navigate("/dashboard/workspaces/new")}
           className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-card hover:bg-surface-hover transition-colors cursor-pointer text-left"
         >
-          <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-body-bold text-primary">
-              {activeWs ? initials(activeWs.name) : initials(APP_NAME)}
-            </span>
-          </div>
+          {activeWs && (
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-xs font-body-bold text-primary">
+                {initials(activeWs.name)}
+              </span>
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-body-bold text-heading truncate">
-              {activeWs?.name ?? APP_NAME}
-            </p>
-            {activeWs && (
-              <p className="text-exs text-subtle font-body-medium truncate">{activeWs.slug}</p>
-            )}
-            {!activeWs && (
-              <p className="text-exs text-subtle font-body-medium">{t("sidebar.selectWorkspace")}</p>
+            {activeWs ? (
+              <>
+                <p className="text-sm font-body-bold text-heading truncate">{activeWs.name}</p>
+                <p className="text-exs text-subtle font-body-medium truncate">{activeWs.slug}</p>
+              </>
+            ) : (
+              <p className="text-sm font-body-medium text-subtle">
+                {workspaces.length > 0 ? t("sidebar.selectWorkspace") : t("sidebar.createWorkspace")}
+              </p>
             )}
           </div>
           {workspaces.length > 0 && (

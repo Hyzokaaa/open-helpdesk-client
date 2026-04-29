@@ -18,6 +18,7 @@ import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import WorkspacesPage from "@modules/workspace/pages/WorkspacesPage";
+import InvitationPage from "@modules/workspace/pages/InvitationPage";
 import WorkspaceCreatePage from "@modules/workspace/pages/WorkspaceCreatePage";
 import AdminUsersPage from "@modules/admin/pages/AdminUsersPage";
 import AdminWorkspacesPage from "@modules/admin/pages/AdminWorkspacesPage";
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/invite/:token" element={<InvitationPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<WorkspacesPage />} />
             <Route path="workspaces/new" element={<WorkspaceCreatePage />} />

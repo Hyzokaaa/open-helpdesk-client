@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -15,6 +15,7 @@ import { APP_NAME } from "@modules/app/domain/constants/env";
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
 
@@ -36,7 +37,7 @@ export default function SignupPage() {
       const profile = await getProfile();
       setUser(profile);
 
-      navigate("/dashboard");
+      navigate(searchParams.get("redirect") || "/dashboard");
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || t("signup.failed"));
