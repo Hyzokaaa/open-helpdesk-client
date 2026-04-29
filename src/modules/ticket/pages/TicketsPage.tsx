@@ -10,10 +10,12 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import {
   TicketListItem,
   TicketFilters,
   listTickets,
+  deleteTicket,
 } from "../services/ticket.service";
 import {
   PRIORITIES,
@@ -59,6 +61,7 @@ export default function TicketsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
   const [showCreate, setShowCreate] = useState(false);
   const [createDirty, setCreateDirty] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
@@ -313,6 +316,7 @@ export default function TicketsPage() {
                       )}
                     </SortableTh>
                   ))}
+                  <th className="px-2 py-3 bg-surface-hover sticky right-0 w-10" />
                 </tr>
                 </SortableContext>
               </thead>
@@ -321,7 +325,7 @@ export default function TicketsPage() {
                   <tr
                     key={ticket.id}
                     className="border-b border-border-row hover:bg-surface-hover/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedTicketId(ticket.id)}
+                    onClick={() => { setSelectedTicketId(ticket.id); setTicketMode("view"); }}
                   >
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
@@ -375,6 +379,29 @@ export default function TicketsPage() {
                         )}
                       </td>
                     ))}
+                    <td className="px-2 py-3 sticky right-0 bg-surface">
+                      <ActionMenu items={[
+                        {
+                          label: t("tickets.view"),
+                          onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); },
+                        },
+                        {
+                          label: t("tickets.edit"),
+                          onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); },
+                        },
+                        {
+                          label: t("tickets.delete"),
+                          onClick: () => {
+                            if (confirm(t("ticketDetail.deleteMessage"))) {
+                              deleteTicket(workspaceSlug!, ticket.id)
+                                .then(() => { toast.success(t("tickets.deleted")); fetchTickets(); })
+                                .catch(() => toast.error(t("tickets.deleteError")));
+                            }
+                          },
+                          danger: true,
+                        },
+                      ]} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -452,6 +479,7 @@ export default function TicketsPage() {
             workspaceSlugProp={workspaceSlug}
             ticketIdProp={selectedTicketId}
             onClose={() => { setSelectedTicketId(null); fetchTickets(); }}
+            initialMode={ticketMode}
           />
         </Sheet>
       )}

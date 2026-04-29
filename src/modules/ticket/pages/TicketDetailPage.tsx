@@ -56,9 +56,10 @@ interface Props {
   workspaceSlugProp?: string;
   ticketIdProp?: string;
   onClose?: () => void;
+  initialMode?: "view" | "edit";
 }
 
-export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onClose }: Props = {}) {
+export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onClose, initialMode = "view" }: Props = {}) {
   const params = useParams();
   const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const ticketId = ticketIdProp || params.ticketId;
@@ -67,6 +68,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { t, tEnum } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
@@ -146,13 +148,17 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { can } = usePermissions(workspaceSlug);
   const isCreator = ticket?.creatorId === user?.id;
   const isClosed = ticket?.status === "closed";
+  const isEditing = mode === "edit";
 
-  const canChangeStatus = isClosed ? can(P.TICKET_CHANGE_STATUS_CLOSED) : can(P.TICKET_CHANGE_STATUS);
-  const canEditFields = isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator);
-  const canEditName = can(P.TICKET_EDIT_NAME);
-  const canAssign = can(P.TICKET_ASSIGN);
-  const canDelete = can(P.TICKET_DELETE);
-  const canEditTags = isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_TAGS) || isCreator);
+  const canChangeStatus = isEditing && (isClosed ? can(P.TICKET_CHANGE_STATUS_CLOSED) : can(P.TICKET_CHANGE_STATUS));
+  const canEditFields = isEditing && (isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator));
+  const canEditName = isEditing && can(P.TICKET_EDIT_NAME);
+  const canAssign = isEditing && can(P.TICKET_ASSIGN);
+  const canDelete = isEditing && can(P.TICKET_DELETE);
+  const canEditTags = isEditing && (isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_TAGS) || isCreator));
+  const canSwitchToEdit = mode === "view" && (
+    can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN) || isCreator
+  );
 
   const assignableMembers = members.filter(
     (m) => m.role === "admin" || m.role === "agent",
@@ -343,6 +349,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
       {/* Header */}
       <div className="mb-6">
+        {canSwitchToEdit && (
+          <div className="flex justify-end mb-2">
+            <Button size="xs" onClick={() => setMode("edit")}>{t("ticketDetail.edit")}</Button>
+          </div>
+        )}
         {editingName ? (
           <div className="flex items-center gap-2">
             <Input
@@ -536,7 +547,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {canChangeStatus && (
+          {canChangeStatus ? (
             <Card className="p-4">
               <FormInput label={t("ticketDetail.status")} className={clsx("!mb-0")}>
                 <Select
@@ -547,9 +558,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 />
               </FormInput>
             </Card>
+          ) : (
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.status")}</p>
+              <StatusBadge label={tEnum("status", ticket.status)} color={STATUS_COLORS[ticket.status] || "gray"} />
+            </Card>
           )}
 
-          {canEditFields && (
+          {canEditFields ? (
             <Card className="p-4">
               <FormInput label={t("ticketDetail.priority")} className={clsx("!mb-0")}>
                 <Select
@@ -560,9 +576,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 />
               </FormInput>
             </Card>
+          ) : (
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.priority")}</p>
+              <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} />
+            </Card>
           )}
 
-          {canEditFields && (
+          {canEditFields ? (
             <Card className="p-4">
               <FormInput label={t("ticketDetail.category")} className={clsx("!mb-0")}>
                 <Select
@@ -573,9 +594,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 />
               </FormInput>
             </Card>
+          ) : (
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.category")}</p>
+              <StatusBadge label={tEnum("category", ticket.category)} color="primary" size="xs" />
+            </Card>
           )}
 
-          {canAssign && (
+          {canAssign ? (
             <Card className="p-4">
               <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
                 <Select
@@ -587,7 +613,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 />
               </FormInput>
             </Card>
-          )}
+          ) : ticket.assigneeId ? (
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
+              <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+            </Card>
+          ) : null}
 
           <Card className="p-4">
             <FormInput label={t("ticketDetail.tags")} className="!mb-0">
@@ -611,7 +642,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   {getMemberName(ticket.creatorId)}
                 </span>
               </div>
-              {ticket.assigneeId && (
+              {ticket.assigneeId && !canAssign && (
                 <div className="flex justify-between">
                   <span className="text-muted">{t("ticketDetail.assignee")}</span>
                   <span className="text-body font-body-medium">
