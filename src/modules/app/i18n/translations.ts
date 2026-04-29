@@ -47,9 +47,9 @@ const translations = {
   "invitations.invalidMessage": { en: "This invitation link is not valid or has expired", es: "Este enlace de invitación no es válido o ha expirado" },
   "invitations.goToLogin": { en: "Go to Login", es: "Ir al Login" },
   "invitations.goToDashboard": { en: "Go to Dashboard", es: "Ir al Dashboard" },
-  "invitations.wrongAccountTitle": { en: "Wrong account", es: "Cuenta incorrecta" },
-  "invitations.wrongAccountMessage": { en: "This invitation was sent to {email}. Please log in with that account.", es: "Esta invitación fue enviada a {email}. Inicia sesión con esa cuenta." },
-  "invitations.loggedInAs": { en: "You're logged in as {email}", es: "Estás conectado como {email}" },
+  "invitations.successTitle": { en: "You're in!", es: "Ya estás dentro!" },
+  "invitations.successMessage": { en: "Your account has been created and you're now a member of {workspace}", es: "Tu cuenta ha sido creada y ahora eres miembro de {workspace}" },
+  "invitations.verifyEmailHint": { en: "Please verify your email to access all features", es: "Verifica tu correo para acceder a todas las funcionalidades" },
 
   "tickets.view": { en: "View", es: "Ver" },
   "tickets.edit": { en: "Edit", es: "Editar" },
@@ -62,6 +62,7 @@ const translations = {
   // Login
   "login.title": { en: "Open Helpdesk", es: "Open Helpdesk" },
   "login.subtitle": { en: "Sign in to your account", es: "Inicia sesión en tu cuenta" },
+  "login.inviteHint": { en: "Sign in as {email} to accept the invitation", es: "Inicia sesión como {email} para aceptar la invitación" },
   "login.email": { en: "Email", es: "Correo electrónico" },
   "login.password": { en: "Password", es: "Contraseña" },
   "login.signIn": { en: "Sign In", es: "Iniciar Sesión" },

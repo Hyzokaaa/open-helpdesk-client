@@ -22,7 +22,9 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { saasMode } = useConfig();
 
-  const [email, setEmail] = useState("");
+  const inviteEmail = searchParams.get("email") || "";
+
+  const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +58,9 @@ export default function LoginPage() {
             </h1>
             <LanguageToggle />
           </div>
-          <p className="text-sm text-muted mb-6">{t("login.subtitle")}</p>
+          <p className="text-sm text-muted mb-6">
+            {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
+          </p>
 
           <form onSubmit={handleSubmit}>
             <FormInput label={t("login.email")} required>

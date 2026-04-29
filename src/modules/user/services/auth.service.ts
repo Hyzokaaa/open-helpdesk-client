@@ -6,7 +6,7 @@ interface SignupRequest {
   password: string;
   firstName: string;
   lastName: string;
-  workspaceName: string;
+  workspaceName?: string;
 }
 
 interface SignupResponse {

@@ -19,9 +19,12 @@ export default function SignupPage() {
   const { setUser } = useUser();
   const { t } = useTranslation();
 
+  const inviteEmail = searchParams.get("email") || "";
+  const isInviteFlow = !!inviteEmail;
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,13 +34,17 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await signup({ email, password, firstName, lastName, workspaceName });
+      const res = await signup({
+        email, password, firstName, lastName,
+        ...(isInviteFlow ? {} : { workspaceName }),
+      });
       LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.accessToken);
 
       const profile = await getProfile();
       setUser(profile);
 
-      navigate(searchParams.get("redirect") || "/dashboard");
+      const redirect = searchParams.get("redirect");
+      navigate(redirect ? `${redirect}?from=signup` : "/dashboard");
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || t("signup.failed"));
@@ -77,7 +84,8 @@ export default function SignupPage() {
                 type="email"
                 placeholder="email@example.com"
                 value={email}
-                onChange={setEmail}
+                onChange={isInviteFlow ? () => {} : setEmail}
+                disabled={isInviteFlow}
               />
             </FormInput>
 
@@ -90,13 +98,15 @@ export default function SignupPage() {
               />
             </FormInput>
 
-            <FormInput label={t("signup.workspaceName")} required>
-              <Input
-                placeholder={t("signup.workspacePlaceholder")}
-                value={workspaceName}
-                onChange={setWorkspaceName}
-              />
-            </FormInput>
+            {!isInviteFlow && (
+              <FormInput label={t("signup.workspaceName")} required>
+                <Input
+                  placeholder={t("signup.workspacePlaceholder")}
+                  value={workspaceName}
+                  onChange={setWorkspaceName}
+                />
+              </FormInput>
+            )}
 
             <Button type="submit" full loading={loading} className="mt-2">
               {t("signup.submit")}
