@@ -1,6 +1,7 @@
 export const P = {
   WORKSPACE_CREATE: "workspace.create",
   WORKSPACE_MEMBERS_MANAGE: "workspace.members.manage",
+  WORKSPACE_INVITATIONS_MANAGE: "workspace.invitations.manage",
 
   TAG_CREATE: "tag.create",
   TAG_DELETE: "tag.delete",

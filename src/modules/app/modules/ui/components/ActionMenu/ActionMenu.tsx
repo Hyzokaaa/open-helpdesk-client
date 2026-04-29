@@ -55,7 +55,7 @@ export default function ActionMenu({ items }: Props) {
       {open && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-50 bg-surface border border-border-input rounded-lg shadow-lg py-1 min-w-[140px]"
+          className="fixed z-50 bg-surface border border-border-input rounded-lg shadow-lg py-1 min-w-[140px] flex flex-col"
           style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
         >
           {items.map((item) => (
@@ -67,7 +67,7 @@ export default function ActionMenu({ items }: Props) {
                 item.onClick();
               }}
               className={clsx(
-                "w-full text-left px-3 py-1.5 text-xs font-body-medium transition-colors cursor-pointer",
+                "w-full text-left px-3 py-1.5 text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
                 item.danger
                   ? "text-danger hover:bg-danger-hover"
                   : "text-secondary-text hover:bg-surface-hover",

@@ -63,6 +63,7 @@ export default function Sidebar() {
     ? [
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${currentSlug}/tickets` },
         { label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` },
+        { label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` },
         { label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` },
         ...(user?.isSystemAdmin ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
       ]

@@ -19,6 +19,7 @@ import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
 import WorkspacesPage from "@modules/workspace/pages/WorkspacesPage";
 import InvitationPage from "@modules/workspace/pages/InvitationPage";
+import WorkspaceInvitationsPage from "@modules/workspace/pages/WorkspaceInvitationsPage";
 import WorkspaceCreatePage from "@modules/workspace/pages/WorkspaceCreatePage";
 import AdminUsersPage from "@modules/admin/pages/AdminUsersPage";
 import AdminWorkspacesPage from "@modules/admin/pages/AdminWorkspacesPage";
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
             <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+            <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
             <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
