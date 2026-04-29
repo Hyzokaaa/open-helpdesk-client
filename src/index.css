@@ -42,6 +42,9 @@
   --th-border-row: #f9fafb;
   --th-border-hover: #e5e7eb;
 
+  --th-danger: #ef4444;
+  --th-danger-hover: #fef2f2;
+
   --th-input-shadow: 0px 0px 5.5px rgb(134 105 255 / 0.08);
   --th-input-focus-shadow: 0px 0px 5.5px rgb(134 105 255 / 0.08);
 }
@@ -71,6 +74,9 @@
   --th-border-row: #374151;
   --th-border-hover: #4b5563;
 
+  --th-danger: #f87171;
+  --th-danger-hover: rgb(239 68 68 / 0.1);
+
   --th-input-shadow: 0px 0px 5.5px rgb(134 105 255 / 0.05);
   --th-input-focus-shadow: 0px 0px 8px rgb(134 105 255 / 0.15);
 }
@@ -92,6 +98,9 @@
   --th-border-input: #374151;
   --th-border-row: #1f2937;
   --th-border-hover: #374151;
+
+  --th-danger: #f87171;
+  --th-danger-hover: rgb(239 68 68 / 0.1);
 
   --th-input-shadow: 0px 0px 5.5px rgb(134 105 255 / 0.05);
   --th-input-focus-shadow: 0px 0px 8px rgb(134 105 255 / 0.2);
@@ -131,6 +140,9 @@
   --color-border-card: var(--th-border-card);
   --color-border-input: var(--th-border-input);
   --color-border-row: var(--th-border-row);
+  --color-danger: var(--th-danger);
+  --color-danger-hover: var(--th-danger-hover);
+
   --color-border-hover: var(--th-border-hover);
 
   --shadow-input: var(--th-input-shadow);

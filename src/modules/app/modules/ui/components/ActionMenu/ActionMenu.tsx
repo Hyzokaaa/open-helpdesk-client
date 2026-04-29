@@ -69,7 +69,7 @@ export default function ActionMenu({ items }: Props) {
               className={clsx(
                 "w-full text-left px-3 py-1.5 text-xs font-body-medium transition-colors cursor-pointer",
                 item.danger
-                  ? "text-danger hover:bg-danger/5"
+                  ? "text-danger hover:bg-danger-hover"
                   : "text-secondary-text hover:bg-surface-hover",
               )}
             >
