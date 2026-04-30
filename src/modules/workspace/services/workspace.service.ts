@@ -7,6 +7,7 @@ export interface Workspace {
   description: string;
   role: string;
   ownerName?: string;
+  palette: string | null;
 }
 
 export interface WorkspaceDetail {
@@ -14,6 +15,7 @@ export interface WorkspaceDetail {
   name: string;
   slug: string;
   description: string;
+  palette: string | null;
 }
 
 export interface WorkspaceMember {
@@ -101,4 +103,11 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   await http.delete(`/workspaces/${slug}/members/${userId}`);
+}
+
+export async function updateWorkspacePalette(
+  slug: string,
+  palette: string | null,
+): Promise<void> {
+  await http.patch(`/workspaces/${slug}/palette`, { palette });
 }

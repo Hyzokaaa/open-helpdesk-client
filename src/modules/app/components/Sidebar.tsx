@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
@@ -6,6 +6,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_NAME } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
+import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -14,6 +15,7 @@ export default function Sidebar() {
   const { user } = useUser();
   const { saasMode } = useConfig();
   const { t } = useTranslation();
+  const { clearWorkspacePalette } = useContext(PaletteContext);
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const wsSwitcherRef = useRef<HTMLDivElement>(null);
@@ -65,7 +67,7 @@ export default function Sidebar() {
         { label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` },
         { label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` },
         { label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` },
-        ...(user?.isSystemAdmin ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
+        { label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` },
       ]
     : [];
 
@@ -115,7 +117,11 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-dvh w-[240px] bg-surface border-r border-border-card hidden lg:flex flex-col z-40">
       {/* App brand */}
-      <Link to="/dashboard" className="block px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors">
+      <Link
+        to="/dashboard"
+        onClick={() => { setLastSlug(null); clearWorkspacePalette(); }}
+        className="block px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
+      >
         <h1 className="text-base font-body-bold text-primary">{APP_NAME}</h1>
         <p className="text-exs text-subtle font-body-medium">Helpdesk</p>
       </Link>

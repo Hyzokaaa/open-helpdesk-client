@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -10,15 +10,20 @@ import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBa
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
 import {
   WorkspaceDetail,
   getWorkspace,
   updateWorkspace,
+  updateWorkspacePalette,
   deleteWorkspace,
   listMembers,
   WorkspaceMember,
 } from "../services/workspace.service";
+import { PaletteContext } from "../context/PaletteProvider";
+import PalettePicker from "../components/PalettePicker";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { P } from "../domain/permissions";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -31,6 +36,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const navigate = useNavigate();
   const { user } = useUser();
   const { t } = useTranslation();
+  const { can } = usePermissions(workspaceSlug);
+  const { setPalette } = useContext(PaletteContext);
 
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -56,8 +63,21 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   if (!workspace) return null;
 
   const isSystemAdmin = user?.isSystemAdmin ?? false;
+  const canManageSettings = can(P.WORKSPACE_SETTINGS_MANAGE);
   const hasChanges = name !== workspace.name || description !== workspace.description;
   const nameValid = name.trim().length > 0;
+
+  const handlePaletteChange = async (palette: string) => {
+    if (!workspaceSlug) return;
+    try {
+      await updateWorkspacePalette(workspaceSlug, palette === "green" ? null : palette);
+      setPalette(palette);
+      setWorkspace({ ...workspace, palette: palette === "green" ? null : palette });
+      toast.success(t("workspaceSettings.updated"));
+    } catch {
+      toast.error(t("workspaceSettings.updateError"));
+    }
+  };
 
   const handleSave = async () => {
     if (!workspaceSlug || !nameValid) return;
@@ -138,10 +158,19 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 </div>
               )}
             </Card>
-          ) : (
+          ) : !canManageSettings ? (
             <p className="text-sm text-muted text-center py-12">
               {t("workspaceSettings.noPermission")}
             </p>
+          ) : null}
+
+          {canManageSettings && (
+            <Card className="p-5">
+              <p className="text-xs font-body-medium text-subtle uppercase mb-3">
+                {t("workspaceSettings.palette")}
+              </p>
+              <PalettePicker value={workspace.palette} onChange={handlePaletteChange} />
+            </Card>
           )}
         </div>
 

@@ -161,6 +161,19 @@ const translations = {
   "workspaceSettings.deleteConfirm": { en: "Delete permanently", es: "Eliminar permanentemente" },
   "workspaceSettings.noPermission": { en: "Only system admins can manage workspace settings.", es: "Solo los administradores del sistema pueden gestionar la configuración del espacio." },
   "workspaceSettings.info": { en: "Information", es: "Información" },
+  "workspaceSettings.palette": { en: "Color Palette", es: "Paleta de Colores" },
+
+  // Custom palette
+  "customPalette.custom": { en: "Custom", es: "Personalizado" },
+  "customPalette.title": { en: "Custom Color", es: "Color Personalizado" },
+  "customPalette.description": { en: "Pick a color and preview how it looks across the interface.", es: "Elige un color y previsualiza cómo se ve en la interfaz." },
+  "customPalette.scalePreview": { en: "Color scale", es: "Escala de color" },
+  "customPalette.uiPreview": { en: "Preview", es: "Vista previa" },
+  "customPalette.previewButton": { en: "Button", es: "Botón" },
+  "customPalette.previewLink": { en: "Active link", es: "Enlace activo" },
+  "customPalette.previewActive": { en: "Active item", es: "Elemento activo" },
+  "customPalette.cancel": { en: "Cancel", es: "Cancelar" },
+  "customPalette.apply": { en: "Apply", es: "Aplicar" },
 
   // Members
   "members.title": { en: "Members", es: "Miembros" },
