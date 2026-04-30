@@ -8,6 +8,19 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Open Helpdesk</title>
+    <script>
+      (function() {
+        var src = '%VITE_UMAMI_URL%';
+        var id = '%VITE_UMAMI_WEBSITE_ID%';
+        if (src && id && !src.includes('VITE_')) {
+          var s = document.createElement('script');
+          s.defer = true;
+          s.src = src;
+          s.dataset.websiteId = id;
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
