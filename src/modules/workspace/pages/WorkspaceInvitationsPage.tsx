@@ -66,7 +66,7 @@ export default function WorkspaceInvitationsPage() {
       ) : invitations.length === 0 ? (
         <p className="text-sm text-muted text-center py-12">{t("invitations.empty")}</p>
       ) : (
-        <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
+        <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-card bg-surface-hover">

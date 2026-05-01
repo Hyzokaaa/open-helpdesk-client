@@ -5,7 +5,11 @@ import NotificationBell from "@modules/notification/components/NotificationBell"
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { updateTheme } from "@modules/user/services/auth.service";
 
-export default function Navbar() {
+interface Props {
+  onMenuToggle?: () => void;
+}
+
+export default function Navbar({ onMenuToggle }: Props) {
   const { user, setUser, signOut } = useUser();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
@@ -24,11 +28,20 @@ export default function Navbar() {
   return (
     <header className="w-full border-b border-border-card bg-surface px-6 md:px-8">
       <div className="flex items-center justify-between h-14 max-w-[1200px] mx-auto">
-        <div />
+        {/* Mobile hamburger */}
+        <button
+          onClick={onMenuToggle}
+          className="lg:hidden w-8 h-8 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <span className="w-5 h-0.5 bg-heading" />
+          <span className="w-5 h-0.5 bg-heading" />
+        </button>
+
+        <div className="hidden lg:block" />
 
         <div className="flex items-center gap-x-3">
           {user && (
-            <span className="text-sm text-secondary-text font-body-medium">
+            <span className="text-sm text-secondary-text font-body-medium hidden sm:inline">
               {user.firstName} {user.lastName}
             </span>
           )}

@@ -296,7 +296,7 @@ export default function TicketsPage() {
       ) : (
         <>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
+          <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
             <table className="w-full">
               <thead>
                 <SortableContext items={order} strategy={horizontalListSortingStrategy}>

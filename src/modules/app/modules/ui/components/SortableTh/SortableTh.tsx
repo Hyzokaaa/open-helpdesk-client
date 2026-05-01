@@ -34,7 +34,7 @@ export default function SortableTh({ id, children, className, width, sortable, o
     >
       <div className="flex items-center gap-1.5">
         <span
-          className="text-subtle hover:text-muted cursor-grab active:cursor-grabbing"
+          className="text-subtle hover:text-muted cursor-grab active:cursor-grabbing hidden lg:inline"
           {...attributes}
           {...listeners}
         >

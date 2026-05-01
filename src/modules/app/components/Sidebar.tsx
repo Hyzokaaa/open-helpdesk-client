@@ -8,7 +8,12 @@ import { APP_NAME } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceSlug } = useParams();
@@ -58,6 +63,10 @@ export default function Sidebar() {
     if (isSettingsActive) setSettingsOpen(true);
     if (isAdminActive) setAdminOpen(true);
   }, [isSettingsActive, isAdminActive]);
+
+  useEffect(() => {
+    if (mobileOpen) onClose?.();
+  }, [location.pathname]);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -114,8 +123,11 @@ export default function Sidebar() {
         : "text-subtle hover:text-secondary-text",
     );
 
-  return (
-    <aside className="fixed left-0 top-0 h-dvh w-[240px] bg-surface border-r border-border-card hidden lg:flex flex-col z-40">
+  const sidebarContent = (
+    <aside className={clsx(
+      "fixed left-0 top-0 h-dvh w-[240px] bg-surface border-r border-border-card flex flex-col z-50",
+      mobileOpen ? "flex" : "hidden lg:flex",
+    )}>
       {/* App brand */}
       <Link
         to="/dashboard"
@@ -296,4 +308,15 @@ export default function Sidebar() {
       </nav>
     </aside>
   );
+
+  if (mobileOpen) {
+    return (
+      <>
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onClose} />
+        {sidebarContent}
+      </>
+    );
+  }
+
+  return sidebarContent;
 }

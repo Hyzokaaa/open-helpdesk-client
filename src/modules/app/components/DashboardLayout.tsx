@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigate, Outlet } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
@@ -8,6 +9,7 @@ import Navbar from "./Navbar";
 
 export default function DashboardLayout() {
   const { user, loading } = useUser();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/login" replace />;
@@ -16,10 +18,10 @@ export default function DashboardLayout() {
   return (
     <PaletteProvider>
       <div className="w-full flex min-h-dvh bg-page">
-        <Sidebar />
+        <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="w-full flex flex-col grow lg:pl-[240px]">
-          <Navbar />
+          <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
           <div className="flex flex-col items-center px-6 md:px-8 w-full">
             <main
