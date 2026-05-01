@@ -183,6 +183,8 @@ const translations = {
   "members.role": { en: "Role", es: "Rol" },
   "members.selectUser": { en: "Select a user...", es: "Seleccionar usuario..." },
   "members.added": { en: "Member added", es: "Miembro agregado" },
+  "members.addError": { en: "Failed to add member", es: "Error al agregar miembro" },
+  "members.addAnother": { en: "Add another", es: "Agregar otro" },
   "members.removed": { en: "Member removed", es: "Miembro eliminado" },
   "members.changeRole": { en: "Change role", es: "Cambiar rol" },
   "members.remove": { en: "Remove", es: "Eliminar" },

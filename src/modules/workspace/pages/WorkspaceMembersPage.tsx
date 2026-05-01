@@ -2,19 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
-import Card from "@modules/app/modules/ui/components/Card/Card";
-import Select from "@modules/app/modules/ui/components/Select/Select";
-import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import InviteSheet from "../components/InviteSheet";
+import AddMemberSheet from "../components/AddMemberSheet";
 import {
   WorkspaceMember,
-  UserListItem,
   listMembers,
-  listUsers,
-  addMember,
   removeMember,
   changeMemberRole,
 } from "../services/workspace.service";
@@ -31,12 +26,8 @@ export default function WorkspaceMembersPage() {
   const { can } = usePermissions(workspaceSlug);
   const { t, tEnum } = useTranslation();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [role, setRole] = useState<string>("reporter");
-  const [adding, setAdding] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
 
   const fetchMembers = () => {
@@ -48,37 +39,11 @@ export default function WorkspaceMembersPage() {
       .finally(() => setLoading(false));
   };
 
-  const fetchUsers = () => {
-    listUsers().then(setUsers);
-  };
-
   useEffect(() => {
     fetchMembers();
-    fetchUsers();
   }, [workspaceSlug]);
 
   const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
-
-  const availableUsers = users.filter(
-    (u) => !members.some((m) => m.userId === u.id),
-  );
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!workspaceSlug || !selectedUserId) return;
-    setAdding(true);
-    try {
-      await addMember(workspaceSlug, { userId: selectedUserId, role });
-      setSelectedUserId(null);
-      setShowAdd(false);
-      fetchMembers();
-      toast.success(t("members.added"));
-    } catch {
-      toast.error("Failed to add member");
-    } finally {
-      setAdding(false);
-    }
-  };
 
   const handleRemove = async (memberUserId: string) => {
     if (!workspaceSlug) return;
@@ -137,33 +102,13 @@ export default function WorkspaceMembersPage() {
         </div>
       </div>
 
-      {showAdd && (
-        <Card className="p-5 mb-4">
-          <form onSubmit={handleAdd}>
-            <div className="flex gap-4">
-              <FormInput label={t("members.user")} required className="flex-[3]">
-                <Select
-                  options={availableUsers}
-                  label={(u) => `${u.firstName} ${u.lastName} (${u.email})`}
-                  value={(u) => u.id === selectedUserId}
-                  onChange={(u) => setSelectedUserId(u.id)}
-                  placeholder={t("members.selectUser")}
-                />
-              </FormInput>
-              <FormInput label={t("members.role")} required className="flex-1">
-                <Select
-                  options={[...ROLES]}
-                  label={(r) => r}
-                  value={(r) => r === role}
-                  onChange={(r) => setRole(r)}
-                />
-              </FormInput>
-            </div>
-            <Button type="submit" size="sm" loading={adding} disabled={!selectedUserId}>
-              {t("members.add")}
-            </Button>
-          </form>
-        </Card>
+      {showAdd && workspaceSlug && (
+        <AddMemberSheet
+          workspaceSlug={workspaceSlug}
+          existingMemberIds={members.map((m) => m.userId)}
+          onClose={() => setShowAdd(false)}
+          onAdded={fetchMembers}
+        />
       )}
 
       {loading ? (
