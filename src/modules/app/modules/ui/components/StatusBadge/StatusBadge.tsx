@@ -16,7 +16,7 @@ export default function StatusBadge({
       className={clsx(
         "flex items-center rounded w-max font-body-medium",
         {
-          "bg-primary-100 dark:bg-primary-950 text-primary": color === "primary",
+          "bg-badge-primary-bg text-badge-primary-text": color === "primary",
           "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400": color === "yellow",
           "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400": color === "green",
           "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400": color === "red",

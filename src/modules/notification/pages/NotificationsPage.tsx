@@ -84,7 +84,7 @@ export default function NotificationsPage() {
             className={clsx(
               "px-3 py-1.5 text-xs rounded-full cursor-pointer transition-colors",
               filter === f
-                ? "bg-primary text-white"
+                ? "bg-primary-600 text-on-primary"
                 : "bg-surface border border-border-card text-muted hover:text-body",
             )}
           >

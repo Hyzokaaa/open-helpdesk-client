@@ -161,7 +161,7 @@ export default function TicketsPage() {
           onClick={() => { setTab("active"); setFilters({ ...filters, status: undefined, page: 1 }); }}
           className={clsx(
             "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-            tab === "active" ? "bg-primary text-white" : "text-muted hover:bg-surface-hover",
+            tab === "active" ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
           )}
         >
           {t("tickets.active")}
@@ -170,7 +170,7 @@ export default function TicketsPage() {
           onClick={() => { setTab("closed"); setFilters({ ...filters, status: undefined, page: 1 }); }}
           className={clsx(
             "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-            tab === "closed" ? "bg-primary text-white" : "text-muted hover:bg-surface-hover",
+            tab === "closed" ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
           )}
         >
           {t("tickets.closed")}
@@ -225,7 +225,7 @@ export default function TicketsPage() {
             >
               <span>Tags</span>
               {filterTagIds.length > 0 && (
-                <span className="bg-primary text-white text-exs rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="bg-primary-600 text-on-primary text-exs rounded-full w-4 h-4 flex items-center justify-center">
                   {filterTagIds.length}
                 </span>
               )}

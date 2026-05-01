@@ -37,7 +37,7 @@ function Button(
     "whitespace-nowrap cursor-pointer",
 
     {
-      "disabled:bg-secondary bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30":
+      "bg-primary-600 hover:bg-primary-700 hover:shadow-lg hover:shadow-primary/30":
         color === "primary",
       "bg-surface hover:bg-surface-hover disabled:bg-surface-disabled border-button":
         color === "light",
@@ -47,7 +47,7 @@ function Button(
     },
 
     {
-      "text-white": color === "primary",
+      "text-on-primary": color === "primary",
       "text-secondary-text": color === "light",
     },
 

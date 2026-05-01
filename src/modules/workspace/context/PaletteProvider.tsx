@@ -2,6 +2,7 @@ import { createContext, useEffect, useRef, useState, ReactNode } from "react";
 import { useParams, useLocation } from "react-router";
 import { getWorkspace } from "../services/workspace.service";
 import { getPalette, DEFAULT_PALETTE, PALETTES, PaletteDefinition } from "../domain/palettes";
+import { needsDarkText } from "../domain/color-scale";
 
 interface PaletteContextValue {
   palette: string;
@@ -21,6 +22,10 @@ function applyPalette(def: PaletteDefinition) {
     root.style.setProperty(`--color-primary-${shade}`, color);
   });
   root.style.setProperty('--palette-accent-rgb', def.accentRgb);
+  const lightPrimary = needsDarkText(def.scale['600']);
+  root.style.setProperty('--color-primary-contrast', lightPrimary ? '#1f2937' : '#ffffff');
+  root.style.setProperty('--color-primary-badge-bg', lightPrimary ? '#f3f4f6' : def.scale['100']);
+  root.style.setProperty('--color-primary-badge-text', lightPrimary ? '#374151' : def.scale['700']);
 }
 
 function clearPalette() {
@@ -30,6 +35,9 @@ function clearPalette() {
     root.style.removeProperty(`--color-primary-${shade}`);
   });
   root.style.removeProperty('--palette-accent-rgb');
+  root.style.removeProperty('--color-primary-contrast');
+  root.style.removeProperty('--color-primary-badge-bg');
+  root.style.removeProperty('--color-primary-badge-text');
 }
 
 export function PaletteProvider({ children }: { children: ReactNode }) {

@@ -66,7 +66,7 @@ export default function PricingPage() {
             )}
           >
             {plan.popular && !isCurrent(plan.id) && (
-              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-white text-exs font-body-semibold px-2 py-0.5 rounded">
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary-600 text-on-primary text-exs font-body-semibold px-2 py-0.5 rounded">
                 {t("billing.popular")}
               </span>
             )}
