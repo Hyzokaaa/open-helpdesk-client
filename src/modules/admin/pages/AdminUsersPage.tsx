@@ -13,6 +13,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import useUser from "@modules/user/hooks/useUser";
 import useConfig from "@modules/app/hooks/useConfig";
 import {
@@ -223,7 +224,8 @@ export default function AdminUsersPage() {
       </div>
 
       {showCreateUser && (
-        <Card className="p-5 mb-4">
+        <Sheet onClose={() => setShowCreateUser(false)}>
+          <h3 className="text-lg font-body-bold text-heading mb-4">{t("admin.newUser")}</h3>
           <form onSubmit={handleCreateUser}>
             <div className="flex gap-4">
               <FormInput label={t("admin.firstName")} required className="flex-1">
@@ -253,7 +255,7 @@ export default function AdminUsersPage() {
             </div>
             <Button type="submit" size="sm" loading={creatingUser}>{t("admin.createUser")}</Button>
           </form>
-        </Card>
+        </Sheet>
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

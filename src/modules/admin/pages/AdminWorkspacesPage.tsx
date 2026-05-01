@@ -122,7 +122,8 @@ export default function AdminWorkspacesPage() {
       </div>
 
       {showCreateWs && (
-        <Card className="p-5 mb-4">
+        <Sheet onClose={() => setShowCreateWs(false)}>
+          <h3 className="text-lg font-body-bold text-heading mb-4">{t("workspaces.new")}</h3>
           <form onSubmit={handleCreateWorkspace}>
             <div className="flex gap-4">
               <FormInput label={t("workspaces.name")} required className="flex-1">
@@ -134,7 +135,7 @@ export default function AdminWorkspacesPage() {
             </div>
             <Button type="submit" size="sm" loading={creatingWs} disabled={!wsName.trim()}>{t("workspaces.create")}</Button>
           </form>
-        </Card>
+        </Sheet>
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
