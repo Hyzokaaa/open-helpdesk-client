@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import { Workspace, listWorkspaces } from "../services/workspace.service";
@@ -8,6 +9,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function WorkspacesPage() {
   const { t, tEnum } = useTranslation();
+  const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,24 +32,18 @@ export default function WorkspacesPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-heading">{t("workspaces.title")}</h2>
         {workspaces.length > 0 && (
-          <Link
-            to="/dashboard/workspaces/new"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-button text-xs font-body-semibold text-white bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
-          >
+          <Button size="sm" onClick={() => navigate("/dashboard/workspaces/new")}>
             {t("workspaces.new")}
-          </Link>
+          </Button>
         )}
       </div>
 
       {workspaces.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm text-muted mb-4">{t("workspaces.emptyHome")}</p>
-          <Link
-            to="/dashboard/workspaces/new"
-            className="inline-flex items-center px-3 py-1.5 rounded-button text-xs font-body-semibold text-white bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
-          >
+          <Button size="sm" onClick={() => navigate("/dashboard/workspaces/new")}>
             {t("workspaces.createFirst")}
-          </Link>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
