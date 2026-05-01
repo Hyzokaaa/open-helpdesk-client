@@ -6,7 +6,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { resetPassword } from "../services/auth.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { APP_NAME } from "@modules/app/domain/constants/env";
+import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-card border-card p-8">
           <h1 className="text-xl font-body-bold text-heading mb-1">
-            {APP_NAME}
+            {APP_FULL_NAME}
           </h1>
           <p className="text-sm text-muted mb-6">{t("reset.subtitle")}</p>
 

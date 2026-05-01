@@ -13,7 +13,7 @@ import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
-import { APP_NAME } from "@modules/app/domain/constants/env";
+import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div className="bg-surface rounded-card border-card p-8">
           <div className="flex items-start justify-between mb-1">
             <h1 className="text-xl font-body-bold text-heading">
-              {APP_NAME}
+              {APP_FULL_NAME}
             </h1>
             <LanguageToggle />
           </div>

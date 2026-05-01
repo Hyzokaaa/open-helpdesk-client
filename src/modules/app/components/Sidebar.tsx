@@ -4,7 +4,7 @@ import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
 import useConfig from "@modules/app/hooks/useConfig";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { APP_NAME } from "@modules/app/domain/constants/env";
+import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 
@@ -135,7 +135,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         className="block px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
       >
         <h1 className="text-base font-body-bold text-primary">{APP_NAME}</h1>
-        <p className="text-exs text-subtle font-body-medium">Helpdesk</p>
+        {APP_SUBTITLE && <p className="text-exs text-subtle font-body-medium">{APP_SUBTITLE}</p>}
       </Link>
 
       {/* Workspace switcher */}
