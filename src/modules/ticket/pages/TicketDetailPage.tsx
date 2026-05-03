@@ -51,6 +51,7 @@ import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -76,6 +77,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
+  const [activityKey, setActivityKey] = useState(0);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
@@ -88,12 +90,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     onConfirm: () => void;
   } | null>(null);
 
-  const fetchTicket = () => {
+  const fetchTicket = (refreshActivity = false) => {
     if (!workspaceSlug || !ticketId) return;
     getTicket(workspaceSlug, ticketId)
       .then((t) => {
         setTicket(t);
         setSelectedAssigneeId(t.assigneeId);
+        if (refreshActivity) setActivityKey((k) => k + 1);
       })
       .catch(() => toast.error("Ticket not found"))
       .finally(() => setLoading(false));
@@ -173,7 +176,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId || !editName.trim()) return;
     try {
       await updateTicket(workspaceSlug, ticketId, { name: editName });
-      fetchTicket();
+      fetchTicket(true);
       setEditingName(false);
       toast.success("Name updated");
     } catch {
@@ -185,7 +188,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId) return;
     try {
       await updateTicket(workspaceSlug, ticketId, { description: editDescription });
-      fetchTicket();
+      fetchTicket(true);
       setEditingDescription(false);
       toast.success("Description updated");
     } catch {
@@ -197,7 +200,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId) return;
     try {
       await updateTicket(workspaceSlug, ticketId, { priority });
-      fetchTicket();
+      fetchTicket(true);
       toast.success("Priority updated");
     } catch {
       toast.error("Failed to update priority");
@@ -208,7 +211,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId) return;
     try {
       await updateTicket(workspaceSlug, ticketId, { category });
-      fetchTicket();
+      fetchTicket(true);
       toast.success("Category updated");
     } catch {
       toast.error("Failed to update category");
@@ -219,7 +222,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId) return;
     try {
       await changeTicketStatus(workspaceSlug, ticketId, status);
-      fetchTicket();
+      fetchTicket(true);
       toast.success("Status updated");
     } catch {
       toast.error("Cannot transition to this status");
@@ -230,7 +233,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId) return;
     try {
       await updateTicket(workspaceSlug, ticketId, { tagIds });
-      fetchTicket();
+      fetchTicket(true);
     } catch {
       toast.error("Failed to update tags");
     }
@@ -261,7 +264,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     try {
       await assignTicket(workspaceSlug, ticketId, member.userId);
       setSelectedAssigneeId(member.userId);
-      fetchTicket();
+      fetchTicket(true);
       toast.success("Assignee updated");
     } catch {
       toast.error("Failed to assign");
@@ -274,6 +277,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     try {
       await createComment(workspaceSlug, ticketId, content);
       fetchComments();
+      setActivityKey((k) => k + 1);
     } catch {
       toast.error("Failed to add comment");
     } finally {
@@ -543,6 +547,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               onSubmit={handleAddComment}
             />
           </div>
+
+          {/* Activity Feed */}
+          {workspaceSlug && ticketId && (
+            <TicketActivityFeed
+              workspaceSlug={workspaceSlug}
+              ticketId={ticketId}
+              members={members}
+              refreshKey={activityKey}
+            />
+          )}
         </div>
 
         {/* Sidebar */}

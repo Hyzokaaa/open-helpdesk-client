@@ -28,4 +28,6 @@ export const P = {
 
   USER_CREATE: "user.create",
   USER_LIST: "user.list",
+
+  AUDIT_LOG_VIEW: "audit-log.view",
 } as const;

@@ -418,6 +418,55 @@ const translations = {
   "enum.category.bug": { en: "Bug", es: "Error" },
   "enum.category.issue": { en: "Issue", es: "Incidencia" },
   "enum.category.task": { en: "Task", es: "Tarea" },
+
+  // Sidebar - Audit Log
+  "sidebar.auditLog": { en: "Audit Log", es: "Registro de Auditoría" },
+
+  // Audit Log Page
+  "auditLog.title": { en: "Audit Log", es: "Registro de Auditoría" },
+  "auditLog.loadError": { en: "Failed to load audit log", es: "Error al cargar registro de auditoría" },
+  "auditLog.noPermission": { en: "You don't have permission to view the audit log", es: "No tienes permiso para ver el registro de auditoría" },
+  "auditLog.empty": { en: "No audit entries found", es: "No se encontraron registros de auditoría" },
+  "auditLog.allActions": { en: "All actions", es: "Todas las acciones" },
+  "auditLog.allEntities": { en: "All entities", es: "Todas las entidades" },
+  "auditLog.allUsers": { en: "All users", es: "Todos los usuarios" },
+  "auditLog.showing": { en: "Showing", es: "Mostrando" },
+  "auditLog.col.action": { en: "Action", es: "Acción" },
+  "auditLog.col.entity": { en: "Entity", es: "Entidad" },
+  "auditLog.col.user": { en: "User", es: "Usuario" },
+  "auditLog.col.details": { en: "Details", es: "Detalles" },
+  "auditLog.col.date": { en: "Date", es: "Fecha" },
+
+  // Audit Log Actions
+  "auditLog.action.ticket-created": { en: "Ticket Created", es: "Ticket Creado" },
+  "auditLog.action.ticket-updated": { en: "Ticket Updated", es: "Ticket Actualizado" },
+  "auditLog.action.ticket-status-changed": { en: "Status Changed", es: "Estado Cambiado" },
+  "auditLog.action.ticket-assigned": { en: "Ticket Assigned", es: "Ticket Asignado" },
+  "auditLog.action.ticket-deleted": { en: "Ticket Deleted", es: "Ticket Eliminado" },
+  "auditLog.action.comment-created": { en: "Comment Created", es: "Comentario Creado" },
+  "auditLog.action.workspace-created": { en: "Workspace Created", es: "Espacio Creado" },
+  "auditLog.action.workspace-updated": { en: "Workspace Updated", es: "Espacio Actualizado" },
+  "auditLog.action.workspace-deleted": { en: "Workspace Deleted", es: "Espacio Eliminado" },
+  "auditLog.action.member-added": { en: "Member Added", es: "Miembro Agregado" },
+  "auditLog.action.member-removed": { en: "Member Removed", es: "Miembro Eliminado" },
+  "auditLog.action.member-role-changed": { en: "Role Changed", es: "Rol Cambiado" },
+
+  // Audit Log Entity Types
+  "auditLog.entity.ticket": { en: "Ticket", es: "Ticket" },
+  "auditLog.entity.workspace": { en: "Workspace", es: "Espacio" },
+  "auditLog.entity.workspace-member": { en: "Member", es: "Miembro" },
+
+  // Audit Log Activity Feed (ticket detail)
+  "auditLog.activity": { en: "Activity", es: "Actividad" },
+  "auditLog.feed.created": { en: "created this ticket", es: "creó este ticket" },
+  "auditLog.feed.updated": { en: "updated this ticket", es: "actualizó este ticket" },
+  "auditLog.feed.statusChanged": { en: "changed status", es: "cambió el estado" },
+  "auditLog.feed.assigned": { en: "assigned to", es: "asignó a" },
+  "auditLog.feed.unassigned": { en: "removed assignee", es: "removió el asignado" },
+  "auditLog.feed.deleted": { en: "deleted this ticket", es: "eliminó este ticket" },
+  "auditLog.feed.commented": { en: "added a comment", es: "agregó un comentario" },
+  "auditLog.feed.showAll": { en: "Show all ({count})", es: "Ver todo ({count})" },
+  "auditLog.feed.showLess": { en: "Show less", es: "Ver menos" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

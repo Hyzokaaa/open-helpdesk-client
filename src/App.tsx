@@ -31,6 +31,7 @@ import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import PricingPage from "@modules/billing/pages/PricingPage";
 import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
+import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
             <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+            <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
             <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
             <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
