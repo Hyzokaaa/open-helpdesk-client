@@ -24,8 +24,9 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
       entityId: ticketId,
       sortOrder: "ASC",
       limit: 100,
-    })
+    }, { silent: true })
       .then((res) => setItems(res.items))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [workspaceSlug, ticketId, refreshKey]);
 

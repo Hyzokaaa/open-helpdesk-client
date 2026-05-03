@@ -103,8 +103,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
           `/dashboard/workspaces/${workspaceSlug}/tickets/${res.id}`,
         );
       }
-    } catch {
-      toast.error("Failed to create ticket");
+    } catch (err: any) {
+      if (!err?.handled) toast.error("Failed to create ticket");
     } finally {
       setLoading(false);
     }

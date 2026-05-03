@@ -27,6 +27,7 @@ export interface AuditLogFilters {
 export async function listAuditLog(
   workspaceSlug: string,
   filters: AuditLogFilters = {},
+  options?: { silent?: boolean },
 ): Promise<PaginatedResult<AuditLogItem>> {
   const params = new URLSearchParams();
   if (filters.userId) params.set("userId", filters.userId);
@@ -41,6 +42,7 @@ export async function listAuditLog(
 
   const res = await http.get<PaginatedResult<AuditLogItem>>(
     `/workspaces/${workspaceSlug}/audit-log?${params}`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
   );
   return res.data;
 }

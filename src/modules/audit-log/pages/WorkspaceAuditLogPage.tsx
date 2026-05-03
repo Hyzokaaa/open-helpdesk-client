@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import { toast } from "react-toastify";
+import { Link, useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -55,18 +54,25 @@ export default function WorkspaceAuditLogPage() {
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
 
   const fetchLog = () => {
     if (!workspaceSlug) return;
     setLoading(true);
-    listAuditLog(workspaceSlug, filters)
+    listAuditLog(workspaceSlug, filters, { silent: true })
       .then((res) => {
         setItems(res.items);
         setTotal(res.total);
+        setDenied(false);
       })
-      .catch(() => toast.error(t("auditLog.loadError")))
+      .catch((err) => {
+        if (err?.status === 403) {
+          const isUpgrade = err.message?.includes('Upgrade');
+          setDenied(isUpgrade ? 'upgrade' : 'permission');
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -85,8 +91,25 @@ export default function WorkspaceAuditLogPage() {
 
   const totalPages = Math.ceil(total / (filters.limit ?? 20));
 
-  if (!can(P.AUDIT_LOG_VIEW)) {
-    return <p className="text-sm text-muted text-center py-12">{t("auditLog.noPermission")}</p>;
+  if (!can(P.AUDIT_LOG_VIEW) || denied) {
+    return (
+      <div className="w-full">
+        <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.title")}</h2>
+        <div className="text-center py-12">
+          <p className="text-sm text-muted">
+            {denied === 'upgrade' ? t("auditLog.upgradeRequired") : t("auditLog.noPermission")}
+          </p>
+          {denied === 'upgrade' && (
+            <Link
+              to="/dashboard/settings/billing"
+              className="inline-block mt-3 text-sm text-primary hover:underline"
+            >
+              {t("auditLog.goToBilling")}
+            </Link>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -62,8 +62,8 @@ export default function WorkspaceMembersPage() {
       await changeMemberRole(workspaceSlug, memberUserId, newRole);
       fetchMembers();
       toast.success(t("members.roleUpdated"));
-    } catch {
-      toast.error(t("members.roleError"));
+    } catch (err: any) {
+      if (!err?.handled) toast.error(t("members.roleError"));
     }
   };
 

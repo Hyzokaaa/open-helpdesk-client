@@ -61,9 +61,11 @@ export default function AddMemberSheet({ workspaceSlug, existingMemberIds, onClo
       try {
         await addMember(workspaceSlug, { userId: row.userId!, role: row.role });
         added++;
-      } catch {
-        const user = users.find((u) => u.id === row.userId);
-        toast.error(`${t("members.addError")}: ${user?.email ?? row.userId}`);
+      } catch (err: any) {
+        if (!err?.handled) {
+          const user = users.find((u) => u.id === row.userId);
+          toast.error(`${t("members.addError")}: ${user?.email ?? row.userId}`);
+        }
       }
     }
     if (added > 0) {

@@ -23,8 +23,8 @@ export default function WorkspaceCreatePage() {
       const ws = await createWorkspace({ name: name.trim(), description: description.trim() });
       toast.success(t("workspaces.created"));
       navigate(`/dashboard/workspaces/${ws.slug}/tickets`);
-    } catch {
-      toast.error(t("workspaces.createError"));
+    } catch (err: any) {
+      if (!err?.handled) toast.error(t("workspaces.createError"));
     } finally {
       setCreating(false);
     }

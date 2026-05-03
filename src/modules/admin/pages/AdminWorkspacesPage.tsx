@@ -80,7 +80,7 @@ export default function AdminWorkspacesPage() {
       setShowCreateWs(false);
       fetchData();
       toast.success(t("workspaces.created"));
-    } catch { toast.error("Failed to create workspace"); }
+    } catch (err: any) { if (!err?.handled) toast.error("Failed to create workspace"); }
     finally { setCreatingWs(false); }
   };
 

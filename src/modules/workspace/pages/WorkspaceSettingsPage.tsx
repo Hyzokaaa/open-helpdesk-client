@@ -74,8 +74,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
       setPalette(palette);
       setWorkspace({ ...workspace, palette: palette === "green" ? null : palette });
       toast.success(t("workspaceSettings.updated"));
-    } catch {
-      toast.error(t("workspaceSettings.updateError"));
+    } catch (err: any) {
+      if (!err?.handled) toast.error(t("workspaceSettings.updateError"));
     }
   };
 

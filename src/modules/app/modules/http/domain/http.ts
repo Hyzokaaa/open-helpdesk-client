@@ -1,4 +1,5 @@
 import axios from "axios";
+import { createElement } from "react";
 import { toast } from "react-toastify";
 import { API_URL } from "@modules/app/domain/constants/env";
 import { t } from "@modules/app/i18n/translations";
@@ -10,6 +11,7 @@ import {
 export interface HttpResponseError {
   message: string;
   status: number;
+  handled?: boolean;
 }
 
 const http = axios.create({
@@ -32,24 +34,38 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (axios.isAxiosError(error) && error.response) {
-      if (
-        error.response.status === 403 &&
-        error.response.data?.message === "Email not verified"
-      ) {
-        toast.warning(t("verification.banner"), {
-          toastId: "email-not-verified",
-        });
-      }
+    const silent = error.config?.headers?.['X-Silent-Errors'] === 'true';
 
-      if (
-        error.response.status === 403 &&
-        typeof error.response.data?.message === "string" &&
-        error.response.data.message.includes("Upgrade")
-      ) {
-        toast.warning(error.response.data.message, {
-          toastId: "plan-limit",
-        });
+    if (axios.isAxiosError(error) && error.response) {
+      let handled = false;
+
+      if (!silent && error.response.status === 403) {
+        if (error.response.data?.message === "Email not verified") {
+          toast.warning(t("verification.banner"), {
+            toastId: "email-not-verified",
+          });
+          handled = true;
+        }
+
+        if (
+          typeof error.response.data?.message === "string" &&
+          error.response.data.message.includes("Upgrade")
+        ) {
+          const msg = error.response.data.message;
+          toast.warning(
+            ({ closeToast }) =>
+              createElement('div', null,
+                createElement('p', null, msg),
+                createElement('a', {
+                  href: '/dashboard/settings/billing',
+                  onClick: closeToast,
+                  style: { color: '#60a5fa', textDecoration: 'underline', fontSize: '0.85em' },
+                }, t("planLimit.viewPlans")),
+              ),
+            { toastId: "plan-limit" },
+          );
+          handled = true;
+        }
       }
 
       const e: HttpResponseError = {
@@ -58,13 +74,16 @@ http.interceptors.response.use(
           error.response.statusText ||
           "Request error",
         status: error.response.status,
+        handled,
       };
       return Promise.reject(e);
     }
 
-    toast.error(t("network.connectionLost"), {
-      toastId: "network-error",
-    });
+    if (!silent) {
+      toast.error(t("network.connectionLost"), {
+        toastId: "network-error",
+      });
+    }
 
     return Promise.reject({
       message: t("network.connectionLost"),

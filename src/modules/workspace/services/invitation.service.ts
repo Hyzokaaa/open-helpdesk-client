@@ -19,6 +19,12 @@ export interface InvitationDetail {
   accountExists: boolean;
 }
 
+export interface BatchInvitationResult {
+  email: string;
+  status: 'sent' | 'error';
+  error?: string;
+}
+
 export async function createInvitation(
   slug: string,
   data: { email: string; role: string },
@@ -26,6 +32,17 @@ export async function createInvitation(
   const res = await http.post<InvitationItem>(
     `/workspaces/${slug}/invitations`,
     data,
+  );
+  return res.data;
+}
+
+export async function createInvitationBatch(
+  slug: string,
+  invitations: { email: string; role: string }[],
+): Promise<BatchInvitationResult[]> {
+  const res = await http.post<BatchInvitationResult[]>(
+    `/workspaces/${slug}/invitations/batch`,
+    { invitations },
   );
   return res.data;
 }
