@@ -10,6 +10,7 @@ export const P = {
 
   TICKET_CREATE: "ticket.create",
   TICKET_VIEW: "ticket.view",
+  TICKET_VIEW_OWN: "ticket.view.own",
   TICKET_EDIT_NAME: "ticket.edit.name",
   TICKET_EDIT_DESCRIPTION: "ticket.edit.description",
   TICKET_EDIT_PRIORITY: "ticket.edit.priority",

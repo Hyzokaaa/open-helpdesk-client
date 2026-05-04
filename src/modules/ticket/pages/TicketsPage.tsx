@@ -11,6 +11,9 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import {
   TicketListItem,
   TicketFilters,
@@ -53,6 +56,9 @@ export default function TicketsPage() {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
+  const { user } = useUser();
+  const { can, loading: permLoading } = usePermissions(workspaceSlug);
+  const isReporter = !permLoading && !can(P.TICKET_VIEW);
 
   const [tab, setTab] = useState<Tab>("active");
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(
@@ -98,6 +104,9 @@ export default function TicketsPage() {
     if (filterTagIds.length > 0) {
       params.tagIds = filterTagIds;
     }
+    if (isReporter && user) {
+      params.creatorId = user.id;
+    }
     listTickets(workspaceSlug, params)
       .then(setResult)
       .catch(() => toast.error("Failed to load tickets"))
@@ -109,8 +118,8 @@ export default function TicketsPage() {
   }, [workspaceSlug]);
 
   useEffect(() => {
-    fetchTickets();
-  }, [workspaceSlug, filters, filterTagIds, tab]);
+    if (!permLoading) fetchTickets();
+  }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -385,11 +394,11 @@ export default function TicketsPage() {
                           label: t("tickets.view"),
                           onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); },
                         },
-                        {
+                        ...(!isReporter ? [{
                           label: t("tickets.edit"),
                           onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); },
-                        },
-                        {
+                        }] : []),
+                        ...(can(P.TICKET_DELETE) ? [{
                           label: t("tickets.delete"),
                           onClick: () => {
                             if (confirm(t("ticketDetail.deleteMessage"))) {
@@ -399,7 +408,7 @@ export default function TicketsPage() {
                             }
                           },
                           danger: true,
-                        },
+                        }] : []),
                       ]} />
                     </td>
                   </tr>

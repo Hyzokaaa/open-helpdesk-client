@@ -7,6 +7,8 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -37,6 +39,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
 
   const currentSlug = workspaceSlug ?? lastSlug;
   const activeWs = workspaces.find((ws) => ws.slug === currentSlug);
+  const { can } = usePermissions(currentSlug ?? undefined);
 
   useEffect(() => {
     if (user) listWorkspaces().then(setWorkspaces);
@@ -73,12 +76,12 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const workspaceNav = currentSlug
     ? [
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${currentSlug}/tickets` },
-        { label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` },
-        { label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` },
-        { label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` },
-        { label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` },
-        { label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` },
-        { label: t("sidebar.auditLog"), path: `/dashboard/workspaces/${currentSlug}/audit-log` },
+        ...(can(P.WORKSPACE_MEMBERS_MANAGE) ? [{ label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
+        ...(can(P.WORKSPACE_INVITATIONS_MANAGE) ? [{ label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` }] : []),
+        ...(can(P.TAG_CREATE) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
+        ...(can(P.CANNED_RESPONSE_CREATE) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
+        ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
+        ...(can(P.AUDIT_LOG_VIEW) ? [{ label: t("sidebar.auditLog"), path: `/dashboard/workspaces/${currentSlug}/audit-log` }] : []),
       ]
     : [];
 
