@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import InviteSheet from "../components/InviteSheet";
 import AddMemberSheet from "../components/AddMemberSheet";
 import {
@@ -29,6 +30,7 @@ export default function WorkspaceMembersPage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
 
   const fetchMembers = () => {
     if (!workspaceSlug) return;
@@ -45,10 +47,11 @@ export default function WorkspaceMembersPage() {
 
   const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
 
-  const handleRemove = async (memberUserId: string) => {
-    if (!workspaceSlug) return;
+  const handleRemove = async () => {
+    if (!workspaceSlug || !removeMemberId) return;
     try {
-      await removeMember(workspaceSlug, memberUserId);
+      await removeMember(workspaceSlug, removeMemberId);
+      setRemoveMemberId(null);
       fetchMembers();
       toast.success(t("members.removed"));
     } catch {
@@ -149,7 +152,7 @@ export default function WorkspaceMembersPage() {
                           })) : []),
                         {
                           label: t("members.remove"),
-                          onClick: () => handleRemove(m.userId),
+                          onClick: () => setRemoveMemberId(m.userId),
                           danger: true,
                         },
                       ]} />
@@ -160,6 +163,16 @@ export default function WorkspaceMembersPage() {
             </tbody>
           </table>
         </div>
+      )}
+      {removeMemberId && (
+        <ConfirmModal
+          title={t("members.remove")}
+          message={t("ticketDetail.deleteMessage")}
+          confirmLabel={t("members.remove")}
+          danger
+          onConfirm={handleRemove}
+          onCancel={() => setRemoveMemberId(null)}
+        />
       )}
       {showInvite && workspaceSlug && (
         <InviteSheet

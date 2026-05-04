@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import InviteSheet from "../components/InviteSheet";
 import {
   InvitationItem,
@@ -19,6 +20,7 @@ export default function WorkspaceInvitationsPage() {
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
+  const [cancelId, setCancelId] = useState<string | null>(null);
 
   const fetchInvitations = () => {
     if (!workspaceSlug) return;
@@ -32,10 +34,11 @@ export default function WorkspaceInvitationsPage() {
     fetchInvitations();
   }, [workspaceSlug]);
 
-  const handleCancel = async (id: string) => {
-    if (!workspaceSlug) return;
+  const handleCancel = async () => {
+    if (!workspaceSlug || !cancelId) return;
     try {
-      await cancelInvitation(workspaceSlug, id);
+      await cancelInvitation(workspaceSlug, cancelId);
+      setCancelId(null);
       fetchInvitations();
       toast.success(t("invitations.cancelled"));
     } catch {
@@ -96,7 +99,7 @@ export default function WorkspaceInvitationsPage() {
                     <ActionMenu items={[
                       {
                         label: t("invitations.cancel"),
-                        onClick: () => handleCancel(inv.id),
+                        onClick: () => setCancelId(inv.id),
                         danger: true,
                       },
                     ]} />
@@ -108,6 +111,16 @@ export default function WorkspaceInvitationsPage() {
         </div>
       )}
 
+      {cancelId && (
+        <ConfirmModal
+          title={t("invitations.cancel")}
+          message={t("ticketDetail.deleteMessage")}
+          confirmLabel={t("invitations.cancel")}
+          danger
+          onConfirm={handleCancel}
+          onCancel={() => setCancelId(null)}
+        />
+      )}
       {showInvite && workspaceSlug && (
         <InviteSheet
           workspaceSlug={workspaceSlug}

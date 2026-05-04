@@ -69,6 +69,7 @@ export default function TicketsPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
   const [showCreate, setShowCreate] = useState(false);
+  const [deleteTicketId, setDeleteTicketId] = useState<string | null>(null);
   const [createDirty, setCreateDirty] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
 
@@ -400,13 +401,7 @@ export default function TicketsPage() {
                         }] : []),
                         ...(can(P.TICKET_DELETE) ? [{
                           label: t("tickets.delete"),
-                          onClick: () => {
-                            if (confirm(t("ticketDetail.deleteMessage"))) {
-                              deleteTicket(workspaceSlug!, ticket.id)
-                                .then(() => { toast.success(t("tickets.deleted")); fetchTickets(); })
-                                .catch(() => toast.error(t("tickets.deleteError")));
-                            }
-                          },
+                          onClick: () => setDeleteTicketId(ticket.id),
                           danger: true,
                         }] : []),
                       ]} />
@@ -449,6 +444,22 @@ export default function TicketsPage() {
             </div>
           )}
         </>
+      )}
+
+      {deleteTicketId && (
+        <ConfirmModal
+          title={t("tickets.delete")}
+          message={t("ticketDetail.deleteMessage")}
+          confirmLabel={t("common.delete")}
+          danger
+          onConfirm={() => {
+            deleteTicket(workspaceSlug!, deleteTicketId)
+              .then(() => { toast.success(t("tickets.deleted")); fetchTickets(); })
+              .catch(() => toast.error(t("tickets.deleteError")));
+            setDeleteTicketId(null);
+          }}
+          onCancel={() => setDeleteTicketId(null)}
+        />
       )}
 
       {showDiscard && (
