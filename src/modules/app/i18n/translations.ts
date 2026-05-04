@@ -223,6 +223,23 @@ const translations = {
   "cannedResponses.edit": { en: "Edit", es: "Editar" },
   "cannedResponses.confirmDelete": { en: "Delete this response?", es: "��Eliminar esta respuesta?" },
 
+  // Custom Fields
+  "sidebar.customFields": { en: "Custom Fields", es: "Campos Personalizados" },
+  "customFields.title": { en: "Custom Fields", es: "Campos Personalizados" },
+  "customFields.new": { en: "New Field", es: "Nuevo Campo" },
+  "customFields.cancel": { en: "Cancel", es: "Cancelar" },
+  "customFields.nameLabel": { en: "Name", es: "Nombre" },
+  "customFields.typeLabel": { en: "Type", es: "Tipo" },
+  "customFields.optionsLabel": { en: "Options (comma-separated)", es: "Opciones (separadas por coma)" },
+  "customFields.required": { en: "Required", es: "Obligatorio" },
+  "customFields.create": { en: "Create", es: "Crear" },
+  "customFields.save": { en: "Save", es: "Guardar" },
+  "customFields.edit": { en: "Edit", es: "Editar" },
+  "customFields.created": { en: "Field created", es: "Campo creado" },
+  "customFields.updated": { en: "Field updated", es: "Campo actualizado" },
+  "customFields.deleted": { en: "Field deleted", es: "Campo eliminado" },
+  "customFields.empty": { en: "No custom fields yet.", es: "Sin campos personalizados." },
+
   // Tickets list
   "tickets.title": { en: "Tickets", es: "Tickets" },
   "tickets.new": { en: "New Ticket", es: "Nuevo Ticket" },

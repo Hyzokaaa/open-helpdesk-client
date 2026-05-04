@@ -12,6 +12,9 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
 import { CannedResponse, listCannedResponses } from "@modules/canned-response/services/canned-response.service";
+import { CustomFieldDefinition } from "@modules/custom-field/domain/custom-field-types";
+import { listCustomFields } from "@modules/custom-field/services/custom-field.service";
+import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useUser from "@modules/user/hooks/useUser";
@@ -77,6 +80,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [activityKey, setActivityKey] = useState(0);
@@ -128,6 +132,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
     if (workspaceSlug) listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
+    if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
   }, [workspaceSlug, ticketId]);
 
   const handleDroppedFiles = useCallback(
@@ -239,6 +244,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       fetchTicket(true);
     } catch {
       toast.error("Failed to update tags");
+    }
+  };
+
+  const handleCustomFieldsChange = async (values: Record<string, unknown>) => {
+    if (!workspaceSlug || !ticketId) return;
+    try {
+      await updateTicket(workspaceSlug, ticketId, { customFields: values });
+      fetchTicket(true);
+    } catch {
+      // handled by interceptor
     }
   };
 
@@ -648,6 +663,33 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               />
             </FormInput>
           </Card>
+
+          {customFieldDefs.length > 0 && ticket && canEditFields && (
+            <Card className="p-4">
+              <CustomFieldsForm
+                definitions={customFieldDefs}
+                values={ticket.customFields ?? {}}
+                onChange={handleCustomFieldsChange}
+              />
+            </Card>
+          )}
+
+          {customFieldDefs.length > 0 && ticket && !canEditFields && (
+            <Card className="p-4">
+              {customFieldDefs.map((def) => {
+                const val = (ticket.customFields ?? {})[def.id];
+                if (val === undefined || val === null || val === "") return null;
+                return (
+                  <div key={def.id} className="flex justify-between text-xs mb-1.5 last:mb-0">
+                    <span className="text-muted">{def.name}</span>
+                    <span className="text-body font-body-medium text-right max-w-[60%]">
+                      {Array.isArray(val) ? val.join(", ") : typeof val === "boolean" ? (val ? "Yes" : "No") : String(val)}
+                    </span>
+                  </div>
+                );
+              })}
+            </Card>
+          )}
 
           <Card className="p-4">
             <p className="text-xs text-subtle font-body-medium mb-2">

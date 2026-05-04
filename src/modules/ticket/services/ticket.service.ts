@@ -11,6 +11,7 @@ export interface TicketListItem {
   assigneeId: string | null;
   createdAt: string | null;
   tagIds: string[];
+  customFields: Record<string, unknown>;
 }
 
 export interface TicketDetail {
@@ -25,6 +26,7 @@ export interface TicketDetail {
   assigneeId: string | null;
   resolvedAt: string | null;
   tagIds: string[];
+  customFields: Record<string, unknown>;
 }
 
 export interface TicketFilters {
@@ -81,6 +83,7 @@ export async function createTicket(
     priority: string;
     category: string;
     tagIds: string[];
+    customFields?: Record<string, unknown>;
   },
 ): Promise<{ id: string }> {
   const res = await http.post(`/workspaces/${workspaceId}/tickets`, data);
@@ -96,6 +99,7 @@ export async function updateTicket(
     priority: string;
     category: string;
     tagIds: string[];
+    customFields: Record<string, unknown>;
   }>,
 ): Promise<void> {
   await http.patch(`/workspaces/${workspaceId}/tickets/${ticketId}`, data);

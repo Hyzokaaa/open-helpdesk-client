@@ -16,6 +16,9 @@ import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { CustomFieldDefinition } from "@modules/custom-field/domain/custom-field-types";
+import { listCustomFields } from "@modules/custom-field/services/custom-field.service";
+import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -38,6 +41,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
@@ -53,7 +58,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   };
 
   useEffect(() => {
-    if (workspaceSlug) listTags(workspaceSlug).then(setTags);
+    if (workspaceSlug) {
+      listTags(workspaceSlug).then(setTags);
+      listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
+    }
   }, [workspaceSlug]);
 
   const handleDroppedFiles = useCallback((newFiles: File[]) => {
@@ -89,6 +97,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         priority,
         category,
         tagIds,
+        customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
       });
 
       for (const file of files) {
@@ -170,6 +179,12 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
           <FormInput label={t("ticketCreate.tags")}>
             <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
           </FormInput>
+
+          <CustomFieldsForm
+            definitions={customFieldDefs}
+            values={customFields}
+            onChange={setCustomFields}
+          />
 
           <FormInput label={t("ticketCreate.attachments")}>
             <div>

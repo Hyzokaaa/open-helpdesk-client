@@ -35,5 +35,8 @@ export const P = {
   CANNED_RESPONSE_DELETE: "canned-response.delete",
   CANNED_RESPONSE_VIEW: "canned-response.view",
 
+  CUSTOM_FIELD_MANAGE: "custom-field.manage",
+  CUSTOM_FIELD_VIEW: "custom-field.view",
+
   AUDIT_LOG_VIEW: "audit-log.view",
 } as const;

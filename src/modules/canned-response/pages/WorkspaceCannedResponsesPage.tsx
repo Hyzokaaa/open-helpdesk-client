@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
-import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -23,14 +25,25 @@ export default function WorkspaceCannedResponsesPage() {
   const { t } = useTranslation();
   const [responses, setResponses] = useState<CannedResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [originalTitle, setOriginalTitle] = useState("");
+  const [originalContent, setOriginalContent] = useState("");
+
+  const isDirty = title !== originalTitle || content !== originalContent;
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      setShowSheet(false);
+    }
+  };
 
   const fetchResponses = () => {
     if (!workspaceSlug) return;
@@ -44,53 +57,49 @@ export default function WorkspaceCannedResponsesPage() {
     fetchResponses();
   }, [workspaceSlug]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreate = () => {
+    setEditingId(null);
+    setTitle("");
+    setContent("");
+    setOriginalTitle("");
+    setOriginalContent("");
+    setShowSheet(true);
+  };
+
+  const openEdit = (r: CannedResponse) => {
+    setEditingId(r.id);
+    setTitle(r.title);
+    setContent(r.content);
+    setOriginalTitle(r.title);
+    setOriginalContent(r.content);
+    setShowSheet(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workspaceSlug) return;
-    setCreating(true);
-    try {
-      await createCannedResponse(workspaceSlug, { title, content });
-      setTitle("");
-      setContent("");
-      setShowCreate(false);
-      fetchResponses();
-      toast.success(t("cannedResponses.created"));
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const startEdit = (r: CannedResponse) => {
-    setEditingId(r.id);
-    setEditTitle(r.title);
-    setEditContent(r.content);
-  };
-
-  const handleUpdate = async () => {
-    if (!workspaceSlug || !editingId) return;
     setSaving(true);
     try {
-      await updateCannedResponse(workspaceSlug, editingId, {
-        title: editTitle,
-        content: editContent,
-      });
-      setEditingId(null);
+      if (editingId) {
+        await updateCannedResponse(workspaceSlug, editingId, { title, content });
+        toast.success(t("cannedResponses.updated"));
+      } else {
+        await createCannedResponse(workspaceSlug, { title, content });
+        toast.success(t("cannedResponses.created"));
+      }
+      setShowSheet(false);
       fetchResponses();
-      toast.success(t("cannedResponses.updated"));
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!workspaceSlug) return;
-    try {
-      await deleteCannedResponse(workspaceSlug, id);
-      fetchResponses();
-      toast.success(t("cannedResponses.deleted"));
-    } catch {
-      // handled by interceptor
-    }
+  const handleDelete = async () => {
+    if (!workspaceSlug || !deleteId) return;
+    await deleteCannedResponse(workspaceSlug, deleteId);
+    setDeleteId(null);
+    fetchResponses();
+    toast.success(t("cannedResponses.deleted"));
   };
 
   const textareaClass =
@@ -98,42 +107,16 @@ export default function WorkspaceCannedResponsesPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">
           {t("cannedResponses.title")}
         </h2>
         {can(P.CANNED_RESPONSE_CREATE) && (
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? t("cannedResponses.cancel") : t("cannedResponses.new")}
+          <Button size="sm" onClick={openCreate}>
+            {t("cannedResponses.new")}
           </Button>
         )}
       </div>
-
-      {showCreate && (
-        <Card className="p-5 mb-6">
-          <form onSubmit={handleCreate}>
-            <FormInput label={t("cannedResponses.titleLabel")} required>
-              <Input
-                placeholder="e.g. Greeting"
-                value={title}
-                onChange={setTitle}
-              />
-            </FormInput>
-            <FormInput label={t("cannedResponses.content")} required>
-              <textarea
-                className={textareaClass}
-                rows={4}
-                placeholder="e.g. Hello! How can I help you today?"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
-            </FormInput>
-            <Button type="submit" size="sm" loading={creating}>
-              {t("cannedResponses.create")}
-            </Button>
-          </form>
-        </Card>
-      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -144,68 +127,106 @@ export default function WorkspaceCannedResponsesPage() {
           {t("cannedResponses.empty")}
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {responses.map((r) => (
-            <Card key={r.id} className="p-4">
-              {editingId === r.id ? (
-                <div className="flex flex-col gap-3">
-                  <FormInput label={t("cannedResponses.titleLabel")} required>
-                    <Input value={editTitle} onChange={setEditTitle} />
-                  </FormInput>
-                  <FormInput label={t("cannedResponses.content")} required>
-                    <textarea
-                      className={textareaClass}
-                      rows={4}
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                  </FormInput>
-                  <div className="flex gap-2">
-                    <Button size="sm" loading={saving} onClick={handleUpdate}>
-                      {t("cannedResponses.save")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      color="light"
-                      onClick={() => setEditingId(null)}
-                    >
-                      {t("cannedResponses.cancel")}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-body-semibold text-heading">
+        <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-card bg-surface-hover">
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
+                  {t("cannedResponses.titleLabel")}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">
+                  {t("cannedResponses.content")}
+                </th>
+                <th className="px-2 py-3 w-10" />
+              </tr>
+            </thead>
+            <tbody>
+              {responses.map((r) => (
+                <tr key={r.id} className="border-b border-border-row">
+                  <td className="px-4 py-3">
+                    <span className="text-sm font-body-semibold text-heading">
                       {r.title}
-                    </h3>
-                    <p className="text-sm text-subtle mt-1 whitespace-pre-wrap line-clamp-3">
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-subtle truncate block max-w-md">
                       {r.content}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    {can(P.CANNED_RESPONSE_EDIT) && (
-                      <button
-                        className="text-xs text-subtle hover:text-primary cursor-pointer"
-                        onClick={() => startEdit(r)}
-                      >
-                        {t("cannedResponses.edit")}
-                      </button>
-                    )}
-                    {can(P.CANNED_RESPONSE_DELETE) && (
-                      <button
-                        className="text-xs text-subtle hover:text-red-500 cursor-pointer"
-                        onClick={() => handleDelete(r.id)}
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </Card>
-          ))}
+                    </span>
+                  </td>
+                  <td className="px-2 py-3">
+                    <ActionMenu
+                      items={[
+                        ...(can(P.CANNED_RESPONSE_EDIT)
+                          ? [{ label: t("cannedResponses.edit"), onClick: () => openEdit(r) }]
+                          : []),
+                        ...(can(P.CANNED_RESPONSE_DELETE)
+                          ? [{ label: t("common.delete"), onClick: () => setDeleteId(r.id), danger: true }]
+                          : []),
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      )}
+
+      {deleteId && (
+        <ConfirmModal
+          title={t("cannedResponses.confirmDelete")}
+          message={t("ticketDetail.deleteMessage")}
+          confirmLabel={t("common.delete")}
+          danger
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowSheet(false); }}
+          onCancel={() => setShowDiscard(false)}
+        />
+      )}
+
+      {showSheet && (
+        <Sheet onClose={handleClose}>
+          <h2 className="text-lg font-body-bold text-heading mb-6">
+            {editingId ? t("cannedResponses.edit") : t("cannedResponses.new")}
+          </h2>
+          <form onSubmit={handleSubmit}>
+            <FormInput label={t("cannedResponses.titleLabel")} required>
+              <Input
+                placeholder="e.g. Greeting"
+                value={title}
+                onChange={setTitle}
+                autoFocus
+              />
+            </FormInput>
+            <FormInput label={t("cannedResponses.content")} required>
+              <textarea
+                className={textareaClass}
+                rows={6}
+                placeholder="e.g. Hello! How can I help you today?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </FormInput>
+            <div className="flex gap-3">
+              <Button type="submit" size="sm" loading={saving}>
+                {editingId ? t("cannedResponses.save") : t("cannedResponses.create")}
+              </Button>
+              <Button size="sm" color="light" onClick={handleClose}>
+                {t("cannedResponses.cancel")}
+              </Button>
+            </div>
+          </form>
+        </Sheet>
       )}
     </div>
   );
