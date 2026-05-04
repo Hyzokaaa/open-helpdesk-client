@@ -11,6 +11,7 @@ import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
+import { CannedResponse, listCannedResponses } from "@modules/canned-response/services/canned-response.service";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useUser from "@modules/user/hooks/useUser";
@@ -75,6 +76,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
+  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [activityKey, setActivityKey] = useState(0);
@@ -125,6 +127,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchAttachments();
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
+    if (workspaceSlug) listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
   }, [workspaceSlug, ticketId]);
 
   const handleDroppedFiles = useCallback(
@@ -545,6 +548,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               members={members}
               loading={sendingComment}
               onSubmit={handleAddComment}
+              cannedResponses={cannedResponses}
             />
           </div>
 

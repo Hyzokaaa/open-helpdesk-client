@@ -29,5 +29,10 @@ export const P = {
   USER_CREATE: "user.create",
   USER_LIST: "user.list",
 
+  CANNED_RESPONSE_CREATE: "canned-response.create",
+  CANNED_RESPONSE_EDIT: "canned-response.edit",
+  CANNED_RESPONSE_DELETE: "canned-response.delete",
+  CANNED_RESPONSE_VIEW: "canned-response.view",
+
   AUDIT_LOG_VIEW: "audit-log.view",
 } as const;

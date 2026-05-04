@@ -3,24 +3,34 @@ import clsx from "clsx";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import CannedResponseInserter from "@modules/canned-response/components/CannedResponseInserter";
+import { CannedResponse } from "@modules/canned-response/services/canned-response.service";
 
 interface Props {
   members: WorkspaceMember[];
   loading: boolean;
   onSubmit: (content: string) => void;
+  cannedResponses?: CannedResponse[];
 }
 
-export default function CommentInput({ members, loading, onSubmit }: Props) {
+export default function CommentInput({ members, loading, onSubmit, cannedResponses = [] }: Props) {
   const { t } = useTranslation();
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
+  const [showCanned, setShowCanned] = useState(false);
+  const [cannedSearch, setCannedSearch] = useState("");
+  const [cannedIndex, setCannedIndex] = useState(0);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const filteredMembers = members.filter((m) => {
     const name = `${m.firstName} ${m.lastName}`.toLowerCase();
     return name.includes(mentionSearch.toLowerCase());
   });
+
+  const filteredCanned = cannedResponses.filter((r) =>
+    r.title.toLowerCase().includes(cannedSearch.toLowerCase()),
+  );
 
   const checkForMention = useCallback(() => {
     const sel = window.getSelection();
@@ -43,10 +53,21 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
       setMentionSearch(atMatch[1]);
       setShowMentions(true);
       setMentionIndex(0);
+      setShowCanned(false);
+      return;
     } else {
       setShowMentions(false);
     }
-  }, []);
+
+    const slashMatch = textBeforeCursor.match(/(^|\s)\/([^\s]*)$/);
+    if (slashMatch && cannedResponses.length > 0) {
+      setCannedSearch(slashMatch[2]);
+      setShowCanned(true);
+      setCannedIndex(0);
+    } else {
+      setShowCanned(false);
+    }
+  }, [cannedResponses.length]);
 
   const insertMention = useCallback(
     (member: WorkspaceMember) => {
@@ -103,6 +124,40 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
     [],
   );
 
+  const insertCannedResponse = useCallback(
+    (response: CannedResponse) => {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer;
+
+      if (node.nodeType !== Node.TEXT_NODE) return;
+
+      const text = node.textContent || "";
+      const cursor = range.startOffset;
+      const textBeforeCursor = text.substring(0, cursor);
+      const slashMatch = textBeforeCursor.match(/(^|\s)\/([^\s]*)$/);
+
+      if (!slashMatch) return;
+
+      const slashPos = textBeforeCursor.lastIndexOf("/");
+      const before = text.substring(0, slashPos);
+      const after = text.substring(cursor);
+
+      node.textContent = before + response.content + after;
+
+      const newRange = document.createRange();
+      newRange.setStart(node, before.length + response.content.length);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+
+      setShowCanned(false);
+    },
+    [],
+  );
+
   const handleInput = () => {
     checkForMention();
   };
@@ -130,7 +185,29 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
       }
     }
 
-    if (e.key === "Enter" && !e.shiftKey && !showMentions) {
+    if (showCanned && filteredCanned.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setCannedIndex((i) => Math.min(i + 1, filteredCanned.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setCannedIndex((i) => Math.max(i - 1, 0));
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        insertCannedResponse(filteredCanned[cannedIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        setShowCanned(false);
+        return;
+      }
+    }
+
+    if (e.key === "Enter" && !e.shiftKey && !showMentions && !showCanned) {
       e.preventDefault();
       handleSubmit();
     }
@@ -188,6 +265,10 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
     setMentionIndex(0);
   }, [mentionSearch]);
 
+  useEffect(() => {
+    setCannedIndex(0);
+  }, [cannedSearch]);
+
   // Handle paste - strip formatting
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
@@ -221,6 +302,15 @@ export default function CommentInput({ members, loading, onSubmit }: Props) {
             </button>
           ))}
         </div>
+      )}
+
+      {showCanned && filteredCanned.length > 0 && (
+        <CannedResponseInserter
+          responses={cannedResponses}
+          search={cannedSearch}
+          selectedIndex={cannedIndex}
+          onSelect={insertCannedResponse}
+        />
       )}
 
       <div className="flex gap-2">

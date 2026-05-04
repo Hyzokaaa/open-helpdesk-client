@@ -207,6 +207,22 @@ const translations = {
   "tags.deleted": { en: "Tag deleted", es: "Etiqueta eliminada" },
   "tags.empty": { en: "No tags yet.", es: "Sin etiquetas." },
 
+  // Canned Responses
+  "sidebar.cannedResponses": { en: "Canned Responses", es: "Respuestas Predefinidas" },
+  "cannedResponses.title": { en: "Canned Responses", es: "Respuestas Predefinidas" },
+  "cannedResponses.new": { en: "New Response", es: "Nueva Respuesta" },
+  "cannedResponses.cancel": { en: "Cancel", es: "Cancelar" },
+  "cannedResponses.titleLabel": { en: "Title", es: "Título" },
+  "cannedResponses.content": { en: "Content", es: "Contenido" },
+  "cannedResponses.create": { en: "Create", es: "Crear" },
+  "cannedResponses.save": { en: "Save", es: "Guardar" },
+  "cannedResponses.created": { en: "Response created", es: "Respuesta creada" },
+  "cannedResponses.updated": { en: "Response updated", es: "Respuesta actualizada" },
+  "cannedResponses.deleted": { en: "Response deleted", es: "Respuesta eliminada" },
+  "cannedResponses.empty": { en: "No canned responses yet.", es: "Sin respuestas predefinidas." },
+  "cannedResponses.edit": { en: "Edit", es: "Editar" },
+  "cannedResponses.confirmDelete": { en: "Delete this response?", es: "��Eliminar esta respuesta?" },
+
   // Tickets list
   "tickets.title": { en: "Tickets", es: "Tickets" },
   "tickets.new": { en: "New Ticket", es: "Nuevo Ticket" },

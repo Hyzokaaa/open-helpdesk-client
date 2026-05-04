@@ -32,6 +32,7 @@ import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import PricingPage from "@modules/billing/pages/PricingPage";
 import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
+import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
             <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
             <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+            <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
             <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
             <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
             <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />

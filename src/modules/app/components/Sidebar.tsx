@@ -76,6 +76,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         { label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` },
         { label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` },
         { label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` },
+        { label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` },
         { label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` },
         { label: t("sidebar.auditLog"), path: `/dashboard/workspaces/${currentSlug}/audit-log` },
       ]
