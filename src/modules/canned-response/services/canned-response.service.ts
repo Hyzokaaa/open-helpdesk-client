@@ -6,8 +6,11 @@ export interface CannedResponse {
   content: string;
 }
 
-export async function listCannedResponses(workspaceSlug: string): Promise<CannedResponse[]> {
-  const res = await http.get<CannedResponse[]>(`/workspaces/${workspaceSlug}/canned-responses`);
+export async function listCannedResponses(workspaceSlug: string, options?: { silent?: boolean }): Promise<CannedResponse[]> {
+  const res = await http.get<CannedResponse[]>(
+    `/workspaces/${workspaceSlug}/canned-responses`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
+  );
   return res.data;
 }
 

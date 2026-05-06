@@ -17,6 +17,7 @@ import { listCustomFields } from "@modules/custom-field/services/custom-field.se
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
+import { handlePlanLimitError } from "@modules/billing/domain/plan-limit-error";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -187,8 +188,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       fetchTicket(true);
       setEditingName(false);
       toast.success("Name updated");
-    } catch {
-      toast.error("Failed to update name");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to update name");
     }
   };
 
@@ -199,8 +200,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       fetchTicket(true);
       setEditingDescription(false);
       toast.success("Description updated");
-    } catch {
-      toast.error("Failed to update description");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to update description");
     }
   };
 
@@ -210,8 +211,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       await updateTicket(workspaceSlug, ticketId, { priority });
       fetchTicket(true);
       toast.success("Priority updated");
-    } catch {
-      toast.error("Failed to update priority");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to update priority");
     }
   };
 
@@ -221,8 +222,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       await updateTicket(workspaceSlug, ticketId, { category });
       fetchTicket(true);
       toast.success("Category updated");
-    } catch {
-      toast.error("Failed to update category");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to update category");
     }
   };
 
@@ -232,8 +233,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       await changeTicketStatus(workspaceSlug, ticketId, status);
       fetchTicket(true);
       toast.success("Status updated");
-    } catch {
-      toast.error("Cannot transition to this status");
+    } catch (err) {
+      handlePlanLimitError(err, "Cannot transition to this status");
     }
   };
 
@@ -242,8 +243,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     try {
       await updateTicket(workspaceSlug, ticketId, { tagIds });
       fetchTicket(true);
-    } catch {
-      toast.error("Failed to update tags");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to update tags");
     }
   };
 
@@ -284,8 +285,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       setSelectedAssigneeId(member.userId);
       fetchTicket(true);
       toast.success("Assignee updated");
-    } catch {
-      toast.error("Failed to assign");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to assign");
     }
   };
 
@@ -296,8 +297,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       await createComment(workspaceSlug, ticketId, content);
       fetchComments();
       setActivityKey((k) => k + 1);
-    } catch {
-      toast.error("Failed to add comment");
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to add comment");
     } finally {
       setSendingComment(false);
     }

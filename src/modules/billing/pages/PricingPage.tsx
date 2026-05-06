@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { toast } from "react-toastify";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getPlans, getSubscription, type Plan, type Subscription } from "../services/billing.service";
+import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
+import { getPlans, getSubscription, checkout, cancelSubscription, type Plan, type Subscription } from "../services/billing.service";
 
 export default function PricingPage() {
   const { t } = useTranslation();
@@ -13,6 +15,37 @@ export default function PricingPage() {
   const [billing, setBilling] = useState<"left" | "right">("left");
   const yearly = billing === "right";
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [downgrading, setDowngrading] = useState(false);
+
+  const hasPaidPlan = subscription !== null && subscription.planId !== "free";
+
+  const handleDowngrade = async () => {
+    setDowngrading(true);
+    try {
+      await cancelSubscription();
+      const updated = await getSubscription();
+      setSubscription(updated);
+      toast.success(t("billing.downgradeSuccess"));
+    } catch {
+      toast.error(t("billing.downgradeError"));
+    } finally {
+      setDowngrading(false);
+    }
+  };
+
+  const handleUpgrade = async (plan: Plan) => {
+    setCheckoutLoading(plan.id);
+    try {
+      const billingCycle = yearly ? "yearly" : "monthly";
+      const result = await checkout({ planId: plan.id, billingCycle });
+      window.location.href = result.paymentUrl;
+    } catch (err) {
+      const error = err as HttpResponseError;
+      toast.error(error.message || t("billing.checkoutError"));
+      setCheckoutLoading(null);
+    }
+  };
 
   useEffect(() => {
     Promise.all([getPlans(), getSubscription()])
@@ -105,8 +138,24 @@ export default function PricingPage() {
               <Button size="sm" color="light" disabled>{t("billing.current")}</Button>
             ) : isEnterprise(plan.id) ? (
               <Button size="sm" color="light">{t("billing.contactUs")}</Button>
+            ) : plan.priceMonthly === 0 && hasPaidPlan && !isEnterprise(plan.id) ? (
+              <Button
+                size="sm"
+                color="danger"
+                disabled={downgrading}
+                onClick={handleDowngrade}
+              >
+                {downgrading ? t("billing.processing") : t("billing.downgrade")}
+              </Button>
             ) : plan.priceMonthly > 0 ? (
-              <Button size="sm" color="primary-light" disabled>{t("billing.comingSoon")}</Button>
+              <Button
+                size="sm"
+                color="primary"
+                disabled={checkoutLoading !== null}
+                onClick={() => handleUpgrade(plan)}
+              >
+                {checkoutLoading === plan.id ? t("billing.processing") : t("billing.upgrade")}
+              </Button>
             ) : null}
           </div>
         ))}

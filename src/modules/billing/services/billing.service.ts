@@ -40,6 +40,14 @@ export async function subscribe(data: {
   return res.data;
 }
 
+export async function checkout(data: {
+  planId: string;
+  billingCycle: string;
+}): Promise<{ paymentUrl: string }> {
+  const res = await http.post<{ paymentUrl: string }>("/billing/checkout", data);
+  return res.data;
+}
+
 export async function getUserPlans(): Promise<Record<string, string>> {
   try {
     const res = await http.get<Record<string, string>>("/billing/admin/user-plans");
@@ -47,6 +55,10 @@ export async function getUserPlans(): Promise<Record<string, string>> {
   } catch {
     return {};
   }
+}
+
+export async function cancelSubscription(): Promise<void> {
+  await http.post("/billing/cancel");
 }
 
 export async function adminUpdateSubscription(

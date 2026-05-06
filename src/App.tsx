@@ -31,6 +31,7 @@ import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import PricingPage from "@modules/billing/pages/PricingPage";
 import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
+import PaymentResultPage from "@modules/billing/pages/PaymentResultPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
@@ -77,6 +78,8 @@ export default function App() {
             <Route path="settings/notifications" element={<NotificationsSection />} />
             <Route path="changelog" element={<ChangelogPage />} />
             <Route path="settings/billing" element={<SubscriptionPage />} />
+            <Route path="settings/billing/success" element={<PaymentResultPage success />} />
+            <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
             <Route path="settings/pricing" element={<PricingPage />} />
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />

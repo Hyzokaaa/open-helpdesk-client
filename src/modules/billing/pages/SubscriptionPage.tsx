@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { format } from "date-fns";
+import { toast } from "react-toastify";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getSubscription, type Subscription } from "../services/billing.service";
+import { getSubscription, cancelSubscription, type Subscription } from "../services/billing.service";
 
 const STATUS_COLOR: Record<string, "green" | "yellow" | "red" | "gray"> = {
   active: "green",
@@ -19,12 +21,29 @@ export default function SubscriptionPage() {
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCancel, setShowCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
     getSubscription()
       .then(setSubscription)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCancel = async () => {
+    setCanceling(true);
+    try {
+      await cancelSubscription();
+      const updated = await getSubscription();
+      setSubscription(updated);
+      toast.success(t("billing.cancelSuccess"));
+    } catch {
+      toast.error(t("billing.cancelError"));
+    } finally {
+      setCanceling(false);
+      setShowCancel(false);
+    }
+  };
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
 
@@ -39,6 +58,8 @@ export default function SubscriptionPage() {
       </div>
     );
   }
+
+  const isFree = subscription.planId === "free";
 
   const formatDate = (date: string | null) =>
     date ? format(new Date(date), "MMM d, yyyy") : "-";
@@ -77,12 +98,28 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border-card">
+        <div className="mt-6 pt-4 border-t border-border-card flex gap-3">
           <Button size="sm" onClick={() => navigate("/dashboard/settings/pricing")}>
             {t("billing.upgrade")}
           </Button>
+          {!isFree && (
+            <Button size="sm" color="danger" onClick={() => setShowCancel(true)}>
+              {t("billing.cancelSubscription")}
+            </Button>
+          )}
         </div>
       </div>
+
+      {showCancel && (
+        <ConfirmModal
+          title={t("billing.cancelConfirmTitle")}
+          message={t("billing.cancelConfirmMessage")}
+          confirmLabel={t("billing.cancelConfirmButton")}
+          danger
+          onConfirm={handleCancel}
+          onCancel={() => setShowCancel(false)}
+        />
+      )}
     </div>
   );
 }

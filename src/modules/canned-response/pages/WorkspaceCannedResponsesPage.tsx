@@ -8,9 +8,11 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import { Link } from "react-router";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
 import {
   CannedResponse,
   listCannedResponses,
@@ -34,6 +36,7 @@ export default function WorkspaceCannedResponsesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [originalTitle, setOriginalTitle] = useState("");
   const [originalContent, setOriginalContent] = useState("");
+  const [denied, setDenied] = useState(false);
 
   const isDirty = title !== originalTitle || content !== originalContent;
 
@@ -48,8 +51,11 @@ export default function WorkspaceCannedResponsesPage() {
   const fetchResponses = () => {
     if (!workspaceSlug) return;
     setLoading(true);
-    listCannedResponses(workspaceSlug)
-      .then(setResponses)
+    listCannedResponses(workspaceSlug, { silent: true })
+      .then((res) => { setResponses(res); setDenied(false); })
+      .catch((err) => {
+        if (isPlanLimitError(err)) setDenied(true);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -104,6 +110,20 @@ export default function WorkspaceCannedResponsesPage() {
 
   const textareaClass =
     "w-full bg-surface rounded-input border-input transition-all duration-200 outline-none shadow-input text-body border-input-effect px-3 py-1.5 text-sm resize-none";
+
+  if (denied) {
+    return (
+      <div className="w-full">
+        <h2 className="text-lg font-body-bold text-heading mb-4">{t("cannedResponses.title")}</h2>
+        <div className="text-center py-12">
+          <p className="text-sm text-muted">{t("planLimit.cannedResponsesBlocked")}</p>
+          <Link to="/dashboard/settings/billing" className="inline-block mt-3 text-sm text-primary hover:underline">
+            {t("planLimit.viewPlans")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

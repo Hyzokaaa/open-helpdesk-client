@@ -16,6 +16,7 @@ import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { handlePlanLimitError } from "@modules/billing/domain/plan-limit-error";
 import { CustomFieldDefinition } from "@modules/custom-field/domain/custom-field-types";
 import { listCustomFields } from "@modules/custom-field/services/custom-field.service";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
@@ -113,7 +114,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         );
       }
     } catch (err: any) {
-      if (!err?.handled) toast.error("Failed to create ticket");
+      handlePlanLimitError(err, "Failed to create ticket");
     } finally {
       setLoading(false);
     }
