@@ -32,6 +32,7 @@ import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import PricingPage from "@modules/billing/pages/PricingPage";
 import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
 import PaymentResultPage from "@modules/billing/pages/PaymentResultPage";
+import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/invite/:token" element={<InvitationPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<WorkspacesPage />} />

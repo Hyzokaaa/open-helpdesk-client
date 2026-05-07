@@ -21,6 +21,14 @@ export default function SignupPage() {
 
   const inviteEmail = searchParams.get("email") || "";
   const isInviteFlow = !!inviteEmail;
+  const planParam = searchParams.get("plan") || "";
+
+  // Non-invite flow: redirect to onboarding wizard
+  if (!isInviteFlow) {
+    const onboardingUrl = planParam ? `/onboarding?plan=${planParam}` : "/onboarding";
+    navigate(onboardingUrl, { replace: true });
+    return null;
+  }
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
