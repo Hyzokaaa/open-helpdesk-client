@@ -57,6 +57,11 @@ export async function getUserPlans(): Promise<Record<string, string>> {
   }
 }
 
+export async function renewSubscription(): Promise<{ paymentUrl: string }> {
+  const res = await http.post<{ paymentUrl: string }>("/billing/renew");
+  return res.data;
+}
+
 export async function cancelSubscription(): Promise<void> {
   await http.post("/billing/cancel");
 }

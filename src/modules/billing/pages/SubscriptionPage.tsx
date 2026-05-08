@@ -7,7 +7,8 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getSubscription, cancelSubscription, type Subscription } from "../services/billing.service";
+import { getSubscription, cancelSubscription, renewSubscription, type Subscription } from "../services/billing.service";
+import { GRACE_PERIOD_DAYS } from "../domain/billing.constants";
 
 const STATUS_COLOR: Record<string, "green" | "yellow" | "red" | "gray"> = {
   active: "green",
@@ -23,6 +24,7 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(true);
   const [showCancel, setShowCancel] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [renewing, setRenewing] = useState(false);
 
   useEffect(() => {
     getSubscription()
@@ -45,6 +47,18 @@ export default function SubscriptionPage() {
     }
   };
 
+  const handleRenew = async () => {
+    setRenewing(true);
+    try {
+      const result = await renewSubscription();
+      window.open(result.paymentUrl, "_blank");
+    } catch {
+      toast.error(t("billing.renewError"));
+    } finally {
+      setRenewing(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
 
   if (!subscription) {
@@ -61,12 +75,32 @@ export default function SubscriptionPage() {
 
   const isFree = subscription.planId === "free";
 
+  const now = new Date();
+  const periodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
+  const daysUntilExpiry = periodEnd ? Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const isExpiringSoon = !isFree && daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry <= 3;
+  const isInGracePeriod = !isFree && daysUntilExpiry !== null && daysUntilExpiry <= 0 && daysUntilExpiry > -GRACE_PERIOD_DAYS;
+
   const formatDate = (date: string | null) =>
     date ? format(new Date(date), "MMM d, yyyy") : "-";
 
   return (
     <div className="w-full">
       <h2 className="text-lg font-body-bold text-heading mb-6">{t("billing.title")}</h2>
+
+      {isExpiringSoon && (
+        <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-4 max-w-lg flex items-center justify-between">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">{t("billing.expiringSoon")} ({daysUntilExpiry} {t("billing.daysLeft")})</p>
+          <Button size="xs" onClick={handleRenew} loading={renewing}>{t("billing.renew")}</Button>
+        </div>
+      )}
+
+      {isInGracePeriod && (
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-4 max-w-lg flex items-center justify-between">
+          <p className="text-sm text-red-800 dark:text-red-200">{t("billing.gracePeriod")}</p>
+          <Button size="xs" color="danger" onClick={handleRenew} loading={renewing}>{t("billing.renew")}</Button>
+        </div>
+      )}
 
       <div className="bg-surface border border-border-card rounded-lg p-6 max-w-lg">
         <div className="flex flex-col gap-4">

@@ -489,6 +489,11 @@ const translations = {
   "billing.downgrade": { en: "Downgrade to Free", es: "Bajar a Free" },
   "billing.downgradeSuccess": { en: "Plan downgraded to Free.", es: "Plan degradado a Free." },
   "billing.downgradeError": { en: "Failed to downgrade plan.", es: "Error al degradar el plan." },
+  "billing.renew": { en: "Renew", es: "Renovar" },
+  "billing.renewError": { en: "Failed to start renewal.", es: "Error al iniciar la renovación." },
+  "billing.expiringSoon": { en: "Your plan expires soon.", es: "Tu plan expira pronto." },
+  "billing.daysLeft": { en: "days left", es: "días restantes" },
+  "billing.gracePeriod": { en: "Your plan has expired. Renew now to keep your features.", es: "Tu plan ha expirado. Renueva ahora para conservar tus funcionalidades." },
   "admin.col.plan": { en: "Plan", es: "Plan" },
   "admin.col.owner": { en: "Owner", es: "Propietario" },
 

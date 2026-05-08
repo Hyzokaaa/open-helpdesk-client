@@ -6,6 +6,7 @@ import EmailVerificationBanner from "@modules/user/components/EmailVerificationB
 import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import SubscriptionBanner from "@modules/billing/components/SubscriptionBanner";
 
 export default function DashboardLayout() {
   const { user, loading } = useUser();
@@ -21,6 +22,7 @@ export default function DashboardLayout() {
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="w-full flex flex-col grow lg:pl-[240px]">
+          <SubscriptionBanner />
           <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
           <div className="flex flex-col items-center px-6 md:px-8 w-full">
