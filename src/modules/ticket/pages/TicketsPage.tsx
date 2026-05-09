@@ -50,7 +50,7 @@ const COLUMNS: Column[] = [
   { key: "createdAt", labelKey: "tickets.col.created", sortable: true },
 ];
 
-type Tab = "active" | "closed";
+type Tab = "active" | "resolved" | "discarded";
 
 export default function TicketsPage() {
   const { workspaceSlug } = useParams();
@@ -97,10 +97,12 @@ export default function TicketsPage() {
     if (!workspaceSlug) return;
     setLoading(true);
     const params: TicketFilters = { ...filters };
-    if (tab === "closed") {
-      params.status = "closed";
+    if (tab === "resolved") {
+      params.status = "resolved";
+    } else if (tab === "discarded") {
+      params.status = "discarded";
     } else if (!params.status) {
-      params.excludeStatus = "closed";
+      params.excludeStatus = "resolved,discarded";
     }
     if (filterTagIds.length > 0) {
       params.tagIds = filterTagIds;
@@ -177,13 +179,22 @@ export default function TicketsPage() {
           {t("tickets.active")}
         </button>
         <button
-          onClick={() => { setTab("closed"); setFilters({ ...filters, status: undefined, page: 1 }); }}
+          onClick={() => { setTab("resolved"); setFilters({ ...filters, status: undefined, page: 1 }); }}
           className={clsx(
             "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-            tab === "closed" ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
+            tab === "resolved" ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
           )}
         >
-          {t("tickets.closed")}
+          {t("tickets.resolved")}
+        </button>
+        <button
+          onClick={() => { setTab("discarded"); setFilters({ ...filters, status: undefined, page: 1 }); }}
+          className={clsx(
+            "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
+            tab === "discarded" ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
+          )}
+        >
+          {t("tickets.discarded")}
         </button>
       </div>
 
@@ -191,7 +202,7 @@ export default function TicketsPage() {
         {tab === "active" && (
           <div className="w-40">
             <Select
-              options={["all", ...STATUSES.filter((s) => s !== "closed")]}
+              options={["all", ...STATUSES.filter((s) => s !== "resolved" && s !== "discarded")]}
               label={(s) => (s === "all" ? t("tickets.allStatuses") : tEnum("status", s))}
               value={(s) => s === (filters.status || "all")}
               onChange={(s) =>

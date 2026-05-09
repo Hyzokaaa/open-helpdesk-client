@@ -27,6 +27,7 @@ export interface TicketDetail {
   resolvedAt: string | null;
   tagIds: string[];
   customFields: Record<string, unknown>;
+  discardReason: string | null;
 }
 
 export interface TicketFilters {
@@ -109,9 +110,11 @@ export async function changeTicketStatus(
   workspaceId: string,
   ticketId: string,
   status: string,
+  discardReason?: string,
 ): Promise<void> {
   await http.patch(`/workspaces/${workspaceId}/tickets/${ticketId}/status`, {
     status,
+    ...(discardReason ? { discardReason } : {}),
   });
 }
 

@@ -84,6 +84,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
+  const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
   const [activityKey, setActivityKey] = useState(0);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -159,15 +160,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   const { can } = usePermissions(workspaceSlug);
   const isCreator = ticket?.creatorId === user?.id;
-  const isClosed = ticket?.status === "closed";
+  const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
 
-  const canChangeStatus = isEditing && (isClosed ? can(P.TICKET_CHANGE_STATUS_CLOSED) : can(P.TICKET_CHANGE_STATUS));
-  const canEditFields = isEditing && (isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator));
+  const canChangeStatus = isEditing && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
+  const canEditFields = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator));
   const canEditName = isEditing && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && can(P.TICKET_ASSIGN);
   const canDelete = isEditing && can(P.TICKET_DELETE);
-  const canEditTags = isEditing && (isClosed ? can(P.TICKET_EDIT_CLOSED) : (can(P.TICKET_EDIT_TAGS) || isCreator));
+  const canEditTags = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : (can(P.TICKET_EDIT_TAGS) || isCreator));
   const canSwitchToEdit = mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN) || isCreator
   );
@@ -227,10 +228,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     }
   };
 
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = async (status: string, discardReason?: string) => {
     if (!workspaceSlug || !ticketId) return;
+
+    if (status === "discarded" && !discardReason) {
+      setShowCloseReasonModal(true);
+      return;
+    }
+
     try {
-      await changeTicketStatus(workspaceSlug, ticketId, status);
+      await changeTicketStatus(workspaceSlug, ticketId, status, discardReason);
       fetchTicket(true);
       toast.success("Status updated");
     } catch (err) {
@@ -368,6 +375,35 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           onConfirm={confirmAction.onConfirm}
           onCancel={() => setConfirmAction(null)}
         />
+      )}
+
+      {showCloseReasonModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setShowCloseReasonModal(false)}>
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+            <div className="flex flex-col gap-2">
+              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => {
+                    setShowCloseReasonModal(false);
+                    handleStatusChange("discarded", reason);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
+                >
+                  {tEnum("discardReason", reason)}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowCloseReasonModal(false)}
+              className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer"
+            >
+              {t("cannedResponses.cancel")}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Header */}

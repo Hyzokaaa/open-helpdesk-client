@@ -1,5 +1,5 @@
 export const PRIORITIES = ["low", "medium", "high", "critical"] as const;
-export const STATUSES = ["pending", "in-progress", "resolved", "closed"] as const;
+export const STATUSES = ["pending", "in-progress", "resolved", "discarded"] as const;
 export const CATEGORIES = ["bug", "issue", "task"] as const;
 
 export const PRIORITY_COLORS: Record<string, "gray" | "blue" | "yellow" | "red"> = {
@@ -13,7 +13,7 @@ export const STATUS_COLORS: Record<string, "gray" | "blue" | "green" | "primary"
   pending: "gray",
   "in-progress": "blue",
   resolved: "green",
-  closed: "primary",
+  discarded: "red",
 };
 
 export const CATEGORY_COLORS: Record<string, "red" | "yellow" | "blue"> = {

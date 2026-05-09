@@ -244,7 +244,8 @@ const translations = {
   "tickets.title": { en: "Tickets", es: "Tickets" },
   "tickets.new": { en: "New Ticket", es: "Nuevo Ticket" },
   "tickets.active": { en: "Active", es: "Activos" },
-  "tickets.closed": { en: "Closed", es: "Cerrados" },
+  "tickets.resolved": { en: "Resolved", es: "Resueltos" },
+  "tickets.discarded": { en: "Discarded", es: "Descartados" },
   "tickets.allStatuses": { en: "All Statuses", es: "Todos los estados" },
   "tickets.allPriorities": { en: "All Priorities", es: "Todas las prioridades" },
   "tickets.filterByTags": { en: "Filter by tags", es: "Filtrar por etiquetas" },
@@ -304,6 +305,8 @@ const translations = {
   "ticketDetail.deleteConfirm": { en: "Delete", es: "Eliminar" },
   "ticketDetail.deleteAttachmentTitle": { en: "Delete Attachment", es: "Eliminar Adjunto" },
   "ticketDetail.deleteAttachmentMessage": { en: "This file will be permanently deleted.", es: "Este archivo será eliminado permanentemente." },
+  "ticketDetail.discardReasonTitle": { en: "Discard Ticket", es: "Descartar Ticket" },
+  "ticketDetail.discardReasonMessage": { en: "Why is this ticket being discarded?", es: "¿Por qué se descarta este ticket?" },
 
   // Settings
   "settings.title": { en: "Settings", es: "Configuración" },
@@ -507,15 +510,41 @@ const translations = {
   "enum.status.pending": { en: "Pending", es: "Pendiente" },
   "enum.status.in-progress": { en: "In Progress", es: "En Progreso" },
   "enum.status.resolved": { en: "Resolved", es: "Resuelto" },
-  "enum.status.closed": { en: "Closed", es: "Cerrado" },
+  "enum.status.discarded": { en: "Discarded", es: "Descartado" },
 
   // Enums - Categories
   "enum.category.bug": { en: "Bug", es: "Error" },
   "enum.category.issue": { en: "Issue", es: "Incidencia" },
   "enum.category.task": { en: "Task", es: "Tarea" },
 
-  // Sidebar - Audit Log
+  // Enums - Discard Reasons
+  "enum.discardReason.duplicate": { en: "Duplicate", es: "Duplicado" },
+  "enum.discardReason.spam": { en: "Spam", es: "Spam" },
+  "enum.discardReason.no-response": { en: "No response", es: "Sin respuesta" },
+  "enum.discardReason.wont-fix": { en: "Won't fix", es: "No se corregirá" },
+
+  // Sidebar - Reports & Audit Log
+  "sidebar.reports": { en: "Reports", es: "Reportes" },
   "sidebar.auditLog": { en: "Audit Log", es: "Registro de Auditoría" },
+
+  // Reports
+  "reports.title": { en: "Reports", es: "Reportes" },
+  "reports.last7d": { en: "7 days", es: "7 días" },
+  "reports.last30d": { en: "30 days", es: "30 días" },
+  "reports.last90d": { en: "90 days", es: "90 días" },
+  "reports.openTickets": { en: "Open Tickets", es: "Tickets Abiertos" },
+  "reports.resolvedPeriod": { en: "Resolved", es: "Resueltos" },
+  "reports.avgResolution": { en: "Avg. Resolution Time", es: "Tiempo Prom. Resolución" },
+  "reports.avgFirstResponse": { en: "Avg. First Response", es: "Prom. Primera Respuesta" },
+  "reports.overTime": { en: "Tickets Over Time", es: "Tickets en el Tiempo" },
+  "reports.byStatus": { en: "By Status", es: "Por Estado" },
+  "reports.byPriority": { en: "By Priority", es: "Por Prioridad" },
+  "reports.byCategory": { en: "By Category", es: "Por Categoría" },
+  "reports.topAgents": { en: "Top Agents", es: "Mejores Agentes" },
+  "reports.created": { en: "Created", es: "Creados" },
+  "reports.resolved": { en: "Resolved", es: "Resueltos" },
+  "reports.tickets": { en: "Tickets", es: "Tickets" },
+  "reports.noData": { en: "No data for this period.", es: "Sin datos para este periodo." },
 
   // Audit Log Page
   "auditLog.title": { en: "Audit Log", es: "Registro de Auditoría" },

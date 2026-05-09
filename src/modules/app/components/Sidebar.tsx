@@ -82,6 +82,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         ...(can(P.CANNED_RESPONSE_CREATE) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
         ...(can(P.CUSTOM_FIELD_MANAGE) ? [{ label: t("sidebar.customFields"), path: `/dashboard/workspaces/${currentSlug}/custom-fields` }] : []),
         ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
+        ...(can(P.AUDIT_LOG_VIEW) ? [{ label: t("sidebar.reports"), path: `/dashboard/workspaces/${currentSlug}/reports` }] : []),
         ...(can(P.AUDIT_LOG_VIEW) ? [{ label: t("sidebar.auditLog"), path: `/dashboard/workspaces/${currentSlug}/audit-log` }] : []),
       ]
     : [];
