@@ -5,6 +5,8 @@ export interface ReportOverview {
   resolvedThisPeriod: number;
   avgResolutionTimeHours: number | null;
   avgFirstResponseTimeHours: number | null;
+  csatScore: number | null;
+  csatResponseCount: number;
 }
 
 export interface ReportData {
@@ -14,6 +16,7 @@ export interface ReportData {
   ticketsByPriority: { priority: string; count: number }[];
   ticketsByCategory: { category: string; count: number }[];
   topAgents: { resolvedById: string; name: string; resolved: number }[];
+  csatBreakdown: { rating: string; count: number }[];
 }
 
 export async function getReport(

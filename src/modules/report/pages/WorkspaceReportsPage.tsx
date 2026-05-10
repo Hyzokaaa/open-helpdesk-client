@@ -11,6 +11,7 @@ import TicketsByStatusChart from "../components/TicketsByStatusChart";
 import TicketsByPriorityChart from "../components/TicketsByPriorityChart";
 import TicketsByCategoryChart from "../components/TicketsByCategoryChart";
 import TopAgentsChart from "../components/TopAgentsChart";
+import CsatChart from "../components/CsatChart";
 
 function getDateRange(preset: string) {
   const now = new Date();
@@ -62,6 +63,11 @@ export default function WorkspaceReportsPage() {
             <TicketsByCategoryChart data={data.ticketsByCategory} />
             <TopAgentsChart data={data.topAgents} />
           </div>
+          <CsatChart
+            data={data.csatBreakdown}
+            score={data.overview.csatScore}
+            total={data.overview.csatResponseCount}
+          />
         </div>
       )}
     </div>

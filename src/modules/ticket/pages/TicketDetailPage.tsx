@@ -133,7 +133,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchAttachments();
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
-    if (workspaceSlug) listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
+    if (workspaceSlug && can(P.CANNED_RESPONSE_CREATE)) listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
   }, [workspaceSlug, ticketId]);
 
@@ -164,13 +164,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const isEditing = mode === "edit";
 
   const canChangeStatus = isEditing && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
-  const canEditFields = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : (can(P.TICKET_EDIT_DESCRIPTION) || isCreator));
+  const canEditFields = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && can(P.TICKET_ASSIGN);
   const canDelete = isEditing && can(P.TICKET_DELETE);
-  const canEditTags = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : (can(P.TICKET_EDIT_TAGS) || isCreator));
+  const canEditTags = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
+  const canEditCustomFields = isEditing && can(P.TICKET_EDIT_DESCRIPTION);
   const canSwitchToEdit = mode === "view" && (
-    can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN) || isCreator
+    can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
 
   const assignableMembers = members.filter(
@@ -701,7 +702,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             </FormInput>
           </Card>
 
-          {customFieldDefs.length > 0 && ticket && canEditFields && (
+          {customFieldDefs.length > 0 && ticket && canEditCustomFields && (
             <Card className="p-4">
               <CustomFieldsForm
                 definitions={customFieldDefs}
@@ -711,7 +712,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             </Card>
           )}
 
-          {customFieldDefs.length > 0 && ticket && !canEditFields && (
+          {customFieldDefs.length > 0 && ticket && !canEditCustomFields && (
             <Card className="p-4">
               {customFieldDefs.map((def) => {
                 const val = (ticket.customFields ?? {})[def.id];

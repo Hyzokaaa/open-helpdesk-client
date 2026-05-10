@@ -16,15 +16,21 @@ export default function OverviewCards({ overview }: Props) {
     return `${(hours / 24).toFixed(1)}d`;
   };
 
+  const formatCsat = (score: number | null) => {
+    if (score === null) return "—";
+    return `${Math.round(score)}%`;
+  };
+
   const cards = [
     { label: t("reports.openTickets"), value: overview.openTickets },
     { label: t("reports.resolvedPeriod"), value: overview.resolvedThisPeriod },
     { label: t("reports.avgResolution"), value: formatHours(overview.avgResolutionTimeHours) },
     { label: t("reports.avgFirstResponse"), value: formatHours(overview.avgFirstResponseTimeHours) },
+    { label: t("reports.csatScore"), value: formatCsat(overview.csatScore) },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
       {cards.map((c) => (
         <Card key={c.label} className="p-4 text-center">
           <p className="text-2xl font-body-bold text-heading">{c.value}</p>

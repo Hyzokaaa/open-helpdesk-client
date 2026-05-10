@@ -545,6 +545,12 @@ const translations = {
   "reports.resolved": { en: "Resolved", es: "Resueltos" },
   "reports.tickets": { en: "Tickets", es: "Tickets" },
   "reports.noData": { en: "No data for this period.", es: "Sin datos para este periodo." },
+  "reports.csatScore": { en: "CSAT Score", es: "Satisfacción" },
+  "reports.csat": { en: "Customer Satisfaction", es: "Satisfacción del Cliente" },
+  "reports.csatResponses": { en: "responses", es: "respuestas" },
+  "enum.csat.good": { en: "Good", es: "Buena" },
+  "enum.csat.neutral": { en: "Neutral", es: "Neutral" },
+  "enum.csat.bad": { en: "Bad", es: "Mala" },
 
   // Audit Log Page
   "auditLog.title": { en: "Audit Log", es: "Registro de Auditoría" },
