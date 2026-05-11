@@ -1,7 +1,11 @@
 import { http } from "@modules/app/modules/http/domain/http";
 
-interface PublicConfig {
+export interface PublicConfig {
   saasMode: boolean;
+  paymentGateways: string[];
+  defaultGateway: string;
+  paddleClientToken: string | null;
+  paddleEnvironment: string;
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {
@@ -9,6 +13,6 @@ export async function getPublicConfig(): Promise<PublicConfig> {
     const res = await http.get<PublicConfig>("/config/public");
     return res.data;
   } catch {
-    return { saasMode: false };
+    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox" };
   }
 }

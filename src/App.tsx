@@ -33,6 +33,7 @@ import PricingPage from "@modules/billing/pages/PricingPage";
 import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
 import PaymentResultPage from "@modules/billing/pages/PaymentResultPage";
 import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
+import PaddlePayPage from "@modules/billing/pages/PaddlePayPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/invite/:token" element={<InvitationPage />} />
+          <Route path="/pay" element={<PaddlePayPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<WorkspacesPage />} />
             <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
