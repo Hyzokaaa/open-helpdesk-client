@@ -450,6 +450,18 @@ const translations = {
   "billing.paymentFailedDescription": { en: "Something went wrong with your payment. Please try again.", es: "Algo salió mal con tu pago. Inténtalo de nuevo." },
   "billing.viewSubscription": { en: "View Subscription", es: "Ver Suscripción" },
   "billing.checkoutError": { en: "Failed to start checkout. Please try again.", es: "Error al iniciar el pago. Inténtalo de nuevo." },
+  "billing.checkout": { en: "Checkout", es: "Pago" },
+  "billing.paymentMethod": { en: "Payment method", es: "Método de pago" },
+  "billing.proceedToPayment": { en: "Proceed to payment", es: "Continuar al pago" },
+  "billing.checkoutDesc": { en: "Review your plan and choose a payment method", es: "Revisa tu plan y elige un método de pago" },
+  "billing.payWithCard": { en: "Continue to payment", es: "Continuar al pago" },
+  "billing.securePayment": { en: "Card, PayPal, Apple Pay & more — powered by Paddle", es: "Tarjeta, PayPal, Apple Pay y más — procesado por Paddle" },
+  "billing.orPayWith": { en: "or pay with", es: "o pagar con" },
+  "billing.loadingCheckout": { en: "Loading checkout...", es: "Cargando checkout..." },
+  "billing.gateway.paddle": { en: "Credit/Debit Card", es: "Tarjeta de Crédito/Débito" },
+  "billing.gateway.paddle.desc": { en: "Visa, Mastercard, PayPal", es: "Visa, Mastercard, PayPal" },
+  "billing.gateway.tropipay": { en: "TropiPay", es: "TropiPay" },
+  "billing.gateway.tropipay.desc": { en: "TropiPay balance or card", es: "Saldo TropiPay o tarjeta" },
 
   // Onboarding
   "onboarding.createAccount": { en: "Create your account", es: "Crea tu cuenta" },

@@ -40,11 +40,18 @@ export async function subscribe(data: {
   return res.data;
 }
 
+export interface CheckoutResult {
+  paymentUrl: string;
+  transactionId?: string;
+  gateway: string;
+}
+
 export async function checkout(data: {
   planId: string;
   billingCycle: string;
-}): Promise<{ paymentUrl: string }> {
-  const res = await http.post<{ paymentUrl: string }>("/billing/checkout", data);
+  gateway?: string;
+}): Promise<CheckoutResult> {
+  const res = await http.post<CheckoutResult>("/billing/checkout", data);
   return res.data;
 }
 

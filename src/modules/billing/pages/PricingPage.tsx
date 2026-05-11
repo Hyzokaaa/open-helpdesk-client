@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
-import { getPlans, getSubscription, checkout, cancelSubscription, type Plan, type Subscription } from "../services/billing.service";
+import { getPlans, getSubscription, cancelSubscription, type Plan, type Subscription } from "../services/billing.service";
+import CheckoutSheet from "../components/CheckoutSheet";
 
 export default function PricingPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [billing, setBilling] = useState<"left" | "right">("left");
   const yearly = billing === "right";
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [downgrading, setDowngrading] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
 
   const hasPaidPlan = subscription !== null && subscription.planId !== "free";
 
@@ -31,19 +33,6 @@ export default function PricingPage() {
       toast.error(t("billing.downgradeError"));
     } finally {
       setDowngrading(false);
-    }
-  };
-
-  const handleUpgrade = async (plan: Plan) => {
-    setCheckoutLoading(plan.id);
-    try {
-      const billingCycle = yearly ? "yearly" : "monthly";
-      const result = await checkout({ planId: plan.id, billingCycle });
-      window.location.href = result.paymentUrl;
-    } catch (err) {
-      const error = err as HttpResponseError;
-      toast.error(error.message || t("billing.checkoutError"));
-      setCheckoutLoading(null);
     }
   };
 
@@ -63,6 +52,12 @@ export default function PricingPage() {
     if (plan.priceMonthly === 0) return t("billing.free");
     const price = yearly ? plan.priceYearly / 12 : plan.priceMonthly;
     return `$${(price / 100).toFixed(0)}`;
+  };
+
+  const formatCheckoutPrice = (plan: Plan) => {
+    const amount = yearly ? plan.priceYearly : plan.priceMonthly;
+    const period = yearly ? t("billing.yr") : t("billing.mo");
+    return `$${(amount / 100).toFixed(0)}${period}`;
   };
 
   const isCurrent = (planId: string) => subscription?.planId === planId;
@@ -151,15 +146,25 @@ export default function PricingPage() {
               <Button
                 size="sm"
                 color="primary"
-                disabled={checkoutLoading !== null}
-                onClick={() => handleUpgrade(plan)}
+                onClick={() => setCheckoutPlan(plan)}
               >
-                {checkoutLoading === plan.id ? t("billing.processing") : t("billing.upgrade")}
+                {t("billing.upgrade")}
               </Button>
             ) : null}
           </div>
         ))}
       </div>
+
+      {checkoutPlan && (
+        <CheckoutSheet
+          planName={checkoutPlan.name}
+          planId={checkoutPlan.id}
+          price={formatCheckoutPrice(checkoutPlan)}
+          billingCycle={yearly ? "yearly" : "monthly"}
+          onClose={() => setCheckoutPlan(null)}
+          onRedirect={(url) => { url.startsWith("/") ? navigate(url) : window.location.href = url; }}
+        />
+      )}
     </div>
   );
 }

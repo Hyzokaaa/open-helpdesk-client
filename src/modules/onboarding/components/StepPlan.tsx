@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getPlans, getSubscription, checkout, type Plan } from "@modules/billing/services/billing.service";
+import { getPlans, getSubscription, type Plan } from "@modules/billing/services/billing.service";
+import CheckoutSheet from "@modules/billing/components/CheckoutSheet";
 
 interface Props {
   defaultPlan: string;
@@ -14,14 +16,15 @@ interface Props {
 
 export default function StepPlan({ defaultPlan, onDone }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selected, setSelected] = useState(defaultPlan || "free");
   const [billing, setBilling] = useState<"left" | "right">("left");
   const yearly = billing === "right";
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [waitingPayment, setWaitingPayment] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
     getPlans()
@@ -38,23 +41,20 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
     return `$${(price / 100).toFixed(0)}`;
   };
 
-  const handleContinue = async () => {
+  const selectedPlan = plans.find((p) => p.id === selected);
+
+  const formatCheckoutPrice = (plan: Plan) => {
+    const amount = yearly ? plan.priceYearly : plan.priceMonthly;
+    const period = yearly ? t("billing.yr") : t("billing.mo");
+    return `$${(amount / 100).toFixed(0)}${period}`;
+  };
+
+  const handleContinue = () => {
     if (selected === "free") {
       onDone();
       return;
     }
-
-    setCheckoutLoading(true);
-    try {
-      const billingCycle = yearly ? "yearly" : "monthly";
-      const result = await checkout({ planId: selected, billingCycle });
-      window.open(result.paymentUrl, "_blank");
-      setWaitingPayment(true);
-    } catch {
-      toast.error(t("billing.checkoutError"));
-    } finally {
-      setCheckoutLoading(false);
-    }
+    setShowCheckout(true);
   };
 
   const handleVerifyPayment = async () => {
@@ -138,9 +138,28 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
           </Button>
         </div>
       ) : (
-        <Button full onClick={handleContinue} loading={checkoutLoading}>
+        <Button full onClick={handleContinue}>
           {selected === "free" ? t("onboarding.continue") : t("onboarding.continueToPayment")}
         </Button>
+      )}
+
+      {showCheckout && selectedPlan && (
+        <CheckoutSheet
+          planName={selectedPlan.name}
+          planId={selectedPlan.id}
+          price={formatCheckoutPrice(selectedPlan)}
+          billingCycle={yearly ? "yearly" : "monthly"}
+          onClose={() => setShowCheckout(false)}
+          onRedirect={(url) => {
+            if (url.startsWith("/")) {
+              navigate(url);
+            } else {
+              window.open(url, "_blank");
+              setShowCheckout(false);
+              setWaitingPayment(true);
+            }
+          }}
+        />
       )}
     </div>
   );
