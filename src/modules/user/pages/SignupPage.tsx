@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -23,19 +23,21 @@ export default function SignupPage() {
   const isInviteFlow = !!inviteEmail;
   const planParam = searchParams.get("plan") || "";
 
-  // Non-invite flow: redirect to onboarding wizard
-  if (!isInviteFlow) {
-    const onboardingUrl = planParam ? `/onboarding?plan=${planParam}` : "/onboarding";
-    navigate(onboardingUrl, { replace: true });
-    return null;
-  }
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isInviteFlow) {
+      const onboardingUrl = planParam ? `/onboarding?plan=${planParam}` : "/onboarding";
+      navigate(onboardingUrl, { replace: true });
+    }
+  }, [isInviteFlow, planParam, navigate]);
+
+  if (!isInviteFlow) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
