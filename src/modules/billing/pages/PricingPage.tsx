@@ -6,6 +6,7 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import { getPlans, getSubscription, cancelSubscription, type Plan, type Subscription } from "../services/billing.service";
 import CheckoutSheet from "../components/CheckoutSheet";
 
@@ -19,6 +20,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(true);
   const [downgrading, setDowngrading] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
+  const [showDowngradeConfirm, setShowDowngradeConfirm] = useState(false);
 
   const hasPaidPlan = subscription !== null && subscription.planId !== "free";
 
@@ -138,7 +140,7 @@ export default function PricingPage() {
                 size="sm"
                 color="danger"
                 disabled={downgrading}
-                onClick={handleDowngrade}
+                onClick={() => setShowDowngradeConfirm(true)}
               >
                 {downgrading ? t("billing.processing") : t("billing.downgrade")}
               </Button>
@@ -155,6 +157,18 @@ export default function PricingPage() {
         ))}
       </div>
 
+      {showDowngradeConfirm && (
+        <ConfirmModal
+          title={t("billing.cancelConfirmTitle")}
+          message={t("billing.cancelConfirmMessage")}
+          confirmLabel={t("billing.downgrade")}
+          cancelLabel={t("common.cancel")}
+          danger
+          onConfirm={() => { setShowDowngradeConfirm(false); handleDowngrade(); }}
+          onCancel={() => setShowDowngradeConfirm(false)}
+        />
+      )}
+
       {checkoutPlan && (
         <CheckoutSheet
           planName={checkoutPlan.name}
@@ -162,7 +176,8 @@ export default function PricingPage() {
           price={formatCheckoutPrice(checkoutPlan)}
           billingCycle={yearly ? "yearly" : "monthly"}
           onClose={() => setCheckoutPlan(null)}
-          onRedirect={(url) => { url.startsWith("/") ? navigate(url) : window.location.href = url; }}
+          onPaddleComplete={() => navigate("/dashboard/settings/billing/success")}
+          onTropiPayRedirect={(url) => { window.location.href = url; }}
         />
       )}
     </div>
