@@ -36,7 +36,8 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
   const formatPrice = (plan: Plan) => {
     if (plan.priceMonthly === 0) return t("billing.free");
     const price = yearly ? plan.priceYearly / 12 : plan.priceMonthly;
-    return `$${(price / 100).toFixed(0)}`;
+    const formatted = price / 100;
+    return `$${formatted % 1 === 0 ? formatted.toFixed(0) : formatted.toFixed(2)}`;
   };
 
   const selectedPlan = plans.find((p) => p.id === selected);
