@@ -4,6 +4,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { checkout } from "../services/billing.service";
+import usePaddle from "../hooks/usePaddle";
 import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { toast } from "react-toastify";
 
@@ -13,23 +14,44 @@ interface Props {
   price: string;
   billingCycle: string;
   onClose: () => void;
-  onRedirect: (url: string) => void;
+  onPaddleComplete: () => void;
+  onTropiPayRedirect: (url: string) => void;
 }
 
-export default function CheckoutSheet({ planName, planId, price, billingCycle, onClose, onRedirect }: Props) {
+export default function CheckoutSheet({ planName, planId, price, billingCycle, onClose, onPaddleComplete, onTropiPayRedirect }: Props) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePay = async (gateway: string) => {
-    setLoading(gateway);
-    try {
-      const result = await checkout({ planId, billingCycle, gateway });
+  const { openCheckout } = usePaddle((event) => {
+    if (event.name === "checkout.completed") {
+      onClose();
+      onPaddleComplete();
+    }
+    if (event.name === "checkout.closed") {
+      setLoading(null);
+    }
+  });
 
-      if (result.gateway === "paddle" && result.transactionId) {
-        onRedirect(`/pay?_ptxn=${result.transactionId}`);
-      } else {
-        onRedirect(result.paymentUrl);
+  const handlePaddle = async () => {
+    setLoading("paddle");
+    try {
+      const result = await checkout({ planId, billingCycle, gateway: "paddle" });
+      if (result.transactionId) {
+        onClose();
+        openCheckout(result.transactionId);
       }
+    } catch (err) {
+      const error = err as HttpResponseError;
+      toast.error(error.message || t("billing.checkoutError"));
+      setLoading(null);
+    }
+  };
+
+  const handleTropiPay = async () => {
+    setLoading("tropipay");
+    try {
+      const result = await checkout({ planId, billingCycle, gateway: "tropipay" });
+      onTropiPayRedirect(result.paymentUrl);
     } catch (err) {
       const error = err as HttpResponseError;
       toast.error(error.message || t("billing.checkoutError"));
@@ -46,7 +68,6 @@ export default function CheckoutSheet({ planName, planId, price, billingCycle, o
         <h2 className="text-lg font-body-bold text-heading mb-1">{t("billing.checkout")}</h2>
         <p className="text-xs text-muted mb-5">{t("billing.checkoutDesc")}</p>
 
-        {/* Plan summary */}
         <div className="rounded-lg border border-border-card p-4 mb-5">
           <div className="flex items-center justify-between">
             <div>
@@ -57,17 +78,15 @@ export default function CheckoutSheet({ planName, planId, price, billingCycle, o
           </div>
         </div>
 
-        {/* Primary CTA */}
         <Button
           full
-          onClick={() => handlePay("paddle")}
+          onClick={handlePaddle}
           loading={loading === "paddle"}
           disabled={isLoading}
         >
           {t("billing.payWithCard")}
         </Button>
 
-        {/* Trust signal */}
         <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted mt-2 mb-5">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -75,18 +94,16 @@ export default function CheckoutSheet({ planName, planId, price, billingCycle, o
           {t("billing.securePayment")}
         </p>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-border-card" />
           <span className="text-[11px] text-muted">{t("billing.orPayWith")}</span>
           <div className="flex-1 h-px bg-border-card" />
         </div>
 
-        {/* Alternatives */}
         <div className="flex flex-col gap-2">
           <button
             type="button"
-            onClick={() => handlePay("tropipay")}
+            onClick={handleTropiPay}
             disabled={isLoading}
             className={clsx(
               "w-full text-sm text-heading border border-border-card rounded-lg px-4 py-2.5 transition-all cursor-pointer hover:border-primary/50",
