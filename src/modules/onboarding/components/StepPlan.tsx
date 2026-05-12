@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -16,7 +15,6 @@ interface Props {
 
 export default function StepPlan({ defaultPlan, onDone }: Props) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selected, setSelected] = useState(defaultPlan || "free");
   const [billing, setBilling] = useState<"left" | "right">("left");
@@ -56,6 +54,24 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
     }
     setShowCheckout(true);
   };
+
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!waitingPayment) return;
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const sub = await getSubscription();
+        if (sub && sub.planId !== "free" && sub.status === "active") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          onDone();
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [waitingPayment, onDone]);
 
   const handleVerifyPayment = async () => {
     setVerifying(true);
@@ -150,14 +166,11 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
           price={formatCheckoutPrice(selectedPlan)}
           billingCycle={yearly ? "yearly" : "monthly"}
           onClose={() => setShowCheckout(false)}
-          onRedirect={(url) => {
-            if (url.startsWith("/")) {
-              navigate(url);
-            } else {
-              window.open(url, "_blank");
-              setShowCheckout(false);
-              setWaitingPayment(true);
-            }
+          onPaddleComplete={() => onDone()}
+          onTropiPayRedirect={(url) => {
+            window.open(url, "_blank");
+            setShowCheckout(false);
+            setWaitingPayment(true);
           }}
         />
       )}

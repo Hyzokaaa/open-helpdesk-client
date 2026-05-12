@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import { resendVerification, getProfile } from "@modules/user/services/auth.service";
@@ -14,6 +14,22 @@ export default function StepVerifyEmail({ onDone }: Props) {
   const { t } = useTranslation();
   const [resending, setResending] = useState(false);
   const [checking, setChecking] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    pollRef.current = setInterval(async () => {
+      try {
+        const profile = await getProfile();
+        if (profile.isEmailVerified) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setUser(profile);
+          onDone();
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [onDone, setUser]);
 
   const handleResend = async () => {
     setResending(true);
