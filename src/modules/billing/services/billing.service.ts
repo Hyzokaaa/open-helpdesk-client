@@ -18,6 +18,7 @@ export interface Subscription {
   planName: string;
   billingCycle: string;
   status: string;
+  gateway: string | null;
   currentPeriodStart: string;
   currentPeriodEnd: string | null;
 }

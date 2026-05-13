@@ -78,8 +78,9 @@ export default function SubscriptionPage() {
   const now = new Date();
   const periodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
   const daysUntilExpiry = periodEnd ? Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
-  const isExpiringSoon = !isFree && daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry <= 3;
-  const isInGracePeriod = !isFree && daysUntilExpiry !== null && daysUntilExpiry <= 0 && daysUntilExpiry > -GRACE_PERIOD_DAYS;
+  const isPaddle = subscription.gateway === "paddle";
+  const isExpiringSoon = !isFree && !isPaddle && daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry <= 3;
+  const isInGracePeriod = !isFree && !isPaddle && daysUntilExpiry !== null && daysUntilExpiry <= 0 && daysUntilExpiry > -GRACE_PERIOD_DAYS;
 
   const formatDate = (date: string | null) =>
     date ? format(new Date(date), "MMM d, yyyy") : "-";

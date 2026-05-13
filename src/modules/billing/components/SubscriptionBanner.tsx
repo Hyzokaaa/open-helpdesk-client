@@ -16,6 +16,7 @@ export default function SubscriptionBanner() {
 
   if (!saasMode || !subscription || subscription.planId === "free") return null;
   if (!subscription.currentPeriodEnd) return null;
+  if (subscription.gateway === "paddle") return null;
 
   const now = new Date();
   const periodEnd = new Date(subscription.currentPeriodEnd);
