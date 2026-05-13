@@ -509,6 +509,9 @@ const translations = {
   "billing.expiringSoon": { en: "Your plan expires soon.", es: "Tu plan expira pronto." },
   "billing.daysLeft": { en: "days left", es: "días restantes" },
   "billing.gracePeriod": { en: "Your plan has expired. Renew now to keep your features.", es: "Tu plan ha expirado. Renueva ahora para conservar tus funcionalidades." },
+  "legal.terms": { en: "Terms", es: "Términos" },
+  "legal.privacy": { en: "Privacy", es: "Privacidad" },
+  "legal.refund": { en: "Refund", es: "Reembolsos" },
   "admin.col.plan": { en: "Plan", es: "Plan" },
   "admin.col.owner": { en: "Owner", es: "Propietario" },
 

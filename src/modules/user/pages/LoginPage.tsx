@@ -49,53 +49,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-page">
-      <div className="w-full max-w-sm">
-        <div className="bg-surface rounded-card border-card p-8">
-          <div className="flex items-start justify-between mb-1">
-            <h1 className="text-xl font-body-bold text-heading">
-              {APP_FULL_NAME}
-            </h1>
-            <LanguageToggle />
-          </div>
-          <p className="text-sm text-muted mb-6">
-            {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
-          </p>
+    <div className="min-h-dvh flex flex-col bg-page">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-sm">
+          <div className="bg-surface rounded-card border-card p-8">
+            <div className="flex items-start justify-between mb-1">
+              <h1 className="text-xl font-body-bold text-heading">
+                {APP_FULL_NAME}
+              </h1>
+              <LanguageToggle />
+            </div>
+            <p className="text-sm text-muted mb-6">
+              {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
+            </p>
 
-          <form onSubmit={handleSubmit}>
-            <FormInput label={t("login.email")} required>
-              <Input
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={setEmail}
-              />
-            </FormInput>
+            <form onSubmit={handleSubmit}>
+              <FormInput label={t("login.email")} required>
+                <Input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={setEmail}
+                />
+              </FormInput>
 
-            <FormInput label={t("login.password")} required>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={setPassword}
-              />
-            </FormInput>
+              <FormInput label={t("login.password")} required>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={setPassword}
+                />
+              </FormInput>
 
-            <Button type="submit" full loading={loading} className="mt-2">
-              {t("login.signIn")}
-            </Button>
-          </form>
+              <Button type="submit" full loading={loading} className="mt-2">
+                {t("login.signIn")}
+              </Button>
+            </form>
 
-          <div className="text-center mt-4 flex flex-col gap-2">
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-              {t("login.forgotPassword")}
-            </Link>
-            {saasMode && (
-              <Link to="/signup" className="text-xs text-primary hover:underline">
-                {t("login.noAccount")}
+            <div className="text-center mt-4 flex flex-col gap-2">
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                {t("login.forgotPassword")}
               </Link>
-            )}
+              {saasMode && (
+                <Link to="/signup" className="text-xs text-primary hover:underline">
+                  {t("login.noAccount")}
+                </Link>
+              )}
+            </div>
           </div>
+
+          {saasMode && (
+            <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">
+              <a href="https://openhelpdesk.dev/terms" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
+              <span>·</span>
+              <a href="https://openhelpdesk.dev/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+              <span>·</span>
+              <a href="https://openhelpdesk.dev/refund" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+            </div>
+          )}
         </div>
       </div>
     </div>

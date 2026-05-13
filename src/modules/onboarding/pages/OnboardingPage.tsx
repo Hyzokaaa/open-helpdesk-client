@@ -68,33 +68,43 @@ export default function OnboardingPage() {
   if (loading) return null;
 
   return (
-    <div className="min-h-dvh flex flex-col items-center bg-page py-12 px-4">
-      <h1 className="text-xl font-body-bold text-heading mb-8">{APP_FULL_NAME}</h1>
+    <div className="min-h-dvh flex flex-col bg-page">
+      <div className="flex-1 flex flex-col items-center justify-center py-12 px-4">
+        <h1 className="text-xl font-body-bold text-heading mb-8">{APP_FULL_NAME}</h1>
 
-      <div className="flex items-center gap-2 mb-8">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-body-semibold ${
-                i <= stepIndex
-                  ? "bg-primary-600 text-white"
-                  : "bg-surface-hover text-muted"
-              }`}
-            >
-              {i + 1}
+        <div className="flex items-center gap-2 mb-8">
+          {STEPS.map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-body-semibold ${
+                  i <= stepIndex
+                    ? "bg-primary-600 text-white"
+                    : "bg-surface-hover text-muted"
+                }`}
+              >
+                {i + 1}
+              </div>
+              {i < STEPS.length - 1 && (
+                <div className={`w-8 h-0.5 ${i < stepIndex ? "bg-primary-600" : "bg-surface-hover"}`} />
+              )}
             </div>
-            {i < STEPS.length - 1 && (
-              <div className={`w-8 h-0.5 ${i < stepIndex ? "bg-primary-600" : "bg-surface-hover"}`} />
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="w-full max-w-md">
-        {step === "account" && <StepAccount onDone={handleAccountDone} />}
-        {step === "verify" && <StepVerifyEmail onDone={handleVerifyDone} />}
-        {step === "plan" && <StepPlan defaultPlan={planFromUrl} onDone={handlePlanDone} />}
-        {step === "workspace" && <StepWorkspace onDone={handleFinish} onSkip={handleFinish} />}
+        <div className="w-full max-w-md">
+          {step === "account" && <StepAccount onDone={handleAccountDone} />}
+          {step === "verify" && <StepVerifyEmail onDone={handleVerifyDone} />}
+          {step === "plan" && <StepPlan defaultPlan={planFromUrl} onDone={handlePlanDone} />}
+          {step === "workspace" && <StepWorkspace onDone={handleFinish} onSkip={handleFinish} />}
+        </div>
+
+        <div className="flex items-center justify-center gap-3 mt-8 text-[11px] text-muted">
+          <a href="https://openhelpdesk.dev/terms" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
+          <span>·</span>
+          <a href="https://openhelpdesk.dev/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+          <span>·</span>
+          <a href="https://openhelpdesk.dev/refund" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+        </div>
       </div>
     </div>
   );
