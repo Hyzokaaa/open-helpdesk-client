@@ -133,7 +133,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchAttachments();
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
-    if (workspaceSlug && can(P.CANNED_RESPONSE_CREATE)) listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
   }, [workspaceSlug, ticketId]);
 
@@ -159,6 +158,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   });
 
   const { can } = usePermissions(workspaceSlug);
+
+  useEffect(() => {
+    if (workspaceSlug && can(P.CANNED_RESPONSE_VIEW)) {
+      listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
+    }
+  }, [workspaceSlug, can(P.CANNED_RESPONSE_VIEW)]);
+
   const isCreator = ticket?.creatorId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
