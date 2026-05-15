@@ -120,11 +120,11 @@ export default function CheckoutSheet({ planName, planId, price, billingCycle, o
         </div>
 
         <div className="flex items-center justify-center gap-2 mt-5 pt-4 border-t border-border-card text-[10px] text-muted">
-          <a href="https://openhelpdesk.dev/terms" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
+          <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
           <span>·</span>
-          <a href="https://openhelpdesk.dev/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+          <a href="/privacy" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
           <span>·</span>
-          <a href="https://openhelpdesk.dev/refund" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+          <a href="/refund" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
         </div>
       </div>
     </Sheet>

@@ -101,11 +101,11 @@ export default function LoginPage() {
 
           {saasMode && (
             <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">
-              <a href="https://openhelpdesk.dev/terms" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
+              <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
               <span>·</span>
-              <a href="https://openhelpdesk.dev/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+              <a href="/privacy" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
               <span>·</span>
-              <a href="https://openhelpdesk.dev/refund" target="_blank" rel="noopener noreferrer" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+              <a href="/refund" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
             </div>
           )}
         </div>
