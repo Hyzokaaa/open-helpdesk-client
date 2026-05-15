@@ -13,8 +13,8 @@ const translations = {
     es: "Completo sin ser complejo",
   },
   "hero.subheadline": {
-    en: "The open-source helpdesk that has everything you need and nothing you don't.",
-    es: "El helpdesk open-source que tiene todo lo que necesitas y nada que no.",
+    en: "Open-source helpdesk for teams who need powerful support without the complexity.",
+    es: "Helpdesk open-source para equipos que necesitan soporte potente sin la complejidad.",
   },
   "hero.cta": { en: "Get Started Free", es: "Comenzar Gratis" },
   "hero.github": { en: "View on GitHub", es: "Ver en GitHub" },
@@ -62,25 +62,25 @@ const translations = {
     en: "Add your own fields to tickets — text, dropdowns, dates, checkboxes, and more.",
     es: "Agrega tus propios campos a tickets — texto, selección, fechas, casillas y más.",
   },
-  "features.roles.title": { en: "Roles & Permissions", es: "Roles y Permisos" },
-  "features.roles.desc": {
-    en: "Three built-in roles — Admin, Agent, and Reporter — with granular permissions per workspace.",
-    es: "Tres roles integrados — Admin, Agente y Reportero — con permisos granulares por workspace.",
+  "features.workspaces.title": { en: "Workspaces", es: "Workspaces" },
+  "features.workspaces.desc": {
+    en: "Separate teams, departments, or clients into independent workspaces with their own settings.",
+    es: "Separa equipos, departamentos o clientes en workspaces independientes con su propia configuración.",
   },
-  "features.email.title": { en: "Email Notifications", es: "Notificaciones por Email" },
-  "features.email.desc": {
-    en: "Automatic alerts for assignments, mentions, status changes, and CSAT surveys.",
-    es: "Alertas automáticas para asignaciones, menciones, cambios de estado y encuestas CSAT.",
+  "features.auditLog.title": { en: "Audit Log", es: "Registro de Auditoría" },
+  "features.auditLog.desc": {
+    en: "Full traceability of every action — who changed what, when, and why.",
+    es: "Trazabilidad completa de cada acción — quién cambió qué, cuándo y por qué.",
   },
-  "features.attachments.title": { en: "Attachments", es: "Archivos Adjuntos" },
-  "features.attachments.desc": {
-    en: "Drag & drop files, paste images, and preview attachments inline.",
-    es: "Arrastra archivos, pega imágenes y previsualiza adjuntos en línea.",
+  "features.selfHosted.title": { en: "Self-hosted", es: "Self-hosted" },
+  "features.selfHosted.desc": {
+    en: "Deploy on your own servers with Docker. Your data stays yours — no vendor lock-in.",
+    es: "Despliega en tus propios servidores con Docker. Tus datos son tuyos — sin dependencia de terceros.",
   },
-  "features.tags.title": { en: "Tags", es: "Etiquetas" },
-  "features.tags.desc": {
-    en: "Organize and filter tickets with custom color-coded tags.",
-    es: "Organiza y filtra tickets con etiquetas personalizadas con colores.",
+  "features.api.title": { en: "REST API", es: "REST API" },
+  "features.api.desc": {
+    en: "Integrate with any external system. Automate workflows and extend functionality via API.",
+    es: "Integra con cualquier sistema externo. Automatiza flujos y extiende funcionalidad vía API.",
   },
 
   // Product Showcase
@@ -194,8 +194,8 @@ const translations = {
     es: "Es Open Helpdesk realmente gratis?",
   },
   "faq.a1": {
-    en: "Yes! The core product is free and open-source under AGPL-3.0. You can self-host it at no cost. We offer paid cloud plans for teams who want managed hosting and premium support.",
-    es: "Sí! El producto principal es gratuito y open-source bajo AGPL-3.0. Puedes auto-hospedarlo sin costo. Ofrecemos planes cloud de pago para equipos que quieran hosting administrado y soporte premium.",
+    en: "Yes! The core product is free and open-source under AGPL-3.0. You can self-host it at no cost. We offer paid cloud plans for teams who need more agents, workspaces, and advanced features.",
+    es: "Sí! El producto principal es gratuito y open-source bajo AGPL-3.0. Puedes auto-hospedarlo sin costo. Ofrecemos planes cloud de pago para equipos que necesiten más agentes, workspaces y funcionalidades avanzadas.",
   },
   "faq.q2": { en: "Can I self-host it?", es: "Puedo auto-hospedarlo?" },
   "faq.a2": {
@@ -203,20 +203,20 @@ const translations = {
     es: "Absolutamente. Proveemos imágenes Docker y un archivo docker-compose que te permite correr en menos de 5 minutos. Despliega en cualquier VPS, cluster de Kubernetes o servidor bare metal.",
   },
   "faq.q3": {
-    en: "How does it compare to Zendesk?",
-    es: "Cómo se compara con Zendesk?",
+    en: "How is it different from other helpdesks?",
+    es: "En qué se diferencia de otros helpdesks?",
   },
   "faq.a3": {
-    en: "Open Helpdesk focuses on what matters: tickets, roles, notifications, and clean UX. No bloated features you'll never use. Plus, you own your data and can customize everything.",
-    es: "Open Helpdesk se enfoca en lo que importa: tickets, roles, notificaciones y UX limpia. Sin funciones infladas que nunca usarás. Además, eres dueño de tus datos y puedes personalizar todo.",
+    en: "Most helpdesks are either too simple or bloated with features you'll never use. Open Helpdesk gives you what actually matters — tickets, workspaces, reports, CSAT, and a clean UX — without the noise. Plus, it's open-source: you own your data and can self-host it.",
+    es: "La mayoría de helpdesks son demasiado simples o están inflados con funciones que nunca usarás. Open Helpdesk te da lo que realmente importa — tickets, workspaces, reportes, CSAT y una UX limpia — sin el ruido. Además, es open-source: eres dueño de tus datos y puedes auto-hospedarlo.",
   },
   "faq.q4": {
     en: "What's included in the free plan?",
     es: "Qué incluye el plan gratuito?",
   },
   "faq.a4": {
-    en: "Up to 2 agents, 1 workspace, full ticket management, email notifications, dark mode, i18n support, and community support. No feature gating on the essentials.",
-    es: "Hasta 2 agentes, 1 workspace, gestión completa de tickets, notificaciones por email, modo oscuro, soporte i18n y soporte comunitario. Sin limitaciones en lo esencial.",
+    en: "Up to 2 agents, 1 workspace, full ticket management, reports, canned responses, custom fields, and email notifications. No feature gating on the essentials.",
+    es: "Hasta 2 agentes, 1 workspace, gestión completa de tickets, reportes, respuestas predefinidas, campos personalizados y notificaciones por email. Sin limitaciones en lo esencial.",
   },
   "faq.q5": {
     en: "Can I upgrade or downgrade anytime?",

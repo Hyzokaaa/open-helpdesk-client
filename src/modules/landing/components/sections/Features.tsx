@@ -8,10 +8,10 @@ import {
   CsatIcon,
   CannedIcon,
   CustomFieldsIcon,
-  RolesIcon,
-  EmailIcon,
-  AttachmentsIcon,
-  TagsIcon,
+  WorkspacesIcon,
+  AuditLogIcon,
+  SelfHostedIcon,
+  ApiIcon,
 } from "../icons/FeatureIcons";
 
 export default function Features() {
@@ -23,10 +23,10 @@ export default function Features() {
     { icon: <CsatIcon />, title: t("features.csat.title"), desc: t("features.csat.desc") },
     { icon: <CannedIcon />, title: t("features.canned.title"), desc: t("features.canned.desc") },
     { icon: <CustomFieldsIcon />, title: t("features.customFields.title"), desc: t("features.customFields.desc") },
-    { icon: <RolesIcon />, title: t("features.roles.title"), desc: t("features.roles.desc") },
-    { icon: <EmailIcon />, title: t("features.email.title"), desc: t("features.email.desc") },
-    { icon: <AttachmentsIcon />, title: t("features.attachments.title"), desc: t("features.attachments.desc") },
-    { icon: <TagsIcon />, title: t("features.tags.title"), desc: t("features.tags.desc") },
+    { icon: <WorkspacesIcon />, title: t("features.workspaces.title"), desc: t("features.workspaces.desc") },
+    { icon: <AuditLogIcon />, title: t("features.auditLog.title"), desc: t("features.auditLog.desc") },
+    { icon: <SelfHostedIcon />, title: t("features.selfHosted.title"), desc: t("features.selfHosted.desc") },
+    { icon: <ApiIcon />, title: t("features.api.title"), desc: t("features.api.desc") },
   ];
 
   return (
