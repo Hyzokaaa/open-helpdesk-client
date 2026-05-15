@@ -41,6 +41,7 @@ export default function CommentInput({ members, loading, onSubmit, cannedRespons
 
     if (node.nodeType !== Node.TEXT_NODE) {
       setShowMentions(false);
+      setShowCanned(false);
       return;
     }
 
