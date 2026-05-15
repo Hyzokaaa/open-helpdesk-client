@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider } from "@modules/app/context/ThemeProvider";
 import { ConfigProvider } from "@modules/app/context/ConfigProvider";
 import useTheme from "@modules/app/hooks/useTheme";
+import useConfig from "@modules/app/hooks/useConfig";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import SignupPage from "@modules/user/pages/SignupPage";
@@ -38,11 +39,74 @@ import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPag
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
+import LandingLayout from "@modules/landing/LandingLayout";
+import HomePage from "@modules/landing/pages/HomePage";
+import PrivacyPage from "@modules/landing/pages/PrivacyPage";
+import TermsPage from "@modules/landing/pages/TermsPage";
+import RefundPage from "@modules/landing/pages/RefundPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
   const toastTheme = theme.startsWith("dark") ? "dark" : "light";
   return <ToastContainer position="top-right" autoClose={3000} theme={toastTheme} />;
+}
+
+function AppRoutes() {
+  const { saasMode, loading } = useConfig();
+
+  if (loading) return null;
+
+  return (
+    <Routes>
+      {saasMode && (
+        <Route element={<LandingLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/refund" element={<RefundPage />} />
+        </Route>
+      )}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path="/invite/:token" element={<InvitationPage />} />
+      <Route path="/pay" element={<PaddlePayPage />} />
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<WorkspacesPage />} />
+        <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
+        <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
+        <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+        <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
+        <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+        <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
+        <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+        <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
+        <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
+        <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
+        <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
+        <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
+        <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="settings" element={<Navigate to="account" replace />} />
+        <Route path="settings/account" element={<AccountSection />} />
+        <Route path="settings/security" element={<PasswordSection />} />
+        <Route path="settings/preferences" element={<PreferencesSection />} />
+        <Route path="settings/notifications" element={<NotificationsSection />} />
+        <Route path="changelog" element={<ChangelogPage />} />
+        <Route path="settings/billing" element={<SubscriptionPage />} />
+        <Route path="settings/billing/success" element={<PaymentResultPage success />} />
+        <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
+        <Route path="settings/pricing" element={<PricingPage />} />
+        <Route path="admin" element={<Navigate to="users" replace />} />
+        <Route path="admin/users" element={<AdminUsersPage />} />
+        <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to={saasMode ? "/" : "/login"} replace />} />
+    </Routes>
+  );
 }
 
 export default function App() {
@@ -52,47 +116,7 @@ export default function App() {
     <BrowserRouter>
       <UserProvider>
         <ThemedToast />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/invite/:token" element={<InvitationPage />} />
-          <Route path="/pay" element={<PaddlePayPage />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<WorkspacesPage />} />
-            <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
-            <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
-            <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
-            <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
-            <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
-            <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
-            <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
-            <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
-            <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
-            <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
-            <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
-            <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
-            <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="settings" element={<Navigate to="account" replace />} />
-            <Route path="settings/account" element={<AccountSection />} />
-            <Route path="settings/security" element={<PasswordSection />} />
-            <Route path="settings/preferences" element={<PreferencesSection />} />
-            <Route path="settings/notifications" element={<NotificationsSection />} />
-            <Route path="changelog" element={<ChangelogPage />} />
-            <Route path="settings/billing" element={<SubscriptionPage />} />
-            <Route path="settings/billing/success" element={<PaymentResultPage success />} />
-            <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
-            <Route path="settings/pricing" element={<PricingPage />} />
-            <Route path="admin" element={<Navigate to="users" replace />} />
-            <Route path="admin/users" element={<AdminUsersPage />} />
-            <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <AppRoutes />
       </UserProvider>
     </BrowserRouter>
     </ConfigProvider>
