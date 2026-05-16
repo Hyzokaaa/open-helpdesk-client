@@ -134,3 +134,33 @@ export async function deleteTicket(
 ): Promise<void> {
   await http.delete(`/workspaces/${workspaceId}/tickets/${ticketId}`);
 }
+
+export interface BulkResult {
+  ticketId: string;
+  success: boolean;
+  error?: string;
+}
+
+export async function bulkChangeStatus(
+  workspaceId: string,
+  ticketIds: string[],
+  status: string,
+  discardReason?: string,
+): Promise<BulkResult[]> {
+  const res = await http.patch<BulkResult[]>(`/workspaces/${workspaceId}/tickets/bulk/status`, {
+    ticketIds,
+    status,
+    ...(discardReason ? { discardReason } : {}),
+  });
+  return res.data;
+}
+
+export async function bulkDeleteTickets(
+  workspaceId: string,
+  ticketIds: string[],
+): Promise<BulkResult[]> {
+  const res = await http.post<BulkResult[]>(`/workspaces/${workspaceId}/tickets/bulk/delete`, {
+    ticketIds,
+  });
+  return res.data;
+}

@@ -19,6 +19,9 @@ import {
   TicketFilters,
   listTickets,
   deleteTicket,
+  changeTicketStatus,
+  bulkChangeStatus,
+  bulkDeleteTickets,
 } from "../services/ticket.service";
 import {
   PRIORITIES,
@@ -72,6 +75,15 @@ export default function TicketsPage() {
   const [deleteTicketId, setDeleteTicketId] = useState<string | null>(null);
   const [createDirty, setCreateDirty] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
+  const [changeStatusTicket, setChangeStatusTicket] = useState<TicketListItem | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [showDiscardReason, setShowDiscardReason] = useState(false);
+  const [discardReason, setDiscardReason] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatusModal, setBulkStatusModal] = useState(false);
+  const [bulkSelectedStatus, setBulkSelectedStatus] = useState("");
+  const [bulkDiscardReason, setBulkDiscardReason] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const handleCreateClose = useCallback(() => {
     if (createDirty) {
@@ -122,6 +134,7 @@ export default function TicketsPage() {
 
   useEffect(() => {
     if (!permLoading) fetchTickets();
+    setSelectedIds(new Set());
   }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter]);
 
   useEffect(() => {
@@ -143,6 +156,74 @@ export default function TicketsPage() {
       });
     } else {
       setFilters({ ...filters, sortBy: field, sortOrder: "ASC", page: 1 });
+    }
+  };
+
+  const tickets = result?.items ?? [];
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === tickets.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(tickets.map((t) => t.id)));
+    }
+  };
+
+  const handleBulkStatusChange = async (reason?: string) => {
+    if (!workspaceSlug || !bulkSelectedStatus) return;
+    if (bulkSelectedStatus === "discarded" && !reason) {
+      setBulkDiscardReason(true);
+      return;
+    }
+    try {
+      await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
+      toast.success(`${selectedIds.size} ticket(s) updated`);
+      setSelectedIds(new Set());
+      setBulkStatusModal(false);
+      setBulkSelectedStatus("");
+      setBulkDiscardReason(false);
+      fetchTickets();
+    } catch {
+      toast.error("Failed to update tickets");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!workspaceSlug) return;
+    try {
+      await bulkDeleteTickets(workspaceSlug, [...selectedIds]);
+      toast.success(`${selectedIds.size} ticket(s) deleted`);
+      setSelectedIds(new Set());
+      fetchTickets();
+    } catch {
+      toast.error("Failed to delete tickets");
+    }
+  };
+
+  const handleChangeStatus = async () => {
+    if (!workspaceSlug || !changeStatusTicket || !selectedStatus) return;
+    if (selectedStatus === "discarded" && !discardReason) {
+      setShowDiscardReason(true);
+      return;
+    }
+    try {
+      await changeTicketStatus(workspaceSlug, changeStatusTicket.id, selectedStatus, selectedStatus === "discarded" ? discardReason : undefined);
+      toast.success(t("ticketDetail.status") + " updated");
+      setChangeStatusTicket(null);
+      setSelectedStatus("");
+      setDiscardReason("");
+      setShowDiscardReason(false);
+      fetchTickets();
+    } catch {
+      toast.error("Failed to change status");
     }
   };
 
@@ -199,109 +280,132 @@ export default function TicketsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        {tab === "active" && (
-          <div className="w-40">
-            <Select
-              options={["all", ...STATUSES.filter((s) => s !== "resolved" && s !== "discarded")]}
-              label={(s) => (s === "all" ? t("tickets.allStatuses") : tEnum("status", s))}
-              value={(s) => s === (filters.status || "all")}
-              onChange={(s) =>
-                setFilters({
-                  ...filters,
-                  status: s === "all" ? undefined : s,
-                  page: 1,
-                })
-              }
-              placeholder="Status"
-            />
-          </div>
-        )}
-        <div className="w-40">
-          <Select
-            options={["all", ...PRIORITIES]}
-            label={(p) => (p === "all" ? t("tickets.allPriorities") : tEnum("priority", p))}
-            value={(p) => p === (filters.priority || "all")}
-            onChange={(p) =>
-              setFilters({
-                ...filters,
-                priority: p === "all" ? undefined : p,
-                page: 1,
-              })
-            }
-            placeholder="Priority"
-          />
-        </div>
+            {tab === "active" && (
+              <div className="w-40">
+                <Select
+                  options={["all", ...STATUSES.filter((s) => s !== "resolved" && s !== "discarded")]}
+                  label={(s) => (s === "all" ? t("tickets.allStatuses") : tEnum("status", s))}
+                  value={(s) => s === (filters.status || "all")}
+                  onChange={(s) =>
+                    setFilters({
+                      ...filters,
+                      status: s === "all" ? undefined : s,
+                      page: 1,
+                    })
+                  }
+                  placeholder="Status"
+                />
+              </div>
+            )}
+            <div className="w-40">
+              <Select
+                options={["all", ...PRIORITIES]}
+                label={(p) => (p === "all" ? t("tickets.allPriorities") : tEnum("priority", p))}
+                value={(p) => p === (filters.priority || "all")}
+                onChange={(p) =>
+                  setFilters({
+                    ...filters,
+                    priority: p === "all" ? undefined : p,
+                    page: 1,
+                  })
+                }
+                placeholder="Priority"
+              />
+            </div>
 
-        {tags.length > 0 && (
-          <div ref={tagDropdownRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-              className={clsx(
-                "h-max px-3 py-1 rounded-input border-input text-sm text-left cursor-pointer flex items-center gap-2 transition-all",
-                filterTagIds.length > 0
-                  ? "bg-surface-active border-primary-300 text-primary"
-                  : "bg-surface text-subtle",
-              )}
-            >
-              <span>Tags</span>
-              {filterTagIds.length > 0 && (
-                <span className="bg-primary-600 text-on-primary text-exs rounded-full w-4 h-4 flex items-center justify-center">
-                  {filterTagIds.length}
-                </span>
-              )}
-              <span className="text-xs ml-1">▼</span>
-            </button>
+            {tags.length > 0 && (
+              <div ref={tagDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+                  className={clsx(
+                    "h-max px-3 py-1 rounded-input border-input text-sm text-left cursor-pointer flex items-center gap-2 transition-all",
+                    filterTagIds.length > 0
+                      ? "bg-surface-active border-primary-300 text-primary"
+                      : "bg-surface text-subtle",
+                  )}
+                >
+                  <span>Tags</span>
+                  {filterTagIds.length > 0 && (
+                    <span className="bg-primary-600 text-on-primary text-exs rounded-full w-4 h-4 flex items-center justify-center">
+                      {filterTagIds.length}
+                    </span>
+                  )}
+                  <span className="text-xs ml-1">▼</span>
+                </button>
 
-            {tagDropdownOpen && (
-              <div className="absolute z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg p-3 w-56">
-                <p className="text-exs text-subtle font-body-medium mb-2 uppercase">
-                  {t("tickets.filterByTags")}
-                </p>
-                <div className="flex flex-col gap-1.5 max-h-48 overflow-auto">
-                  {tags.map((tag) => {
-                    const selected = filterTagIds.includes(tag.id);
-                    return (
+                {tagDropdownOpen && (
+                  <div className="absolute z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg p-3 w-56">
+                    <p className="text-exs text-subtle font-body-medium mb-2 uppercase">
+                      {t("tickets.filterByTags")}
+                    </p>
+                    <div className="flex flex-col gap-1.5 max-h-48 overflow-auto">
+                      {tags.map((tag) => {
+                        const selected = filterTagIds.includes(tag.id);
+                        return (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => {
+                              const ids = selected
+                                ? filterTagIds.filter((id) => id !== tag.id)
+                                : [...filterTagIds, tag.id];
+                              setFilterTagIds(ids);
+                              setFilters({ ...filters, page: 1 });
+                            }}
+                            className={clsx(
+                              "flex items-center gap-2 px-2 py-1.5 rounded text-xs font-body-medium transition-colors cursor-pointer text-left",
+                              selected
+                                ? "bg-surface-active text-primary"
+                                : "text-secondary-text hover:bg-surface-hover",
+                            )}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: tag.color || "#6366f1" }}
+                            />
+                            {tag.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {filterTagIds.length > 0 && (
                       <button
-                        key={tag.id}
                         type="button"
                         onClick={() => {
-                          const ids = selected
-                            ? filterTagIds.filter((id) => id !== tag.id)
-                            : [...filterTagIds, tag.id];
-                          setFilterTagIds(ids);
+                          setFilterTagIds([]);
                           setFilters({ ...filters, page: 1 });
                         }}
-                        className={clsx(
-                          "flex items-center gap-2 px-2 py-1.5 rounded text-xs font-body-medium transition-colors cursor-pointer text-left",
-                          selected
-                            ? "bg-surface-active text-primary"
-                            : "text-secondary-text hover:bg-surface-hover",
-                        )}
+                        className="text-exs text-subtle hover:text-secondary-text mt-2 cursor-pointer"
                       >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: tag.color || "#6366f1" }}
-                        />
-                        {tag.name}
+                        {t("tickets.clearAll")}
                       </button>
-                    );
-                  })}
-                </div>
-                {filterTagIds.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilterTagIds([]);
-                      setFilters({ ...filters, page: 1 });
-                    }}
-                    className="text-exs text-subtle hover:text-secondary-text mt-2 cursor-pointer"
-                  >
-                    {t("tickets.clearAll")}
-                  </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-xs text-body font-body-semibold">
+              {selectedIds.size} {t("tickets.selected")}
+            </span>
+            {can(P.TICKET_CHANGE_STATUS) && (
+              <Button size="xs" color="light" onClick={() => { setBulkStatusModal(true); setBulkSelectedStatus(""); }}>
+                {t("tickets.changeStatus")}
+              </Button>
+            )}
+            {can(P.TICKET_DELETE) && (
+              <Button size="xs" color="danger" onClick={() => setConfirmBulkDelete(true)}>
+                {t("tickets.delete")}
+              </Button>
+            )}
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-subtle hover:text-body cursor-pointer"
+            >
+              ✕
+            </button>
           </div>
         )}
       </div>
@@ -322,6 +426,23 @@ export default function TicketsPage() {
               <thead>
                 <SortableContext items={order} strategy={horizontalListSortingStrategy}>
                 <tr className="border-b border-border-card bg-surface-hover">
+                  {!isReporter && (
+                    <th className="pl-4 pr-1 py-3 w-10">
+                      <button
+                        onClick={toggleSelectAll}
+                        className={clsx(
+                          "w-4 h-4 rounded border transition-colors flex items-center justify-center cursor-pointer",
+                          tickets.length > 0 && selectedIds.size === tickets.length
+                            ? "bg-primary-600 border-primary-600"
+                            : "border-border-input hover:border-primary-400",
+                        )}
+                      >
+                        {tickets.length > 0 && selectedIds.size === tickets.length && (
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        )}
+                      </button>
+                    </th>
+                  )}
                   {reorder(COLUMNS).map((col) => (
                     <SortableTh
                       key={col.key}
@@ -348,6 +469,23 @@ export default function TicketsPage() {
                     className="border-b border-border-row hover:bg-surface-hover/50 cursor-pointer transition-colors"
                     onClick={() => { setSelectedTicketId(ticket.id); setTicketMode("view"); }}
                   >
+                    {!isReporter && (
+                      <td className="pl-4 pr-1 py-3 w-10" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleSelect(ticket.id)}
+                          className={clsx(
+                            "w-4 h-4 rounded border transition-colors flex items-center justify-center cursor-pointer",
+                            selectedIds.has(ticket.id)
+                              ? "bg-primary-600 border-primary-600"
+                              : "border-border-input hover:border-primary-400",
+                          )}
+                        >
+                          {selectedIds.has(ticket.id) && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          )}
+                        </button>
+                      </td>
+                    )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
                         {col.key === "name" && (
@@ -410,6 +548,10 @@ export default function TicketsPage() {
                           label: t("tickets.edit"),
                           onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); },
                         }] : []),
+                        ...(can(P.TICKET_CHANGE_STATUS) ? [{
+                          label: t("tickets.changeStatus"),
+                          onClick: () => { setChangeStatusTicket(ticket); setSelectedStatus(ticket.status); },
+                        }] : []),
                         ...(can(P.TICKET_DELETE) ? [{
                           label: t("tickets.delete"),
                           onClick: () => setDeleteTicketId(ticket.id),
@@ -455,6 +597,158 @@ export default function TicketsPage() {
             </div>
           )}
         </>
+      )}
+
+      {changeStatusTicket && !showDiscardReason && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => { setChangeStatusTicket(null); setSelectedStatus(""); }}
+        >
+          <div
+            className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-body-bold text-heading mb-1">
+              {t("tickets.changeStatus")}
+            </h3>
+            <p className="text-sm text-muted mb-4">{changeStatusTicket.name}</p>
+            <div className="flex flex-col gap-1.5 mb-6">
+              {STATUSES.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedStatus(s)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${
+                    selectedStatus === s
+                      ? "bg-surface-active text-primary border border-primary/30"
+                      : "text-secondary-text hover:bg-surface-hover border border-transparent"
+                  }`}
+                >
+                  {tEnum("status", s)}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" color="light" onClick={() => { setChangeStatusTicket(null); setSelectedStatus(""); }}>
+                {t("ticketDetail.cancel")}
+              </Button>
+              <Button
+                size="sm"
+                color="primary"
+                disabled={!selectedStatus || selectedStatus === changeStatusTicket.status}
+                onClick={handleChangeStatus}
+              >
+                {t("ticketDetail.confirmSave")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDiscardReason && changeStatusTicket && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => { setShowDiscardReason(false); setDiscardReason(""); }}>
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+            <div className="flex flex-col gap-2">
+              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+                <button
+                  key={reason}
+                  onClick={async () => {
+                    try {
+                      await changeTicketStatus(workspaceSlug!, changeStatusTicket.id, "discarded", reason);
+                      toast.success(t("ticketDetail.status") + " updated");
+                      setChangeStatusTicket(null);
+                      setSelectedStatus("");
+                      setDiscardReason("");
+                      setShowDiscardReason(false);
+                      fetchTickets();
+                    } catch {
+                      toast.error("Failed to change status");
+                    }
+                  }}
+                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
+                >
+                  {tEnum("discardReason", reason)}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setShowDiscardReason(false); setDiscardReason(""); }}
+              className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer"
+            >
+              {t("ticketDetail.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bulkStatusModal && !bulkDiscardReason && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => { setBulkStatusModal(false); setBulkSelectedStatus(""); }}
+        >
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
+            <p className="text-sm text-muted mb-4">{selectedIds.size} ticket(s)</p>
+            <div className="flex flex-col gap-1.5 mb-6">
+              {STATUSES.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setBulkSelectedStatus(s)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${
+                    bulkSelectedStatus === s
+                      ? "bg-surface-active text-primary border border-primary/30"
+                      : "text-secondary-text hover:bg-surface-hover border border-transparent"
+                  }`}
+                >
+                  {tEnum("status", s)}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" color="light" onClick={() => { setBulkStatusModal(false); setBulkSelectedStatus(""); }}>
+                {t("ticketDetail.cancel")}
+              </Button>
+              <Button size="sm" color="primary" disabled={!bulkSelectedStatus} onClick={() => handleBulkStatusChange()}>
+                {t("ticketDetail.confirmSave")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bulkDiscardReason && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => { setBulkDiscardReason(false); }}>
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+            <div className="flex flex-col gap-2">
+              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => handleBulkStatusChange(reason)}
+                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
+                >
+                  {tEnum("discardReason", reason)}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setBulkDiscardReason(false)} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">
+              {t("ticketDetail.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmBulkDelete && (
+        <ConfirmModal
+          title={t("tickets.delete")}
+          message={`${selectedIds.size} ticket(s) will be deleted.`}
+          confirmLabel={t("common.delete")}
+          danger
+          onConfirm={() => { setConfirmBulkDelete(false); handleBulkDelete(); }}
+          onCancel={() => setConfirmBulkDelete(false)}
+        />
       )}
 
       {deleteTicketId && (
