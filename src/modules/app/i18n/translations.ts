@@ -533,6 +533,11 @@ const translations = {
   "billing.seatsReduceWarning": { en: "Changes take effect immediately. Agents exceeding the new limit will be deactivated. Unused time is credited to your next invoice.", es: "Los cambios se aplican de inmediato. Los agentes que excedan el nuevo límite serán desactivados. El tiempo no utilizado se acredita en tu próxima factura." },
   "billing.seatsIncreaseNote": { en: "You'll be charged a prorated amount for the remaining days in your billing cycle.", es: "Se te cobrará un monto prorrateado por los días restantes de tu ciclo de facturación." },
   "billing.calculatingCharges": { en: "Calculating charges...", es: "Calculando cargos..." },
+  "billing.granted": { en: "Granted", es: "Otorgado" },
+  "billing.paid": { en: "Paid", es: "Pagado" },
+  "billing.grantedConfirmTitle": { en: "You have a granted plan", es: "Tienes un plan otorgado" },
+  "billing.grantedConfirmMessage": { en: "Your current plan was granted by the administrator at no cost. If you proceed, you will start paying for a plan. Are you sure?", es: "Tu plan actual fue otorgado por el administrador sin costo. Si continúas, comenzarás a pagar por un plan. ¿Estás seguro?" },
+  "billing.grantedDowngradeMessage": { en: "Your current plan was granted by the administrator at no cost. If you downgrade to Free, you will lose your granted benefits. Are you sure?", es: "Tu plan actual fue otorgado por el administrador sin costo. Si bajas a Free, perderás los beneficios otorgados. ¿Estás seguro?" },
   "billing.immediateCharge": { en: "Immediate charge", es: "Cargo inmediato" },
   "billing.creditApplied": { en: "Credit for unused time", es: "Crédito por tiempo no usado" },
   "billing.subtotal": { en: "Subtotal", es: "Subtotal" },
@@ -555,6 +560,7 @@ const translations = {
   "legal.privacy": { en: "Privacy", es: "Privacidad" },
   "legal.refund": { en: "Refund", es: "Reembolsos" },
   "admin.col.plan": { en: "Plan", es: "Plan" },
+  "admin.col.source": { en: "Source", es: "Origen" },
   "admin.col.owner": { en: "Owner", es: "Propietario" },
 
   // Enums - Priorities

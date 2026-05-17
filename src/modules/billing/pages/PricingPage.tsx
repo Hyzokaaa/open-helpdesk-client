@@ -25,7 +25,9 @@ export default function PricingPage() {
   const [reactivating, setReactivating] = useState(false);
 
   const isCanceled = subscription?.status === "canceled";
+  const isGranted = subscription?.source === "granted" && subscription?.planId !== "free";
   const hasPaidPlan = subscription !== null && subscription.planId !== "free";
+  const [grantedConfirmPlan, setGrantedConfirmPlan] = useState<Plan | null>(null);
 
   const handleDowngrade = async () => {
     setDowngrading(true);
@@ -165,7 +167,7 @@ export default function PricingPage() {
                 size="sm"
                 color="danger"
                 disabled={downgrading}
-                onClick={() => setShowDowngradeConfirm(true)}
+                onClick={() => isGranted ? setGrantedConfirmPlan(plan) : setShowDowngradeConfirm(true)}
               >
                 {downgrading ? t("billing.processing") : t("billing.downgrade")}
               </Button>
@@ -173,7 +175,7 @@ export default function PricingPage() {
               <Button
                 size="sm"
                 color="primary"
-                onClick={() => setCheckoutPlan(plan)}
+                onClick={() => isGranted ? setGrantedConfirmPlan(plan) : setCheckoutPlan(plan)}
               >
                 {t("billing.upgrade")}
               </Button>
@@ -191,6 +193,26 @@ export default function PricingPage() {
           danger
           onConfirm={() => { setShowDowngradeConfirm(false); handleDowngrade(); }}
           onCancel={() => setShowDowngradeConfirm(false)}
+        />
+      )}
+
+      {grantedConfirmPlan && (
+        <ConfirmModal
+          title={t("billing.grantedConfirmTitle")}
+          message={grantedConfirmPlan.priceMonthly === 0 ? t("billing.grantedDowngradeMessage") : t("billing.grantedConfirmMessage")}
+          confirmLabel={t("admin.confirm")}
+          cancelLabel={t("common.cancel")}
+          danger={grantedConfirmPlan.priceMonthly === 0}
+          onConfirm={() => {
+            const plan = grantedConfirmPlan;
+            setGrantedConfirmPlan(null);
+            if (plan.priceMonthly === 0) {
+              handleDowngrade();
+            } else {
+              setCheckoutPlan(plan);
+            }
+          }}
+          onCancel={() => setGrantedConfirmPlan(null)}
         />
       )}
 

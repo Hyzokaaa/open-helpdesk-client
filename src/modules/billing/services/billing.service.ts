@@ -18,6 +18,7 @@ export interface Subscription {
   planName: string;
   billingCycle: string;
   status: string;
+  source: string;
   gateway: string | null;
   extraSeats: number;
   currentPeriodStart: string;
@@ -57,9 +58,14 @@ export async function checkout(data: {
   return res.data;
 }
 
-export async function getUserPlans(): Promise<Record<string, string>> {
+export interface UserPlanInfo {
+  planId: string;
+  source: string;
+}
+
+export async function getUserPlans(): Promise<Record<string, UserPlanInfo>> {
   try {
-    const res = await http.get<Record<string, string>>("/billing/admin/user-plans");
+    const res = await http.get<Record<string, UserPlanInfo>>("/billing/admin/user-plans");
     return res.data;
   } catch {
     return {};
@@ -104,7 +110,7 @@ export async function updateExtraSeats(quantity: number): Promise<void> {
 
 export async function adminUpdateSubscription(
   userId: string,
-  data: { planId?: string; billingCycle?: string; status?: string },
+  data: { planId?: string; billingCycle?: string; status?: string; extraSeats?: number },
 ): Promise<void> {
   await http.patch(`/billing/admin/subscription/${userId}`, data);
 }

@@ -87,6 +87,7 @@ export default function SubscriptionPage() {
   const totalAgents = baseAgents === -1 ? -1 : baseAgents + extraSeats;
   const isFree = subscription.planId === "free";
   const isCanceled = subscription.status === "canceled";
+  const isGranted = subscription.source === "granted" && !isFree;
   const seatPrice = subscription.billingCycle === "yearly" ? 90 : 9;
 
   const handleReactivate = async () => {
@@ -163,7 +164,14 @@ export default function SubscriptionPage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted">{t("billing.plan")}</span>
-            <span className="text-sm font-body-bold text-heading">{subscription.planName}</span>
+            <span className="text-sm font-body-bold text-heading flex items-center gap-2">
+              {subscription.planName}
+              {isGranted && (
+                <span className="text-exs font-body-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/40 px-1.5 py-0.5 rounded">
+                  {t("billing.granted")}
+                </span>
+              )}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted">{t("billing.cycle")}</span>
@@ -222,7 +230,7 @@ export default function SubscriptionPage() {
               {t("billing.upgrade")}
             </Button>
           )}
-          {!isFree && !isCanceled && totalAgents !== -1 && (
+          {!isFree && !isCanceled && totalAgents !== -1 && isPaddle && (
             <span className="flex items-center gap-1.5">
               <Button size="sm" color="light" onClick={() => { setSeatQuantity(extraSeats); setSeatsPreview(null); setShowSeatsModal(true); }}>
                 {t("billing.manageSeats")}
