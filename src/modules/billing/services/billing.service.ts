@@ -19,6 +19,7 @@ export interface Subscription {
   billingCycle: string;
   status: string;
   gateway: string | null;
+  extraSeats: number;
   currentPeriodStart: string;
   currentPeriodEnd: string | null;
 }
@@ -72,6 +73,33 @@ export async function renewSubscription(): Promise<{ paymentUrl: string }> {
 
 export async function cancelSubscription(): Promise<void> {
   await http.post("/billing/cancel");
+}
+
+export async function reactivateSubscription(): Promise<void> {
+  await http.post("/billing/reactivate");
+}
+
+export interface SeatsPreview {
+  immediate: {
+    subtotal: string;
+    tax: string;
+    total: string;
+    credit: string;
+    balance: string;
+    grandTotal: string;
+    creditToBalance: string;
+    remainingCredit: string;
+    currencyCode: string;
+  } | null;
+}
+
+export async function previewSeats(quantity: number): Promise<SeatsPreview> {
+  const res = await http.post<SeatsPreview>("/billing/preview-seats", { quantity });
+  return res.data;
+}
+
+export async function updateExtraSeats(quantity: number): Promise<void> {
+  await http.patch("/billing/extra-seats", { quantity });
 }
 
 export async function adminUpdateSubscription(

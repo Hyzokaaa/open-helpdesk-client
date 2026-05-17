@@ -6,8 +6,9 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import Tooltip from "@modules/app/modules/ui/components/Tooltip/Tooltip";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getSubscription, cancelSubscription, renewSubscription, type Subscription } from "../services/billing.service";
+import { getSubscription, getPlans, cancelSubscription, renewSubscription, updateExtraSeats, reactivateSubscription, previewSeats, type Subscription, type Plan, type SeatsPreview } from "../services/billing.service";
 import { GRACE_PERIOD_DAYS } from "../domain/billing.constants";
 
 const STATUS_COLOR: Record<string, "green" | "yellow" | "red" | "gray"> = {
@@ -21,14 +22,21 @@ export default function SubscriptionPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCancel, setShowCancel] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [renewing, setRenewing] = useState(false);
+  const [showSeatsModal, setShowSeatsModal] = useState(false);
+  const [seatQuantity, setSeatQuantity] = useState(0);
+  const [savingSeats, setSavingSeats] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
+  const [seatsPreview, setSeatsPreview] = useState<SeatsPreview | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   useEffect(() => {
-    getSubscription()
-      .then(setSubscription)
+    Promise.all([getSubscription(), getPlans()])
+      .then(([sub, p]) => { setSubscription(sub); setPlans(p); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -73,7 +81,55 @@ export default function SubscriptionPage() {
     );
   }
 
+  const currentPlan = plans.find((p) => p.id === subscription.planId);
+  const baseAgents = currentPlan?.limits.maxAgentsPerWorkspace ?? 0;
+  const extraSeats = subscription.extraSeats ?? 0;
+  const totalAgents = baseAgents === -1 ? -1 : baseAgents + extraSeats;
   const isFree = subscription.planId === "free";
+  const isCanceled = subscription.status === "canceled";
+  const seatPrice = subscription.billingCycle === "yearly" ? 90 : 9;
+
+  const handleReactivate = async () => {
+    setReactivating(true);
+    try {
+      await reactivateSubscription();
+      const updated = await getSubscription();
+      setSubscription(updated);
+      toast.success(t("billing.reactivateSuccess"));
+    } catch {
+      toast.error(t("billing.reactivateError"));
+    } finally {
+      setReactivating(false);
+    }
+  };
+
+  const handlePreviewSeats = async (qty: number) => {
+    if (qty === extraSeats) { setSeatsPreview(null); return; }
+    setLoadingPreview(true);
+    try {
+      const preview = await previewSeats(qty);
+      setSeatsPreview(preview);
+    } catch {
+      setSeatsPreview(null);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleUpdateSeats = async () => {
+    setSavingSeats(true);
+    try {
+      await updateExtraSeats(seatQuantity);
+      const updated = await getSubscription();
+      setSubscription(updated);
+      setShowSeatsModal(false);
+      toast.success(t("billing.seatsUpdated"));
+    } catch {
+      toast.error(t("billing.seatsError"));
+    } finally {
+      setSavingSeats(false);
+    }
+  };
 
   const now = new Date();
   const periodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
@@ -117,11 +173,14 @@ export default function SubscriptionPage() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted">{t("billing.status")}</span>
-            <StatusBadge
-              label={subscription.status}
-              color={STATUS_COLOR[subscription.status] ?? "gray"}
-              size="xs"
-            />
+            <span className="flex items-center gap-1.5">
+              <StatusBadge
+                label={subscription.status}
+                color={STATUS_COLOR[subscription.status] ?? "gray"}
+                size="xs"
+              />
+              {isCanceled && <Tooltip text={t("billing.tooltipCanceled")} />}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted">{t("billing.periodStart")}</span>
@@ -131,16 +190,53 @@ export default function SubscriptionPage() {
             <span className="text-sm text-muted">{t("billing.periodEnd")}</span>
             <span className="text-sm text-heading">{formatDate(subscription.currentPeriodEnd)}</span>
           </div>
+          {totalAgents !== -1 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted">{t("billing.agentSeats")}</span>
+              <span className="text-sm text-heading">
+                {baseAgents} {t("billing.included")}
+                {extraSeats > 0 && <span className="text-primary"> + {extraSeats} {t("billing.extra")}</span>}
+              </span>
+            </div>
+          )}
         </div>
 
+        {isCanceled && periodEnd && (
+          <div className="mt-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              {t("billing.canceledNotice")} {formatDate(subscription.currentPeriodEnd)}.
+            </p>
+          </div>
+        )}
+
         <div className="mt-6 pt-4 border-t border-border-card flex gap-3">
-          <Button size="sm" onClick={() => navigate("/dashboard/settings/pricing")}>
-            {t("billing.upgrade")}
-          </Button>
-          {!isFree && (
-            <Button size="sm" color="danger" onClick={() => setShowCancel(true)}>
-              {t("billing.cancelSubscription")}
+          {isCanceled ? (
+            <span className="flex items-center gap-1.5">
+              <Button size="sm" color="primary" loading={reactivating} onClick={handleReactivate}>
+                {t("billing.reactivate")}
+              </Button>
+              <Tooltip text={t("billing.tooltipReactivate")} />
+            </span>
+          ) : (
+            <Button size="sm" onClick={() => navigate("/dashboard/settings/pricing")}>
+              {t("billing.upgrade")}
             </Button>
+          )}
+          {!isFree && !isCanceled && totalAgents !== -1 && (
+            <span className="flex items-center gap-1.5">
+              <Button size="sm" color="light" onClick={() => { setSeatQuantity(extraSeats); setSeatsPreview(null); setShowSeatsModal(true); }}>
+                {t("billing.manageSeats")}
+              </Button>
+              <Tooltip text={t("billing.tooltipManageSeats")} />
+            </span>
+          )}
+          {!isFree && !isCanceled && (
+            <span className="flex items-center gap-1.5">
+              <Button size="sm" color="danger" onClick={() => setShowCancel(true)}>
+                {t("billing.cancelSubscription")}
+              </Button>
+              <Tooltip text={t("billing.tooltipCancel")} />
+            </span>
           )}
         </div>
       </div>
@@ -154,6 +250,96 @@ export default function SubscriptionPage() {
           onConfirm={handleCancel}
           onCancel={() => setShowCancel(false)}
         />
+      )}
+
+      {showSeatsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowSeatsModal(false)}>
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("billing.manageSeats")}</h3>
+            <p className="text-sm text-muted mb-4">
+              {baseAgents} {t("billing.included")} · ${seatPrice}/{subscription.billingCycle === "yearly" ? t("billing.perYear") : t("billing.perMonth")} {t("billing.perSeat")}
+            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <label className="text-sm text-body">{t("billing.extraSeats")}</label>
+              <input
+                type="number"
+                min={0}
+                value={seatQuantity}
+                onChange={(e) => { const v = Math.max(0, parseInt(e.target.value) || 0); setSeatQuantity(v); handlePreviewSeats(v); }}
+                className="w-20 bg-surface rounded-input border-input px-3 py-1.5 text-sm text-body shadow-input border-input-effect outline-none"
+              />
+            </div>
+            {seatQuantity > 0 && (
+              <p className="text-sm text-body mb-4">
+                {seatQuantity} × ${seatPrice} = <span className="font-body-bold">${seatQuantity * seatPrice}{subscription.billingCycle === "yearly" ? t("billing.yr") : t("billing.mo")}</span>
+              </p>
+            )}
+            <p className="text-xs text-subtle mb-2">
+              {t("billing.totalAgents")}: {baseAgents + seatQuantity}
+            </p>
+            {seatQuantity < extraSeats && (
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded px-2.5 py-2 mb-4">
+                {t("billing.seatsReduceWarning")}
+              </p>
+            )}
+            {seatQuantity > extraSeats && !seatsPreview && (
+              <p className="text-xs text-subtle mb-4">
+                {t("billing.seatsIncreaseNote")}
+              </p>
+            )}
+            {loadingPreview && (
+              <div className="flex items-center gap-2 mb-4">
+                <Spinner width={14} />
+                <span className="text-xs text-subtle">{t("billing.calculatingCharges")}</span>
+              </div>
+            )}
+            {seatsPreview?.immediate && !loadingPreview && seatQuantity !== extraSeats && (() => {
+              const p = seatsPreview.immediate!;
+              const cur = p.currencyCode;
+              const fmt = (v: number) => `${cur} ${(Math.abs(v) / 100).toFixed(2)}`;
+              const total = parseInt(p.total);
+              const credit = parseInt(p.credit);
+              const grandTotal = parseInt(p.grandTotal);
+              const remainingCredit = parseInt(p.remainingCredit);
+              return (
+                <div className="bg-surface-hover rounded px-3 py-2.5 mb-4 text-xs flex flex-col gap-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-subtle">{t("billing.monthlyRate")}</span>
+                    <span className="text-body">${seatQuantity * seatPrice}.00{t("billing.mo")}</span>
+                  </div>
+                  {total > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-subtle">{t("billing.proratedCharge")}</span>
+                      <span className="text-body">{fmt(total)}</span>
+                    </div>
+                  )}
+                  {credit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-subtle">{t("billing.creditApplied")}</span>
+                      <span className="text-green-600 dark:text-green-400">-{fmt(credit)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-border-card pt-1">
+                    <span className="text-body font-body-semibold">{t("billing.totalDue")}</span>
+                    <span className="text-body font-body-bold">{fmt(grandTotal)}</span>
+                  </div>
+                  {remainingCredit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-green-600 dark:text-green-400 font-body-medium">{t("billing.remainingCredit")}</span>
+                      <span className="text-green-600 dark:text-green-400 font-body-bold">{fmt(remainingCredit)}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            <div className="flex justify-end gap-2">
+              <Button size="sm" color="light" onClick={() => setShowSeatsModal(false)}>{t("ticketDetail.cancel")}</Button>
+              <Button size="sm" color="primary" loading={savingSeats} disabled={seatQuantity === extraSeats} onClick={handleUpdateSeats}>
+                {t("ticketDetail.confirmSave")}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
