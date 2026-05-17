@@ -7,7 +7,8 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
-import { getPlans, getSubscription, cancelSubscription, type Plan, type Subscription } from "../services/billing.service";
+import Tooltip from "@modules/app/modules/ui/components/Tooltip/Tooltip";
+import { getPlans, getSubscription, cancelSubscription, reactivateSubscription, type Plan, type Subscription } from "../services/billing.service";
 import CheckoutSheet from "../components/CheckoutSheet";
 
 export default function PricingPage() {
@@ -21,7 +22,9 @@ export default function PricingPage() {
   const [downgrading, setDowngrading] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
   const [showDowngradeConfirm, setShowDowngradeConfirm] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
 
+  const isCanceled = subscription?.status === "canceled";
   const hasPaidPlan = subscription !== null && subscription.planId !== "free";
 
   const handleDowngrade = async () => {
@@ -35,6 +38,20 @@ export default function PricingPage() {
       toast.error(t("billing.downgradeError"));
     } finally {
       setDowngrading(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    setReactivating(true);
+    try {
+      await reactivateSubscription();
+      const updated = await getSubscription();
+      setSubscription(updated);
+      toast.success(t("billing.reactivateSuccess"));
+    } catch {
+      toast.error(t("billing.reactivateError"));
+    } finally {
+      setReactivating(false);
     }
   };
 
@@ -63,7 +80,7 @@ export default function PricingPage() {
     return `$${(amount / 100).toFixed(0)}${period}`;
   };
 
-  const isCurrent = (planId: string) => subscription?.planId === planId;
+  const isCurrent = (planId: string) => subscription?.planId === planId && subscription?.status !== "canceled";
   const isEnterprise = (planId: string) => planId === "enterprise";
 
   return (
@@ -132,7 +149,14 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {isCurrent(plan.id) ? (
+            {isCanceled && subscription?.planId === plan.id ? (
+              <span className="flex items-center gap-1.5">
+                <Button size="sm" color="primary" loading={reactivating} onClick={handleReactivate}>
+                  {t("billing.reactivate")}
+                </Button>
+                <Tooltip text={t("billing.tooltipReactivate")} />
+              </span>
+            ) : isCurrent(plan.id) ? (
               <Button size="sm" color="light" disabled>{t("billing.current")}</Button>
             ) : isEnterprise(plan.id) ? (
               <Button size="sm" color="light">{t("billing.contactUs")}</Button>
