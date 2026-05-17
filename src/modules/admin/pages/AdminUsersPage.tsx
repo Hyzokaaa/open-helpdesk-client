@@ -25,6 +25,7 @@ import {
 } from "../services/admin.service";
 import {
   getPlans,
+  getUserPlans,
   adminUpdateSubscription,
   type Plan,
 } from "@modules/billing/services/billing.service";
@@ -53,8 +54,9 @@ export default function AdminUsersPage() {
   const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
   const [changePlanUser, setChangePlanUser] = useState<UserItem | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [selectedExtraSeats, setSelectedExtraSeats] = useState(0);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [userPlans, setUserPlans] = useState<Record<string, string>>({});
+  const [userPlans, setUserPlans] = useState<Record<string, { planId: string; source: string }>>({});
 
   const baseKeys = ["name", "email", "role", "status"];
   const columnKeys = saasMode ? [...baseKeys, "plan"] : baseKeys;
@@ -66,7 +68,10 @@ export default function AdminUsersPage() {
     { key: "email", label: t("admin.col.email"), sortable: true, sortField: "email" },
     { key: "role", label: t("admin.col.role"), sortable: true, sortField: "isSystemAdmin" },
     { key: "status", label: t("admin.col.status"), sortable: true, sortField: "isActive" },
-    ...(saasMode ? [{ key: "plan", label: t("admin.col.plan"), sortable: true, sortField: "planId" }] : []),
+    ...(saasMode ? [
+      { key: "plan", label: t("admin.col.plan"), sortable: true, sortField: "planId" },
+      { key: "source", label: t("admin.col.source"), sortable: true, sortField: "source" },
+    ] : []),
   ];
 
   const toggleSort = (field: string) => {
@@ -88,9 +93,14 @@ export default function AdminUsersPage() {
       if (saasMode) {
         const p = await getPlans();
         setPlans(p);
-        const planMap: Record<string, string> = {};
+        const planData = await getUserPlans();
+        const planMap: Record<string, { planId: string; source: string }> = {};
         for (const user of u) {
-          if (user.planId) planMap[user.id] = user.planId;
+          if (planData[user.id]) {
+            planMap[user.id] = planData[user.id];
+          } else if (user.planId) {
+            planMap[user.id] = { planId: user.planId, source: '' };
+          }
         }
         setUserPlans(planMap);
       }
@@ -131,11 +141,11 @@ export default function AdminUsersPage() {
     } catch { toast.error("Failed to update user status"); }
   };
 
-  const handleChangePlan = async (userId: string, planId: string) => {
+  const handleChangePlan = async (userId: string, planId: string, extraSeats: number) => {
     try {
-      await adminUpdateSubscription(userId, { planId, status: "active" });
+      await adminUpdateSubscription(userId, { planId, status: "active", extraSeats });
       toast.success(t("billing.planUpdated"));
-      setUserPlans((prev) => ({ ...prev, [userId]: planId }));
+      setUserPlans((prev) => ({ ...prev, [userId]: { planId, source: 'granted' } }));
     } catch {
       toast.error(t("billing.planError"));
     }
@@ -197,15 +207,27 @@ export default function AdminUsersPage() {
                 </button>
               ))}
             </div>
+            {selectedPlanId && selectedPlanId !== "free" && selectedPlanId !== "enterprise" && (
+              <div className="flex items-center gap-3 mb-6">
+                <label className="text-sm text-body">{t("billing.extraSeats")}</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={selectedExtraSeats}
+                  onChange={(e) => setSelectedExtraSeats(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-20 bg-surface rounded-input border-input px-3 py-1.5 text-sm text-body shadow-input border-input-effect outline-none"
+                />
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <Button size="sm" color="light" onClick={() => setChangePlanUser(null)}>
                 {t("admin.cancel")}
               </Button>
               <Button
                 size="sm"
-                disabled={!selectedPlanId || selectedPlanId === userPlans[changePlanUser.id]}
+                disabled={!selectedPlanId || (selectedPlanId === userPlans[changePlanUser.id]?.planId && selectedExtraSeats === 0)}
                 onClick={async () => {
-                  await handleChangePlan(changePlanUser.id, selectedPlanId);
+                  await handleChangePlan(changePlanUser.id, selectedPlanId, selectedPlanId === "free" ? 0 : selectedExtraSeats);
                   setChangePlanUser(null);
                 }}
               >
@@ -306,7 +328,18 @@ export default function AdminUsersPage() {
                     )}
                     {col.key === "plan" && (
                       <span className="text-sm text-muted">
-                        {plans.find((p) => p.id === userPlans[u.id])?.name ?? "—"}
+                        {plans.find((p) => p.id === userPlans[u.id]?.planId)?.name ?? "—"}
+                      </span>
+                    )}
+                    {col.key === "source" && (
+                      <span className="text-sm">
+                        {userPlans[u.id]?.source === "granted" && userPlans[u.id]?.planId !== "free" ? (
+                          <StatusBadge label={t("billing.granted")} color="green" size="xs" />
+                        ) : userPlans[u.id]?.source === "payment" ? (
+                          <StatusBadge label={t("billing.paid")} color="blue" size="xs" />
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
                       </span>
                     )}
                   </td>
@@ -320,7 +353,7 @@ export default function AdminUsersPage() {
                       },
                       ...(saasMode ? [{
                         label: t("admin.changePlan"),
-                        onClick: () => { setChangePlanUser(u); setSelectedPlanId(userPlans[u.id] ?? ""); },
+                        onClick: () => { setChangePlanUser(u); setSelectedPlanId(userPlans[u.id]?.planId ?? ""); setSelectedExtraSeats(0); },
                       }] : []),
                       {
                         label: u.isActive ? t("admin.deactivate") : t("admin.activate"),
