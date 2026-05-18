@@ -1,27 +1,17 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { STATUS_COLORS } from "../domain/ticket-enums";
+import useTranslation from "@modules/app/i18n/useTranslation";
 import TicketCard from "./TicketCard";
 import type { TicketListItem } from "../services/ticket.service";
-
-interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface Member {
-  userId: string;
-  firstName?: string;
-  lastName?: string;
-}
+import type { Tag } from "@modules/tag/services/tag.service";
+import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 
 interface Props {
   status: string;
   label: string;
   tickets: TicketListItem[];
   tags: Tag[];
-  members: Member[];
+  members: WorkspaceMember[];
   onTicketClick: (ticketId: string) => void;
   tEnum: (ns: string, key: string) => string;
 }
@@ -34,17 +24,18 @@ const BORDER_COLORS: Record<string, string> = {
 
 export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { t } = useTranslation();
 
   return (
     <div
-      className={`flex flex-col min-w-[280px] flex-1 rounded-lg border border-border-card bg-surface-hover ${
-        isOver ? "ring-2 ring-primary-400" : ""
+      className={`flex flex-col min-w-[280px] flex-1 rounded-lg border border-border-card bg-surface-hover/50 transition-all ${
+        isOver ? "ring-2 ring-primary/50 bg-surface-hover" : ""
       }`}
     >
-      <div className={`flex items-center justify-between px-3 py-2.5 border-l-4 ${BORDER_COLORS[status] ?? "border-l-gray-400"} rounded-tl-lg`}>
+      <div className={`flex items-center justify-between px-3 py-2.5 border-l-4 ${BORDER_COLORS[status] ?? "border-l-gray-400"} rounded-tl-lg border-b border-border-card`}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-body-bold text-heading">{label}</span>
-          <span className="text-exs text-subtle bg-surface rounded-full px-1.5 py-0.5 font-body-medium">
+          <span className="text-exs text-muted bg-surface rounded-full px-1.5 py-0.5 font-body-medium min-w-[20px] text-center">
             {tickets.length}
           </span>
         </div>
@@ -53,18 +44,25 @@ export default function TicketColumn({ status, label, tickets, tags, members, on
       <div
         ref={setNodeRef}
         className="flex flex-col gap-2 p-2 overflow-y-auto flex-1 min-h-[120px]"
+        style={{ maxHeight: "calc(100vh - 220px)" }}
       >
         <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          {tickets.map((ticket) => (
-            <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              tags={tags}
-              members={members}
-              onClick={() => onTicketClick(ticket.id)}
-              tEnum={tEnum}
-            />
-          ))}
+          {tickets.length === 0 ? (
+            <div className="flex items-center justify-center flex-1 border-2 border-dashed border-border-card/40 rounded-lg mx-1 my-2 py-10">
+              <span className="text-sm text-muted">{t("tickets.boardDropHere")}</span>
+            </div>
+          ) : (
+            tickets.map((ticket) => (
+              <TicketCard
+                key={ticket.id}
+                ticket={ticket}
+                tags={tags}
+                members={members}
+                onClick={() => onTicketClick(ticket.id)}
+                tEnum={tEnum}
+              />
+            ))
+          )}
         </SortableContext>
       </div>
     </div>

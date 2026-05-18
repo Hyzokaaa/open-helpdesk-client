@@ -3,23 +3,13 @@ import { CSS } from "@dnd-kit/utilities";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import { PRIORITY_COLORS, CATEGORY_COLORS } from "../domain/ticket-enums";
 import type { TicketListItem } from "../services/ticket.service";
-
-interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface Member {
-  userId: string;
-  firstName?: string;
-  lastName?: string;
-}
+import type { Tag } from "@modules/tag/services/tag.service";
+import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 
 interface Props {
   ticket: TicketListItem;
   tags: Tag[];
-  members: Member[];
+  members: WorkspaceMember[];
   onClick: () => void;
   tEnum: (ns: string, key: string) => string;
 }
@@ -36,7 +26,7 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    transition,
+    transition: transition ?? "transform 200ms ease",
   };
 
   const assignee = members.find((m) => m.userId === ticket.assigneeId);
@@ -60,15 +50,15 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`bg-surface border border-border-card rounded-lg p-3 cursor-pointer hover:shadow-sm transition-shadow ${
-        isDragging ? "opacity-30" : ""
+      className={`group bg-surface border border-border-card rounded-lg p-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${
+        isDragging ? "opacity-40 rotate-2 scale-105 shadow-lg" : ""
       }`}
     >
-      <p className="text-sm font-body-semibold text-heading line-clamp-2 mb-2">
+      <p className="text-sm font-body-semibold text-heading line-clamp-2 mb-2.5">
         {ticket.name}
       </p>
 
-      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+      <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
         <StatusBadge
           label={tEnum("priority", ticket.priority)}
           color={PRIORITY_COLORS[ticket.priority] ?? "gray"}
@@ -82,11 +72,11 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       </div>
 
       {ticketTags.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap mb-2">
+        <div className="flex items-center gap-1 flex-wrap mb-2.5">
           {ticketTags.slice(0, 3).map((tag) => (
             <span
               key={tag.id}
-              className="text-exs px-1.5 py-0.5 rounded-full text-white"
+              className="text-exs px-1.5 py-0.5 rounded-full text-white/90"
               style={{ backgroundColor: tag.color || "#6366f1" }}
             >
               {tag.name}
@@ -98,11 +88,15 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <span className="text-exs text-subtle">{timeAgo}</span>
-        {initials && (
-          <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-exs font-body-semibold flex items-center justify-center">
+      <div className="flex items-center justify-between pt-2 border-t border-border-card/50">
+        <span className="text-exs text-muted">{timeAgo}</span>
+        {initials ? (
+          <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-[10px] font-body-semibold flex items-center justify-center">
             {initials}
+          </span>
+        ) : (
+          <span className="w-6 h-6 rounded-full bg-surface-hover text-muted text-[10px] flex items-center justify-center">
+            ?
           </span>
         )}
       </div>

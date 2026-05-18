@@ -255,6 +255,7 @@ const translations = {
   "tickets.empty": { en: "No tickets found.", es: "No se encontraron tickets." },
   "tickets.listView": { en: "List", es: "Lista" },
   "tickets.boardView": { en: "Board", es: "Tablero" },
+  "tickets.boardDropHere": { en: "Drag tickets here", es: "Arrastra tickets aquí" },
   "tickets.previous": { en: "Previous", es: "Anterior" },
   "tickets.next": { en: "Next", es: "Siguiente" },
   "tickets.page": { en: "Page", es: "Página" },

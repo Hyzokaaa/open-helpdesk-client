@@ -68,6 +68,7 @@ export default function TicketsPage() {
 
   const [viewMode, setViewMode] = useState<"left" | "right">("left");
   const isBoard = viewMode === "right";
+  const [boardKey, setBoardKey] = useState(0);
   const [tab, setTab] = useState<Tab>("active");
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(
@@ -268,6 +269,7 @@ export default function TicketsPage() {
 
       {isBoard ? (
         <TicketBoard
+          key={boardKey}
           workspaceSlug={workspaceSlug!}
           filters={{
             priority: filters.priority,
@@ -825,6 +827,7 @@ export default function TicketsPage() {
               setCreateDirty(false);
               if (id) setSelectedTicketId(id);
               fetchTickets();
+              setBoardKey((k) => k + 1);
             }}
             onClose={handleCreateClose}
             onDirtyChange={setCreateDirty}
@@ -833,11 +836,11 @@ export default function TicketsPage() {
       )}
 
       {selectedTicketId && workspaceSlug && (
-        <Sheet onClose={() => { setSelectedTicketId(null); fetchTickets(); }}>
+        <Sheet onClose={() => { setSelectedTicketId(null); fetchTickets(); setBoardKey((k) => k + 1); }}>
           <TicketDetailPage
             workspaceSlugProp={workspaceSlug}
             ticketIdProp={selectedTicketId}
-            onClose={() => { setSelectedTicketId(null); fetchTickets(); }}
+            onClose={() => { setSelectedTicketId(null); fetchTickets(); setBoardKey((k) => k + 1); }}
             initialMode={ticketMode}
           />
         </Sheet>
