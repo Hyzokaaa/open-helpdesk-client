@@ -26,7 +26,7 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    transition: transition ?? "transform 200ms ease",
+    transition,
   };
 
   const assignee = members.find((m) => m.userId === ticket.assigneeId);
