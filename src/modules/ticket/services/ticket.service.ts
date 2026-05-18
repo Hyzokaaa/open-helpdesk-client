@@ -66,6 +66,21 @@ export async function listTickets(
   return res.data;
 }
 
+export async function listAllTickets(
+  workspaceId: string,
+  filters: Omit<TicketFilters, "page" | "limit"> = {},
+): Promise<TicketListItem[]> {
+  const all: TicketListItem[] = [];
+  let page = 1;
+  while (true) {
+    const result = await listTickets(workspaceId, { ...filters, page, limit: 100 });
+    all.push(...result.items);
+    if (all.length >= result.total) break;
+    page++;
+  }
+  return all;
+}
+
 export async function getTicket(
   workspaceId: string,
   ticketId: string,

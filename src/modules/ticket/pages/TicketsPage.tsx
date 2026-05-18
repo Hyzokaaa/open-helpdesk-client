@@ -33,8 +33,11 @@ import {
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import TicketBoard from "../components/TicketBoard";
 import TicketDetailPage from "./TicketDetailPage";
 import TicketCreatePage from "./TicketCreatePage";
 
@@ -63,7 +66,10 @@ export default function TicketsPage() {
   const { can, loading: permLoading } = usePermissions(workspaceSlug);
   const isReporter = !permLoading && !can(P.TICKET_VIEW);
 
+  const [viewMode, setViewMode] = useState<"left" | "right">("left");
+  const isBoard = viewMode === "right";
   const [tab, setTab] = useState<Tab>("active");
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(
     null,
   );
@@ -129,13 +135,16 @@ export default function TicketsPage() {
   };
 
   useEffect(() => {
-    if (workspaceSlug) listTags(workspaceSlug).then(setTags);
+    if (workspaceSlug) {
+      listTags(workspaceSlug).then(setTags);
+      listMembers(workspaceSlug).then(setMembers);
+    }
   }, [workspaceSlug]);
 
   useEffect(() => {
     if (!permLoading) fetchTickets();
     setSelectedIds(new Set());
-  }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter]);
+  }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter, viewMode]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -240,7 +249,15 @@ export default function TicketsPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-body-bold text-heading">{t("tickets.title")}</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-body-bold text-heading">{t("tickets.title")}</h2>
+          <Toggle
+            left={t("tickets.listView")}
+            right={t("tickets.boardView")}
+            active={viewMode}
+            onChange={setViewMode}
+          />
+        </div>
         <Button
           size="sm"
           onClick={() => setShowCreate(true)}
@@ -249,6 +266,21 @@ export default function TicketsPage() {
         </Button>
       </div>
 
+      {isBoard ? (
+        <TicketBoard
+          workspaceSlug={workspaceSlug!}
+          filters={{
+            priority: filters.priority,
+            tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
+            creatorId: isReporter ? user?.id : undefined,
+          }}
+          tags={tags}
+          members={members}
+          onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
+          canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
+        />
+      ) : (
+      <>
       <div className="flex gap-1 mb-4">
         <button
           onClick={() => { setTab("active"); setFilters({ ...filters, status: undefined, page: 1 }); }}
@@ -597,6 +629,8 @@ export default function TicketsPage() {
             </div>
           )}
         </>
+      )}
+      </>
       )}
 
       {changeStatusTicket && !showDiscardReason && (

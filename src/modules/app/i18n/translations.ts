@@ -253,6 +253,8 @@ const translations = {
   "tickets.filterByTags": { en: "Filter by tags", es: "Filtrar por etiquetas" },
   "tickets.clearAll": { en: "Clear all", es: "Limpiar todo" },
   "tickets.empty": { en: "No tickets found.", es: "No se encontraron tickets." },
+  "tickets.listView": { en: "List", es: "Lista" },
+  "tickets.boardView": { en: "Board", es: "Tablero" },
   "tickets.previous": { en: "Previous", es: "Anterior" },
   "tickets.next": { en: "Next", es: "Siguiente" },
   "tickets.page": { en: "Page", es: "Página" },
