@@ -168,7 +168,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 280px)" }}>
+      <div className="flex gap-4 overflow-x-auto pb-4 h-full">
         {BOARD_STATUSES.map((status) => (
           <TicketColumn
             key={status}

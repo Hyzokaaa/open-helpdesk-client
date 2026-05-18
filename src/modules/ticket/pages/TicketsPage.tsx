@@ -248,16 +248,18 @@ export default function TicketsPage() {
   const tagMap = new Map(tags.map((t) => [t.id, t]));
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-body-bold text-heading">{t("tickets.title")}</h2>
-          <Toggle
-            left={t("tickets.listView")}
-            right={t("tickets.boardView")}
-            active={viewMode}
-            onChange={setViewMode}
-          />
+          <div className="hidden md:block">
+            <Toggle
+              left={t("tickets.listView")}
+              right={t("tickets.boardView")}
+              active={viewMode}
+              onChange={setViewMode}
+            />
+          </div>
         </div>
         <Button
           size="sm"
@@ -268,19 +270,21 @@ export default function TicketsPage() {
       </div>
 
       {isBoard ? (
-        <TicketBoard
-          key={boardKey}
-          workspaceSlug={workspaceSlug!}
-          filters={{
-            priority: filters.priority,
-            tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
-            creatorId: isReporter ? user?.id : undefined,
-          }}
-          tags={tags}
-          members={members}
-          onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
-          canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
-        />
+        <div className="flex-1 overflow-hidden">
+          <TicketBoard
+            key={boardKey}
+            workspaceSlug={workspaceSlug!}
+            filters={{
+              priority: filters.priority,
+              tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
+              creatorId: isReporter ? user?.id : undefined,
+            }}
+            tags={tags}
+            members={members}
+            onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
+            canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
+          />
+        </div>
       ) : (
       <>
       <div className="flex gap-1 mb-4">

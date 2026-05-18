@@ -6,6 +6,13 @@ import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 
+const PRIORITY_BORDER: Record<string, string> = {
+  low: "border-l-gray-400",
+  medium: "border-l-yellow-500",
+  high: "border-l-orange-500",
+  critical: "border-l-red-500",
+};
+
 interface Props {
   ticket: TicketListItem;
   tags: Tag[];
@@ -42,6 +49,8 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
     ? formatTimeAgo(new Date(ticket.createdAt))
     : "";
 
+  const shortId = `#${ticket.id.slice(-6)}`;
+
   return (
     <div
       ref={setNodeRef}
@@ -50,15 +59,20 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`group bg-surface border border-border-card rounded-lg p-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${
+      className={`group bg-surface border border-border-card border-l-[3px] ${PRIORITY_BORDER[ticket.priority] ?? "border-l-gray-400"} rounded-lg px-3 py-2.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${
         isDragging ? "opacity-40 rotate-2 scale-105 shadow-lg" : ""
       }`}
     >
-      <p className="text-sm font-body-semibold text-heading line-clamp-2 mb-2.5">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-exs text-muted font-mono">{shortId}</span>
+        <span className="text-exs text-muted">{timeAgo}</span>
+      </div>
+
+      <p className="text-sm font-body-semibold text-heading line-clamp-2 mb-1.5">
         {ticket.name}
       </p>
 
-      <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+      <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
         <StatusBadge
           label={tEnum("priority", ticket.priority)}
           color={PRIORITY_COLORS[ticket.priority] ?? "gray"}
@@ -72,7 +86,7 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       </div>
 
       {ticketTags.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap mb-2.5">
+        <div className="flex items-center gap-1 flex-wrap mb-1.5">
           {ticketTags.slice(0, 3).map((tag) => (
             <span
               key={tag.id}
@@ -88,15 +102,14 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-2 border-t border-border-card/50">
-        <span className="text-exs text-muted">{timeAgo}</span>
+      <div className="flex items-center justify-end">
         {initials ? (
-          <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-[10px] font-body-semibold flex items-center justify-center">
+          <span className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-[9px] font-body-semibold flex items-center justify-center">
             {initials}
           </span>
         ) : (
-          <span className="w-6 h-6 rounded-full bg-surface-hover text-muted text-[10px] flex items-center justify-center">
-            ?
+          <span className="w-5 h-5 rounded-full border border-dashed border-subtle text-muted text-[9px] flex items-center justify-center">
+            +
           </span>
         )}
       </div>

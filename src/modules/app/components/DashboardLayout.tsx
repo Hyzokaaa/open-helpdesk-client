@@ -18,16 +18,16 @@ export default function DashboardLayout() {
 
   return (
     <PaletteProvider>
-      <div className="w-full flex min-h-dvh bg-page">
+      <div className="w-full flex h-dvh bg-page overflow-hidden">
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="w-full flex flex-col grow lg:pl-[240px]">
+        <div className="w-full flex flex-col grow lg:pl-[240px] overflow-hidden">
           <SubscriptionBanner />
           <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-          <div className="flex flex-col items-center px-6 md:px-8 w-full">
+          <div className="flex flex-col items-center px-6 md:px-8 w-full flex-1 overflow-y-auto">
             <main
-              className="flex flex-col grow w-full items-center py-6"
+              className="flex flex-col grow w-full items-center py-6 min-h-0"
               style={{ maxWidth: "1200px" }}
             >
               <Outlet />
