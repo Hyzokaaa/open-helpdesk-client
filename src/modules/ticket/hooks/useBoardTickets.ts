@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   listAllTickets,
@@ -11,11 +11,62 @@ const BOARD_STATUSES = ["pending", "in-progress", "resolved"] as const;
 type BoardStatus = (typeof BOARD_STATUSES)[number];
 export type BoardColumns = Record<BoardStatus, TicketListItem[]>;
 
-function groupByStatus(tickets: TicketListItem[]): BoardColumns {
+const POLL_INTERVAL = 30_000;
+
+function storageKey(workspaceSlug: string): string {
+  return `board-order:${workspaceSlug}`;
+}
+
+function loadOrder(workspaceSlug: string): Record<string, string[]> | null {
+  try {
+    const raw = localStorage.getItem(storageKey(workspaceSlug));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveOrder(workspaceSlug: string, columns: BoardColumns): void {
+  const order: Record<string, string[]> = {};
+  for (const status of BOARD_STATUSES) {
+    order[status] = columns[status].map((t) => t.id);
+  }
+  localStorage.setItem(storageKey(workspaceSlug), JSON.stringify(order));
+}
+
+function applyOrder(tickets: TicketListItem[], savedIds: string[] | undefined): TicketListItem[] {
+  if (!savedIds || savedIds.length === 0) {
+    return tickets.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  }
+
+  const known: TicketListItem[] = [];
+  const newTickets: TicketListItem[] = [];
+
+  for (const t of tickets) {
+    if (savedIds.includes(t.id)) {
+      known.push(t);
+    } else {
+      newTickets.push(t);
+    }
+  }
+
+  known.sort((a, b) => savedIds.indexOf(a.id) - savedIds.indexOf(b.id));
+  newTickets.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+
+  return [...newTickets, ...known];
+}
+
+function groupByStatus(tickets: TicketListItem[], workspaceSlug: string): BoardColumns {
   const columns: BoardColumns = { pending: [], "in-progress": [], resolved: [] };
   for (const t of tickets) {
     if (t.status in columns) columns[t.status as BoardStatus].push(t);
   }
+
+  const saved = loadOrder(workspaceSlug);
+  for (const status of BOARD_STATUSES) {
+    columns[status] = applyOrder(columns[status], saved?.[status]);
+  }
+
   return columns;
 }
 
@@ -25,44 +76,69 @@ export function useBoardTickets(
 ) {
   const [columns, setColumns] = useState<BoardColumns>({ pending: [], "in-progress": [], resolved: [] });
   const [loading, setLoading] = useState(true);
+  const isDragging = useRef(false);
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     if (!workspaceSlug) return;
-    setLoading(true);
+    if (isDragging.current) return;
+    if (!silent) setLoading(true);
     try {
       const items = await listAllTickets(workspaceSlug, {
         ...filters,
         excludeStatus: "discarded",
       });
-      setColumns(groupByStatus(items));
+      setColumns(groupByStatus(items, workspaceSlug));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [workspaceSlug, filters.priority, filters.tagIds?.join(","), filters.creatorId]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const moveTicket = useCallback(async (ticketId: string, toStatus: string) => {
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(true), POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const reorderColumn = useCallback((status: BoardStatus, fromIndex: number, toIndex: number) => {
+    if (!workspaceSlug) return;
+    setColumns((prev) => {
+      const items = [...prev[status]];
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
+      const updated = { ...prev, [status]: items };
+      saveOrder(workspaceSlug, updated);
+      return updated;
+    });
+  }, [workspaceSlug]);
+
+  const commitMove = useCallback(async (
+    ticketId: string,
+    originalStatus: string,
+    newStatus: string,
+    currentColumns: BoardColumns,
+    targetIndex?: number,
+  ) => {
     if (!workspaceSlug) return;
 
-    const snapshot = structuredClone(columns);
-    const fromStatus = BOARD_STATUSES.find((s) => columns[s].some((t) => t.id === ticketId));
-    if (!fromStatus || fromStatus === toStatus) return;
-
-    const ticket = columns[fromStatus].find((t) => t.id === ticketId)!;
-    setColumns({
-      ...columns,
-      [fromStatus]: columns[fromStatus].filter((t) => t.id !== ticketId),
-      [toStatus]: [...columns[toStatus as BoardStatus], { ...ticket, status: toStatus }],
-    });
+    isDragging.current = true;
+    const snapshot = structuredClone(currentColumns);
+    saveOrder(workspaceSlug, currentColumns);
 
     try {
-      await changeTicketStatus(workspaceSlug, ticketId, toStatus);
+      await changeTicketStatus(workspaceSlug, ticketId, newStatus);
     } catch {
       setColumns(snapshot);
+      saveOrder(workspaceSlug, snapshot);
       toast.error("Failed to update status");
+    } finally {
+      isDragging.current = false;
     }
-  }, [workspaceSlug, columns]);
+  }, [workspaceSlug]);
 
-  return { columns, loading, moveTicket, refetch: fetch };
+  const setDragging = useCallback((value: boolean) => {
+    isDragging.current = value;
+  }, []);
+
+  return { columns, loading, commitMove, reorderColumn, setColumns, setDragging, refetch: () => fetchData() };
 }
