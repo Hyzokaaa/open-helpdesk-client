@@ -7,7 +7,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { UserListItem, listUsers, addMember } from "../services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-const ROLES = ["admin", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
 
 interface Row {
   userId: string | null;

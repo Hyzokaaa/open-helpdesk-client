@@ -19,7 +19,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-const ROLES = ["admin", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
 
 export default function WorkspaceMembersPage() {
   const { workspaceSlug } = useParams();

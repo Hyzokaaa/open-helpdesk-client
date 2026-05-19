@@ -11,7 +11,7 @@ import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import { getPlans, getSubscription } from "@modules/billing/services/billing.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-const ROLES = ["admin", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
 
 interface Props {
   workspaceSlug: string;

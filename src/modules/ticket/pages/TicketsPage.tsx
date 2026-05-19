@@ -64,7 +64,7 @@ export default function TicketsPage() {
   const { t, tEnum } = useTranslation();
   const { user } = useUser();
   const { can, loading: permLoading } = usePermissions(workspaceSlug);
-  const isReporter = !permLoading && !can(P.TICKET_VIEW);
+  const isReporter = !permLoading && !can(P.TICKET_VIEW) && !can(P.TICKET_CHANGE_STATUS);
 
   const [viewMode, setViewMode] = useState<"left" | "right">("left");
   const isBoard = viewMode === "right";
