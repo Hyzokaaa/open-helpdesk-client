@@ -141,6 +141,7 @@ const translations = {
 
   // Roles
   "enum.role.admin": { en: "Admin", es: "Admin" },
+  "enum.role.supervisor": { en: "Supervisor", es: "Supervisor" },
   "enum.role.agent": { en: "Agent", es: "Agente" },
   "enum.role.reporter": { en: "Reporter", es: "Reportero" },
   "workspaces.edit": { en: "Edit", es: "Editar" },
@@ -256,6 +257,7 @@ const translations = {
   "tickets.listView": { en: "List", es: "Lista" },
   "tickets.boardView": { en: "Board", es: "Tablero" },
   "tickets.boardDropHere": { en: "Drag tickets here", es: "Arrastra tickets aquí" },
+  "tickets.boardCannotDrop": { en: "Cannot move back to Open", es: "No se puede devolver a Abierto" },
   "tickets.previous": { en: "Previous", es: "Anterior" },
   "tickets.next": { en: "Next", es: "Siguiente" },
   "tickets.page": { en: "Page", es: "Página" },
@@ -573,6 +575,7 @@ const translations = {
   "enum.priority.critical": { en: "Critical", es: "Crítica" },
 
   // Enums - Statuses
+  "enum.status.open": { en: "Open", es: "Abierto" },
   "enum.status.pending": { en: "Pending", es: "Pendiente" },
   "enum.status.in-progress": { en: "In Progress", es: "En Progreso" },
   "enum.status.resolved": { en: "Resolved", es: "Resuelto" },

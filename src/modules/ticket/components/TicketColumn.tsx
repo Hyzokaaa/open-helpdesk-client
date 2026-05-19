@@ -14,24 +14,30 @@ interface Props {
   members: WorkspaceMember[];
   onTicketClick: (ticketId: string) => void;
   tEnum: (ns: string, key: string) => string;
+  blocked?: boolean;
 }
 
 const BORDER_COLORS: Record<string, string> = {
+  open: "border-l-yellow-500",
   pending: "border-l-gray-400",
   "in-progress": "border-l-blue-500",
   resolved: "border-l-green-500",
 };
 
-export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum }: Props) {
+export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum, blocked }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const { t } = useTranslation();
 
   return (
     <div
-      className={`flex flex-col min-w-[280px] flex-1 h-full rounded-lg border border-border-card bg-surface-hover/50 transition-all ${
-        isOver ? "ring-2 ring-primary/50 bg-surface-hover" : ""
+      className={`relative flex flex-col min-w-[280px] flex-1 h-full rounded-lg border border-border-card bg-surface-hover/50 transition-all ${
+        blocked ? "" : isOver ? "ring-2 ring-primary/50 bg-surface-hover" : ""
       }`}
     >
+      {blocked && (
+        <div className="absolute inset-0 bg-red-500/10 rounded-lg z-10 pointer-events-none" />
+      )}
+
       <div className={`flex items-center justify-between px-3 py-2.5 border-l-4 ${BORDER_COLORS[status] ?? "border-l-gray-400"} rounded-tl-lg border-b border-border-card`}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-body-bold text-heading">{label}</span>
@@ -47,8 +53,12 @@ export default function TicketColumn({ status, label, tickets, tags, members, on
       >
         <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tickets.length === 0 ? (
-            <div className="flex items-center justify-center flex-1 border-2 border-dashed border-border-card/40 rounded-lg mx-1 my-2 py-10">
-              <span className="text-sm text-muted">{t("tickets.boardDropHere")}</span>
+            <div className={`flex items-center justify-center flex-1 border-2 border-dashed rounded-lg mx-1 my-2 py-10 ${
+              blocked ? "border-red-300/40" : "border-border-card/40"
+            }`}>
+              <span className="text-sm text-muted">
+                {blocked ? t("tickets.boardCannotDrop") : t("tickets.boardDropHere")}
+              </span>
             </div>
           ) : (
             tickets.map((ticket) => (

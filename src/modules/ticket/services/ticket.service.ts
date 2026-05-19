@@ -9,6 +9,7 @@ export interface TicketListItem {
   category: string;
   creatorId: string;
   assigneeId: string | null;
+  ticketNumber: number;
   createdAt: string | null;
   tagIds: string[];
   customFields: Record<string, unknown>;

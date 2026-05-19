@@ -3,6 +3,7 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 const STATUS_COLORS: Record<string, string> = {
+  open: "#eab308",
   pending: "#f59e0b",
   "in-progress": "#3b82f6",
   resolved: "#22c55e",

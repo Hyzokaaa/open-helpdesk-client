@@ -20,7 +20,7 @@ import type { TicketListItem, TicketFilters } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 
-const BOARD_STATUSES = ["pending", "in-progress", "resolved"] as const;
+const BOARD_STATUSES = ["open", "pending", "in-progress", "resolved"] as const;
 type BoardStatus = (typeof BOARD_STATUSES)[number];
 
 interface Props {
@@ -37,6 +37,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
   const { columns, loading, commitMove, reorderColumn, setColumns, setDragging } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
   const [activeWidth, setActiveWidth] = useState(0);
+  const [draggingFromStatus, setDraggingFromStatus] = useState<string | null>(null);
   const dragStartColumns = useRef<BoardColumns | null>(null);
   const dragStartStatus = useRef<string | null>(null);
 
@@ -63,6 +64,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
       setActiveTicket(columns[status as BoardStatus].find((t) => t.id === id) ?? null);
       dragStartColumns.current = structuredClone(columns);
       dragStartStatus.current = status;
+      setDraggingFromStatus(status);
       setDragging(true);
       const el = document.querySelector(`[data-ticket-id="${id}"]`);
       if (el) setActiveWidth(el.getBoundingClientRect().width);
@@ -80,6 +82,13 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
     const fromCol = findColumn(activeId);
     const toCol = findColumn(overId);
     if (!fromCol || !toCol || fromCol === toCol) return;
+
+    if (toCol === "open" && dragStartStatus.current !== "open") {
+      if (dragStartColumns.current) {
+        setColumns(dragStartColumns.current);
+      }
+      return;
+    }
 
     setColumns((prev) => {
       const ticket = prev[fromCol as BoardStatus].find((t) => t.id === activeId);
@@ -103,6 +112,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
     const { active, over } = event;
     setActiveTicket(null);
     setDragging(false);
+    setDraggingFromStatus(null);
 
     if (!over || !dragStartColumns.current || !dragStartStatus.current) {
       dragStartColumns.current = null;
@@ -144,6 +154,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
   const handleDragCancel = () => {
     setActiveTicket(null);
     setDragging(false);
+    setDraggingFromStatus(null);
     if (dragStartColumns.current) {
       setColumns(dragStartColumns.current);
       dragStartColumns.current = null;
@@ -179,6 +190,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
             members={members}
             onTicketClick={onTicketClick}
             tEnum={tEnum}
+            blocked={status === "open" && draggingFromStatus !== null && draggingFromStatus !== "open"}
           />
         ))}
       </div>

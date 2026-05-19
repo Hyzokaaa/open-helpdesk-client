@@ -7,7 +7,7 @@ import {
   type TicketFilters,
 } from "../services/ticket.service";
 
-const BOARD_STATUSES = ["pending", "in-progress", "resolved"] as const;
+const BOARD_STATUSES = ["open", "pending", "in-progress", "resolved"] as const;
 type BoardStatus = (typeof BOARD_STATUSES)[number];
 export type BoardColumns = Record<BoardStatus, TicketListItem[]>;
 
@@ -57,7 +57,7 @@ function applyOrder(tickets: TicketListItem[], savedIds: string[] | undefined): 
 }
 
 function groupByStatus(tickets: TicketListItem[], workspaceSlug: string): BoardColumns {
-  const columns: BoardColumns = { pending: [], "in-progress": [], resolved: [] };
+  const columns: BoardColumns = { open: [], pending: [], "in-progress": [], resolved: [] };
   for (const t of tickets) {
     if (t.status in columns) columns[t.status as BoardStatus].push(t);
   }
@@ -74,7 +74,7 @@ export function useBoardTickets(
   workspaceSlug: string | undefined,
   filters: Omit<TicketFilters, "page" | "limit" | "excludeStatus">,
 ) {
-  const [columns, setColumns] = useState<BoardColumns>({ pending: [], "in-progress": [], resolved: [] });
+  const [columns, setColumns] = useState<BoardColumns>({ open: [], pending: [], "in-progress": [], resolved: [] });
   const [loading, setLoading] = useState(true);
   const isDragging = useRef(false);
 
@@ -127,11 +127,12 @@ export function useBoardTickets(
 
     try {
       await changeTicketStatus(workspaceSlug, ticketId, newStatus);
+      isDragging.current = false;
+      fetchData(true);
     } catch {
       setColumns(snapshot);
       saveOrder(workspaceSlug, snapshot);
       toast.error("Failed to update status");
-    } finally {
       isDragging.current = false;
     }
   }, [workspaceSlug]);
