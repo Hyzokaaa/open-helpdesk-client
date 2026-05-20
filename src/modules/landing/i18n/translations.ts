@@ -16,7 +16,8 @@ const translations = {
     en: "Open-source helpdesk for teams who need powerful support without the complexity.",
     es: "Helpdesk open-source para equipos que necesitan soporte potente sin la complejidad.",
   },
-  "hero.cta": { en: "Get Started Free", es: "Comenzar Gratis" },
+  "hero.cta": { en: "Start Free Trial", es: "Comienza tu Prueba Gratis" },
+  "hero.trialNote": { en: "14 days free. No credit card needed.", es: "14 días gratis. Sin tarjeta de crédito." },
   "hero.github": { en: "View on GitHub", es: "Ver en GitHub" },
 
   // Social Proof
@@ -125,7 +126,8 @@ const translations = {
     en: "For small teams getting started",
     es: "Para equipos que inician",
   },
-  "pricing.starter.cta": { en: "Get Started", es: "Comenzar" },
+  "pricing.starter.cta": { en: "Start Free Trial", es: "Prueba Gratis" },
+  "pricing.starter.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
   "pricing.starter.f1": { en: "Everything in Free", es: "Todo lo de Free" },
   "pricing.starter.f2": { en: "Up to 5 agents", es: "Hasta 5 agentes" },
   "pricing.starter.f3": { en: "3 workspaces", es: "3 workspaces" },

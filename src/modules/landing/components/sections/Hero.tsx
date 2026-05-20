@@ -23,13 +23,16 @@ export default function Hero() {
           <p className="text-lg text-muted max-w-lg leading-relaxed">
             {t("hero.subheadline")}
           </p>
-          <div className="flex flex-wrap gap-4 mt-2">
-            <Button href={CONFIG.APP_URL} size="lg">
-              {t("hero.cta")}
-            </Button>
-            <Button href={CONFIG.GITHUB_URL} variant="outline" size="lg">
-              {t("hero.github")}
-            </Button>
+          <div className="flex flex-col gap-2 mt-2">
+            <div className="flex flex-wrap gap-4">
+              <Button href={CONFIG.APP_URL} size="lg">
+                {t("hero.cta")}
+              </Button>
+              <Button href={CONFIG.GITHUB_URL} variant="outline" size="lg">
+                {t("hero.github")}
+              </Button>
+            </div>
+            <p className="text-xs text-muted">{t("hero.trialNote")}</p>
           </div>
         </div>
 

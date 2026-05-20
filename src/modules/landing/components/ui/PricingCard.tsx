@@ -13,6 +13,7 @@ interface Props {
   disabled?: boolean;
   highlighted?: boolean;
   badge?: string;
+  ctaSubtitle?: string;
 }
 
 export default function PricingCard({
@@ -26,6 +27,7 @@ export default function PricingCard({
   disabled,
   highlighted,
   badge,
+  ctaSubtitle,
 }: Props) {
   return (
     <div
@@ -63,14 +65,17 @@ export default function PricingCard({
         ))}
       </ul>
 
-      <Button
-        href={disabled ? undefined : href}
-        variant={highlighted ? "primary" : "outline"}
-        size="base"
-        className={clsx("w-full", disabled && "opacity-50 cursor-not-allowed pointer-events-none")}
-      >
-        {cta}
-      </Button>
+      <div className="relative">
+        <Button
+          href={disabled ? undefined : href}
+          variant={highlighted ? "primary" : "outline"}
+          size="base"
+          className={clsx("w-full", disabled && "opacity-50 cursor-not-allowed pointer-events-none")}
+        >
+          {cta}
+        </Button>
+        {ctaSubtitle && <p className="absolute w-full text-center text-[11px] text-muted mt-1">{ctaSubtitle}</p>}
+      </div>
     </div>
   );
 }

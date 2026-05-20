@@ -30,6 +30,7 @@ export default function Pricing() {
       cta: disablePaid ? t("pricing.comingSoon") : t("pricing.starter.cta"),
       href: CONFIG.APP_URL + "?plan=starter",
       disabled: disablePaid,
+      ctaSubtitle: disablePaid ? undefined : t("pricing.starter.trial"),
       features: [t("pricing.starter.f1"), t("pricing.starter.f2"), t("pricing.starter.f3"), t("pricing.starter.f4"), t("pricing.starter.f5")],
     },
     {
@@ -98,6 +99,7 @@ export default function Pricing() {
               disabled={tier.disabled}
               highlighted={tier.highlighted}
               badge={tier.badge}
+              ctaSubtitle={(tier as any).ctaSubtitle}
             />
           ))}
         </div>
