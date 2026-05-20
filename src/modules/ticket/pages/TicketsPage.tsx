@@ -283,6 +283,7 @@ export default function TicketsPage() {
             members={members}
             onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
             canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
+            canMoveToOpen={can(P.TICKET_ASSIGN)}
           />
         </div>
       ) : (

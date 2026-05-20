@@ -30,9 +30,10 @@ interface Props {
   members: WorkspaceMember[];
   onTicketClick: (ticketId: string) => void;
   canChangeStatus: boolean;
+  canMoveToOpen?: boolean;
 }
 
-export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus }: Props) {
+export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen }: Props) {
   const { tEnum } = useTranslation();
   const { columns, loading, commitMove, reorderColumn, setColumns, setDragging } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
@@ -83,7 +84,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
     const toCol = findColumn(overId);
     if (!fromCol || !toCol || fromCol === toCol) return;
 
-    if (toCol === "open" && dragStartStatus.current !== "open") {
+    if (toCol === "open" && dragStartStatus.current !== "open" && !canMoveToOpen) {
       if (dragStartColumns.current) {
         setColumns(dragStartColumns.current);
       }
@@ -190,7 +191,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
             members={members}
             onTicketClick={onTicketClick}
             tEnum={tEnum}
-            blocked={status === "open" && draggingFromStatus !== null && draggingFromStatus !== "open"}
+            blocked={status === "open" && draggingFromStatus !== null && draggingFromStatus !== "open" && !canMoveToOpen}
           />
         ))}
       </div>
