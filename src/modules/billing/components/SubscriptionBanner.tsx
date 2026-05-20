@@ -16,11 +16,26 @@ export default function SubscriptionBanner() {
 
   if (!saasMode || !subscription || subscription.planId === "free") return null;
   if (!subscription.currentPeriodEnd) return null;
-  if (subscription.gateway === "paddle") return null;
 
   const now = new Date();
   const periodEnd = new Date(subscription.currentPeriodEnd);
   const daysLeft = Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const isTrial = subscription.source === "trial";
+  const isPaddle = subscription.gateway === "paddle";
+
+  // Trial banner: always show while trial is active
+  if (isTrial && daysLeft > 0) {
+    return (
+      <div className="w-full px-4 py-2 text-center text-xs font-body-medium flex items-center justify-center gap-2 bg-blue-500 text-white">
+        <span>{t("billing.trialBanner")} — {daysLeft} {t("billing.trialDaysLeft")}</span>
+        <Link to="/dashboard/settings/pricing" className="underline font-body-bold text-white">
+          {t("billing.trialUpgrade")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (isPaddle) return null;
 
   const isExpiringSoon = daysLeft > 0 && daysLeft <= 3;
   const isInGracePeriod = daysLeft <= 0 && daysLeft > -GRACE_PERIOD_DAYS;

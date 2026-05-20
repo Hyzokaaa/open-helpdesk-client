@@ -16,7 +16,7 @@ interface Props {
 export default function StepPlan({ defaultPlan, onDone }: Props) {
   const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [selected, setSelected] = useState(defaultPlan || "free");
+  const [selected, setSelected] = useState(defaultPlan || "starter");
   const [billing, setBilling] = useState<"left" | "right">("left");
   const yearly = billing === "right";
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,10 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
   };
 
   const handleContinue = () => {
+    if (selected === "starter") {
+      onDone();
+      return;
+    }
     if (selected === "free") {
       onDone();
       return;
@@ -64,7 +68,7 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
     pollRef.current = setInterval(async () => {
       try {
         const sub = await getSubscription();
-        if (sub && sub.planId !== "free" && sub.status === "active") {
+        if (sub && sub.planId !== "free" && sub.status === "active" && sub.source === "payment") {
           if (pollRef.current) clearInterval(pollRef.current);
           onDone();
         }
@@ -78,7 +82,7 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
     setVerifying(true);
     try {
       const sub = await getSubscription();
-      if (sub && sub.planId !== "free" && sub.status === "active") {
+      if (sub && sub.planId !== "free" && sub.status === "active" && sub.source === "payment") {
         onDone();
       } else {
         toast.warning(t("onboarding.paymentNotConfirmed"));
@@ -92,14 +96,22 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
 
+  const isTrialSelected = selected === "starter";
+
   return (
     <div>
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <h2 className="text-lg font-body-bold text-heading mb-1">{t("onboarding.choosePlan")}</h2>
         <p className="text-sm text-muted">{t("onboarding.choosePlanDesc")}</p>
       </div>
 
-      <div className="flex justify-center mb-6">
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4 text-center">
+        <p className="text-sm text-blue-800 dark:text-blue-200">
+          {t("onboarding.trialInfo")}
+        </p>
+      </div>
+
+      <div className="flex justify-center mb-4">
         <Toggle
           left={t("billing.monthly")}
           right={t("billing.yearly")}
@@ -118,15 +130,22 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
             className={clsx(
               "w-full text-left rounded-card border p-4 transition-all cursor-pointer",
               selected === plan.id
-                ? "border-primary bg-primary-100/30 dark:bg-primary-950/30"
+                ? plan.id === "starter"
+                  ? "border-blue-400 bg-blue-50/30 dark:bg-blue-950/20"
+                  : "border-primary bg-primary-100/30 dark:bg-primary-950/30"
                 : "border-border-card bg-surface hover:border-primary/50",
             )}
           >
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-body-bold text-heading">{plan.name}</span>
-                {plan.popular && (
-                  <span className="ml-2 text-exs bg-primary-600 text-white px-1.5 py-0.5 rounded">
+                {plan.id === "starter" && (
+                  <span className="text-exs font-body-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
+                    {t("onboarding.trialDuration")}
+                  </span>
+                )}
+                {plan.popular && plan.id !== "starter" && (
+                  <span className="text-exs bg-primary-600 text-white px-1.5 py-0.5 rounded">
                     {t("billing.popular")}
                   </span>
                 )}
@@ -155,9 +174,14 @@ export default function StepPlan({ defaultPlan, onDone }: Props) {
           </Button>
         </div>
       ) : (
-        <Button full onClick={handleContinue}>
-          {selected === "free" ? t("onboarding.continue") : t("onboarding.continueToPayment")}
-        </Button>
+        <>
+          <Button full onClick={handleContinue}>
+            {isTrialSelected ? t("onboarding.trialContinue") : selected === "free" ? t("onboarding.continue") : t("onboarding.continueToPayment")}
+          </Button>
+          {isTrialSelected && (
+            <p className="text-exs text-muted text-center mt-1">{t("onboarding.trialNoCreditCard")}</p>
+          )}
+        </>
       )}
 
       {showCheckout && selectedPlan && (

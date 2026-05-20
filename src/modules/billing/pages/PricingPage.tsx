@@ -82,7 +82,8 @@ export default function PricingPage() {
     return `$${(amount / 100).toFixed(0)}${period}`;
   };
 
-  const isCurrent = (planId: string) => subscription?.planId === planId && subscription?.status !== "canceled";
+  const isTrial = subscription?.source === "trial";
+  const isCurrent = (planId: string) => subscription?.planId === planId && subscription?.status !== "canceled" && !isTrial;
   const isEnterprise = (planId: string) => planId === "enterprise";
 
   return (
@@ -110,12 +111,19 @@ export default function PricingPage() {
               "rounded-card border p-5 flex flex-col relative",
               isCurrent(plan.id)
                 ? "border-primary bg-primary-100/30 dark:bg-primary-950/30"
-                : plan.popular
-                  ? "border-primary"
-                  : "border-border-card bg-surface",
+                : isTrial && subscription?.planId === plan.id
+                  ? "border-blue-400 bg-blue-50/30 dark:bg-blue-950/20"
+                  : plan.popular
+                    ? "border-primary"
+                    : "border-border-card bg-surface",
             )}
           >
-            {plan.popular && !isCurrent(plan.id) && (
+            {isTrial && subscription?.planId === plan.id && (
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-exs font-body-semibold px-2 py-0.5 rounded">
+                {t("billing.trial")}
+              </span>
+            )}
+            {plan.popular && !isCurrent(plan.id) && !(isTrial && subscription?.planId === plan.id) && (
               <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary-600 text-on-primary text-exs font-body-semibold px-2 py-0.5 rounded">
                 {t("billing.popular")}
               </span>

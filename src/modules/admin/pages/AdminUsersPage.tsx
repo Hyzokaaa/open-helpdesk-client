@@ -333,7 +333,9 @@ export default function AdminUsersPage() {
                     )}
                     {col.key === "source" && (
                       <span className="text-sm">
-                        {userPlans[u.id]?.source === "granted" && userPlans[u.id]?.planId !== "free" ? (
+                        {userPlans[u.id]?.source === "trial" ? (
+                          <StatusBadge label={t("billing.trial")} color="blue" size="xs" />
+                        ) : userPlans[u.id]?.source === "granted" && userPlans[u.id]?.planId !== "free" ? (
                           <StatusBadge label={t("billing.granted")} color="green" size="xs" />
                         ) : userPlans[u.id]?.source === "payment" ? (
                           <StatusBadge label={t("billing.paid")} color="blue" size="xs" />

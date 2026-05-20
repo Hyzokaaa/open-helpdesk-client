@@ -88,6 +88,7 @@ export default function SubscriptionPage() {
   const isFree = subscription.planId === "free";
   const isCanceled = subscription.status === "canceled";
   const isGranted = subscription.source === "granted" && !isFree;
+  const isTrial = subscription.source === "trial";
   const seatPrice = subscription.billingCycle === "yearly" ? 90 : 9;
 
   const handleReactivate = async () => {
@@ -169,6 +170,11 @@ export default function SubscriptionPage() {
               {isGranted && (
                 <span className="text-exs font-body-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/40 px-1.5 py-0.5 rounded">
                   {t("billing.granted")}
+                </span>
+              )}
+              {isTrial && (
+                <span className="text-exs font-body-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
+                  {t("billing.trial")}
                 </span>
               )}
             </span>
