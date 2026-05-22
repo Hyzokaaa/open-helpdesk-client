@@ -16,6 +16,7 @@ export interface WorkspaceDetail {
   slug: string;
   description: string;
   palette: string | null;
+  supportEmail: string | null;
 }
 
 export interface WorkspaceMember {

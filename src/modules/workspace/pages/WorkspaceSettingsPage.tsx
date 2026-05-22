@@ -205,6 +205,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 <span className="text-muted">Slug</span>
                 <span className="text-body font-body-medium">{workspace.slug}</span>
               </div>
+              {workspace.supportEmail && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{t("workspaceSettings.supportEmail")}</span>
+                  <span className="text-body font-body-medium">{workspace.supportEmail}</span>
+                </div>
+              )}
             </div>
           </Card>
 

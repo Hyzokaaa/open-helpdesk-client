@@ -168,6 +168,7 @@ const translations = {
   "workspaceSettings.deleteConfirm": { en: "Delete permanently", es: "Eliminar permanentemente" },
   "workspaceSettings.noPermission": { en: "Only system admins can manage workspace settings.", es: "Solo los administradores del sistema pueden gestionar la configuración del espacio." },
   "workspaceSettings.info": { en: "Information", es: "Información" },
+  "workspaceSettings.supportEmail": { en: "Support Email", es: "Email de Soporte" },
   "workspaceSettings.palette": { en: "Color Palette", es: "Paleta de Colores" },
 
   // Custom palette
