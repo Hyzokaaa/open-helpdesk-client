@@ -303,15 +303,6 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           </>
         )}
 
-        {/* Changelog */}
-        <div className="mt-auto pt-2 border-t border-border-card">
-          <Link
-            to="/dashboard/changelog"
-            className={subLinkClass(isActive("/dashboard/changelog"))}
-          >
-            {t("sidebar.changelog")}
-          </Link>
-        </div>
       </nav>
     </aside>
   );
