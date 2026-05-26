@@ -25,6 +25,7 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
   const [invites, setInvites] = useState<Invite[]>([{ email: "", role: "agent" }]);
   const [loading, setLoading] = useState(false);
   const [maxAgents, setMaxAgents] = useState(2);
+  const [supportEmail, setSupportEmail] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getPlans(), getSubscription()]).then(([plans, sub]) => {
@@ -65,8 +66,12 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
         await createInvitationBatch(ws.slug, validInvites);
       }
 
-      toast.success(t("onboarding.workspaceCreated"));
-      onDone();
+      if (ws.supportEmail) {
+        setSupportEmail(ws.supportEmail);
+      } else {
+        toast.success(t("onboarding.workspaceCreated"));
+        onDone();
+      }
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || t("onboarding.workspaceError"));
@@ -74,6 +79,22 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
       setLoading(false);
     }
   };
+
+  if (supportEmail) {
+    return (
+      <div className="bg-surface rounded-card border-card p-8 text-center">
+        <div className="text-3xl mb-3">✉️</div>
+        <h2 className="text-lg font-body-bold text-heading mb-2">{t("onboarding.workspaceReady")}</h2>
+        <p className="text-sm text-muted mb-4">{t("onboarding.supportEmailDesc")}</p>
+        <div className="bg-page rounded-lg px-4 py-3 mb-4">
+          <p className="text-xs text-muted mb-1">{t("workspaceSettings.supportEmail")}</p>
+          <p className="text-sm font-body-bold text-heading break-all">{supportEmail}</p>
+        </div>
+        <p className="text-xs text-muted mb-6">{t("onboarding.supportEmailHint")}</p>
+        <Button full onClick={onDone}>{t("onboarding.goToDashboard")}</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface rounded-card border-card p-8">

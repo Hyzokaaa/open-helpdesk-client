@@ -11,8 +11,8 @@ export default function PaymentResultPage({ success }: Props) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full flex flex-col items-center justify-center py-16">
-      <div className="bg-surface border border-border-card rounded-lg p-8 max-w-md text-center">
+    <div className="min-h-[60vh] w-full flex flex-col items-center justify-center py-16">
+      <div className="bg-surface border border-border-card rounded-lg p-8 max-w-md w-full text-center">
         <div className={`text-4xl mb-4 ${success ? "text-green-500" : "text-red-500"}`}>
           {success ? "\u2713" : "\u2717"}
         </div>

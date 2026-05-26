@@ -43,6 +43,11 @@ export async function subscribe(data: {
   return res.data;
 }
 
+export async function activatePlan(planId: string): Promise<{ planId: string; status: string }> {
+  const res = await http.post("/billing/activate-plan", { planId });
+  return res.data;
+}
+
 export interface CheckoutResult {
   paymentUrl: string;
   transactionId?: string;

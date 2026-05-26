@@ -56,7 +56,7 @@ export async function getWorkspace(slug: string): Promise<WorkspaceDetail> {
 export async function createWorkspace(data: {
   name: string;
   description: string;
-}): Promise<{ id: string; name: string; slug: string }> {
+}): Promise<{ id: string; name: string; slug: string; supportEmail: string | null }> {
   const res = await http.post("/workspaces", data);
   return res.data;
 }

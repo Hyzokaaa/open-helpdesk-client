@@ -91,7 +91,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="w-full max-w-md">
+        <div className={`w-full ${step === "plan" ? "max-w-3xl" : "max-w-md"}`}>
           {step === "account" && <StepAccount onDone={handleAccountDone} />}
           {step === "verify" && <StepVerifyEmail onDone={handleVerifyDone} />}
           {step === "plan" && <StepPlan defaultPlan={planFromUrl} onDone={handlePlanDone} />}

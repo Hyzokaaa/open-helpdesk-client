@@ -206,9 +206,9 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 <span className="text-body font-body-medium">{workspace.slug}</span>
               </div>
               {workspace.supportEmail && (
-                <div className="flex justify-between">
+                <div className="flex flex-col gap-0.5">
                   <span className="text-muted">{t("workspaceSettings.supportEmail")}</span>
-                  <span className="text-body font-body-medium">{workspace.supportEmail}</span>
+                  <span className="text-body font-body-medium break-all">{workspace.supportEmail}</span>
                 </div>
               )}
             </div>

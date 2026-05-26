@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -82,6 +83,11 @@ export default function StepAccount({ onDone }: Props) {
           {t("onboarding.continue")}
         </Button>
       </form>
+
+      <p className="text-center text-xs text-muted mt-4">
+        {t("onboarding.alreadyHaveAccount")}{" "}
+        <Link to="/login" className="text-primary hover:underline">{t("onboarding.loginLink")}</Link>
+      </p>
     </div>
   );
 }
