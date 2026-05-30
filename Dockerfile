@@ -3,8 +3,8 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 ARG VITE_API_URL=http://localhost:3000
-ARG VITE_APP_NAME=Open
-ARG VITE_APP_SUBTITLE=Helpdesk
+ARG VITE_APP_NAME=__APP_NAME_PLACEHOLDER__
+ARG VITE_APP_SUBTITLE=__APP_SUBTITLE_PLACEHOLDER__
 
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
@@ -25,6 +25,9 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]
