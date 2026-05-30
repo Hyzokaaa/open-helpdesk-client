@@ -40,5 +40,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
-            VITE_APP_NAME=${{ vars.VITE_APP_NAME }}
-            VITE_APP_SUBTITLE=${{ vars.VITE_APP_SUBTITLE }}
