@@ -39,7 +39,7 @@ export default function WorkspacesPage() {
       </div>
 
       {workspaces.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="flex flex-col items-center justify-center py-16">
           <p className="text-sm text-muted mb-4">{t("workspaces.emptyHome")}</p>
           <Button size="sm" onClick={() => navigate("/dashboard/workspaces/new")}>
             {t("workspaces.createFirst")}
