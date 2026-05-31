@@ -22,6 +22,7 @@ import {
 } from "../services/workspace.service";
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
+import MailboxSettings from "../components/MailboxSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { P } from "../domain/permissions";
 
@@ -166,10 +167,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
 
           {canManageSettings && (
             <Card className="p-5">
-              <p className="text-xs font-body-medium text-subtle uppercase mb-3">
-                {t("workspaceSettings.palette")}
-              </p>
-              <PalettePicker value={workspace.palette} onChange={handlePaletteChange} />
+              <MailboxSettings slug={workspaceSlug!} />
             </Card>
           )}
         </div>
@@ -196,6 +194,15 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             </div>
           </Card>
 
+          {canManageSettings && (
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-medium mb-2">
+                {t("workspaceSettings.palette")}
+              </p>
+              <PalettePicker value={workspace.palette} onChange={handlePaletteChange} />
+            </Card>
+          )}
+
           <Card className="p-4">
             <p className="text-xs text-subtle font-body-medium mb-2">
               {t("workspaceSettings.info")}
@@ -205,12 +212,6 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 <span className="text-muted">Slug</span>
                 <span className="text-body font-body-medium">{workspace.slug}</span>
               </div>
-              {workspace.supportEmail && (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-muted">{t("workspaceSettings.supportEmail")}</span>
-                  <span className="text-body font-body-medium break-all">{workspace.supportEmail}</span>
-                </div>
-              )}
             </div>
           </Card>
 
