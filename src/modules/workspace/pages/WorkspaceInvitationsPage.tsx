@@ -53,7 +53,7 @@ export default function WorkspaceInvitationsPage() {
   };
 
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
   return (
     <div className="w-full">

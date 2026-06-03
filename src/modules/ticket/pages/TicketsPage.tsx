@@ -239,7 +239,7 @@ export default function TicketsPage() {
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
     });
