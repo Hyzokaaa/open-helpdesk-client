@@ -68,6 +68,13 @@ http.interceptors.response.use(
         }
       }
 
+      if (!silent && error.response.status === 503) {
+        toast.error(t("network.serviceUnavailable"), {
+          toastId: "service-unavailable",
+        });
+        handled = true;
+      }
+
       const e: HttpResponseError = {
         message:
           error.response.data?.message ||

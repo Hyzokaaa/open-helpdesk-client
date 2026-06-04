@@ -290,6 +290,7 @@ const translations = {
   "tickets.boardView": { en: "Board", es: "Tablero" },
   "tickets.boardDropHere": { en: "Drag tickets here", es: "Arrastra tickets aquí" },
   "tickets.boardCannotDrop": { en: "Cannot move back to Open", es: "No se puede devolver a Abierto" },
+  "tickets.boardTruncated": { en: "Showing {shown} of {total} tickets. Use filters to narrow results.", es: "Mostrando {shown} de {total} tickets. Usa filtros para refinar resultados." },
   "tickets.previous": { en: "Previous", es: "Anterior" },
   "tickets.next": { en: "Next", es: "Siguiente" },
   "tickets.page": { en: "Page", es: "Página" },
@@ -422,6 +423,7 @@ const translations = {
 
   // Network
   "network.connectionLost": { en: "Connection lost. Check your internet and try again.", es: "Conexión perdida. Revisa tu internet e intenta de nuevo." },
+  "network.serviceUnavailable": { en: "A required service is unavailable. Please contact your administrator.", es: "Un servicio requerido no está disponible. Contacte a su administrador." },
 
   // Common
   "common.confirm": { en: "Confirm", es: "Confirmar" },
