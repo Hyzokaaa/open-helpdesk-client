@@ -39,6 +39,8 @@ import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPag
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
+import ProtectedRoute from "@modules/app/components/ProtectedRoute";
+import AdminRoute from "@modules/app/components/AdminRoute";
 import LandingLayout from "@modules/landing/LandingLayout";
 import HomePage from "@modules/landing/pages/HomePage";
 import PrivacyPage from "@modules/landing/pages/PrivacyPage";
@@ -74,35 +76,39 @@ function AppRoutes() {
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
       <Route path="/pay" element={<PaddlePayPage />} />
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<WorkspacesPage />} />
-        <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
-        <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
-        <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
-        <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
-        <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
-        <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
-        <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
-        <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
-        <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
-        <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
-        <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
-        <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
-        <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="settings" element={<Navigate to="account" replace />} />
-        <Route path="settings/account" element={<AccountSection />} />
-        <Route path="settings/security" element={<PasswordSection />} />
-        <Route path="settings/preferences" element={<PreferencesSection />} />
-        <Route path="settings/notifications" element={<NotificationsSection />} />
-        <Route path="changelog" element={<ChangelogPage />} />
-        <Route path="settings/billing" element={<SubscriptionPage />} />
-        <Route path="settings/billing/success" element={<PaymentResultPage success />} />
-        <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
-        <Route path="settings/pricing" element={<PricingPage />} />
-        <Route path="admin" element={<Navigate to="users" replace />} />
-        <Route path="admin/users" element={<AdminUsersPage />} />
-        <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<WorkspacesPage />} />
+          <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
+          <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
+          <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+          <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
+          <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+          <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
+          <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+          <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
+          <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
+          <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
+          <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
+          <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
+          <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="settings" element={<Navigate to="account" replace />} />
+          <Route path="settings/account" element={<AccountSection />} />
+          <Route path="settings/security" element={<PasswordSection />} />
+          <Route path="settings/preferences" element={<PreferencesSection />} />
+          <Route path="settings/notifications" element={<NotificationsSection />} />
+          <Route path="changelog" element={<ChangelogPage />} />
+          <Route path="settings/billing" element={<SubscriptionPage />} />
+          <Route path="settings/billing/success" element={<PaymentResultPage success />} />
+          <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
+          <Route path="settings/pricing" element={<PricingPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="admin" element={<Navigate to="users" replace />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
+            <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+          </Route>
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to={saasMode ? "/" : "/login"} replace />} />
     </Routes>
