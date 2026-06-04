@@ -11,6 +11,22 @@ export interface AttachmentDetail extends AttachmentInfo {
   downloadUrl: string;
 }
 
+export interface StagedUpload {
+  token: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+}
+
+export async function stageUpload(file: File): Promise<StagedUpload> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<StagedUpload>("/uploads", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
 export async function uploadToTicket(
   workspaceId: string,
   ticketId: string,

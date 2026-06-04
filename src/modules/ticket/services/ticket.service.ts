@@ -115,6 +115,7 @@ export async function createTicket(
     category: string;
     tagIds: string[];
     customFields?: Record<string, unknown>;
+    uploadTokens?: string[];
   },
 ): Promise<{ id: string }> {
   const res = await http.post(`/workspaces/${workspaceId}/tickets`, data);

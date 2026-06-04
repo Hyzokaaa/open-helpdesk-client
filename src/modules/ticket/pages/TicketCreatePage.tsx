@@ -9,7 +9,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
 import { createTicket } from "../services/ticket.service";
-import { uploadToTicket } from "@modules/attachment/services/attachment.service";
+import { stageUpload, StagedUpload } from "@modules/attachment/services/attachment.service";
 import { PRIORITIES, CATEGORIES } from "../domain/ticket-enums";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
@@ -41,7 +41,12 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [category, setCategory] = useState("issue");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
+  interface StagedFile {
+    file: File;
+    status: "pending" | "uploading" | "done" | "error";
+    token?: string;
+  }
+  const [files, setFiles] = useState<StagedFile[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
@@ -65,10 +70,40 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
     }
   }, [workspaceSlug]);
 
-  const handleDroppedFiles = useCallback((newFiles: File[]) => {
-    setFiles((prev) => [...prev, ...newFiles]);
-    toast.info(`${newFiles.length} file(s) added`);
+  const stageFiles = useCallback(async (newFiles: File[]) => {
+    const staged: StagedFile[] = newFiles.map((file) => ({ file, status: "pending" as const }));
+    setFiles((prev) => [...prev, ...staged]);
+
+    for (let i = 0; i < newFiles.length; i++) {
+      const file = newFiles[i];
+      setFiles((prev) => prev.map((f) => f.file === file ? { ...f, status: "uploading" as const } : f));
+      try {
+        const result = await stageUpload(file);
+        setFiles((prev) => prev.map((f) => f.file === file ? { ...f, status: "done" as const, token: result.token } : f));
+      } catch {
+        setFiles((prev) => prev.map((f) => f.file === file ? { ...f, status: "error" as const } : f));
+        toast.error(`Failed to upload ${file.name}`);
+      }
+    }
   }, []);
+
+  const retryFile = useCallback(async (index: number) => {
+    const entry = files[index];
+    if (!entry || entry.status !== "error") return;
+    const file = entry.file;
+    setFiles((prev) => prev.map((f, i) => i === index ? { ...f, status: "uploading" as const } : f));
+    try {
+      const result = await stageUpload(file);
+      setFiles((prev) => prev.map((f, i) => i === index ? { ...f, status: "done" as const, token: result.token } : f));
+    } catch {
+      setFiles((prev) => prev.map((f, i) => i === index ? { ...f, status: "error" as const } : f));
+      toast.error(`Failed to upload ${file.name}`);
+    }
+  }, [files]);
+
+  const handleDroppedFiles = useCallback((newFiles: File[]) => {
+    stageFiles(newFiles);
+  }, [stageFiles]);
 
   const { dragging } = useFileDrop({
     onFiles: handleDroppedFiles,
@@ -77,7 +112,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
   const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+      stageFiles(Array.from(e.target.files!));
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -92,6 +127,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
     setLoading(true);
 
     try {
+      const uploadTokens = files
+        .filter((f) => f.status === "done" && f.token)
+        .map((f) => f.token!);
+
       const res = await createTicket(workspaceSlug, {
         name,
         description,
@@ -99,11 +138,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         category,
         tagIds,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+        uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
       });
-
-      for (const file of files) {
-        await uploadToTicket(workspaceSlug, res.id, file);
-      }
 
       toast.success(t("ticketCreate.success"));
       if (onCreated) {
@@ -121,6 +157,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   };
 
   const isImage = (file: File) => file.type.startsWith("image/");
+  const hasFilesPending = files.some((f) => f.status === "uploading" || f.status === "pending" || f.status === "error");
+  const hasFilesErrored = files.some((f) => f.status === "error");
 
   return (
     <div className="w-full max-w-2xl">
@@ -211,35 +249,58 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
             {files.length > 0 && (
               <div className="flex flex-wrap gap-3 mt-3">
-                {files.map((file, i) => (
+                {files.map((entry, i) => (
                   <div
                     key={i}
-                    className="relative group border border-border-input rounded-lg overflow-hidden"
+                    className={`relative group border-2 rounded-lg ${entry.status === "error" ? "border-red-400" : "overflow-hidden border-border-input"}`}
                   >
                     <button
                       type="button"
                       onClick={() =>
-                        setLightbox({
-                          src: URL.createObjectURL(file),
-                          type: isImage(file) ? "image" : "video",
-                        })
+                        entry.status === "error"
+                          ? retryFile(i)
+                          : setLightbox({
+                              src: URL.createObjectURL(entry.file),
+                              type: isImage(entry.file) ? "image" : "video",
+                            })
                       }
                       className="cursor-pointer"
+                      title={undefined}
                     >
-                      {isImage(file) ? (
+                      {isImage(entry.file) ? (
                         <img
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          className="w-24 h-24 object-cover"
+                          src={URL.createObjectURL(entry.file)}
+                          alt={entry.file.name}
+                          className={`w-24 h-24 object-cover ${entry.status !== "done" ? "opacity-50" : ""}`}
                         />
                       ) : (
                         <div className="w-24 h-24 flex items-center justify-center bg-surface-hover">
-                          <span className="text-exs text-muted text-center px-1 break-all">
-                            {file.name}
+                          <span className={`text-exs text-center px-1 break-all ${entry.status === "error" ? "text-red-500" : "text-muted"}`}>
+                            {entry.file.name}
                           </span>
                         </div>
                       )}
                     </button>
+                    {(entry.status === "pending" || entry.status === "uploading") && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {entry.status === "error" && (
+                      <>
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 pointer-events-none">
+                          <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </div>
+                        <span className="absolute bottom-1 left-1 group/tip z-10">
+                          <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center cursor-help">!</span>
+                          <span className="hidden group-hover/tip:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">
+                            {t("ticketCreate.uploadFailed")}
+                          </span>
+                        </span>
+                      </>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeFile(i)}
@@ -254,13 +315,12 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
           </FormInput>
 
           <div className="flex gap-3 mt-2">
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={loading} disabled={hasFilesPending}>
               {t("ticketCreate.submit")}
             </Button>
             <Button
               color="light"
-              onClick={handleCancel
-              }
+              onClick={handleCancel}
             >
               {t("ticketCreate.cancel")}
             </Button>
