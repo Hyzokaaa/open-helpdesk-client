@@ -76,6 +76,7 @@ export function useBoardTickets(
 ) {
   const [columns, setColumns] = useState<BoardColumns>({ open: [], pending: [], "in-progress": [], resolved: [] });
   const [loading, setLoading] = useState(true);
+  const [truncatedInfo, setTruncatedInfo] = useState<{ truncated: boolean; total: number }>({ truncated: false, total: 0 });
   const isDragging = useRef(false);
 
   const fetchData = useCallback(async (silent = false) => {
@@ -83,11 +84,12 @@ export function useBoardTickets(
     if (isDragging.current) return;
     if (!silent) setLoading(true);
     try {
-      const items = await listAllTickets(workspaceSlug, {
+      const { items, total, truncated } = await listAllTickets(workspaceSlug, {
         ...filters,
         excludeStatus: "discarded",
       });
       setColumns(groupByStatus(items, workspaceSlug));
+      setTruncatedInfo({ truncated, total });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -141,5 +143,5 @@ export function useBoardTickets(
     isDragging.current = value;
   }, []);
 
-  return { columns, loading, commitMove, reorderColumn, setColumns, setDragging, refetch: () => fetchData() };
+  return { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging, refetch: () => fetchData() };
 }
