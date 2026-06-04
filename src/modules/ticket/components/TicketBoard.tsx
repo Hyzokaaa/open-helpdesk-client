@@ -16,7 +16,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import { useBoardTickets, type BoardColumns } from "../hooks/useBoardTickets";
 import TicketColumn from "./TicketColumn";
 import TicketCard from "./TicketCard";
-import type { TicketListItem, TicketFilters } from "../services/ticket.service";
+import { MAX_BOARD_TICKETS, type TicketListItem, type TicketFilters } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 
@@ -34,8 +34,8 @@ interface Props {
 }
 
 export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen }: Props) {
-  const { tEnum } = useTranslation();
-  const { columns, loading, commitMove, reorderColumn, setColumns, setDragging } = useBoardTickets(workspaceSlug, filters);
+  const { t, tEnum } = useTranslation();
+  const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
   const [activeWidth, setActiveWidth] = useState(0);
   const [draggingFromStatus, setDraggingFromStatus] = useState<string | null>(null);
@@ -180,6 +180,11 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
+      {truncatedInfo.truncated && (
+        <div className="mb-3 px-3 py-2 text-sm rounded bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300">
+          {t("tickets.boardTruncated").replace("{shown}", String(MAX_BOARD_TICKETS)).replace("{total}", String(truncatedInfo.total))}
+        </div>
+      )}
       <div className="flex gap-4 overflow-x-auto pb-4 h-full">
         {BOARD_STATUSES.map((status) => (
           <TicketColumn

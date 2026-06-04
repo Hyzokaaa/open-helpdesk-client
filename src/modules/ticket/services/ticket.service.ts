@@ -67,19 +67,30 @@ export async function listTickets(
   return res.data;
 }
 
+export const MAX_BOARD_TICKETS = 500;
+
+export interface ListAllTicketsResult {
+  items: TicketListItem[];
+  total: number;
+  truncated: boolean;
+}
+
 export async function listAllTickets(
   workspaceId: string,
   filters: Omit<TicketFilters, "page" | "limit"> = {},
-): Promise<TicketListItem[]> {
+): Promise<ListAllTicketsResult> {
   const all: TicketListItem[] = [];
+  let total = 0;
   let page = 1;
   while (true) {
     const result = await listTickets(workspaceId, { ...filters, page, limit: 100 });
     all.push(...result.items);
-    if (all.length >= result.total) break;
+    total = result.total;
+    if (all.length >= result.total || all.length >= MAX_BOARD_TICKETS) break;
     page++;
   }
-  return all;
+  const items = all.slice(0, MAX_BOARD_TICKETS);
+  return { items, total, truncated: total > MAX_BOARD_TICKETS };
 }
 
 export async function getTicket(
