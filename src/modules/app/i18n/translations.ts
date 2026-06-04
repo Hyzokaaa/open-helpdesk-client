@@ -276,6 +276,7 @@ const translations = {
   "customFields.empty": { en: "No custom fields yet.", es: "Sin campos personalizados." },
 
   // Tickets list
+  "tickets.search": { en: "Search tickets...", es: "Buscar tickets..." },
   "tickets.title": { en: "Tickets", es: "Tickets" },
   "tickets.new": { en: "New Ticket", es: "Nuevo Ticket" },
   "tickets.active": { en: "Active", es: "Activos" },
@@ -297,6 +298,7 @@ const translations = {
   "tickets.of": { en: "of", es: "de" },
 
   // Tickets table columns
+  "tickets.col.number": { en: "ID", es: "ID" },
   "tickets.col.name": { en: "Name", es: "Nombre" },
   "tickets.col.category": { en: "Category", es: "Categoría" },
   "tickets.col.priority": { en: "Priority", es: "Prioridad" },

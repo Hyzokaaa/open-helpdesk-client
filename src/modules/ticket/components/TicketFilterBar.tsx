@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import { TicketFilters } from "../services/ticket.service";
@@ -16,6 +17,7 @@ interface TicketFilterBarProps {
   tagDropdownOpen: boolean;
   setTagDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
   tagDropdownRef: React.RefObject<HTMLDivElement | null>;
+  isBoard?: boolean;
 }
 
 export default function TicketFilterBar({
@@ -28,12 +30,52 @@ export default function TicketFilterBar({
   tagDropdownOpen,
   setTagDropdownOpen,
   tagDropdownRef,
+  isBoard,
 }: TicketFilterBarProps) {
   const { t, tEnum } = useTranslation();
+  const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setFilters((prev) => ({
+        ...prev,
+        search: value || undefined,
+        page: 1,
+      }));
+    }, 300);
+  };
 
   return (
     <>
-      {tab === "active" && (
+      <div className="relative w-56">
+        <svg
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+        </svg>
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder={t("tickets.search")}
+          className="w-full pl-8 pr-3 py-1 rounded-input border-input bg-surface text-sm text-body placeholder:text-muted focus:outline-none focus:border-primary-400 transition-colors"
+        />
+      </div>
+      {tab === "active" && !isBoard && (
         <div className="w-40">
           <Select
             options={["all", ...STATUSES.filter((s) => s !== "resolved" && s !== "discarded")]}
