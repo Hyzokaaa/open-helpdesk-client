@@ -36,6 +36,7 @@ import { listMembers, type WorkspaceMember } from "@modules/workspace/services/w
 import TicketBoard from "../components/TicketBoard";
 import TicketDetailPage from "./TicketDetailPage";
 import TicketCreatePage from "./TicketCreatePage";
+import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import useTicketFilters from "../hooks/useTicketFilters";
 import useTicketSelection from "../hooks/useTicketSelection";
 import useBulkOperations from "../hooks/useBulkOperations";
@@ -44,11 +45,12 @@ import TicketBulkActions from "../components/TicketBulkActions";
 
 interface Column {
   key: string;
-  labelKey: "tickets.col.name" | "tickets.col.category" | "tickets.col.priority" | "tickets.col.status" | "tickets.col.tags" | "tickets.col.created";
+  labelKey: "tickets.col.number" | "tickets.col.name" | "tickets.col.category" | "tickets.col.priority" | "tickets.col.status" | "tickets.col.tags" | "tickets.col.created";
   sortable: boolean;
 }
 
 const COLUMNS: Column[] = [
+  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: false },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
   { key: "category", labelKey: "tickets.col.category", sortable: true },
   { key: "priority", labelKey: "tickets.col.priority", sortable: true },
@@ -136,6 +138,18 @@ export default function TicketsPage() {
     setSelectedIds(new Set());
   }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter, viewMode]);
 
+  const refetchAll = useCallback(() => {
+    fetchTickets();
+    setBoardKey((k) => k + 1);
+  }, [workspaceSlug, filters, filterTagIds, tab, permLoading, isReporter, viewMode]);
+
+  useWebSocket(workspaceSlug, {
+    "ticket.created": refetchAll,
+    "ticket.statusChanged": refetchAll,
+    "ticket.assigned": refetchAll,
+    "comment.created": refetchAll,
+  });
+
   const tickets = result?.items ?? [];
   const tagMap = new Map(tags.map((t) => [t.id, t]));
 
@@ -156,12 +170,28 @@ export default function TicketsPage() {
         <Button size="sm" onClick={() => setShowCreate(true)}>{t("tickets.new")}</Button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <TicketFilterBar
+          tab={tab}
+          filters={filters}
+          setFilters={setFilters}
+          filterTagIds={filterTagIds}
+          setFilterTagIds={setFilterTagIds}
+          tags={tags}
+          tagDropdownOpen={tagDropdownOpen}
+          setTagDropdownOpen={setTagDropdownOpen}
+          tagDropdownRef={tagDropdownRef}
+          isBoard={isBoard}
+        />
+      </div>
+
       {isBoard ? (
         <div className="flex-1 overflow-hidden">
           <TicketBoard
             key={boardKey}
             workspaceSlug={workspaceSlug!}
             filters={{
+              search: filters.search,
               priority: filters.priority,
               tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
               creatorId: isReporter ? user?.id : undefined,
@@ -191,17 +221,6 @@ export default function TicketsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <TicketFilterBar
-          tab={tab}
-          filters={filters}
-          setFilters={setFilters}
-          filterTagIds={filterTagIds}
-          setFilterTagIds={setFilterTagIds}
-          tags={tags}
-          tagDropdownOpen={tagDropdownOpen}
-          setTagDropdownOpen={setTagDropdownOpen}
-          tagDropdownRef={tagDropdownRef}
-        />
         <TicketBulkActions
           selectedCount={selectedIds.size}
           can={can}
@@ -276,6 +295,7 @@ export default function TicketsPage() {
                     )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
+                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">#{ticket.ticketNumber}</span>}
                         {col.key === "name" && <p className="text-sm font-body-semibold text-heading truncate max-w-xs">{ticket.name}</p>}
                         {col.key === "category" && <StatusBadge label={tEnum("category", ticket.category)} color={CATEGORY_COLORS[ticket.category] || "gray"} size="xs" />}
                         {col.key === "priority" && <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} size="xs" />}

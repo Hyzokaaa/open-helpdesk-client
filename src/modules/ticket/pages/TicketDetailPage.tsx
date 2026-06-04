@@ -54,6 +54,7 @@ import {
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useFileDrop from "@modules/shared/hooks/useFileDrop";
+import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
@@ -210,6 +211,21 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
   }, [workspaceSlug, ticketId]);
+
+  useWebSocket(workspaceSlug, {
+    "ticket.statusChanged": (data) => {
+      if (data.ticketId === ticketId) fetchTicket(true);
+    },
+    "ticket.assigned": (data) => {
+      if (data.ticketId === ticketId) fetchTicket(true);
+    },
+    "comment.created": (data) => {
+      if (data.ticketId === ticketId) {
+        fetchComments();
+        fetchTicket(true);
+      }
+    },
+  });
 
   const handleDroppedFiles = useCallback(
     async (newFiles: File[]) => {
@@ -497,7 +513,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             size="lg"
           />
         ) : (
-          <h2 className="text-lg font-body-bold text-heading">{ticket.name}</h2>
+          <h2 className="text-lg font-body-bold text-heading"><span className="text-muted font-body-medium">#{ticket.ticketNumber}</span> {ticket.name}</h2>
         )}
         {!isEditing && (
           <div className="flex items-center gap-2 mt-2">
