@@ -53,9 +53,8 @@ import {
 } from "@modules/workspace/services/workspace.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
-import useFileDrop from "@modules/shared/hooks/useFileDrop";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
-import DropOverlay from "@modules/app/modules/ui/components/DropOverlay/DropOverlay";
+import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 
@@ -243,11 +242,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     [workspaceSlug, ticketId],
   );
 
-  const { dragging } = useFileDrop({
-    onFiles: handleDroppedFiles,
-    accept: ["image/*", "video/*"],
-  });
-
   const { can } = usePermissions(workspaceSlug);
 
   useEffect(() => {
@@ -402,7 +396,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   return (
     <div className="w-full max-w-3xl">
-      <DropOverlay visible={dragging} />
 
       {lightbox && (
         <Lightbox
@@ -552,76 +545,81 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
           {/* Attachments */}
           <Card className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-body-medium text-subtle uppercase">
-                {t("ticketDetail.attachments")} ({attachments.length})
-              </p>
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  className="hidden"
-                  onChange={handleUpload}
-                />
-                <Button
-                  size="xs"
-                  color="light"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("ticketDetail.addFile")}
-                </Button>
+            <p className="text-xs font-body-medium text-subtle uppercase mb-3">
+              {t("ticketDetail.attachments")} ({attachments.length})
+            </p>
+            <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
+              <div className="flex items-center justify-between">
+                <span className="text-exs text-subtle">
+                  {t("ticketCreate.pasteOrDrag")}
+                </span>
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={handleUpload}
+                  />
+                  <Button
+                    size="xs"
+                    color="light"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {t("ticketDetail.addFile")}
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-3">
-                {attachments.map((a) => (
-                  <div key={a.id} className="relative group">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        isImage(a.mimeType) || isVideo(a.mimeType)
-                          ? setLightbox({
-                              src: a.downloadUrl,
-                              type: isImage(a.mimeType) ? "image" : "video",
-                            })
-                          : window.open(a.downloadUrl, "_blank")
-                      }
-                      className="block border border-border-input rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
-                    >
-                      {isImage(a.mimeType) ? (
-                        <img
-                          src={a.downloadUrl}
-                          alt={a.originalName}
-                          className="w-32 h-32 object-cover"
-                        />
-                      ) : isVideo(a.mimeType) ? (
-                        <video
-                          src={a.downloadUrl}
-                          className="w-32 h-32 object-cover"
-                        />
-                      ) : (
-                        <div className="w-32 h-32 flex items-center justify-center bg-surface-hover">
-                          <span className="text-exs text-muted text-center px-2 break-all">
-                            {a.originalName}
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteAttachment(a.id);
-                      }}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-3">
+                  {attachments.map((a) => (
+                    <div key={a.id} className="relative group">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          isImage(a.mimeType) || isVideo(a.mimeType)
+                            ? setLightbox({
+                                src: a.downloadUrl,
+                                type: isImage(a.mimeType) ? "image" : "video",
+                              })
+                            : window.open(a.downloadUrl, "_blank")
+                        }
+                        className="block border border-border-input rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
+                      >
+                        {isImage(a.mimeType) ? (
+                          <img
+                            src={a.downloadUrl}
+                            alt={a.originalName}
+                            className="w-32 h-32 object-cover"
+                          />
+                        ) : isVideo(a.mimeType) ? (
+                          <video
+                            src={a.downloadUrl}
+                            className="w-32 h-32 object-cover"
+                          />
+                        ) : (
+                          <div className="w-32 h-32 flex items-center justify-center bg-surface-hover">
+                            <span className="text-exs text-muted text-center px-2 break-all">
+                              {a.originalName}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAttachment(a.id);
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DropZone>
           </Card>
 
           {/* Comments */}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
+import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import {
   getPortalInfo,
   getPortalCustomFields,
@@ -57,7 +58,7 @@ export default function PortalPage() {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState<{ ticketNumber: number; portalToken: string } | null>(null);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -116,6 +117,10 @@ export default function PortalPage() {
     [workspaceSlug],
   );
 
+  const handleDroppedFiles = useCallback((newFiles: File[]) => {
+    stageFiles(newFiles);
+  }, [stageFiles]);
+
   const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       stageFiles(Array.from(e.target.files));
@@ -147,7 +152,7 @@ export default function PortalPage() {
         customFields: hasCustomFields ? customFieldValues : undefined,
       });
 
-      setSubmitted(res.ticketNumber);
+      setSubmitted({ ticketNumber: res.ticketNumber, portalToken: res.portalToken });
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || t("portal.submitError");
       toast.error(message);
@@ -207,11 +212,26 @@ export default function PortalPage() {
             {t("portal.successTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-1">
-            {t("portal.successTicketNumber").replace("{number}", String(submitted))}
+            {t("portal.successTicketNumber").replace("{number}", String(submitted.ticketNumber))}
           </p>
-          <p className="text-gray-500 dark:text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-500 text-sm mb-4">
             {t("portal.successMessage")}
           </p>
+
+          <a
+            href={`/portal/tickets/${submitted.portalToken}`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            {t("portal.trackTicket")}
+          </a>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            {t("portal.trackTicketDesc")}
+          </p>
+
           <button
             type="button"
             onClick={() => {
@@ -244,7 +264,7 @@ export default function PortalPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t("portal.name")} <span className="text-red-500">*</span>
@@ -394,76 +414,79 @@ export default function PortalPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t("portal.attachments")}
               </label>
-              <div>
-                <input
-                  id="portal-files"
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
-                  className="hidden"
-                  onChange={handleFilesChange}
-                />
-                <label
-                  htmlFor="portal-files"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  {t("portal.addFiles")}
-                </label>
-              </div>
-
-              {files.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {files.map((entry, i) => (
-                    <div
-                      key={i}
-                      className={`relative group flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs ${
-                        entry.status === "error"
-                          ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
-                      }`}
-                    >
-                      {isImage(entry.file) ? (
-                        <img
-                          src={URL.createObjectURL(entry.file)}
-                          alt={entry.file.name}
-                          className="w-6 h-6 object-cover rounded"
-                        />
-                      ) : (
-                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                      )}
-                      <span className="max-w-[120px] truncate text-gray-700 dark:text-gray-300">
-                        {entry.file.name}
-                      </span>
-                      {(entry.status === "pending" || entry.status === "uploading") && (
-                        <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-                      )}
-                      {entry.status === "error" && (
-                        <span className="text-red-500 text-xs font-medium">{t("portal.failed")}</span>
-                      )}
-                      {entry.status === "done" && (
-                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => removeFile(i)}
-                        className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+              <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
+                <div>
+                  <input
+                    id="portal-files"
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+                    className="hidden"
+                    onChange={handleFilesChange}
+                  />
+                  <label
+                    htmlFor="portal-files"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    {t("portal.addFiles")}
+                  </label>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{t("portal.pasteOrDrag")}</span>
                 </div>
-              )}
+
+                {files.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {files.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={`relative group flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs ${
+                          entry.status === "error"
+                            ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20"
+                            : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                        }`}
+                      >
+                        {isImage(entry.file) ? (
+                          <img
+                            src={URL.createObjectURL(entry.file)}
+                            alt={entry.file.name}
+                            className="w-6 h-6 object-cover rounded"
+                          />
+                        ) : (
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                        <span className="max-w-[120px] truncate text-gray-700 dark:text-gray-300">
+                          {entry.file.name}
+                        </span>
+                        {(entry.status === "pending" || entry.status === "uploading") && (
+                          <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {entry.status === "error" && (
+                          <span className="text-red-500 text-xs font-medium">{t("portal.failed")}</span>
+                        )}
+                        {entry.status === "done" && (
+                          <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </DropZone>
             </div>
 
             <button
