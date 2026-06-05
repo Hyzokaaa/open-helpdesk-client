@@ -463,6 +463,7 @@ const translations = {
   // Drop overlay
   "drop.title": { en: "Drop files here", es: "Suelta los archivos aquí" },
   "drop.subtitle": { en: "Images and videos", es: "Imágenes y videos" },
+  "drop.hint": { en: "Drop files here", es: "Suelta los archivos aquí" },
 
   // Billing
   "sidebar.billing": { en: "Billing", es: "Facturación" },
@@ -756,6 +757,7 @@ const translations = {
   "portal.descriptionPlaceholder": { en: "Describe your issue in detail...", es: "Describe tu problema en detalle..." },
   "portal.attachments": { en: "Attachments", es: "Archivos adjuntos" },
   "portal.addFiles": { en: "Attach files", es: "Adjuntar archivos" },
+  "portal.pasteOrDrag": { en: "or paste / drag & drop", es: "o pegar / arrastrar" },
   "portal.submit": { en: "Submit ticket", es: "Enviar ticket" },
   "portal.submitting": { en: "Submitting...", es: "Enviando..." },
   "portal.submitError": { en: "Failed to submit ticket", es: "Error al enviar el ticket" },
@@ -768,6 +770,22 @@ const translations = {
   "portal.submitAnother": { en: "Submit another ticket", es: "Enviar otro ticket" },
   "portal.poweredBy": { en: "Powered by Open Helpdesk", es: "Impulsado por Open Helpdesk" },
   "portal.selectOption": { en: "Select an option", es: "Seleccionar una opcion" },
+  "portal.trackTicket": { en: "Track your ticket", es: "Seguir tu ticket" },
+  "portal.trackTicketDesc": { en: "Save this link to check your ticket status and add comments.", es: "Guarda este enlace para ver el estado de tu ticket y agregar comentarios." },
+
+  // Portal Ticket Tracking
+  "portalTicket.notFound": { en: "Ticket not found", es: "Ticket no encontrado" },
+  "portalTicket.description": { en: "Description", es: "Descripcion" },
+  "portalTicket.customFields": { en: "Additional Information", es: "Informacion Adicional" },
+  "portalTicket.comments": { en: "Comments", es: "Comentarios" },
+  "portalTicket.noComments": { en: "No comments yet.", es: "Sin comentarios aun." },
+  "portalTicket.agent": { en: "Agent", es: "Agente" },
+  "portalTicket.commentPlaceholder": { en: "Write a reply...", es: "Escribe una respuesta..." },
+  "portalTicket.send": { en: "Send", es: "Enviar" },
+  "portalTicket.sending": { en: "Sending...", es: "Enviando..." },
+  "portalTicket.commentError": { en: "Failed to send comment", es: "Error al enviar comentario" },
+  "portalTicket.attachments": { en: "Attachments", es: "Archivos adjuntos" },
+  "portalTicket.noAttachments": { en: "No attachments", es: "Sin archivos adjuntos" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
