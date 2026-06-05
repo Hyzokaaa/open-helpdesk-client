@@ -743,6 +743,31 @@ const translations = {
   "auditLog.feed.commented": { en: "added a comment", es: "agregó un comentario" },
   "auditLog.feed.showAll": { en: "Show all ({count})", es: "Ver todo ({count})" },
   "auditLog.feed.showLess": { en: "Show less", es: "Ver menos" },
+
+  // Portal
+  "portal.subtitle": { en: "Submit a support request", es: "Enviar una solicitud de soporte" },
+  "portal.name": { en: "Name", es: "Nombre" },
+  "portal.namePlaceholder": { en: "Your name", es: "Tu nombre" },
+  "portal.email": { en: "Email", es: "Correo electrónico" },
+  "portal.emailPlaceholder": { en: "you@example.com", es: "tu@ejemplo.com" },
+  "portal.subject": { en: "Subject", es: "Asunto" },
+  "portal.subjectPlaceholder": { en: "Brief summary of your issue", es: "Resumen breve de tu problema" },
+  "portal.description": { en: "Description", es: "Descripción" },
+  "portal.descriptionPlaceholder": { en: "Describe your issue in detail...", es: "Describe tu problema en detalle..." },
+  "portal.attachments": { en: "Attachments", es: "Archivos adjuntos" },
+  "portal.addFiles": { en: "Attach files", es: "Adjuntar archivos" },
+  "portal.submit": { en: "Submit ticket", es: "Enviar ticket" },
+  "portal.submitting": { en: "Submitting...", es: "Enviando..." },
+  "portal.submitError": { en: "Failed to submit ticket", es: "Error al enviar el ticket" },
+  "portal.uploadFailed": { en: "Failed to upload", es: "Error al subir" },
+  "portal.failed": { en: "Failed", es: "Error" },
+  "portal.notFound": { en: "Portal not found", es: "Portal no encontrado" },
+  "portal.successTitle": { en: "Ticket submitted!", es: "Ticket enviado!" },
+  "portal.successTicketNumber": { en: "Your ticket #{number} has been created.", es: "Tu ticket #{number} ha sido creado." },
+  "portal.successMessage": { en: "You'll receive updates by email.", es: "Recibirás actualizaciones por correo." },
+  "portal.submitAnother": { en: "Submit another ticket", es: "Enviar otro ticket" },
+  "portal.poweredBy": { en: "Powered by Open Helpdesk", es: "Impulsado por Open Helpdesk" },
+  "portal.selectOption": { en: "Select an option", es: "Seleccionar una opcion" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
