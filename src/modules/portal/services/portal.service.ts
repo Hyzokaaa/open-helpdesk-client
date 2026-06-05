@@ -28,7 +28,40 @@ export interface CreatePortalTicketData {
 
 export interface CreatePortalTicketResponse {
   ticketNumber: number;
+  portalToken: string;
   message: string;
+}
+
+export interface PortalTicketComment {
+  id: string;
+  content: string;
+  authorName: string;
+  isCreator: boolean;
+  createdAt: string;
+}
+
+export interface PortalTicketAttachment {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  downloadUrl: string;
+}
+
+export interface PortalTicketDetail {
+  ticketNumber: number;
+  name: string;
+  description: string;
+  status: string;
+  priority: string;
+  category: string;
+  customFields: Record<string, unknown>;
+  createdAt: string;
+  creatorName: string;
+  workspaceName: string;
+  workspacePalette: string | null;
+  attachments: PortalTicketAttachment[];
+  comments: PortalTicketComment[];
 }
 
 export interface PortalStagedUpload {
@@ -57,6 +90,15 @@ export async function createPortalTicket(
     data,
   );
   return res.data;
+}
+
+export async function getPortalTicket(portalToken: string): Promise<PortalTicketDetail> {
+  const res = await portalHttp.get<PortalTicketDetail>(`/portal/tickets/${portalToken}`);
+  return res.data;
+}
+
+export async function addPortalComment(portalToken: string, content: string): Promise<void> {
+  await portalHttp.post(`/portal/tickets/${portalToken}/comments`, { content });
 }
 
 export async function portalStageUpload(

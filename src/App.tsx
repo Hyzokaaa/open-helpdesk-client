@@ -47,6 +47,7 @@ import PrivacyPage from "@modules/landing/pages/PrivacyPage";
 import TermsPage from "@modules/landing/pages/TermsPage";
 import RefundPage from "@modules/landing/pages/RefundPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
+import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -76,6 +77,7 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
+      <Route path="/portal/tickets/:portalToken" element={<PortalTicketPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
       <Route path="/pay" element={<PaddlePayPage />} />
       <Route element={<ProtectedRoute />}>
