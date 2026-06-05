@@ -45,6 +45,7 @@ interface StagedFile {
 export default function PortalPage() {
   const { workspaceSlug } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isWidget = new URLSearchParams(window.location.search).get("mode") === "widget";
 
   const [info, setInfo] = useState<PortalInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,6 +154,12 @@ export default function PortalPage() {
       });
 
       setSubmitted({ ticketNumber: res.ticketNumber, portalToken: res.portalToken });
+      if (isWidget) {
+        window.parent.postMessage(
+          JSON.stringify({ type: "ohd:submitted", ticketNumber: res.ticketNumber }),
+          "*",
+        );
+      }
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || t("portal.submitError");
       toast.error(message);
@@ -180,15 +187,39 @@ export default function PortalPage() {
     !hasPending &&
     !submitting;
 
+  const closeWidget = () => {
+    window.parent.postMessage("ohd:close", "*");
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className={`${isWidget ? "h-full" : "min-h-screen"} flex items-center justify-center ${isWidget ? "bg-white" : "bg-gray-50 dark:bg-gray-950"}`}>
         <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (notFound || !info) {
+    if (isWidget) {
+      return (
+        <div className="h-full flex flex-col items-center justify-center bg-white px-6 py-8 text-center">
+          <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center mb-3">
+            <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-900 mb-1">{t("portal.notAvailable")}</p>
+          <p className="text-xs text-gray-400 mb-5">{t("portal.notAvailableHint")}</p>
+          <button
+            type="button"
+            onClick={closeWidget}
+            className="px-4 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            {t("portal.close")}
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
@@ -201,14 +232,26 @@ export default function PortalPage() {
 
   if (submitted !== null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+      <div className={`${isWidget ? "h-full relative" : "min-h-screen"} flex items-center justify-center ${isWidget ? "bg-white px-4 py-6" : "bg-gray-50 dark:bg-gray-950 px-4"}`}>
         <div className="w-full max-w-md text-center">
-          <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          {isWidget && (
+            <button
+              type="button"
+              onClick={closeWidget}
+              className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+          <div className={`${isWidget ? "w-12 h-12 mb-4" : "w-16 h-16 mb-6"} bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto`}>
+            <svg className={`${isWidget ? "w-6 h-6" : "w-8 h-8"} text-primary-600`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className={`${isWidget ? "text-lg" : "text-2xl"} font-bold text-gray-900 dark:text-gray-100 mb-2`}>
             {t("portal.successTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-1">
@@ -218,19 +261,23 @@ export default function PortalPage() {
             {t("portal.successMessage")}
           </p>
 
-          <a
-            href={`/portal/tickets/${submitted.portalToken}`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            {t("portal.trackTicket")}
-          </a>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            {t("portal.trackTicketDesc")}
-          </p>
+          <>
+              <a
+                href={`/portal/tickets/${submitted.portalToken}`}
+                target={isWidget ? "_blank" : undefined}
+                rel={isWidget ? "noopener noreferrer" : undefined}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {t("portal.trackTicket")}
+              </a>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                {t("portal.trackTicketDesc")}
+              </p>
+          </>
 
           <button
             type="button"
@@ -243,7 +290,7 @@ export default function PortalPage() {
               setCustomFieldValues({});
               setFiles([]);
             }}
-            className="mt-6 px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+            className={`${isWidget ? "mt-4" : "mt-6"} px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors`}
           >
             {t("portal.submitAnother")}
           </button>
@@ -253,16 +300,35 @@ export default function PortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4 sm:py-12">
-      <div className="w-full max-w-lg mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{info.name}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            {t("portal.subtitle")}
-          </p>
-        </div>
+    <div className={`${isWidget ? "h-full overflow-y-auto bg-white" : "min-h-screen bg-gray-50 dark:bg-gray-950 py-8 sm:py-12"} px-4`}>
+      <div className={`w-full ${isWidget ? "" : "max-w-lg"} mx-auto ${isWidget ? "py-4" : ""}`}>
+        {isWidget ? (
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-sm font-semibold text-gray-900">{info.name}</h1>
+              <p className="text-xs text-gray-500">{t("portal.widgetSubtitle")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={closeWidget}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{info.name}</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              {t("portal.subtitle")}
+            </p>
+          </div>
+        )}
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+        <div className={isWidget ? "" : "bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6"}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div>
@@ -316,7 +382,7 @@ export default function PortalPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("portal.descriptionPlaceholder")}
                 required
-                rows={5}
+                rows={isWidget ? 3 : 5}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition resize-y"
               />
             </div>
@@ -506,9 +572,11 @@ export default function PortalPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-6">
-          {t("portal.poweredBy")}
-        </p>
+        {!isWidget && (
+          <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-6">
+            {t("portal.poweredBy")}
+          </p>
+        )}
       </div>
     </div>
   );
