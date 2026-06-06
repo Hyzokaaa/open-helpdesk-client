@@ -112,3 +112,27 @@ export async function updateWorkspacePalette(
 ): Promise<void> {
   await http.patch(`/workspaces/${slug}/palette`, { palette });
 }
+
+export interface SlaPriorityTargets {
+  critical: number | null;
+  high: number | null;
+  medium: number | null;
+  low: number | null;
+}
+
+export interface SlaPolicy {
+  firstResponse: SlaPriorityTargets;
+  resolution: SlaPriorityTargets;
+}
+
+export async function getSlaPolicy(slug: string): Promise<{ slaPolicy: SlaPolicy | null }> {
+  const res = await http.get<{ slaPolicy: SlaPolicy | null }>(`/workspaces/${slug}/sla`);
+  return res.data;
+}
+
+export async function updateSlaPolicy(
+  slug: string,
+  slaPolicy: SlaPolicy | null,
+): Promise<void> {
+  await http.patch(`/workspaces/${slug}/sla`, { slaPolicy });
+}

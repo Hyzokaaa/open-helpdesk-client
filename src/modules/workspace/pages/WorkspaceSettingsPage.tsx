@@ -23,6 +23,7 @@ import {
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
 import MailboxSettings from "../components/MailboxSettings";
+import SlaSettings from "../components/SlaSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { P } from "../domain/permissions";
 
@@ -168,6 +169,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <Card className="p-5">
               <MailboxSettings slug={workspaceSlug!} />
+            </Card>
+          )}
+
+          {canManageSettings && (
+            <Card className="p-5">
+              <SlaSettings slug={workspaceSlug!} />
             </Card>
           )}
         </div>
