@@ -11,6 +11,8 @@ const CARD_BORDERS = [
   "border-l-amber-500",
   "border-l-purple-500",
   "border-l-pink-500",
+  "border-l-teal-500",
+  "border-l-indigo-500",
 ];
 
 export default function OverviewCards({ overview }: Props) {
@@ -28,7 +30,12 @@ export default function OverviewCards({ overview }: Props) {
     return `${Math.round(score)}%`;
   };
 
-  const cards = [
+  const formatSla = (pct: number | null) => {
+    if (pct === null) return null;
+    return `${pct}%`;
+  };
+
+  const cards: { label: string; value: string | number }[] = [
     { label: t("reports.openTickets"), value: overview.openTickets },
     { label: t("reports.resolvedPeriod"), value: overview.resolvedThisPeriod },
     { label: t("reports.avgResolution"), value: formatHours(overview.avgResolutionTimeHours) },
@@ -36,8 +43,13 @@ export default function OverviewCards({ overview }: Props) {
     { label: t("reports.csatScore"), value: formatCsat(overview.csatScore) },
   ];
 
+  const slaFr = formatSla(overview.slaFirstResponseMet);
+  const slaRes = formatSla(overview.slaResolutionMet);
+  if (slaFr !== null) cards.push({ label: t("reports.slaFirstResponse"), value: slaFr });
+  if (slaRes !== null) cards.push({ label: t("reports.slaResolution"), value: slaRes });
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div className={`grid grid-cols-2 ${cards.length > 5 ? "lg:grid-cols-7" : "lg:grid-cols-5"} gap-3`}>
       {cards.map((c, i) => (
         <div
           key={c.label}

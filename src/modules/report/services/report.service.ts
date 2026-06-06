@@ -7,6 +7,8 @@ export interface ReportOverview {
   avgFirstResponseTimeHours: number | null;
   csatScore: number | null;
   csatResponseCount: number;
+  slaFirstResponseMet: number | null;
+  slaResolutionMet: number | null;
 }
 
 export interface ReportData {
