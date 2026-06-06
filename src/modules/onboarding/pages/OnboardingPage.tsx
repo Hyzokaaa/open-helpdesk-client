@@ -36,8 +36,8 @@ export default function OnboardingPage() {
       return;
     }
 
-    // If user was already logged in before reaching onboarding, redirect to dashboard
-    if (!isNewSignup.current && user.isEmailVerified) {
+    // If user was already logged in before reaching onboarding (not from OAuth or signup), redirect
+    if (!isNewSignup.current && !stepFromUrl && user.isEmailVerified) {
       navigate("/dashboard/settings/pricing", { replace: true });
       return;
     }
@@ -50,6 +50,12 @@ export default function OnboardingPage() {
 
     if (stepFromUrl === "4") {
       setStep("workspace");
+      setLoading(false);
+      return;
+    }
+
+    if (stepFromUrl === "3") {
+      setStep("plan");
       setLoading(false);
       return;
     }

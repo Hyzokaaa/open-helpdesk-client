@@ -80,6 +80,11 @@ const translations = {
   "login.failed": { en: "Login failed", es: "Error al iniciar sesión" },
   "login.forgotPassword": { en: "Forgot your password?", es: "¿Olvidaste tu contraseña?" },
   "login.noAccount": { en: "Don't have an account? Sign up", es: "¿No tienes cuenta? Regístrate" },
+  "login.withGoogle": { en: "Continue with Google", es: "Continuar con Google" },
+  "login.withMicrosoft": { en: "Continue with Microsoft", es: "Continuar con Microsoft" },
+  "login.orDivider": { en: "or", es: "o" },
+  "login.oauthFailed": { en: "Authentication failed. Please try again.", es: "Error de autenticación. Inténtalo de nuevo." },
+  "login.authenticating": { en: "Authenticating...", es: "Autenticando..." },
 
   // Signup
   "signup.subtitle": { en: "Create your account", es: "Crea tu cuenta" },
