@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 const PRIORITY_BORDER: Record<string, string> = {
   low: "border-l-gray-300",
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Props) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -62,9 +64,17 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       }`}
     >
       <div className="flex items-start justify-between gap-2 mb-0.5">
-        <p className="text-[13px] font-semibold text-heading line-clamp-2 leading-tight flex-1">
-          {ticket.name}
-        </p>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (
+            <span
+              className="w-2 h-2 rounded-full bg-red-500 shrink-0 animate-pulse"
+              title={t("ticketDetail.slaBreached")}
+            />
+          )}
+          <p className="text-[13px] font-semibold text-heading line-clamp-2 leading-tight flex-1">
+            {ticket.name}
+          </p>
+        </div>
         {initials && (
           <span className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-[9px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
             {initials}

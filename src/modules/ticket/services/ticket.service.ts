@@ -13,6 +13,8 @@ export interface TicketListItem {
   createdAt: string | null;
   tagIds: string[];
   customFields: Record<string, unknown>;
+  firstResponseBreached: boolean;
+  resolutionBreached: boolean;
 }
 
 export interface TicketDetail {
@@ -25,11 +27,15 @@ export interface TicketDetail {
   workspaceId: string;
   creatorId: string;
   assigneeId: string | null;
+  firstResponseAt: string | null;
   resolvedAt: string | null;
   ticketNumber: number;
+  createdAt: string | null;
   tagIds: string[];
   customFields: Record<string, unknown>;
   discardReason: string | null;
+  firstResponseBreached: boolean;
+  resolutionBreached: boolean;
 }
 
 export interface TicketFilters {

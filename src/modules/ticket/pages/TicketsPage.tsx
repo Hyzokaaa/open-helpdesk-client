@@ -296,7 +296,17 @@ export default function TicketsPage() {
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
                         {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">#{ticket.ticketNumber}</span>}
-                        {col.key === "name" && <p className="text-sm font-body-semibold text-heading truncate max-w-xs">{ticket.name}</p>}
+                        {col.key === "name" && (
+                          <div className="flex items-center gap-1.5 max-w-xs">
+                            {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (
+                              <span
+                                className="w-2 h-2 rounded-full bg-red-500 shrink-0 animate-pulse"
+                                title={t("ticketDetail.slaBreached")}
+                              />
+                            )}
+                            <p className="text-sm font-body-semibold text-heading truncate">{ticket.name}</p>
+                          </div>
+                        )}
                         {col.key === "category" && <StatusBadge label={tEnum("category", ticket.category)} color={CATEGORY_COLORS[ticket.category] || "gray"} size="xs" />}
                         {col.key === "priority" && <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} size="xs" />}
                         {col.key === "status" && <StatusBadge label={tEnum("status", ticket.status)} color={STATUS_COLORS[ticket.status] || "gray"} size="xs" />}

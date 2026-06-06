@@ -50,6 +50,8 @@ import {
 import {
   WorkspaceMember,
   listMembers,
+  SlaPolicy,
+  getSlaPolicy,
 } from "@modules/workspace/services/workspace.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
@@ -57,6 +59,114 @@ import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
+
+function formatResponseTime(createdAt: string, firstResponseAt: string): string {
+  const ms = new Date(firstResponseAt).getTime() - new Date(createdAt).getTime();
+  if (ms < 0) return "—";
+  const totalMinutes = Math.floor(ms / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function SlaStatusCard({
+  ticket,
+  slaPolicy,
+  t,
+  isTerminal,
+}: {
+  ticket: TicketDetail;
+  slaPolicy: SlaPolicy;
+  t: (key: any) => string;
+  isTerminal: boolean;
+}) {
+  const priority = ticket.priority as "critical" | "high" | "medium" | "low";
+  const frTarget = slaPolicy.firstResponse[priority];
+  const resTarget = slaPolicy.resolution[priority];
+
+  if (frTarget === null && resTarget === null) return null;
+
+  const formatRemaining = (ms: number) => {
+    if (ms <= 0) return null;
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) return `${hours}h ${minutes}m ${t("ticketDetail.slaRemaining")}`;
+    return `${minutes}m ${t("ticketDetail.slaRemaining")}`;
+  };
+
+  const getSlaStatus = (
+    targetHours: number | null,
+    breached: boolean,
+    completedAt: string | null,
+  ): { label: string; color: string } | null => {
+    if (targetHours === null) return null;
+
+    if (breached) {
+      return { label: t("ticketDetail.slaBreached"), color: "text-red-500" };
+    }
+
+    if (completedAt) {
+      return { label: t("ticketDetail.slaMet"), color: "text-green-500" };
+    }
+
+    if (isTerminal) {
+      return { label: "—", color: "text-muted" };
+    }
+
+    // Pending: calculate remaining time
+    if (ticket.createdAt) {
+      const deadline = new Date(ticket.createdAt).getTime() + targetHours * 3600000;
+      const remaining = deadline - Date.now();
+      const formatted = formatRemaining(remaining);
+      if (formatted) {
+        return { label: formatted, color: remaining < targetHours * 3600000 * 0.25 ? "text-amber-500" : "text-muted" };
+      }
+    }
+
+    return null;
+  };
+
+  const frStatus = getSlaStatus(frTarget, ticket.firstResponseBreached, ticket.firstResponseAt);
+  const resStatus = getSlaStatus(resTarget, ticket.resolutionBreached, ticket.resolvedAt);
+
+  if (!frStatus && !resStatus) return null;
+
+  return (
+    <Card className="p-4">
+      <p className="text-xs text-subtle font-body-medium mb-2">
+        {t("ticketDetail.slaTarget")}
+      </p>
+      <div className="space-y-2 text-xs">
+        {frStatus && frTarget !== null && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted">{t("ticketDetail.slaFirstResponse")} ({frTarget}h)</span>
+            <span className={`font-body-medium flex items-center gap-1.5 ${frStatus.color}`}>
+              {ticket.firstResponseBreached && (
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              )}
+              {frStatus.label}
+            </span>
+          </div>
+        )}
+        {resStatus && resTarget !== null && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted">{t("ticketDetail.slaResolution")} ({resTarget}h)</span>
+            <span className={`font-body-medium flex items-center gap-1.5 ${resStatus.color}`}>
+              {ticket.resolutionBreached && (
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              )}
+              {resStatus.label}
+            </span>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 interface Props {
   workspaceSlugProp?: string;
@@ -82,6 +192,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
@@ -209,6 +320,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
+    if (workspaceSlug) getSlaPolicy(workspaceSlug).then((r) => setSlaPolicy(r.slaPolicy)).catch(() => {});
   }, [workspaceSlug, ticketId]);
 
   useWebSocket(workspaceSlug, {
@@ -852,6 +964,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   </span>
                 </div>
               )}
+              <div className="flex justify-between items-baseline gap-2">
+                <span className="text-muted shrink-0">{t("ticketDetail.firstResponse")}</span>
+                <span className="text-body font-body-medium text-right">
+                  {ticket.firstResponseAt && ticket.createdAt
+                    ? formatResponseTime(ticket.createdAt, ticket.firstResponseAt)
+                    : isTerminal
+                      ? "—"
+                      : t("ticketDetail.awaitingResponse")}
+                </span>
+              </div>
               {ticket.resolvedAt && (
                 <div className="flex justify-between">
                   <span className="text-muted">{t("ticketDetail.resolved")}</span>
@@ -862,6 +984,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               )}
             </div>
           </Card>
+
+          {slaPolicy && (
+            <SlaStatusCard ticket={ticket} slaPolicy={slaPolicy} t={t} isTerminal={isTerminal} />
+          )}
 
           {canDelete && (
             <Button
