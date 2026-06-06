@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
-import { login, getProfile } from "../services/auth.service";
+import { login, getProfile, getAuthProviders } from "../services/auth.service";
 import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
@@ -14,6 +14,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
+import OAuthButtons from "../components/OAuthButtons";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -27,6 +28,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [providers, setProviders] = useState<{ google: boolean; microsoft: boolean }>({ google: false, microsoft: false });
+
+  useEffect(() => {
+    getAuthProviders().then(setProviders).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "oauth_failed") {
+      toast.error(t("login.oauthFailed"));
+    }
+  }, [searchParams, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +74,14 @@ export default function LoginPage() {
             <p className="text-sm text-muted mb-6">
               {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
             </p>
+
+            <OAuthButtons providers={providers} onSuccess={async () => {
+              const profile = await getProfile();
+              setUser(profile);
+              const { listWorkspaces } = await import("@modules/workspace/services/workspace.service");
+              const workspaces = await listWorkspaces();
+              navigate(workspaces.length === 0 ? "/onboarding?step=3" : "/dashboard", { replace: true });
+            }} />
 
             <form onSubmit={handleSubmit}>
               <FormInput label={t("login.email")} required>

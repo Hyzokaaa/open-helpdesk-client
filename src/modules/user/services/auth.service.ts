@@ -87,3 +87,17 @@ export async function getProfile(): Promise<AuthUser> {
   const res = await http.get<ProfileResponse>("/users/me");
   return res.data;
 }
+
+export interface AuthProviders {
+  google: boolean;
+  microsoft: boolean;
+}
+
+export async function getAuthProviders(): Promise<AuthProviders> {
+  try {
+    const res = await http.get<AuthProviders>("/auth/providers");
+    return res.data;
+  } catch {
+    return { google: false, microsoft: false };
+  }
+}

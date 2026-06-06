@@ -8,6 +8,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import SignupPage from "@modules/user/pages/SignupPage";
+import AuthCallbackPage from "@modules/user/pages/AuthCallbackPage";
 import VerifyEmailPage from "@modules/user/pages/VerifyEmailPage";
 import ForgotPasswordPage from "@modules/user/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
@@ -72,6 +73,7 @@ function AppRoutes() {
       )}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

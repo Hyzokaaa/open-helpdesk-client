@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
-import { signup, getProfile } from "../services/auth.service";
+import { signup, getProfile, getAuthProviders } from "../services/auth.service";
 import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
@@ -12,6 +12,7 @@ import {
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
+import OAuthButtons from "../components/OAuthButtons";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [providers, setProviders] = useState<{ google: boolean; microsoft: boolean }>({ google: false, microsoft: false });
+
+  useEffect(() => {
+    getAuthProviders().then(setProviders).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isInviteFlow) {
@@ -71,6 +77,12 @@ export default function SignupPage() {
             {APP_FULL_NAME}
           </h1>
           <p className="text-sm text-muted mb-6">{t("signup.subtitle")}</p>
+
+          <OAuthButtons providers={providers} onSuccess={async () => {
+            const profile = await getProfile();
+            setUser(profile);
+            navigate("/onboarding?step=3", { replace: true });
+          }} />
 
           <form onSubmit={handleSubmit}>
             <div className="flex gap-3">
