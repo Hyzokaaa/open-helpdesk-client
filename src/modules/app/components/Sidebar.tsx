@@ -76,13 +76,13 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const workspaceNav = currentSlug
     ? [
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${currentSlug}/tickets` },
-        ...(can(P.WORKSPACE_MEMBERS_MANAGE) ? [{ label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
+        ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
         ...(can(P.WORKSPACE_INVITATIONS_MANAGE) ? [{ label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` }] : []),
-        ...(can(P.TAG_CREATE) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
-        ...(can(P.CANNED_RESPONSE_CREATE) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
+        ...(can(P.TAG_VIEW) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
+        ...(can(P.CANNED_RESPONSE_VIEW) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
         ...(can(P.CUSTOM_FIELD_MANAGE) ? [{ label: t("sidebar.customFields"), path: `/dashboard/workspaces/${currentSlug}/custom-fields` }] : []),
         ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
-        ...(can(P.AUDIT_LOG_VIEW) ? [{ label: t("sidebar.reports"), path: `/dashboard/workspaces/${currentSlug}/reports` }] : []),
+        ...(can(P.REPORT_VIEW) ? [{ label: t("sidebar.reports"), path: `/dashboard/workspaces/${currentSlug}/reports` }] : []),
         ...(can(P.AUDIT_LOG_VIEW) ? [{ label: t("sidebar.auditLog"), path: `/dashboard/workspaces/${currentSlug}/audit-log` }] : []),
       ]
     : [];

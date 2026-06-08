@@ -2,6 +2,7 @@ export const P = {
   WORKSPACE_CREATE: "workspace.create",
   WORKSPACE_MEMBERS_MANAGE: "workspace.members.manage",
   WORKSPACE_INVITATIONS_MANAGE: "workspace.invitations.manage",
+  WORKSPACE_MEMBERS_VIEW: "workspace.members.view",
   WORKSPACE_SETTINGS_MANAGE: "workspace.settings.manage",
 
   TAG_CREATE: "tag.create",
@@ -37,6 +38,8 @@ export const P = {
 
   CUSTOM_FIELD_MANAGE: "custom-field.manage",
   CUSTOM_FIELD_VIEW: "custom-field.view",
+
+  REPORT_VIEW: "report.view",
 
   AUDIT_LOG_VIEW: "audit-log.view",
 } as const;
