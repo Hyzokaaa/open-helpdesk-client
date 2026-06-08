@@ -4,6 +4,10 @@ import useUser from "@modules/user/hooks/useUser";
 
 const cache = new Map<string, string[]>();
 
+export function clearPermissionsCache() {
+  cache.clear();
+}
+
 export default function usePermissions(workspaceSlug: string | undefined) {
   const { user } = useUser();
   const [permissions, setPermissions] = useState<string[]>([]);
