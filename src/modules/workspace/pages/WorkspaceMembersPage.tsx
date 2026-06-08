@@ -8,6 +8,7 @@ import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import InviteSheet from "../components/InviteSheet";
 import AddMemberSheet from "../components/AddMemberSheet";
+import ImportMembersSheet from "../components/ImportMembersSheet";
 import {
   WorkspaceMember,
   listMembers,
@@ -30,6 +31,7 @@ export default function WorkspaceMembersPage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
 
   const fetchMembers = () => {
@@ -92,6 +94,11 @@ export default function WorkspaceMembersPage() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("members.title")}</h2>
         <div className="flex gap-2">
+          {canManageMembers && (
+            <Button size="sm" color="light" onClick={() => setShowImport(true)}>
+              {t("import.title")}
+            </Button>
+          )}
           {canManageMembers && user?.isSystemAdmin && (
             <Button size="sm" color="light" onClick={() => setShowAdd(!showAdd)}>
               {showAdd ? t("members.cancel") : t("members.add")}
@@ -179,6 +186,13 @@ export default function WorkspaceMembersPage() {
           workspaceSlug={workspaceSlug}
           onClose={() => setShowInvite(false)}
           onSent={fetchMembers}
+        />
+      )}
+      {showImport && workspaceSlug && (
+        <ImportMembersSheet
+          workspaceSlug={workspaceSlug}
+          onClose={() => setShowImport(false)}
+          onImported={fetchMembers}
         />
       )}
     </div>

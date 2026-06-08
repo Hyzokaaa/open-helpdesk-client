@@ -136,3 +136,78 @@ export async function updateSlaPolicy(
 ): Promise<void> {
   await http.patch(`/workspaces/${slug}/sla`, { slaPolicy });
 }
+
+// Import members
+
+export interface ImportPreviewRow {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  status: "new_user" | "existing_user";
+}
+
+export interface ImportPreviewError {
+  row: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  error: string;
+}
+
+export interface ImportPreviewResult {
+  valid: ImportPreviewRow[];
+  errors: ImportPreviewError[];
+  summary: { toCreate: number; errors: number; alreadyMembers: number };
+}
+
+export interface ImportConfirmResult {
+  created: number;
+  added: number;
+  skipped: number;
+}
+
+export async function importMembersPreview(
+  slug: string,
+  file: File,
+): Promise<ImportPreviewResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<ImportPreviewResult>(
+    `/workspaces/${slug}/members/import/preview`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return res.data;
+}
+
+export async function importMembersConfirm(
+  slug: string,
+  rows: Array<{ email: string; firstName: string; lastName: string; role: string }>,
+  skipVerification = false,
+): Promise<ImportConfirmResult> {
+  const res = await http.post<ImportConfirmResult>(
+    `/workspaces/${slug}/members/import/confirm`,
+    { rows, skipVerification },
+  );
+  return res.data;
+}
+
+export function getImportTemplateUrl(slug: string): string {
+  return `/workspaces/${slug}/members/import/template`;
+}
+
+export async function downloadImportTemplate(slug: string): Promise<void> {
+  const res = await http.get(`/workspaces/${slug}/members/import/template`, {
+    responseType: "blob",
+  });
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "import-members-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
