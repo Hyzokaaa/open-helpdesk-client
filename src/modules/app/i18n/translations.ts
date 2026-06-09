@@ -285,6 +285,7 @@ const translations = {
   "members.empty": { en: "No members.", es: "Sin miembros." },
   "members.roleUpdated": { en: "Role updated", es: "Rol actualizado" },
   "members.roleError": { en: "Failed to update role", es: "Error al actualizar rol" },
+  "members.viewStats": { en: "View Stats", es: "Ver Estadísticas" },
 
   // Tags
   "tags.title": { en: "Tags", es: "Etiquetas" },
@@ -725,9 +726,38 @@ const translations = {
   "enum.discardReason.no-response": { en: "No response", es: "Sin respuesta" },
   "enum.discardReason.wont-fix": { en: "Won't fix", es: "No se corregirá" },
 
-  // Sidebar - Reports & Audit Log
+  // Sidebar - Stats, Reports & Audit Log
+  "sidebar.myStats": { en: "My Stats", es: "Mis Estadisticas" },
   "sidebar.reports": { en: "Reports", es: "Reportes" },
   "sidebar.auditLog": { en: "Audit Log", es: "Registro de Auditoría" },
+
+  // User Stats
+  "stats.myPerformance": { en: "My Performance", es: "Mi Rendimiento" },
+  "stats.userPerformance": { en: "User Performance", es: "Rendimiento del Usuario" },
+  "stats.resolvedTotal": { en: "Tickets You Resolved", es: "Tickets que Resolviste" },
+  "stats.resolvedTotalDesc": { en: "Tickets you personally marked as resolved", es: "Tickets que marcaste personalmente como resueltos" },
+  "stats.thisPeriod": { en: "this period", es: "este periodo" },
+  "stats.totalAssigned": { en: "Total Assigned", es: "Total Asignados" },
+  "stats.totalAssignedDesc": { en: "All tickets ever assigned to you", es: "Todos los tickets asignados a ti" },
+  "stats.activeTickets": { en: "Pending Tickets", es: "Tickets Pendientes" },
+  "stats.activeTicketsDesc": { en: "Assigned tickets not yet resolved", es: "Tickets asignados aún sin resolver" },
+  "stats.avgResolutionDesc": { en: "Average time from creation to resolution", es: "Tiempo promedio desde creación a resolución" },
+  "stats.avgFirstResponseDesc": { en: "Average time to your first reply", es: "Tiempo promedio hasta tu primera respuesta" },
+  "stats.csatDesc": { en: "Customer satisfaction for tickets you resolved", es: "Satisfacción del cliente en tickets que resolviste" },
+  "stats.yourAssignedTickets": { en: "Your Assigned Tickets", es: "Tus Tickets Asignados" },
+  "stats.resolutionTrend": { en: "Resolution Trend", es: "Tendencia de Resoluciones" },
+  "stats.myTickets": { en: "My Tickets", es: "Mis Tickets" },
+  "stats.ticketsCreated": { en: "Tickets Created", es: "Tickets Creados" },
+  "stats.ticketsCreatedDesc": { en: "Total tickets you've submitted", es: "Total de tickets que has enviado" },
+  "stats.ticketsResolved": { en: "Resolved", es: "Resueltos" },
+  "stats.ticketsResolvedDesc": { en: "Your tickets that have been resolved", es: "Tus tickets que han sido resueltos" },
+  "stats.ticketsPending": { en: "Pending", es: "Pendientes" },
+  "stats.ticketsPendingDesc": { en: "Your tickets still awaiting resolution", es: "Tus tickets aún esperando resolución" },
+  "stats.reporterAvgResolutionDesc": { en: "How fast your tickets get resolved", es: "Qué tan rápido se resuelven tus tickets" },
+  "stats.csatGiven": { en: "CSAT Given", es: "CSAT Otorgado" },
+  "stats.csatGivenDesc": { en: "Your average satisfaction rating", es: "Tu calificación promedio de satisfacción" },
+  "stats.yourTicketsByStatus": { en: "Your Tickets by Status", es: "Tus Tickets por Estado" },
+  "stats.creationTrend": { en: "Creation Trend", es: "Tendencia de Creación" },
 
   // Reports
   "reports.title": { en: "Reports", es: "Reportes" },
