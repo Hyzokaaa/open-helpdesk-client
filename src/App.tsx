@@ -40,6 +40,7 @@ import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPag
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
+import UserStatsPage from "@modules/report/pages/UserStatsPage";
 import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
 import LandingLayout from "@modules/landing/LandingLayout";
@@ -95,6 +96,8 @@ function AppRoutes() {
           <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
           <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
           <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
+          <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
+          <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
           <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
           <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
           <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />

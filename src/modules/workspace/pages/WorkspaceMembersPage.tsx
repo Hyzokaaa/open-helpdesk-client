@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
@@ -26,6 +26,7 @@ export default function WorkspaceMembersPage() {
   const { workspaceSlug } = useParams();
   const { user } = useUser();
   const { can } = usePermissions(workspaceSlug);
+  const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,19 +150,23 @@ export default function WorkspaceMembersPage() {
                     <StatusBadge label={tEnum("role", m.role)} color={roleColor(m.role)} size="xs" />
                   </td>
                   <td className="px-2 py-3">
-                    {canManageMembers && (
+                    {(canManageMembers || can(P.REPORT_VIEW)) && (
                       <ActionMenu items={[
+                        ...(can(P.REPORT_VIEW) ? [{
+                          label: t("members.viewStats"),
+                          onClick: () => navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${m.userId}`),
+                        }] : []),
                         ...(canEditRole(m) ? availableRoles()
                           .filter((r) => r !== m.role)
                           .map((r) => ({
                             label: `${t("members.changeRole")}: ${tEnum("role", r)}`,
                             onClick: () => handleRoleChange(m.userId, r),
                           })) : []),
-                        {
+                        ...(canManageMembers ? [{
                           label: t("members.remove"),
                           onClick: () => setRemoveMemberId(m.userId),
                           danger: true,
-                        },
+                        }] : []),
                       ]} />
                     )}
                   </td>
