@@ -1,11 +1,21 @@
 import { useEffect, useRef } from "react";
+import clsx from "clsx";
+
+type SheetSize = "sm" | "md" | "lg";
+
+const sizeClasses: Record<SheetSize, string> = {
+  sm: "max-w-md",
+  md: "max-w-2xl",
+  lg: "max-w-4xl",
+};
 
 interface Props {
   children: React.ReactNode;
   onClose: () => void;
+  size?: SheetSize;
 }
 
-export default function Sheet({ children, onClose }: Props) {
+export default function Sheet({ children, onClose, size = "lg" }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +43,7 @@ export default function Sheet({ children, onClose }: Props) {
     >
       <div
         ref={sheetRef}
-        className="relative bg-surface rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto mx-4 my-4"
+        className={clsx("relative bg-surface rounded-xl shadow-2xl w-full max-h-[90vh] overflow-auto mx-4 my-4", sizeClasses[size])}
       >
         <button
           onClick={onClose}
