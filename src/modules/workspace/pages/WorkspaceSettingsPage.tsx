@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import CollapsibleSection from "@modules/app/modules/ui/components/CollapsibleSection/CollapsibleSection";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -142,10 +143,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
         {/* Main */}
         <div className="lg:col-span-2 space-y-4">
           {isSystemAdmin ? (
-            <Card className="p-5">
-              <p className="text-xs font-body-medium text-subtle uppercase mb-3">
-                {t("workspaceSettings.general")}
-              </p>
+            <CollapsibleSection title={t("workspaceSettings.general")} defaultOpen>
               <div className="space-y-3">
                 <FormInput label={t("workspaces.name")}>
                   <Input value={name} onChange={setName} size="sm" />
@@ -161,7 +159,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                   </Button>
                 </div>
               )}
-            </Card>
+            </CollapsibleSection>
           ) : !canManageSettings ? (
             <p className="text-sm text-muted text-center py-12">
               {t("workspaceSettings.noPermission")}
@@ -169,27 +167,27 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           ) : null}
 
           {canManageSettings && (
-            <Card className="p-5">
+            <CollapsibleSection title={t("mailbox.title")}>
               <MailboxSettings slug={workspaceSlug!} />
-            </Card>
+            </CollapsibleSection>
           )}
 
           {canManageSettings && (
-            <Card className="p-5">
+            <CollapsibleSection title={t("workspaceSettings.sla")}>
               <SlaSettings slug={workspaceSlug!} />
-            </Card>
+            </CollapsibleSection>
           )}
 
           {canManageSettings && (
-            <Card className="p-5">
+            <CollapsibleSection title={t("apiKeys.title")}>
               <ApiKeySettings slug={workspaceSlug!} />
-            </Card>
+            </CollapsibleSection>
           )}
 
           {canManageSettings && (
-            <Card className="p-5">
+            <CollapsibleSection title={t("webhooks.title")}>
               <WebhookSettings slug={workspaceSlug!} />
-            </Card>
+            </CollapsibleSection>
           )}
         </div>
 
@@ -237,17 +235,17 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           </Card>
 
           {isSystemAdmin && (
-            <Card className="p-4 border-red-300 dark:border-red-900/50">
-              <p className="text-xs font-body-semibold text-red-600 mb-1">
-                {t("workspaceSettings.dangerZone")}
-              </p>
+            <CollapsibleSection
+              title={t("workspaceSettings.dangerZone")}
+              className="border-red-300 dark:border-red-900/50"
+            >
               <p className="text-exs text-muted mb-3">
                 {t("workspaceSettings.dangerDescription")}
               </p>
               <Button size="xs" color="danger" full onClick={() => setConfirmDelete(true)}>
                 {t("workspaceSettings.deleteWorkspace")}
               </Button>
-            </Card>
+            </CollapsibleSection>
           )}
         </div>
       </div>

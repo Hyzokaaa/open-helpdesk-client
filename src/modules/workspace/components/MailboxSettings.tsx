@@ -72,8 +72,7 @@ export default function MailboxSettings({ slug }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-body-semibold text-heading">{t("mailbox.title")}</p>
+      <div className="flex justify-end mb-3">
         <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
           {t("mailbox.connectMailbox")}
         </Button>

@@ -121,9 +121,6 @@ export default function SlaSettings({ slug }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-sm font-body-semibold text-heading">{t("workspaceSettings.sla")}</p>
-      </div>
       <p className="text-exs text-muted mb-4">
         {t("workspaceSettings.slaDescription")}
       </p>

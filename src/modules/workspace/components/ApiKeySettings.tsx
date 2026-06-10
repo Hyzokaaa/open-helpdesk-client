@@ -52,8 +52,7 @@ export default function ApiKeySettings({ slug }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-body-semibold text-heading">{t("apiKeys.title")}</p>
+      <div className="flex justify-end mb-3">
         <Button size="xs" color="light" onClick={() => setShowCreate(true)}>
           {t("apiKeys.create")}
         </Button>
