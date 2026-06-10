@@ -24,6 +24,8 @@ import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
 import MailboxSettings from "../components/MailboxSettings";
 import SlaSettings from "../components/SlaSettings";
+import ApiKeySettings from "../components/ApiKeySettings";
+import WebhookSettings from "../components/WebhookSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { P } from "../domain/permissions";
 
@@ -175,6 +177,18 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <Card className="p-5">
               <SlaSettings slug={workspaceSlug!} />
+            </Card>
+          )}
+
+          {canManageSettings && (
+            <Card className="p-5">
+              <ApiKeySettings slug={workspaceSlug!} />
+            </Card>
+          )}
+
+          {canManageSettings && (
+            <Card className="p-5">
+              <WebhookSettings slug={workspaceSlug!} />
             </Card>
           )}
         </div>
