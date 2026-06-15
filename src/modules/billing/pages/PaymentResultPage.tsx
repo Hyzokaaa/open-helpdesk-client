@@ -22,13 +22,15 @@ export default function PaymentResultPage({ success }: Props) {
         <p className="text-sm text-muted mb-6">
           {success ? t("billing.paymentSuccessDescription") : t("billing.paymentFailedDescription")}
         </p>
-        <Button
-          size="sm"
-          color="primary"
-          onClick={() => navigate("/dashboard/settings/billing")}
-        >
-          {t("billing.viewSubscription")}
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            size="sm"
+            color="primary"
+            onClick={() => navigate("/dashboard/settings/billing")}
+          >
+            {t("billing.viewSubscription")}
+          </Button>
+        </div>
       </div>
     </div>
   );

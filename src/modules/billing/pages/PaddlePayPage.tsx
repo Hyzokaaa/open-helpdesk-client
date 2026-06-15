@@ -34,7 +34,7 @@ export default function PaddlePayPage() {
 
     // Wait for Paddle.js to be ready
     const interval = setInterval(() => {
-      if (window.Paddle?.Initialized) {
+      if (window.__paddleReady) {
         clearInterval(interval);
         opened.current = true;
         openCheckout(transactionId);

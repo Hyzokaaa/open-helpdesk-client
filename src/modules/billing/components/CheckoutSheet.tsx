@@ -37,8 +37,10 @@ export default function CheckoutSheet({ planName, planId, price, billingCycle, o
     try {
       const result = await checkout({ planId, billingCycle, gateway: "paddle" });
       if (result.transactionId) {
-        onClose();
         openCheckout(result.transactionId);
+      } else {
+        toast.error(t("billing.checkoutError"));
+        setLoading(null);
       }
     } catch (err) {
       const error = err as HttpResponseError;

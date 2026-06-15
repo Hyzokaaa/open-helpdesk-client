@@ -9,6 +9,7 @@ declare global {
       Checkout: { open: (opts: { transactionId: string }) => void };
       Initialized?: boolean;
     };
+    __paddleReady?: boolean;
   }
 }
 
@@ -22,7 +23,7 @@ export default function usePaddle(onEvent?: PaddleEventHandler) {
 
   useEffect(() => {
     if (loading || !paddleClientToken || initialized.current) return;
-    if (window.Paddle?.Initialized) { initialized.current = true; return; }
+    if (window.__paddleReady) { initialized.current = true; return; }
 
     initialized.current = true;
 
@@ -40,13 +41,21 @@ export default function usePaddle(onEvent?: PaddleEventHandler) {
         token: paddleClientToken,
         eventCallback: (event) => eventHandler.current?.(event),
       });
+      window.__paddleReady = true;
     };
     document.head.appendChild(script);
   }, [loading, paddleClientToken, paddleEnvironment]);
 
   const openCheckout = useCallback((transactionId: string) => {
-    window.Paddle?.Checkout.open({ transactionId });
+    const tryOpen = (attempts: number) => {
+      if (window.__paddleReady && window.Paddle) {
+        window.Paddle.Checkout.open({ transactionId });
+      } else if (attempts > 0) {
+        setTimeout(() => tryOpen(attempts - 1), 200);
+      }
+    };
+    tryOpen(25);
   }, []);
 
-  return { openCheckout, ready: initialized.current && !!window.Paddle };
+  return { openCheckout, ready: initialized.current && !!window.__paddleReady };
 }
