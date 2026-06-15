@@ -48,6 +48,8 @@ import HomePage from "@modules/landing/pages/HomePage";
 import PrivacyPage from "@modules/landing/pages/PrivacyPage";
 import TermsPage from "@modules/landing/pages/TermsPage";
 import RefundPage from "@modules/landing/pages/RefundPage";
+import LandingPricingPage from "@modules/landing/pages/PricingPage";
+import AdminDiscountsPage from "@modules/admin/pages/AdminDiscountsPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
 
@@ -70,6 +72,7 @@ function AppRoutes() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/refund" element={<RefundPage />} />
+          <Route path="/pricing" element={<LandingPricingPage />} />
         </Route>
       )}
       <Route path="/login" element={<LoginPage />} />
@@ -116,6 +119,7 @@ function AppRoutes() {
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+            <Route path="admin/discounts" element={<AdminDiscountsPage />} />
           </Route>
         </Route>
       </Route>

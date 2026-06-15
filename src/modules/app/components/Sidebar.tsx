@@ -99,6 +99,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const adminNav = [
     { label: t("sidebar.adminUsers"), path: "/dashboard/admin/users" },
     { label: t("sidebar.adminWorkspaces"), path: "/dashboard/admin/workspaces" },
+    ...(saasMode ? [{ label: t("sidebar.adminDiscounts"), path: "/dashboard/admin/discounts" }] : []),
   ];
 
   const initials = (name: string) => {
