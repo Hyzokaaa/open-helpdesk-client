@@ -126,7 +126,7 @@ const translations = {
     en: "For small teams getting started",
     es: "Para equipos que inician",
   },
-  "pricing.starter.cta": { en: "Start Free Trial", es: "Prueba Gratis" },
+  "pricing.starter.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.starter.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
   "pricing.starter.f1": { en: "Everything in Free", es: "Todo lo de Free" },
   "pricing.starter.f2": { en: "Up to 5 agents", es: "Hasta 5 agentes" },
@@ -140,6 +140,7 @@ const translations = {
     es: "Para equipos en crecimiento",
   },
   "pricing.business.cta": { en: "Get Started", es: "Comenzar" },
+  "pricing.business.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
   "pricing.business.f1": { en: "Everything in Starter", es: "Todo lo de Starter" },
   "pricing.business.f2": { en: "Up to 20 agents", es: "Hasta 20 agentes" },
   "pricing.business.f3": { en: "10 workspaces", es: "10 workspaces" },
@@ -427,6 +428,100 @@ const translations = {
   "refund.contact.desc": {
     en: "If you have any questions about this Refund Policy, please contact us at",
     es: "Si tiene alguna pregunta sobre esta Política de Reembolso, contáctenos en",
+  },
+
+  // Pricing Page (dedicated /pricing route)
+  "pricingPage.title": {
+    en: "Open Helpdesk Pricing — Plans for Every Team",
+    es: "Precios de Open Helpdesk — Planes para Cada Equipo",
+  },
+  "pricingPage.headline": {
+    en: "Stop overpaying for helpdesk software",
+    es: "Deja de pagar de más por software de helpdesk",
+  },
+  "pricingPage.subheadline": {
+    en: "Most helpdesks charge $25-85 per agent. Open Helpdesk starts free — and stays affordable as you grow.",
+    es: "La mayoría de helpdesks cobran $25-85 por agente. Open Helpdesk empieza gratis — y se mantiene accesible mientras creces.",
+  },
+  "pricingPage.compare.heading": {
+    en: "How we compare",
+    es: "Cómo nos comparamos",
+  },
+  "pricingPage.compare.subheading": {
+    en: "See how Open Helpdesk stacks up against other helpdesk solutions.",
+    es: "Mira cómo Open Helpdesk se compara con otras soluciones de helpdesk.",
+  },
+  "pricingPage.compare.feature": { en: "Feature", es: "Característica" },
+  "pricingPage.compare.openHelpdesk": { en: "Open Helpdesk", es: "Open Helpdesk" },
+  "pricingPage.compare.competitors": { en: "Others", es: "Otros" },
+  "pricingPage.compare.startingPrice": { en: "Starting price", es: "Precio inicial" },
+  "pricingPage.compare.startingPriceUs": { en: "Free", es: "Gratis" },
+  "pricingPage.compare.startingPriceThem": { en: "$15-25/agent/mo", es: "$15-25/agente/mes" },
+  "pricingPage.compare.openSource": { en: "Open source", es: "Código abierto" },
+  "pricingPage.compare.selfHosted": { en: "Self-hosted option", es: "Opción self-hosted" },
+  "pricingPage.compare.unlimitedTickets": { en: "Unlimited tickets", es: "Tickets ilimitados" },
+  "pricingPage.compare.noPerTicketFees": { en: "No per-ticket fees", es: "Sin cobro por ticket" },
+  "pricingPage.compare.multiWorkspace": { en: "Multi-workspace", es: "Multi-workspace" },
+  "pricingPage.compare.reports": { en: "Reports & analytics", es: "Reportes y analíticas" },
+  "pricingPage.compare.csat": { en: "CSAT surveys", es: "Encuestas CSAT" },
+  "pricingPage.compare.customFields": { en: "Custom fields", es: "Campos personalizados" },
+  "pricingPage.compare.yes": { en: "Yes", es: "Sí" },
+  "pricingPage.compare.no": { en: "No", es: "No" },
+  "pricingPage.compare.varies": { en: "Varies", es: "Varía" },
+  "pricingPage.compare.paidOnly": { en: "Paid only", es: "Solo de pago" },
+  "pricingPage.compare.limited": { en: "Limited", es: "Limitado" },
+  "pricingPage.selfHosted.heading": {
+    en: "Prefer to self-host?",
+    es: "Prefieres auto-hospedarlo?",
+  },
+  "pricingPage.selfHosted.desc": {
+    en: "Open Helpdesk is 100% open source under AGPL-3.0. Deploy on your own servers with Docker in under 5 minutes. All features, no limits, no license fees.",
+    es: "Open Helpdesk es 100% open source bajo AGPL-3.0. Despliega en tus propios servidores con Docker en menos de 5 minutos. Todas las funcionalidades, sin límites, sin costo de licencia.",
+  },
+  "pricingPage.selfHosted.cta": { en: "View on GitHub", es: "Ver en GitHub" },
+  "pricingPage.faq.heading": {
+    en: "Pricing FAQ",
+    es: "Preguntas sobre precios",
+  },
+  "pricingPage.faq.q1": {
+    en: "Is there a free trial?",
+    es: "Hay prueba gratuita?",
+  },
+  "pricingPage.faq.a1": {
+    en: "Yes! Paid plans come with a 14-day free trial. No credit card required. If you don't upgrade, you're automatically moved to the Free plan — no data lost.",
+    es: "Sí! Los planes de pago incluyen 14 días de prueba gratis. Sin tarjeta de crédito. Si no actualizas, pasas automáticamente al plan Free — sin perder datos.",
+  },
+  "pricingPage.faq.q2": {
+    en: "What happens if I exceed my agent limit?",
+    es: "Qué pasa si excedo mi límite de agentes?",
+  },
+  "pricingPage.faq.a2": {
+    en: "You won't be able to add more agents until you upgrade. If you downgrade and exceed the limit, the most recently added agents become read-only — but no data is ever deleted.",
+    es: "No podrás agregar más agentes hasta que actualices. Si bajas de plan y excedes el límite, los agentes más recientes pasan a solo lectura — pero nunca se borran datos.",
+  },
+  "pricingPage.faq.q3": {
+    en: "Can I switch plans anytime?",
+    es: "Puedo cambiar de plan en cualquier momento?",
+  },
+  "pricingPage.faq.a3": {
+    en: "Yes. Upgrade instantly, downgrade at the end of your billing period. No lock-in contracts, no cancellation fees.",
+    es: "Sí. Actualiza al instante, baja de plan al final de tu período de facturación. Sin contratos de permanencia, sin penalizaciones.",
+  },
+  "pricingPage.faq.q4": {
+    en: "How does self-hosted pricing work?",
+    es: "Cómo funciona el precio del self-hosted?",
+  },
+  "pricingPage.faq.a4": {
+    en: "Self-hosted is completely free. The code is open source (AGPL-3.0) with no license fees, no feature restrictions, and no agent limits. You only pay for your own infrastructure.",
+    es: "El self-hosted es completamente gratis. El código es open source (AGPL-3.0) sin costos de licencia, sin restricciones de funcionalidades y sin límites de agentes. Solo pagas tu propia infraestructura.",
+  },
+  "pricingPage.faq.q5": {
+    en: "Why is Open Helpdesk so much cheaper?",
+    es: "Por qué Open Helpdesk es mucho más barato?",
+  },
+  "pricingPage.faq.a5": {
+    en: "We're open source and lean. No bloated sales teams, no enterprise upsells. We pass the savings to you. Simple software, simple pricing.",
+    es: "Somos open source y eficientes. Sin equipos de ventas inflados, sin upsells enterprise. Te pasamos los ahorros a ti. Software simple, precios simples.",
   },
 
   // Legal pages shared

@@ -32,7 +32,7 @@ export default function Navbar() {
 
   const links: { label: string; href: string }[] = [
     { label: t("nav.features"), href: "#features" },
-    { label: t("nav.pricing"), href: "#pricing" },
+    { label: t("nav.pricing"), href: "/pricing" },
     { label: t("nav.openSource"), href: "#open-source" },
     { label: t("nav.faq"), href: "#faq" },
   ];
@@ -55,16 +55,26 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleAnchorClick(e, link.href)}
-              className="text-sm text-secondary-text hover:text-primary transition-colors font-body-medium"
-            >
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) =>
+            link.href.startsWith("/") ? (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="text-sm text-secondary-text hover:text-primary transition-colors font-body-medium"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => handleAnchorClick(e, link.href)}
+                className="text-sm text-secondary-text hover:text-primary transition-colors font-body-medium"
+              >
+                {link.label}
+              </a>
+            ),
+          )}
         </div>
 
         {/* Right side */}
@@ -104,16 +114,27 @@ export default function Navbar() {
         )}
       >
         <Container className="py-4 flex flex-col gap-4">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => { handleAnchorClick(e, link.href); setMenuOpen(false); }}
-              className="text-sm text-secondary-text hover:text-primary font-body-medium"
-            >
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) =>
+            link.href.startsWith("/") ? (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="text-sm text-secondary-text hover:text-primary font-body-medium"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => { handleAnchorClick(e, link.href); setMenuOpen(false); }}
+                className="text-sm text-secondary-text hover:text-primary font-body-medium"
+              >
+                {link.label}
+              </a>
+            ),
+          )}
           <div className="flex items-center gap-3 pt-2 border-t border-border-input">
             <button onClick={toggleLang} className="text-xs font-body-semibold text-muted hover:text-primary cursor-pointer">
               {lang === "en" ? "ES" : "EN"}

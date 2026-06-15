@@ -29,7 +29,7 @@ export default function Footer() {
       title: t("footer.product"),
       links: [
         { label: t("footer.features"), hash: "#features" },
-        { label: t("footer.pricing"), hash: "#pricing" },
+        { label: t("footer.pricing"), to: "/pricing" },
       ],
     },
     {

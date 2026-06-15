@@ -40,6 +40,7 @@ export default function Pricing() {
       cta: disablePaid ? t("pricing.comingSoon") : t("pricing.business.cta"),
       href: CONFIG.APP_URL + "?plan=business",
       disabled: disablePaid,
+      ctaSubtitle: disablePaid ? undefined : t("pricing.business.trial"),
       highlighted: true,
       badge: t("mostPopular"),
       features: [t("pricing.business.f1"), t("pricing.business.f2"), t("pricing.business.f3"), t("pricing.business.f4")],
