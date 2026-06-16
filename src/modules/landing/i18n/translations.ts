@@ -83,6 +83,21 @@ const translations = {
     en: "Integrate with any external system. Automate workflows and extend functionality via API.",
     es: "Integra con cualquier sistema externo. Automatiza flujos y extiende funcionalidad vía API.",
   },
+  "features.emailToTicket.title": { en: "Email-to-Ticket", es: "Email-to-Ticket" },
+  "features.emailToTicket.desc": {
+    en: "Turn incoming emails into tickets automatically. Connect any IMAP mailbox — replies thread into the conversation.",
+    es: "Convierte emails entrantes en tickets automáticamente. Conecta cualquier buzón IMAP — las respuestas se hilan en la conversación.",
+  },
+  "features.customerPortal.title": { en: "Customer Portal", es: "Portal de Clientes" },
+  "features.customerPortal.desc": {
+    en: "Public ticket submission form — no login required. Customers track progress via magic link and get email updates.",
+    es: "Formulario público de tickets — sin login. Los clientes siguen el progreso vía magic link y reciben actualizaciones por email.",
+  },
+  "features.sla.title": { en: "SLA Tracking", es: "Seguimiento de SLAs" },
+  "features.sla.desc": {
+    en: "Set response and resolution targets per priority. Real-time breach detection with compliance metrics in reports.",
+    es: "Define objetivos de respuesta y resolución por prioridad. Detección de incumplimientos en tiempo real con métricas de cumplimiento.",
+  },
 
   // Product Showcase
   "showcase.heading": { en: "See it in action", es: "Míralo en acción" },
@@ -118,8 +133,9 @@ const translations = {
   "pricing.free.f1": { en: "Up to 2 agents", es: "Hasta 2 agentes" },
   "pricing.free.f2": { en: "1 workspace", es: "1 workspace" },
   "pricing.free.f3": { en: "Unlimited tickets", es: "Tickets ilimitados" },
-  "pricing.free.f4": { en: "Reports & canned responses", es: "Reportes y respuestas predefinidas" },
-  "pricing.free.f5": { en: "Custom fields & tags", es: "Campos personalizados y etiquetas" },
+  "pricing.free.f4": { en: "Reports & custom fields", es: "Reportes y campos personalizados" },
+  "pricing.free.f5": { en: "Email-to-Ticket", es: "Email-to-Ticket" },
+  "pricing.free.f6": { en: "Google & Microsoft sign-in", es: "Inicio de sesión con Google y Microsoft" },
 
   "pricing.starter.name": { en: "Starter", es: "Starter" },
   "pricing.starter.desc": {
@@ -133,6 +149,8 @@ const translations = {
   "pricing.starter.f3": { en: "3 workspaces", es: "3 workspaces" },
   "pricing.starter.f4": { en: "CSAT surveys", es: "Encuestas de satisfacción" },
   "pricing.starter.f5": { en: "Custom color palette", es: "Paleta de colores personalizada" },
+  "pricing.starter.f6": { en: "SLA tracking", es: "Seguimiento de SLAs" },
+  "pricing.starter.f7": { en: "Canned responses", es: "Respuestas predefinidas" },
 
   "pricing.business.name": { en: "Business", es: "Negocio" },
   "pricing.business.desc": {
@@ -218,8 +236,8 @@ const translations = {
     es: "Qué incluye el plan gratuito?",
   },
   "faq.a4": {
-    en: "Up to 2 agents, 1 workspace, full ticket management, reports, canned responses, custom fields, and email notifications. No feature gating on the essentials.",
-    es: "Hasta 2 agentes, 1 workspace, gestión completa de tickets, reportes, respuestas predefinidas, campos personalizados y notificaciones por email. Sin limitaciones en lo esencial.",
+    en: "Up to 2 agents, 1 workspace, full ticket management, reports, custom fields, email-to-ticket, and email notifications. No feature gating on the essentials.",
+    es: "Hasta 2 agentes, 1 workspace, gestión completa de tickets, reportes, campos personalizados, email-to-ticket y notificaciones por email. Sin limitaciones en lo esencial.",
   },
   "faq.q5": {
     en: "Can I upgrade or downgrade anytime?",
@@ -465,6 +483,10 @@ const translations = {
   "pricingPage.compare.reports": { en: "Reports & analytics", es: "Reportes y analíticas" },
   "pricingPage.compare.csat": { en: "CSAT surveys", es: "Encuestas CSAT" },
   "pricingPage.compare.customFields": { en: "Custom fields", es: "Campos personalizados" },
+  "pricingPage.compare.emailToTicket": { en: "Email-to-Ticket", es: "Email-to-Ticket" },
+  "pricingPage.compare.customerPortal": { en: "Customer portal", es: "Portal de clientes" },
+  "pricingPage.compare.sla": { en: "SLA tracking", es: "Seguimiento de SLAs" },
+  "pricingPage.compare.fromStarter": { en: "From Starter", es: "Desde Starter" },
   "pricingPage.compare.yes": { en: "Yes", es: "Sí" },
   "pricingPage.compare.no": { en: "No", es: "No" },
   "pricingPage.compare.varies": { en: "Varies", es: "Varía" },
@@ -496,8 +518,8 @@ const translations = {
     es: "Qué pasa si excedo mi límite de agentes?",
   },
   "pricingPage.faq.a2": {
-    en: "You won't be able to add more agents until you upgrade. If you downgrade and exceed the limit, the most recently added agents become read-only — but no data is ever deleted.",
-    es: "No podrás agregar más agentes hasta que actualices. Si bajas de plan y excedes el límite, los agentes más recientes pasan a solo lectura — pero nunca se borran datos.",
+    en: "You can purchase extra agent seats at $9/mo each without changing your plan. If you downgrade and exceed the limit, the most recently added agents become read-only — but no data is ever deleted.",
+    es: "Puedes comprar asientos extra de agente a $9/mes cada uno sin cambiar de plan. Si bajas de plan y excedes el límite, los agentes más recientes pasan a solo lectura — pero nunca se borran datos.",
   },
   "pricingPage.faq.q3": {
     en: "Can I switch plans anytime?",

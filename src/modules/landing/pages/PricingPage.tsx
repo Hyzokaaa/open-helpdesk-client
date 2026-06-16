@@ -49,7 +49,7 @@ export default function PricingPage() {
       monthly: 0,
       cta: t("pricing.free.cta"),
       href: CONFIG.APP_URL,
-      features: [t("pricing.free.f1"), t("pricing.free.f2"), t("pricing.free.f3"), t("pricing.free.f4"), t("pricing.free.f5")],
+      features: [t("pricing.free.f1"), t("pricing.free.f2"), t("pricing.free.f3"), t("pricing.free.f4"), t("pricing.free.f5"), t("pricing.free.f6")],
     },
     {
       name: t("pricing.starter.name"),
@@ -59,7 +59,7 @@ export default function PricingPage() {
       href: CONFIG.APP_URL + "?plan=starter",
       disabled: disablePaid,
       ctaSubtitle: disablePaid ? undefined : t("pricing.starter.trial"),
-      features: [t("pricing.starter.f1"), t("pricing.starter.f2"), t("pricing.starter.f3"), t("pricing.starter.f4"), t("pricing.starter.f5")],
+      features: [t("pricing.starter.f1"), t("pricing.starter.f2"), t("pricing.starter.f3"), t("pricing.starter.f4"), t("pricing.starter.f5"), t("pricing.starter.f6"), t("pricing.starter.f7")],
     },
     {
       name: t("pricing.business.name"),
@@ -104,6 +104,9 @@ export default function PricingPage() {
     { label: t("pricingPage.compare.reports"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.csat"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.customFields"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.limited")}</span> },
+    { label: t("pricingPage.compare.emailToTicket"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.customerPortal"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.sla"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
   ];
 
   const faqItems = [

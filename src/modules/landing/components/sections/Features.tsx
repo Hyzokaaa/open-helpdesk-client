@@ -12,6 +12,9 @@ import {
   AuditLogIcon,
   SelfHostedIcon,
   ApiIcon,
+  EmailToTicketIcon,
+  CustomerPortalIcon,
+  SlaIcon,
 } from "../icons/FeatureIcons";
 
 export default function Features() {
@@ -27,6 +30,9 @@ export default function Features() {
     { icon: <AuditLogIcon />, title: t("features.auditLog.title"), desc: t("features.auditLog.desc") },
     { icon: <SelfHostedIcon />, title: t("features.selfHosted.title"), desc: t("features.selfHosted.desc") },
     { icon: <ApiIcon />, title: t("features.api.title"), desc: t("features.api.desc") },
+    { icon: <EmailToTicketIcon />, title: t("features.emailToTicket.title"), desc: t("features.emailToTicket.desc") },
+    { icon: <CustomerPortalIcon />, title: t("features.customerPortal.title"), desc: t("features.customerPortal.desc") },
+    { icon: <SlaIcon />, title: t("features.sla.title"), desc: t("features.sla.desc") },
   ];
 
   return (
