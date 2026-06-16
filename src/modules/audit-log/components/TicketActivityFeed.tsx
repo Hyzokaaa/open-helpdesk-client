@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import { AuditLogItem, listAuditLog } from "../services/audit-log.service";
 
@@ -16,6 +18,7 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
   const { t } = useTranslation();
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locked, setLocked] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -25,8 +28,8 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
       sortOrder: "ASC",
       limit: 100,
     }, { silent: true })
-      .then((res) => setItems(res.items))
-      .catch(() => {})
+      .then((res) => { setItems(res.items); setLocked(false); })
+      .catch((err) => { if (isPlanLimitError(err)) setLocked(true); })
       .finally(() => setLoading(false));
   }, [workspaceSlug, ticketId, refreshKey]);
 
@@ -36,6 +39,21 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
   };
 
   if (loading) return null;
+  if (locked) {
+    return (
+      <div className="flex items-center gap-3 py-3">
+        <svg className="w-4 h-4 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+        <div>
+          <p className="text-xs text-muted">{t("auditLog.feed.locked")}</p>
+          <Link to="/dashboard/settings/billing" className="text-xs text-primary hover:underline">
+            {t("planLimit.upgradeToUnlock")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (items.length === 0) return null;
 
   const hasMore = items.length > COLLAPSED_COUNT;

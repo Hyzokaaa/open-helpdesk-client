@@ -28,6 +28,8 @@ import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
+import { getSubscription } from "@modules/billing/services/billing.service";
 import { P } from "../domain/permissions";
 
 interface Props {
@@ -43,6 +45,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const { t } = useTranslation();
   const { can } = usePermissions(workspaceSlug);
   const { setPalette } = useContext(PaletteContext);
+  const { saasMode } = useConfig();
 
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -51,6 +54,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [customPaletteLocked, setCustomPaletteLocked] = useState(false);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -63,6 +67,13 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
       })
       .finally(() => setLoading(false));
   }, [workspaceSlug]);
+
+  useEffect(() => {
+    if (!saasMode) return;
+    getSubscription().then((sub) => {
+      setCustomPaletteLocked(sub?.planId === "free");
+    }).catch(() => {});
+  }, [saasMode]);
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
   if (!workspace) return null;
@@ -218,7 +229,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
               <p className="text-xs text-subtle font-body-medium mb-2">
                 {t("workspaceSettings.palette")}
               </p>
-              <PalettePicker value={workspace.palette} onChange={handlePaletteChange} />
+              <PalettePicker value={workspace.palette} onChange={handlePaletteChange} customLocked={customPaletteLocked} />
             </Card>
           )}
 

@@ -3,6 +3,8 @@ import { useParams } from "react-router";
 import { subDays, startOfDay, endOfDay, format } from "date-fns";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
+import { getSubscription } from "@modules/billing/services/billing.service";
 import { ReportData, getReport } from "../services/report.service";
 import DateRangeSelector from "../components/DateRangeSelector";
 import OverviewCards from "../components/OverviewCards";
@@ -25,9 +27,11 @@ function getDateRange(preset: string) {
 export default function WorkspaceReportsPage() {
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
+  const { saasMode } = useConfig();
   const [preset, setPreset] = useState("30d");
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [csatLocked, setCsatLocked] = useState(false);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -37,6 +41,13 @@ export default function WorkspaceReportsPage() {
       .then(setData)
       .finally(() => setLoading(false));
   }, [workspaceSlug, preset]);
+
+  useEffect(() => {
+    if (!saasMode) return;
+    getSubscription().then((sub) => {
+      setCsatLocked(sub?.planId === "free");
+    }).catch(() => {});
+  }, [saasMode]);
 
   return (
     <div className="w-full">
@@ -67,6 +78,7 @@ export default function WorkspaceReportsPage() {
             data={data.csatBreakdown}
             score={data.overview.csatScore}
             total={data.overview.csatResponseCount}
+            locked={csatLocked}
           />
         </div>
       )}

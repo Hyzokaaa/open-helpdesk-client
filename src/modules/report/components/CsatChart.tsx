@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import PlanGate from "@modules/billing/components/PlanGate";
 
 const RATING_COLORS: Record<string, string> = {
   good: "#22c55e",
@@ -11,10 +12,20 @@ interface Props {
   data: { rating: string; count: number }[];
   score: number | null;
   total: number;
+  locked?: boolean;
 }
 
-export default function CsatChart({ data, score, total }: Props) {
+export default function CsatChart({ data, score, total, locked }: Props) {
   const { t, tEnum } = useTranslation();
+
+  if (locked) {
+    return (
+      <div className="bg-surface border border-border-card rounded-xl p-4 shadow-sm">
+        <p className="text-sm font-semibold text-heading mb-1">{t("reports.csat")}</p>
+        <PlanGate message={t("planLimit.csatLocked")} />
+      </div>
+    );
+  }
 
   if (data.length === 0) return null;
 

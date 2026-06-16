@@ -233,6 +233,7 @@ const translations = {
   "ticketDetail.slaRemaining": { en: "remaining", es: "restante" },
   "ticketDetail.slaFirstResponse": { en: "Response SLA", es: "SLA Respuesta" },
   "ticketDetail.slaResolution": { en: "Resolution SLA", es: "SLA Resolución" },
+  "ticketDetail.slaLocked": { en: "SLA tracking available on Starter+", es: "Seguimiento SLA disponible en Starter+" },
 
   // Mailboxes
   "mailbox.title": { en: "Email Mailboxes", es: "Buzones de Email" },
@@ -599,6 +600,9 @@ const translations = {
   "planLimit.workspaceReadOnly": { en: "This workspace is read-only. The workspace owner must upgrade their plan to unlock it.", es: "Este workspace es de solo lectura. El propietario debe mejorar su plan para desbloquearlo." },
   "planLimit.agentDeactivated": { en: "Your agent seat has been deactivated. The workspace owner needs to upgrade the plan.", es: "Tu puesto de agente ha sido desactivado. El propietario del workspace necesita mejorar el plan." },
   "planLimit.cannedResponsesBlocked": { en: "Canned responses are available on Starter plan and above.", es: "Las respuestas predefinidas están disponibles desde el plan Starter." },
+  "planLimit.slaLocked": { en: "SLA tracking is available on Starter plan and above.", es: "El seguimiento de SLAs está disponible desde el plan Starter." },
+  "planLimit.csatLocked": { en: "CSAT surveys are available on Starter plan and above.", es: "Las encuestas de satisfacción están disponibles desde el plan Starter." },
+  "planLimit.upgradeToUnlock": { en: "Upgrade to unlock", es: "Mejora tu plan para desbloquear" },
   "billing.viewPlans": { en: "View plans", es: "Ver planes" },
   "billing.processing": { en: "Processing...", es: "Procesando..." },
   "billing.paymentSuccess": { en: "Payment Successful", es: "Pago Exitoso" },
@@ -876,6 +880,7 @@ const translations = {
   "auditLog.feed.commented": { en: "added a comment", es: "agregó un comentario" },
   "auditLog.feed.showAll": { en: "Show all ({count})", es: "Ver todo ({count})" },
   "auditLog.feed.showLess": { en: "Show less", es: "Ver menos" },
+  "auditLog.feed.locked": { en: "Activity history available on Business+", es: "Historial de actividad disponible en Business+" },
 
   // Portal
   "portal.subtitle": { en: "Submit a support request", es: "Enviar una solicitud de soporte" },

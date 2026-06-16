@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import PlanGate from "@modules/billing/components/PlanGate";
 import {
   SlaPolicy,
   SlaPriorityTargets,
@@ -30,6 +32,7 @@ export default function SlaSettings({ slug }: Props) {
   const { t, tEnum } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [policy, setPolicy] = useState<SlaPolicy | null>(null);
   const [firstResponse, setFirstResponse] = useState<SlaPriorityTargets>({ ...EMPTY_TARGETS });
   const [resolution, setResolution] = useState<SlaPriorityTargets>({ ...EMPTY_TARGETS });
@@ -38,9 +41,10 @@ export default function SlaSettings({ slug }: Props) {
   const savedResolution = useRef<SlaPriorityTargets>({ ...EMPTY_TARGETS });
 
   useEffect(() => {
-    getSlaPolicy(slug)
+    getSlaPolicy(slug, { silent: true })
       .then((res) => {
         setPolicy(res.slaPolicy);
+        setLocked(false);
         if (res.slaPolicy) {
           const fr = { ...EMPTY_TARGETS, ...res.slaPolicy.firstResponse };
           const rs = { ...EMPTY_TARGETS, ...res.slaPolicy.resolution };
@@ -49,6 +53,9 @@ export default function SlaSettings({ slug }: Props) {
           savedFirstResponse.current = { ...fr };
           savedResolution.current = { ...rs };
         }
+      })
+      .catch((err) => {
+        if (isPlanLimitError(err)) setLocked(true);
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -119,7 +126,7 @@ export default function SlaSettings({ slug }: Props) {
 
   if (loading) return null;
 
-  return (
+  const content = (
     <div>
       <p className="text-exs text-muted mb-4">
         {t("workspaceSettings.slaDescription")}
@@ -148,6 +155,7 @@ export default function SlaSettings({ slug }: Props) {
                       type="text"
                       inputMode="decimal"
                       placeholder="--"
+                      disabled={locked}
                       value={getRawOrValue("fr", p, firstResponse)}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -166,6 +174,7 @@ export default function SlaSettings({ slug }: Props) {
                       type="text"
                       inputMode="decimal"
                       placeholder="--"
+                      disabled={locked}
                       value={getRawOrValue("res", p, resolution)}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -184,16 +193,33 @@ export default function SlaSettings({ slug }: Props) {
         </table>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!hasChanges}>
-          {t("settings.save")}
-        </Button>
-        {policy && (
-          <Button size="xs" color="light" onClick={handleRemove} loading={saving}>
-            {t("workspaceSettings.slaRemove")}
+      {!locked && (
+        <div className="flex items-center gap-2">
+          <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!hasChanges}>
+            {t("settings.save")}
           </Button>
-        )}
-      </div>
+          {policy && (
+            <Button size="xs" color="light" onClick={handleRemove} loading={saving}>
+              {t("workspaceSettings.slaRemove")}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
+
+  if (locked) {
+    return (
+      <div className="relative overflow-hidden rounded-lg">
+        <div className="pointer-events-none select-none blur-[2px] opacity-40" aria-hidden>
+          {content}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <PlanGate message={t("planLimit.slaLocked")} />
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 }

@@ -17,7 +17,7 @@ import { listCustomFields } from "@modules/custom-field/services/custom-field.se
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
-import { handlePlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import { handlePlanLimitError, isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -193,6 +193,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
+  const [slaLocked, setSlaLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
@@ -320,7 +321,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchMembers();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
-    if (workspaceSlug) getSlaPolicy(workspaceSlug).then((r) => setSlaPolicy(r.slaPolicy)).catch(() => {});
+    if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
   }, [workspaceSlug, ticketId]);
 
   useWebSocket(workspaceSlug, {
@@ -358,7 +359,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   useEffect(() => {
     if (workspaceSlug && can(P.CANNED_RESPONSE_VIEW)) {
-      listCannedResponses(workspaceSlug).then(setCannedResponses).catch(() => {});
+      listCannedResponses(workspaceSlug, { silent: true }).then(setCannedResponses).catch(() => {});
     }
   }, [workspaceSlug, can(P.CANNED_RESPONSE_VIEW)]);
 
@@ -987,6 +988,22 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
           {slaPolicy && (
             <SlaStatusCard ticket={ticket} slaPolicy={slaPolicy} t={t} isTerminal={isTerminal} />
+          )}
+
+          {slaLocked && (
+            <Card>
+              <div className="flex items-center gap-3 p-4">
+                <svg className="w-5 h-5 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <div>
+                  <p className="text-xs font-body-semibold text-heading">{t("ticketDetail.slaLocked")}</p>
+                  <a href="/dashboard/settings/billing" className="text-xs text-primary hover:underline">
+                    {t("planLimit.upgradeToUnlock")}
+                  </a>
+                </div>
+              </div>
+            </Card>
           )}
 
           {canDelete && (

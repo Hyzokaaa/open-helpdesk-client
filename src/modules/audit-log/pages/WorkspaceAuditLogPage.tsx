@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -8,6 +8,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import { listMembers, WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import PlanGate from "@modules/billing/components/PlanGate";
 import {
   AuditLogItem,
   AuditLogFilters,
@@ -95,19 +96,13 @@ export default function WorkspaceAuditLogPage() {
     return (
       <div className="w-full">
         <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.title")}</h2>
-        <div className="text-center py-12">
-          <p className="text-sm text-muted">
-            {denied === 'upgrade' ? t("auditLog.upgradeRequired") : t("auditLog.noPermission")}
-          </p>
-          {denied === 'upgrade' && (
-            <Link
-              to="/dashboard/settings/billing"
-              className="inline-block mt-3 text-sm text-primary hover:underline"
-            >
-              {t("auditLog.goToBilling")}
-            </Link>
-          )}
-        </div>
+        {denied === 'upgrade' ? (
+          <PlanGate message={t("auditLog.upgradeRequired")} />
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted">{t("auditLog.noPermission")}</p>
+          </div>
+        )}
       </div>
     );
   }

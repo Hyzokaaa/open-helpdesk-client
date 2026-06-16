@@ -125,8 +125,11 @@ export interface SlaPolicy {
   resolution: SlaPriorityTargets;
 }
 
-export async function getSlaPolicy(slug: string): Promise<{ slaPolicy: SlaPolicy | null }> {
-  const res = await http.get<{ slaPolicy: SlaPolicy | null }>(`/workspaces/${slug}/sla`);
+export async function getSlaPolicy(slug: string, options?: { silent?: boolean }): Promise<{ slaPolicy: SlaPolicy | null }> {
+  const res = await http.get<{ slaPolicy: SlaPolicy | null }>(
+    `/workspaces/${slug}/sla`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
+  );
   return res.data;
 }
 

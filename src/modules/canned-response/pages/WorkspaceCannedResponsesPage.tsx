@@ -8,11 +8,11 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
-import { Link } from "react-router";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import PlanGate from "@modules/billing/components/PlanGate";
 import {
   CannedResponse,
   listCannedResponses,
@@ -115,12 +115,7 @@ export default function WorkspaceCannedResponsesPage() {
     return (
       <div className="w-full">
         <h2 className="text-lg font-body-bold text-heading mb-4">{t("cannedResponses.title")}</h2>
-        <div className="text-center py-12">
-          <p className="text-sm text-muted">{t("planLimit.cannedResponsesBlocked")}</p>
-          <Link to="/dashboard/settings/billing" className="inline-block mt-3 text-sm text-primary hover:underline">
-            {t("planLimit.viewPlans")}
-          </Link>
-        </div>
+        <PlanGate message={t("planLimit.cannedResponsesBlocked")} />
       </div>
     );
   }
