@@ -100,13 +100,15 @@ export default function PricingPage() {
     { label: t("pricingPage.compare.selfHosted"), us: <Check />, them: <Dash /> },
     { label: t("pricingPage.compare.unlimitedTickets"), us: <Check />, them: <Check /> },
     { label: t("pricingPage.compare.noPerTicketFees"), us: <Check />, them: <Dash /> },
-    { label: t("pricingPage.compare.multiWorkspace"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.multiWorkspace"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.reports"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
-    { label: t("pricingPage.compare.csat"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.csat"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.customFields"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.limited")}</span> },
+    { label: t("pricingPage.compare.cannedResponses"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.emailToTicket"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.customerPortal"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.sla"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.auditLog"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromBusiness")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
   ];
 
   const faqItems = [
