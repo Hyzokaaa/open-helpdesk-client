@@ -163,6 +163,8 @@ const translations = {
   "pricing.business.f2": { en: "Up to 20 agents", es: "Hasta 20 agentes" },
   "pricing.business.f3": { en: "10 workspaces", es: "10 workspaces" },
   "pricing.business.f4": { en: "Audit log", es: "Registro de auditoría" },
+  "pricing.business.f5": { en: "Advanced reports & analytics", es: "Reportes y analíticas avanzados" },
+  "pricing.business.f6": { en: "Custom email mailboxes", es: "Buzones de email personalizados" },
 
   "pricing.enterprise.name": { en: "Enterprise", es: "Empresarial" },
   "pricing.enterprise.desc": {
@@ -484,6 +486,8 @@ const translations = {
   "pricingPage.compare.csat": { en: "CSAT surveys", es: "Encuestas CSAT" },
   "pricingPage.compare.customFields": { en: "Custom fields", es: "Campos personalizados" },
   "pricingPage.compare.cannedResponses": { en: "Canned responses", es: "Respuestas predefinidas" },
+  "pricingPage.compare.customMailbox": { en: "Custom email mailboxes", es: "Buzones de email personalizados" },
+  "pricingPage.compare.advancedReports": { en: "Advanced reports", es: "Reportes avanzados" },
   "pricingPage.compare.auditLog": { en: "Audit log", es: "Registro de auditoría" },
   "pricingPage.compare.fromBusiness": { en: "From Business", es: "Desde Business" },
   "pricingPage.compare.emailToTicket": { en: "Email-to-Ticket", es: "Email-to-Ticket" },

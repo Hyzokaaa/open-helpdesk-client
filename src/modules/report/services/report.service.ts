@@ -11,6 +11,13 @@ export interface ReportOverview {
   slaResolutionMet: number | null;
 }
 
+export interface ReportOverviewBasic {
+  openTickets: number;
+  resolvedThisPeriod: number;
+  avgResolutionTimeHours: number | null;
+  avgFirstResponseTimeHours: number | null;
+}
+
 export interface ReportData {
   overview: ReportOverview;
   ticketsOverTime: { date: string; created: number; resolved: number }[];
@@ -21,13 +28,26 @@ export interface ReportData {
   csatBreakdown: { rating: string; count: number }[];
 }
 
+export async function getReportOverview(
+  workspaceSlug: string,
+  dateFrom: string,
+  dateTo: string,
+): Promise<ReportOverviewBasic> {
+  const res = await http.get<ReportOverviewBasic>(
+    `/workspaces/${workspaceSlug}/reports/overview?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+  );
+  return res.data;
+}
+
 export async function getReport(
   workspaceSlug: string,
   dateFrom: string,
   dateTo: string,
+  options?: { silent?: boolean },
 ): Promise<ReportData> {
   const res = await http.get<ReportData>(
     `/workspaces/${workspaceSlug}/reports?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
   );
   return res.data;
 }

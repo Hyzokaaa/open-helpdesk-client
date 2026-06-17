@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -9,6 +10,8 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
+import { getSubscription } from "@modules/billing/services/billing.service";
 import {
   MailboxDto,
   listMailboxes,
@@ -42,14 +45,24 @@ interface Props {
 
 export default function MailboxSettings({ slug }: Props) {
   const { t } = useTranslation();
+  const { saasMode } = useConfig();
   const [mailboxes, setMailboxes] = useState<MailboxDto[]>([]);
   const [showSheet, setShowSheet] = useState(false);
   const [editMailbox, setEditMailbox] = useState<MailboxDto | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [customMailboxLocked, setCustomMailboxLocked] = useState(false);
 
   useEffect(() => {
     listMailboxes(slug).then(setMailboxes).catch(() => {});
   }, [slug]);
+
+  useEffect(() => {
+    if (!saasMode) return;
+    getSubscription().then((sub) => {
+      const planId = sub?.planId ?? 'free';
+      setCustomMailboxLocked(planId === 'free' || planId === 'starter');
+    }).catch(() => {});
+  }, [saasMode]);
 
   const handleSaved = async () => {
     const updated = await listMailboxes(slug);
@@ -73,9 +86,18 @@ export default function MailboxSettings({ slug }: Props) {
   return (
     <div>
       <div className="flex justify-end mb-3">
-        <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
-          {t("mailbox.connectMailbox")}
-        </Button>
+        {customMailboxLocked ? (
+          <Link to="/dashboard/settings/billing" className="flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            {t("mailbox.customRequiresBusiness")}
+          </Link>
+        ) : (
+          <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
+            {t("mailbox.connectMailbox")}
+          </Button>
+        )}
       </div>
 
       {mailboxes.length === 0 ? (

@@ -43,7 +43,7 @@ export default function Pricing() {
       ctaSubtitle: disablePaid ? undefined : t("pricing.business.trial"),
       highlighted: true,
       badge: t("mostPopular"),
-      features: [t("pricing.business.f1"), t("pricing.business.f2"), t("pricing.business.f3"), t("pricing.business.f4")],
+      features: [t("pricing.business.f1"), t("pricing.business.f2"), t("pricing.business.f3"), t("pricing.business.f4"), t("pricing.business.f5"), t("pricing.business.f6")],
     },
     {
       name: t("pricing.enterprise.name"),

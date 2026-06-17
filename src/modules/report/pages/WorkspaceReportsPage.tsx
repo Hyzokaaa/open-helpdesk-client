@@ -5,7 +5,9 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import { getSubscription } from "@modules/billing/services/billing.service";
-import { ReportData, getReport } from "../services/report.service";
+import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import PlanGate from "@modules/billing/components/PlanGate";
+import { ReportData, ReportOverviewBasic, ReportOverview, getReport, getReportOverview } from "../services/report.service";
 import DateRangeSelector from "../components/DateRangeSelector";
 import OverviewCards from "../components/OverviewCards";
 import TicketsOverTimeChart from "../components/TicketsOverTimeChart";
@@ -24,22 +26,37 @@ function getDateRange(preset: string) {
   };
 }
 
+function toFullOverview(basic: ReportOverviewBasic): ReportOverview {
+  return { ...basic, csatScore: null, csatResponseCount: 0, slaFirstResponseMet: null, slaResolutionMet: null };
+}
+
 export default function WorkspaceReportsPage() {
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
   const { saasMode } = useConfig();
   const [preset, setPreset] = useState("30d");
+  const [overview, setOverview] = useState<ReportOverview | null>(null);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chartsLocked, setChartsLocked] = useState(false);
   const [csatLocked, setCsatLocked] = useState(false);
 
   useEffect(() => {
     if (!workspaceSlug) return;
     setLoading(true);
     const { dateFrom, dateTo } = getDateRange(preset);
-    getReport(workspaceSlug, dateFrom, dateTo)
-      .then(setData)
-      .finally(() => setLoading(false));
+
+    // Always fetch overview (free for all plans)
+    const overviewPromise = getReportOverview(workspaceSlug, dateFrom, dateTo)
+      .then((o) => setOverview(toFullOverview(o)))
+      .catch(() => {});
+
+    // Try full report (may 403 for Free/Starter)
+    const reportPromise = getReport(workspaceSlug, dateFrom, dateTo, { silent: true })
+      .then((d) => { setData(d); setOverview(d.overview); setChartsLocked(false); })
+      .catch((err) => { if (isPlanLimitError(err)) setChartsLocked(true); });
+
+    Promise.all([overviewPromise, reportPromise]).finally(() => setLoading(false));
   }, [workspaceSlug, preset]);
 
   useEffect(() => {
@@ -60,26 +77,35 @@ export default function WorkspaceReportsPage() {
         <div className="flex justify-center py-12">
           <Spinner width={24} />
         </div>
-      ) : !data ? (
+      ) : !overview && !data ? (
         <p className="text-sm text-muted text-center py-12">{t("reports.noData")}</p>
       ) : (
         <div className="space-y-4">
-          <OverviewCards overview={data.overview} />
-          <TicketsOverTimeChart data={data.ticketsOverTime} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TicketsByStatusChart data={data.ticketsByStatus} />
-            <TicketsByPriorityChart data={data.ticketsByPriority} />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TicketsByCategoryChart data={data.ticketsByCategory} />
-            <TopAgentsChart data={data.topAgents} />
-          </div>
-          <CsatChart
-            data={data.csatBreakdown}
-            score={data.overview.csatScore}
-            total={data.overview.csatResponseCount}
-            locked={csatLocked}
-          />
+          {overview && <OverviewCards overview={overview} />}
+
+          {chartsLocked ? (
+            <div className="bg-surface border border-border-card rounded-xl shadow-sm">
+              <PlanGate message={t("planLimit.reportsLocked")} />
+            </div>
+          ) : data ? (
+            <>
+              <TicketsOverTimeChart data={data.ticketsOverTime} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <TicketsByStatusChart data={data.ticketsByStatus} />
+                <TicketsByPriorityChart data={data.ticketsByPriority} />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <TicketsByCategoryChart data={data.ticketsByCategory} />
+                <TopAgentsChart data={data.topAgents} />
+              </div>
+              <CsatChart
+                data={data.csatBreakdown}
+                score={data.overview.csatScore}
+                total={data.overview.csatResponseCount}
+                locked={csatLocked}
+              />
+            </>
+          ) : null}
         </div>
       )}
     </div>

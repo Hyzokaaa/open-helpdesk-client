@@ -71,7 +71,7 @@ export default function PricingPage() {
       ctaSubtitle: disablePaid ? undefined : t("pricing.business.trial"),
       highlighted: true,
       badge: t("mostPopular"),
-      features: [t("pricing.business.f1"), t("pricing.business.f2"), t("pricing.business.f3"), t("pricing.business.f4")],
+      features: [t("pricing.business.f1"), t("pricing.business.f2"), t("pricing.business.f3"), t("pricing.business.f4"), t("pricing.business.f5"), t("pricing.business.f6")],
     },
     {
       name: t("pricing.enterprise.name"),
@@ -108,6 +108,8 @@ export default function PricingPage() {
     { label: t("pricingPage.compare.emailToTicket"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.customerPortal"), us: <Check />, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.sla"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromStarter")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.customMailbox"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromBusiness")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
+    { label: t("pricingPage.compare.advancedReports"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromBusiness")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
     { label: t("pricingPage.compare.auditLog"), us: <span className="text-primary text-sm font-body-medium">{t("pricingPage.compare.fromBusiness")}</span>, them: <span className="text-muted text-sm">{t("pricingPage.compare.paidOnly")}</span> },
   ];
 
