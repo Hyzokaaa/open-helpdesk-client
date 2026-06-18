@@ -52,6 +52,8 @@ import LandingPricingPage from "@modules/landing/pages/PricingPage";
 import AdminDiscountsPage from "@modules/admin/pages/AdminDiscountsPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
+import ComparePage from "@modules/landing/pages/ComparePage";
+import CompareIndexPage from "@modules/landing/pages/CompareIndexPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -73,6 +75,8 @@ function AppRoutes() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/refund" element={<RefundPage />} />
           <Route path="/pricing" element={<LandingPricingPage />} />
+          <Route path="/compare" element={<CompareIndexPage />} />
+          <Route path="/compare/:slug" element={<ComparePage />} />
         </Route>
       )}
       <Route path="/login" element={<LoginPage />} />

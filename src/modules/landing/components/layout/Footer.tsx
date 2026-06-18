@@ -30,6 +30,8 @@ export default function Footer() {
       links: [
         { label: t("footer.features"), hash: "#features" },
         { label: t("footer.pricing"), to: "/pricing" },
+        { label: "vs Zendesk", to: "/compare/zendesk" },
+        { label: "vs osTicket", to: "/compare/osticket" },
       ],
     },
     {
