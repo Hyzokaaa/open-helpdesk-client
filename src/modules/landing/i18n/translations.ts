@@ -9,34 +9,106 @@ const translations = {
 
   // Hero
   "hero.headline": {
-    en: "Complete without being complex",
-    es: "Completo sin ser complejo",
+    en: "Manage all your clients' support in one place",
+    es: "Gestiona el soporte de todos tus clientes en un solo lugar",
   },
   "hero.subheadline": {
-    en: "Open-source helpdesk for teams who need powerful support without the complexity.",
-    es: "Helpdesk open-source para equipos que necesitan soporte potente sin la complejidad.",
+    en: "Multi-tenant helpdesk for MSPs and service teams. Isolated workspaces per client. Self-host or use our cloud.",
+    es: "Helpdesk multi-tenant para MSPs y equipos de servicio. Workspaces aislados por cliente. Self-host o usa nuestra nube.",
   },
   "hero.cta": { en: "Start Free Trial", es: "Comienza tu Prueba Gratis" },
   "hero.trialNote": { en: "14 days free. No credit card needed.", es: "14 días gratis. Sin tarjeta de crédito." },
-  "hero.github": { en: "View on GitHub", es: "Ver en GitHub" },
+  "hero.github": { en: "Deploy Self-Hosted", es: "Desplegar Self-Hosted" },
 
   // Social Proof
   "social.openSource": { en: "Open Source", es: "Código Abierto" },
   "social.license": { en: "AGPL-3.0", es: "AGPL-3.0" },
   "social.stars": { en: "GitHub Stars", es: "Estrellas en GitHub" },
   "social.teams": {
-    en: "Used by growing teams",
-    es: "Usado por equipos en crecimiento",
+    en: "Built for MSPs & service teams",
+    es: "Creado para MSPs y equipos de servicio",
+  },
+
+  // Problem (new section)
+  "problem.heading": {
+    en: "Managing support across multiple clients is messy",
+    es: "Gestionar soporte para varios clientes es un caos",
+  },
+  "problem.p1.title": {
+    en: "Separate tools per client",
+    es: "Herramientas separadas por cliente",
+  },
+  "problem.p1.desc": {
+    en: "Juggling multiple inboxes, portals, or spreadsheets for each client wastes hours every week.",
+    es: "Malabarear entre buzones, portales o hojas de cálculo por cada cliente desperdicia horas cada semana.",
+  },
+  "problem.p2.title": {
+    en: "No isolation between teams",
+    es: "Sin aislamiento entre equipos",
+  },
+  "problem.p2.desc": {
+    en: "Shared helpdesks mix client data, creating security risks and confusion for your agents.",
+    es: "Los helpdesks compartidos mezclan datos de clientes, creando riesgos de seguridad y confusión.",
+  },
+  "problem.p3.title": {
+    en: "Expensive per-agent pricing eats your margins",
+    es: "El alto costo por agente se come tus márgenes",
+  },
+  "problem.p3.desc": {
+    en: "Most helpdesks charge $25-85 per agent per month. With 10 technicians, that's $250-850/mo just for ticketing. Open Helpdesk includes seats in every plan — extras at just $9/mo each.",
+    es: "La mayoría de helpdesks cobran $25-85 por agente al mes. Con 10 técnicos, son $250-850/mes solo por ticketing. Open Helpdesk incluye asientos en cada plan — extras a solo $9/mes cada uno.",
+  },
+
+  // Solution (new section)
+  "solution.heading": {
+    en: "One platform for all your clients",
+    es: "Una plataforma para todos tus clientes",
+  },
+  "solution.subheading": {
+    en: "OpenHelpdesk gives MSPs a unified system to manage support across multiple client environments — without mixing data or workflows.",
+    es: "OpenHelpdesk da a los MSPs un sistema unificado para gestionar soporte en múltiples entornos de clientes — sin mezclar datos ni flujos de trabajo.",
+  },
+  "solution.s1.title": {
+    en: "Workspaces = Clients",
+    es: "Workspaces = Clientes",
+  },
+  "solution.s1.desc": {
+    en: "Each client gets their own isolated workspace with dedicated tickets, agents, settings, and branding.",
+    es: "Cada cliente tiene su propio workspace aislado con tickets, agentes, configuración y branding dedicados.",
+  },
+  "solution.s2.title": {
+    en: "Agents shared or isolated",
+    es: "Agentes compartidos o aislados",
+  },
+  "solution.s2.desc": {
+    en: "Assign technicians to specific clients or share them across workspaces. Full role-based access control with 26 granular permissions.",
+    es: "Asigna técnicos a clientes específicos o compártelos entre workspaces. Control de acceso completo con 26 permisos granulares.",
+  },
+  "solution.s3.title": {
+    en: "Full data separation",
+    es: "Separación total de datos",
+  },
+  "solution.s3.desc": {
+    en: "Tickets, comments, attachments, audit logs — everything is scoped per workspace. No data leaks between clients.",
+    es: "Tickets, comentarios, adjuntos, logs de auditoría — todo está delimitado por workspace. Sin fugas de datos entre clientes.",
+  },
+  "solution.s4.title": {
+    en: "Centralized control panel",
+    es: "Panel de control centralizado",
+  },
+  "solution.s4.desc": {
+    en: "Switch between client workspaces instantly. One dashboard to manage all your operations.",
+    es: "Cambia entre workspaces de clientes al instante. Un dashboard para gestionar todas tus operaciones.",
   },
 
   // Features
   "features.heading": {
-    en: "Everything you need.",
-    es: "Todo lo que necesitas.",
+    en: "Everything MSPs need to operate at scale",
+    es: "Todo lo que los MSPs necesitan para operar a escala",
   },
   "features.subheading": {
-    en: "Built for modern support teams who value simplicity and power.",
-    es: "Creado para equipos de soporte modernos que valoran simplicidad y poder.",
+    en: "Built for service teams managing multiple clients, not just one inbox.",
+    es: "Creado para equipos de servicio que gestionan múltiples clientes, no solo una bandeja de entrada.",
   },
   "features.tickets.title": { en: "Tickets", es: "Tickets" },
   "features.tickets.desc": {
@@ -126,8 +198,8 @@ const translations = {
 
   "pricing.free.name": { en: "Free", es: "Gratis" },
   "pricing.free.desc": {
-    en: "For individuals and small projects",
-    es: "Para proyectos personales",
+    en: "For solo technicians and testing",
+    es: "Para técnicos independientes y pruebas",
   },
   "pricing.free.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.free.f1": { en: "Up to 2 agents", es: "Hasta 2 agentes" },
@@ -139,8 +211,8 @@ const translations = {
 
   "pricing.starter.name": { en: "Starter", es: "Starter" },
   "pricing.starter.desc": {
-    en: "For small teams getting started",
-    es: "Para equipos que inician",
+    en: "For small MSPs starting out",
+    es: "Para MSPs pequeños que inician",
   },
   "pricing.starter.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.starter.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
@@ -154,8 +226,8 @@ const translations = {
 
   "pricing.business.name": { en: "Business", es: "Negocio" },
   "pricing.business.desc": {
-    en: "For growing teams",
-    es: "Para equipos en crecimiento",
+    en: "For growing service teams",
+    es: "Para equipos de servicio en crecimiento",
   },
   "pricing.business.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.business.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
@@ -168,8 +240,8 @@ const translations = {
 
   "pricing.enterprise.name": { en: "Enterprise", es: "Empresarial" },
   "pricing.enterprise.desc": {
-    en: "For large organizations",
-    es: "Para grandes empresas",
+    en: "For large MSP operations",
+    es: "Para operaciones MSP grandes",
   },
   "pricing.enterprise.cta": { en: "Contact Us", es: "Contáctanos" },
   "pricing.enterprise.f1": { en: "Everything in Business", es: "Todo lo de Negocio" },
@@ -226,12 +298,12 @@ const translations = {
     es: "Absolutamente. Proveemos imágenes Docker y un archivo docker-compose que te permite correr en menos de 5 minutos. Despliega en cualquier VPS, cluster de Kubernetes o servidor bare metal.",
   },
   "faq.q3": {
-    en: "How is it different from other helpdesks?",
-    es: "En qué se diferencia de otros helpdesks?",
+    en: "Why is it built for MSPs specifically?",
+    es: "Por qué está hecho específicamente para MSPs?",
   },
   "faq.a3": {
-    en: "Most helpdesks are either too simple or bloated with features you'll never use. Open Helpdesk gives you what actually matters — tickets, workspaces, reports, CSAT, and a clean UX — without the noise. Plus, it's open-source: you own your data and can self-host it.",
-    es: "La mayoría de helpdesks son demasiado simples o están inflados con funciones que nunca usarás. Open Helpdesk te da lo que realmente importa — tickets, workspaces, reportes, CSAT y una UX limpia — sin el ruido. Además, es open-source: eres dueño de tus datos y puedes auto-hospedarlo.",
+    en: "MSPs manage support for multiple clients simultaneously. Open Helpdesk's multi-workspace architecture isolates each client's tickets, agents, and data — something most helpdesks don't offer natively. Plans include seats with affordable $9/mo extras, not $55+/agent like competitors.",
+    es: "Los MSPs gestionan soporte para múltiples clientes simultáneamente. La arquitectura multi-workspace de Open Helpdesk aísla los tickets, agentes y datos de cada cliente — algo que la mayoría de helpdesks no ofrecen nativamente. Los planes incluyen asientos con extras accesibles de $9/mes, no $55+/agente como la competencia.",
   },
   "faq.q4": {
     en: "What's included in the free plan?",
@@ -257,12 +329,12 @@ const translations = {
 
   // CTA Footer
   "cta.heading": {
-    en: "Ready to simplify your support?",
-    es: "Listo para simplificar tu soporte?",
+    en: "Start managing all your clients from one platform",
+    es: "Empieza a gestionar todos tus clientes desde una plataforma",
   },
   "cta.subheading": {
-    en: "Join teams who chose clarity over complexity.",
-    es: "Únete a equipos que eligieron claridad sobre complejidad.",
+    en: "Join MSPs who switched from scattered tools to a unified helpdesk.",
+    es: "Únete a MSPs que cambiaron de herramientas dispersas a un helpdesk unificado.",
   },
   "cta.getStarted": { en: "Get Started Free", es: "Comenzar Gratis" },
   "cta.talkToUs": { en: "Talk to Us", es: "Habla con Nosotros" },
