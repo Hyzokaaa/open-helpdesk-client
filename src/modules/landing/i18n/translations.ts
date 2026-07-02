@@ -13,8 +13,8 @@ const translations = {
     es: "Gestiona el soporte de todos tus clientes en un solo lugar",
   },
   "hero.subheadline": {
-    en: "Multi-tenant helpdesk for MSPs and service teams. Isolated workspaces per client. Self-host or use our cloud.",
-    es: "Helpdesk multi-tenant para MSPs y equipos de servicio. Workspaces aislados por cliente. Self-host o usa nuestra nube.",
+    en: "Open-source helpdesk with built-in multi-tenant support. Perfect for MSPs, agencies, and teams managing multiple clients. Self-host or use our cloud.",
+    es: "Helpdesk open-source con soporte multi-tenant integrado. Perfecto para MSPs, agencias y equipos que gestionan múltiples clientes. Self-host o usa nuestra nube.",
   },
   "hero.cta": { en: "Start Free Trial", es: "Comienza tu Prueba Gratis" },
   "hero.trialNote": { en: "14 days free. No credit card needed.", es: "14 días gratis. Sin tarjeta de crédito." },
@@ -25,8 +25,8 @@ const translations = {
   "social.license": { en: "AGPL-3.0", es: "AGPL-3.0" },
   "social.stars": { en: "GitHub Stars", es: "Estrellas en GitHub" },
   "social.teams": {
-    en: "Built for MSPs & service teams",
-    es: "Creado para MSPs y equipos de servicio",
+    en: "Built for teams who manage support at scale",
+    es: "Creado para equipos que gestionan soporte a escala",
   },
 
   // Problem (new section)
@@ -65,8 +65,8 @@ const translations = {
     es: "Una plataforma para todos tus clientes",
   },
   "solution.subheading": {
-    en: "OpenHelpdesk gives MSPs a unified system to manage support across multiple client environments — without mixing data or workflows.",
-    es: "OpenHelpdesk da a los MSPs un sistema unificado para gestionar soporte en múltiples entornos de clientes — sin mezclar datos ni flujos de trabajo.",
+    en: "Open Helpdesk gives you a unified system to manage support across multiple client environments — without mixing data or workflows.",
+    es: "Open Helpdesk te da un sistema unificado para gestionar soporte en múltiples entornos de clientes — sin mezclar datos ni flujos de trabajo.",
   },
   "solution.s1.title": {
     en: "Workspaces = Clients",
@@ -103,8 +103,8 @@ const translations = {
 
   // Features
   "features.heading": {
-    en: "Everything MSPs need to operate at scale",
-    es: "Todo lo que los MSPs necesitan para operar a escala",
+    en: "Everything you need to operate at scale",
+    es: "Todo lo que necesitas para operar a escala",
   },
   "features.subheading": {
     en: "Built for service teams managing multiple clients, not just one inbox.",
@@ -198,8 +198,8 @@ const translations = {
 
   "pricing.free.name": { en: "Free", es: "Gratis" },
   "pricing.free.desc": {
-    en: "For solo technicians and testing",
-    es: "Para técnicos independientes y pruebas",
+    en: "For individuals and small projects",
+    es: "Para individuos y proyectos pequeños",
   },
   "pricing.free.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.free.f1": { en: "Up to 2 agents", es: "Hasta 2 agentes" },
@@ -211,8 +211,8 @@ const translations = {
 
   "pricing.starter.name": { en: "Starter", es: "Starter" },
   "pricing.starter.desc": {
-    en: "For small MSPs starting out",
-    es: "Para MSPs pequeños que inician",
+    en: "For small teams and MSPs",
+    es: "Para equipos pequeños y MSPs",
   },
   "pricing.starter.cta": { en: "Get Started", es: "Comenzar" },
   "pricing.starter.trial": { en: "14-day free trial — no credit card", es: "14 días gratis — sin tarjeta" },
@@ -240,8 +240,8 @@ const translations = {
 
   "pricing.enterprise.name": { en: "Enterprise", es: "Empresarial" },
   "pricing.enterprise.desc": {
-    en: "For large MSP operations",
-    es: "Para operaciones MSP grandes",
+    en: "For large organizations",
+    es: "Para grandes organizaciones",
   },
   "pricing.enterprise.cta": { en: "Contact Us", es: "Contáctanos" },
   "pricing.enterprise.f1": { en: "Everything in Business", es: "Todo lo de Negocio" },
@@ -298,12 +298,12 @@ const translations = {
     es: "Absolutamente. Proveemos imágenes Docker y un archivo docker-compose que te permite correr en menos de 5 minutos. Despliega en cualquier VPS, cluster de Kubernetes o servidor bare metal.",
   },
   "faq.q3": {
-    en: "Why is it built for MSPs specifically?",
-    es: "Por qué está hecho específicamente para MSPs?",
+    en: "How is it different from other helpdesks?",
+    es: "En qué se diferencia de otros helpdesks?",
   },
   "faq.a3": {
-    en: "MSPs manage support for multiple clients simultaneously. Open Helpdesk's multi-workspace architecture isolates each client's tickets, agents, and data — something most helpdesks don't offer natively. Plans include seats with affordable $9/mo extras, not $55+/agent like competitors.",
-    es: "Los MSPs gestionan soporte para múltiples clientes simultáneamente. La arquitectura multi-workspace de Open Helpdesk aísla los tickets, agentes y datos de cada cliente — algo que la mayoría de helpdesks no ofrecen nativamente. Los planes incluyen asientos con extras accesibles de $9/mes, no $55+/agente como la competencia.",
+    en: "Most helpdesks are single-tenant and charge per agent. Open Helpdesk has multi-workspace built in — each client or team gets isolated tickets, agents, and data. Plans include seats with $9/mo extras instead of $55+/agent. Plus it's open-source: self-host it or use our cloud.",
+    es: "La mayoría de helpdesks son single-tenant y cobran por agente. Open Helpdesk tiene multi-workspace integrado — cada cliente o equipo tiene tickets, agentes y datos aislados. Los planes incluyen asientos con extras de $9/mes en vez de $55+/agente. Además es open-source: self-host o usa nuestra nube.",
   },
   "faq.q4": {
     en: "What's included in the free plan?",
@@ -333,8 +333,8 @@ const translations = {
     es: "Empieza a gestionar todos tus clientes desde una plataforma",
   },
   "cta.subheading": {
-    en: "Join MSPs who switched from scattered tools to a unified helpdesk.",
-    es: "Únete a MSPs que cambiaron de herramientas dispersas a un helpdesk unificado.",
+    en: "Join teams who switched from scattered tools to a unified helpdesk.",
+    es: "Únete a equipos que cambiaron de herramientas dispersas a un helpdesk unificado.",
   },
   "cta.getStarted": { en: "Get Started Free", es: "Comenzar Gratis" },
   "cta.talkToUs": { en: "Talk to Us", es: "Habla con Nosotros" },
