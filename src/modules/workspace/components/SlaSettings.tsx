@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
-import PlanGate from "@modules/billing/components/PlanGate";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import {
   SlaPolicy,
   SlaPriorityTargets,
@@ -30,6 +29,7 @@ function targetsEqual(a: SlaPriorityTargets, b: SlaPriorityTargets): boolean {
 
 export default function SlaSettings({ slug }: Props) {
   const { t, tEnum } = useTranslation();
+  const { isPlanLimitError, PlanGate } = useExtensions();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);

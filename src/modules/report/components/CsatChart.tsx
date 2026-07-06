@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import PlanGate from "@modules/billing/components/PlanGate";
+import useExtensions from "@modules/app/extensions/useExtensions";
 
 const RATING_COLORS: Record<string, string> = {
   good: "#22c55e",
@@ -17,6 +17,7 @@ interface Props {
 
 export default function CsatChart({ data, score, total, locked }: Props) {
   const { t, tEnum } = useTranslation();
+  const { PlanGate } = useExtensions();
 
   if (locked) {
     return (

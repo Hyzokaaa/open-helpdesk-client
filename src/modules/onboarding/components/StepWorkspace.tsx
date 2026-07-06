@@ -5,7 +5,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { getPlans, getSubscription, type Plan } from "@modules/billing/services/billing.service";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import { createWorkspace } from "@modules/workspace/services/workspace.service";
 import { createInvitationBatch } from "@modules/workspace/services/invitation.service";
 
@@ -21,16 +21,17 @@ interface Props {
 
 export default function StepWorkspace({ onDone, onSkip }: Props) {
   const { t } = useTranslation();
+  const { getPlans, getSubscription } = useExtensions();
   const [workspaceName, setWorkspaceName] = useState("");
   const [invites, setInvites] = useState<Invite[]>([{ email: "", role: "agent" }]);
   const [loading, setLoading] = useState(false);
-  const [maxAgents, setMaxAgents] = useState(2);
+  const [maxAgents, setMaxAgents] = useState<number | null>(null);
   const [supportEmail, setSupportEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([getPlans(), getSubscription()]).then(([plans, sub]) => {
-      if (sub) {
-        const plan = plans.find((p) => p.id === sub.planId);
+    Promise.all([getPlans(), getSubscription()]).then(([plans, sub]: [any[], any]) => {
+      if (sub && plans.length > 0) {
+        const plan = plans.find((p: any) => p.id === sub.planId);
         if (plan && plan.limits.maxAgentsPerWorkspace !== -1) {
           setMaxAgents(plan.limits.maxAgentsPerWorkspace);
         }
@@ -39,7 +40,9 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
   }, []);
 
   const agentInvites = invites.filter((i) => i.role === "agent" || i.role === "admin");
-  const remainingSlots = Math.max(0, maxAgents - 1 - agentInvites.filter((i) => i.email.trim()).length);
+  const remainingSlots = maxAgents !== null
+    ? Math.max(0, maxAgents - 1 - agentInvites.filter((i) => i.email.trim()).length)
+    : null;
 
   const updateInvite = (index: number, field: keyof Invite, value: string) => {
     setInvites((prev) => prev.map((inv, i) => (i === index ? { ...inv, [field]: value } : inv)));
@@ -113,9 +116,11 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-body-medium text-heading">{t("onboarding.inviteMembers")}</label>
-            <span className="text-xs text-muted">
-              {remainingSlots} {t("onboarding.slotsRemaining")}
-            </span>
+            {remainingSlots !== null && (
+              <span className="text-xs text-muted">
+                {remainingSlots} {t("onboarding.slotsRemaining")}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -150,7 +155,7 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
             ))}
           </div>
 
-          {remainingSlots > 0 && (
+          {(remainingSlots === null || remainingSlots > 0) && (
             <button
               type="button"
               onClick={addInvite}

@@ -8,7 +8,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import useConfig from "@modules/app/hooks/useConfig";
 import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
-import { getPlans, getSubscription } from "@modules/billing/services/billing.service";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
@@ -22,6 +22,7 @@ interface Props {
 export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   const { t } = useTranslation();
   const { saasMode } = useConfig();
+  const { getPlans, getSubscription } = useExtensions();
   const [rows, setRows] = useState([{ email: "", role: "reporter" }]);
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -41,9 +42,9 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
 
       if (saasMode) {
         try {
-          const [plans, subscription] = await Promise.all([getPlans(), getSubscription()]);
-          if (subscription) {
-            const plan = plans.find((p) => p.id === subscription.planId);
+          const [plans, subscription] = await Promise.all([getPlans(), getSubscription()]) as [any[], any];
+          if (subscription && plans.length > 0) {
+            const plan = plans.find((p: any) => p.id === subscription.planId);
             if (plan && plan.limits.maxAgentsPerWorkspace !== -1) {
               const agentMembers = m.filter((member) => isAgent(member.role)).length;
               const pendingAgents = inv.filter((i) => isAgent(i.role)).length;

@@ -17,7 +17,7 @@ import { listCustomFields } from "@modules/custom-field/services/custom-field.se
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
-import { handlePlanLimitError, isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -182,6 +182,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { user } = useUser();
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
+  const { isPlanLimitError, handlePlanLimitError } = useExtensions();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);

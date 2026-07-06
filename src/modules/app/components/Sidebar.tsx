@@ -2,8 +2,8 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
-import useConfig from "@modules/app/hooks/useConfig";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
@@ -20,8 +20,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const navigate = useNavigate();
   const { workspaceSlug } = useParams();
   const { user } = useUser();
-  const { saasMode } = useConfig();
   const { t } = useTranslation();
+  const { extraSettingsNav, extraAdminNav } = useExtensions();
   const { clearWorkspacePalette } = useContext(PaletteContext);
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -93,13 +93,13 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
     { label: t("settings.security"), path: "/dashboard/settings/security" },
     { label: t("settings.preferences"), path: "/dashboard/settings/preferences" },
     { label: t("notifications.preferences"), path: "/dashboard/settings/notifications" },
-    ...(saasMode ? [{ label: t("sidebar.billing"), path: "/dashboard/settings/billing" }] : []),
+    ...extraSettingsNav.map((item) => ({ ...item, label: t(item.label as any) })),
   ];
 
   const adminNav = [
     { label: t("sidebar.adminUsers"), path: "/dashboard/admin/users" },
     { label: t("sidebar.adminWorkspaces"), path: "/dashboard/admin/workspaces" },
-    ...(saasMode ? [{ label: t("sidebar.adminDiscounts"), path: "/dashboard/admin/discounts" }] : []),
+    ...extraAdminNav.map((item) => ({ ...item, label: t(item.label as any) })),
   ];
 
   const initials = (name: string) => {

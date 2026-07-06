@@ -3,8 +3,10 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider } from "@modules/app/context/ThemeProvider";
 import { ConfigProvider } from "@modules/app/context/ConfigProvider";
+import ExtensionProvider from "@modules/app/extensions/ExtensionProvider";
+import useExtensions from "@modules/app/extensions/useExtensions";
+import type { Extensions } from "@modules/app/extensions/extension-context";
 import useTheme from "@modules/app/hooks/useTheme";
-import useConfig from "@modules/app/hooks/useConfig";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import SignupPage from "@modules/user/pages/SignupPage";
@@ -31,11 +33,7 @@ import PreferencesSection from "@modules/user/components/PreferencesSection";
 import NotificationsSection from "@modules/user/components/NotificationsSection";
 import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
-import PricingPage from "@modules/billing/pages/PricingPage";
-import SubscriptionPage from "@modules/billing/pages/SubscriptionPage";
-import PaymentResultPage from "@modules/billing/pages/PaymentResultPage";
 import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
-import PaddlePayPage from "@modules/billing/pages/PaddlePayPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
@@ -43,17 +41,8 @@ import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
 import UserStatsPage from "@modules/report/pages/UserStatsPage";
 import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
-import LandingLayout from "@modules/landing/LandingLayout";
-import HomePage from "@modules/landing/pages/HomePage";
-import PrivacyPage from "@modules/landing/pages/PrivacyPage";
-import TermsPage from "@modules/landing/pages/TermsPage";
-import RefundPage from "@modules/landing/pages/RefundPage";
-import LandingPricingPage from "@modules/landing/pages/PricingPage";
-import AdminDiscountsPage from "@modules/admin/pages/AdminDiscountsPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
-import ComparePage from "@modules/landing/pages/ComparePage";
-import CompareIndexPage from "@modules/landing/pages/CompareIndexPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -62,23 +51,11 @@ function ThemedToast() {
 }
 
 function AppRoutes() {
-  const { saasMode, loading } = useConfig();
-
-  if (loading) return null;
+  const { extraPublicRoutes, extraDashboardRoutes } = useExtensions();
 
   return (
     <Routes>
-      {saasMode && (
-        <Route element={<LandingLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/refund" element={<RefundPage />} />
-          <Route path="/pricing" element={<LandingPricingPage />} />
-          <Route path="/compare" element={<CompareIndexPage />} />
-          <Route path="/compare/:slug" element={<ComparePage />} />
-        </Route>
-      )}
+      {extraPublicRoutes}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
@@ -89,7 +66,6 @@ function AppRoutes() {
       <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
       <Route path="/portal/tickets/:portalToken" element={<PortalTicketPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
-      <Route path="/pay" element={<PaddlePayPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<WorkspacesPage />} />
@@ -115,33 +91,35 @@ function AppRoutes() {
           <Route path="settings/preferences" element={<PreferencesSection />} />
           <Route path="settings/notifications" element={<NotificationsSection />} />
           <Route path="changelog" element={<ChangelogPage />} />
-          <Route path="settings/billing" element={<SubscriptionPage />} />
-          <Route path="settings/billing/success" element={<PaymentResultPage success />} />
-          <Route path="settings/billing/failed" element={<PaymentResultPage success={false} />} />
-          <Route path="settings/pricing" element={<PricingPage />} />
+          {extraDashboardRoutes}
           <Route element={<AdminRoute />}>
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
-            <Route path="admin/discounts" element={<AdminDiscountsPage />} />
           </Route>
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to={saasMode ? "/" : "/login"} replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
 
-export default function App() {
+interface AppProps {
+  extensions?: Partial<Extensions>;
+}
+
+export default function App({ extensions }: AppProps) {
   return (
     <ThemeProvider>
     <ConfigProvider>
+    <ExtensionProvider extensions={extensions}>
     <BrowserRouter>
       <UserProvider>
         <ThemedToast />
         <AppRoutes />
       </UserProvider>
     </BrowserRouter>
+    </ExtensionProvider>
     </ConfigProvider>
     </ThemeProvider>
   );

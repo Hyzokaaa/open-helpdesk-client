@@ -3,10 +3,7 @@ import { useParams } from "react-router";
 import { subDays, startOfDay, endOfDay, format } from "date-fns";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import useConfig from "@modules/app/hooks/useConfig";
-import { getSubscription } from "@modules/billing/services/billing.service";
-import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
-import PlanGate from "@modules/billing/components/PlanGate";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import { ReportData, ReportOverviewBasic, ReportOverview, getReport, getReportOverview } from "../services/report.service";
 import DateRangeSelector from "../components/DateRangeSelector";
 import OverviewCards from "../components/OverviewCards";
@@ -33,7 +30,7 @@ function toFullOverview(basic: ReportOverviewBasic): ReportOverview {
 export default function WorkspaceReportsPage() {
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
-  const { saasMode } = useConfig();
+  const { isPlanLimitError, PlanGate, getSubscription } = useExtensions();
   const [preset, setPreset] = useState("30d");
   const [overview, setOverview] = useState<ReportOverview | null>(null);
   const [data, setData] = useState<ReportData | null>(null);
@@ -60,11 +57,10 @@ export default function WorkspaceReportsPage() {
   }, [workspaceSlug, preset]);
 
   useEffect(() => {
-    if (!saasMode) return;
-    getSubscription().then((sub) => {
-      setCsatLocked(sub?.planId === "free");
+    getSubscription().then((sub: any) => {
+      if (sub) setCsatLocked(sub.planId === "free");
     }).catch(() => {});
-  }, [saasMode]);
+  }, []);
 
   return (
     <div className="w-full">

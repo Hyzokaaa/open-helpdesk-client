@@ -8,7 +8,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import { listMembers, WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import PlanGate from "@modules/billing/components/PlanGate";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import {
   AuditLogItem,
   AuditLogFilters,
@@ -51,6 +51,7 @@ export default function WorkspaceAuditLogPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
   const { t } = useTranslation();
+  const { PlanGate } = useExtensions();
 
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [total, setTotal] = useState(0);

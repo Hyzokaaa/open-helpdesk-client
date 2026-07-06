@@ -29,7 +29,7 @@ import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
-import { getSubscription } from "@modules/billing/services/billing.service";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import { P } from "../domain/permissions";
 
 interface Props {
@@ -46,6 +46,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const { can } = usePermissions(workspaceSlug);
   const { setPalette } = useContext(PaletteContext);
   const { saasMode } = useConfig();
+  const { getSubscription } = useExtensions();
 
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -69,11 +70,10 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   }, [workspaceSlug]);
 
   useEffect(() => {
-    if (!saasMode) return;
-    getSubscription().then((sub) => {
-      setCustomPaletteLocked(sub?.planId === "free");
+    getSubscription().then((sub: any) => {
+      if (sub) setCustomPaletteLocked(sub.planId === "free");
     }).catch(() => {});
-  }, [saasMode]);
+  }, []);
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
   if (!workspace) return null;

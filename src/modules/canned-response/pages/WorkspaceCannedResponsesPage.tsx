@@ -11,8 +11,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { isPlanLimitError } from "@modules/billing/domain/plan-limit-error";
-import PlanGate from "@modules/billing/components/PlanGate";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import {
   CannedResponse,
   listCannedResponses,
@@ -25,6 +24,7 @@ export default function WorkspaceCannedResponsesPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
   const { t } = useTranslation();
+  const { isPlanLimitError, PlanGate } = useExtensions();
   const [responses, setResponses] = useState<CannedResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSheet, setShowSheet] = useState(false);

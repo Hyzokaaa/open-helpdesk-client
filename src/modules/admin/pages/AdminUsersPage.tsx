@@ -23,18 +23,14 @@ import {
   toggleSystemAdmin,
   toggleUserActive,
 } from "../services/admin.service";
-import {
-  getPlans,
-  getUserPlans,
-  adminUpdateSubscription,
-  type Plan,
-} from "@modules/billing/services/billing.service";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function AdminUsersPage() {
   const { user } = useUser();
   const { saasMode } = useConfig();
   const { t } = useTranslation();
+  const { getPlans, getUserPlans, adminUpdateSubscription } = useExtensions();
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +51,7 @@ export default function AdminUsersPage() {
   const [changePlanUser, setChangePlanUser] = useState<UserItem | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [selectedExtraSeats, setSelectedExtraSeats] = useState(0);
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [userPlans, setUserPlans] = useState<Record<string, { planId: string; source: string }>>({});
 
   const baseKeys = ["name", "email", "role", "status"];
@@ -91,7 +87,7 @@ export default function AdminUsersPage() {
       const u = await listAllUsers({ sortBy, sortOrder });
       setUsers(u);
       if (saasMode) {
-        const p = await getPlans();
+        const p = await getPlans() as any[];
         setPlans(p);
         const planData = await getUserPlans();
         const planMap: Record<string, { planId: string; source: string }> = {};

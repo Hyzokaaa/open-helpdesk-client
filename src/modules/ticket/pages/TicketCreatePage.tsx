@@ -15,7 +15,7 @@ import { Tag, listTags } from "@modules/tag/services/tag.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { handlePlanLimitError } from "@modules/billing/domain/plan-limit-error";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import { CustomFieldDefinition } from "@modules/custom-field/domain/custom-field-types";
 import { listCustomFields } from "@modules/custom-field/services/custom-field.service";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
@@ -32,6 +32,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
+  const { handlePlanLimitError } = useExtensions();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");

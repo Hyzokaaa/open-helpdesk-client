@@ -11,7 +11,7 @@ import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
-import { getSubscription } from "@modules/billing/services/billing.service";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import {
   MailboxDto,
   listMailboxes,
@@ -46,6 +46,7 @@ interface Props {
 export default function MailboxSettings({ slug }: Props) {
   const { t } = useTranslation();
   const { saasMode } = useConfig();
+  const { getSubscription } = useExtensions();
   const [mailboxes, setMailboxes] = useState<MailboxDto[]>([]);
   const [showSheet, setShowSheet] = useState(false);
   const [editMailbox, setEditMailbox] = useState<MailboxDto | null>(null);
@@ -57,12 +58,13 @@ export default function MailboxSettings({ slug }: Props) {
   }, [slug]);
 
   useEffect(() => {
-    if (!saasMode) return;
-    getSubscription().then((sub) => {
-      const planId = sub?.planId ?? 'free';
-      setCustomMailboxLocked(planId === 'free' || planId === 'starter');
+    getSubscription().then((sub: any) => {
+      if (sub) {
+        const planId = sub.planId ?? 'free';
+        setCustomMailboxLocked(planId === 'free' || planId === 'starter');
+      }
     }).catch(() => {});
-  }, [saasMode]);
+  }, []);
 
   const handleSaved = async () => {
     const updated = await listMailboxes(slug);
