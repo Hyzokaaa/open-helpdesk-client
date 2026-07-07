@@ -188,8 +188,8 @@ export default function TicketsPage() {
       {isBoard ? (
         <div className="flex-1 overflow-hidden">
           <TicketBoard
-            key={boardKey}
             workspaceSlug={workspaceSlug!}
+            refreshTrigger={boardKey}
             filters={{
               search: filters.search,
               priority: filters.priority,

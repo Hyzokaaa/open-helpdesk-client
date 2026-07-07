@@ -130,7 +130,6 @@ export function useBoardTickets(
     try {
       await changeTicketStatus(workspaceSlug, ticketId, newStatus);
       isDragging.current = false;
-      fetchData(true);
     } catch {
       setColumns(snapshot);
       saveOrder(workspaceSlug, snapshot);

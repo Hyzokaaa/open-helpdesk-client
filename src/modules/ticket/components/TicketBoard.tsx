@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -31,16 +31,25 @@ interface Props {
   onTicketClick: (ticketId: string) => void;
   canChangeStatus: boolean;
   canMoveToOpen?: boolean;
+  refreshTrigger?: number;
 }
 
-export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen }: Props) {
+export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen, refreshTrigger }: Props) {
   const { t, tEnum } = useTranslation();
-  const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging } = useBoardTickets(workspaceSlug, filters);
+  const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging, refetch } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
   const [activeWidth, setActiveWidth] = useState(0);
   const [draggingFromStatus, setDraggingFromStatus] = useState<string | null>(null);
   const dragStartColumns = useRef<BoardColumns | null>(null);
   const dragStartStatus = useRef<string | null>(null);
+  const initialTrigger = useRef(refreshTrigger);
+
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger !== initialTrigger.current) {
+      refetch();
+      initialTrigger.current = refreshTrigger;
+    }
+  }, [refreshTrigger]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
