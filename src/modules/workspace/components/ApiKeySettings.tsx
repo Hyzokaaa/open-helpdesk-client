@@ -159,6 +159,12 @@ function CreateApiKeyForm({ slug, onCreated, onClose }: { slug: string; onCreate
         { value: "members:read", label: t("apiKeys.scopeMembersRead") },
       ],
     },
+    {
+      label: t("apiKeys.scopeGroupAuth"),
+      scopes: [
+        { value: "auth:exchange", label: t("apiKeys.scopeAuthExchange") },
+      ],
+    },
   ];
 
   const toggleScope = (scope: string) => {

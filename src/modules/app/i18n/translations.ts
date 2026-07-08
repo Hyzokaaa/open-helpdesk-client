@@ -963,6 +963,8 @@ const translations = {
   "apiKeys.scopeCommentsRead": { en: "Read comments", es: "Leer comentarios" },
   "apiKeys.scopeCommentsWrite": { en: "Write comments", es: "Escribir comentarios" },
   "apiKeys.scopeMembersRead": { en: "Read members", es: "Leer miembros" },
+  "apiKeys.scopeGroupAuth": { en: "Integration", es: "Integracion" },
+  "apiKeys.scopeAuthExchange": { en: "Token exchange (SSO)", es: "Intercambio de token (SSO)" },
   "apiKeys.expirationLabel": { en: "Expiration", es: "Expiracion" },
   "apiKeys.expiration30": { en: "30 days", es: "30 dias" },
   "apiKeys.expiration60": { en: "60 days", es: "60 dias" },

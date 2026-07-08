@@ -32,6 +32,7 @@ export const API_KEY_SCOPES = [
   "comments:read",
   "comments:write",
   "members:read",
+  "auth:exchange",
 ] as const;
 
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number];
