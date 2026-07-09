@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { inputClass } from "../../shared/domain/input-class";
 import { Size } from "../../domain/size";
 
@@ -23,23 +24,38 @@ export default function Select<T>({
   disabled = false,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
   const selected = options.find((o) => isSelected(o));
 
+  const updatePosition = useCallback(() => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }, []);
+
   useEffect(() => {
+    if (!open) return;
+    updatePosition();
+
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (
+        btnRef.current?.contains(target) ||
+        dropRef.current?.contains(target)
+      ) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [open, updatePosition]);
 
   return (
-    <div ref={ref} className="relative w-full">
+    <div className="relative w-full">
       <button
+        ref={btnRef}
         type="button"
         disabled={disabled}
         className={clsx(
@@ -54,8 +70,12 @@ export default function Select<T>({
         <span className="text-subtle text-xs ml-2">▼</span>
       </button>
 
-      {open && (
-        <div className="absolute z-50 w-full mt-1 bg-surface border border-border-input rounded-lg shadow-lg max-h-48 overflow-auto">
+      {open && createPortal(
+        <div
+          ref={dropRef}
+          className="fixed z-[9999] bg-surface border border-border-input rounded-lg shadow-lg max-h-48 overflow-auto"
+          style={{ top: pos.top, left: pos.left, width: pos.width }}
+        >
           {options.map((option, i) => (
             <button
               key={i}
@@ -72,7 +92,8 @@ export default function Select<T>({
               {label(option)}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
