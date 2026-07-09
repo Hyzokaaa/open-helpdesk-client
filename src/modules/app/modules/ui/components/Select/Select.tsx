@@ -40,7 +40,7 @@ export default function Select<T>({
     if (!open) return;
     updatePosition();
 
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
         btnRef.current?.contains(target) ||
@@ -48,8 +48,14 @@ export default function Select<T>({
       ) return;
       setOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const handleScroll = () => setOpen(false);
+
+    document.addEventListener("mousedown", handleClick);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, [open, updatePosition]);
 
   return (
