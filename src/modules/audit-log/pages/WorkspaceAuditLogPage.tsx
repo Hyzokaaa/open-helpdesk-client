@@ -243,7 +243,8 @@ function MetadataSummary({ metadata, action, t }: { metadata: Record<string, unk
 
   if (action === "comment-created") {
     const content = metadata.content as string | undefined;
-    const preview = content ? (content.length > 50 ? content.slice(0, 50) + "..." : content) : "";
+    const clean = content ? content.replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1") : "";
+    const preview = clean ? (clean.length > 50 ? clean.slice(0, 50) + "..." : clean) : "";
     const prefix = ticketName ? `${ticketName} — ` : "";
     return <span className="text-xs text-muted">{prefix}"{preview}"</span>;
   }

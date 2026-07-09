@@ -201,6 +201,8 @@ export default function TicketsPage() {
             onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
             canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
             canMoveToOpen={can(P.TICKET_ASSIGN)}
+            canViewAll={can(P.TICKET_VIEW)}
+            userId={user?.id}
           />
         </div>
       ) : (
@@ -327,12 +329,15 @@ export default function TicketsPage() {
                       </td>
                     ))}
                     <td className="px-2 py-3 sticky right-0 bg-surface">
-                      <ActionMenu items={[
-                        { label: t("tickets.view"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); } },
-                        ...(!isReporter ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
-                        ...(can(P.TICKET_CHANGE_STATUS) ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
-                        ...(can(P.TICKET_DELETE) ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
-                      ]} />
+                      <ActionMenu items={(() => {
+                        const hasDirectAccess = ticket.assigneeId === user?.id || ticket.creatorId === user?.id || ticket.status === "open" || can(P.TICKET_VIEW);
+                        return [
+                          { label: t("tickets.view"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); } },
+                          ...(!isReporter && hasDirectAccess ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
+                          ...(can(P.TICKET_CHANGE_STATUS) && hasDirectAccess ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
+                          ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
+                        ];
+                      })()} />
                     </td>
                   </tr>
                 ))}

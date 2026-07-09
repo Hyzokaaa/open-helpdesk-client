@@ -31,10 +31,12 @@ interface Props {
   onTicketClick: (ticketId: string) => void;
   canChangeStatus: boolean;
   canMoveToOpen?: boolean;
+  canViewAll?: boolean;
+  userId?: string;
   refreshTrigger?: number;
 }
 
-export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen, refreshTrigger }: Props) {
+export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen, canViewAll, userId, refreshTrigger }: Props) {
   const { t, tEnum } = useTranslation();
   const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging, refetch } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
@@ -67,11 +69,18 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
     return null;
   }, []);
 
+  const isTicketReadonly = useCallback((ticket: TicketListItem) => {
+    if (canViewAll) return false;
+    return ticket.assigneeId !== userId && ticket.creatorId !== userId && ticket.status !== 'open';
+  }, [canViewAll, userId]);
+
   const handleDragStart = (event: DragStartEvent) => {
     const id = event.active.id as string;
     const status = findColumn(id);
     if (status && !BOARD_STATUSES.includes(id as any)) {
-      setActiveTicket(columns[status as BoardStatus].find((t) => t.id === id) ?? null);
+      const ticket = columns[status as BoardStatus].find((t) => t.id === id);
+      if (ticket && isTicketReadonly(ticket)) return;
+      setActiveTicket(ticket ?? null);
       dragStartColumns.current = structuredClone(columns);
       dragStartStatus.current = status;
       setDraggingFromStatus(status);

@@ -138,7 +138,8 @@ function describeAction(
     case "comment-created": {
       const content = meta.content as string | undefined;
       if (content) {
-        const preview = content.length > 60 ? content.slice(0, 60) + "..." : content;
+        const clean = content.replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1");
+        const preview = clean.length > 60 ? clean.slice(0, 60) + "..." : clean;
         return `${t("auditLog.feed.commented")}: "${preview}"`;
       }
       return t("auditLog.feed.commented");
