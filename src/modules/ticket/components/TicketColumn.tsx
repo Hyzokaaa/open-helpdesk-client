@@ -15,6 +15,7 @@ interface Props {
   onTicketClick: (ticketId: string) => void;
   tEnum: (ns: string, key: string) => string;
   blocked?: boolean;
+  isTicketDisabled?: (ticket: TicketListItem) => boolean;
 }
 
 const BORDER_COLORS: Record<string, string> = {
@@ -24,7 +25,7 @@ const BORDER_COLORS: Record<string, string> = {
   resolved: "border-l-green-500",
 };
 
-export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum, blocked }: Props) {
+export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum, blocked, isTicketDisabled }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const { t } = useTranslation();
 
@@ -69,6 +70,7 @@ export default function TicketColumn({ status, label, tickets, tags, members, on
                 members={members}
                 onClick={() => onTicketClick(ticket.id)}
                 tEnum={tEnum}
+                disabled={isTicketDisabled?.(ticket)}
               />
             ))
           )}

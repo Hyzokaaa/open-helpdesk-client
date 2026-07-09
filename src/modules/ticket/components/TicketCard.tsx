@@ -18,9 +18,10 @@ interface Props {
   members: WorkspaceMember[];
   onClick: () => void;
   tEnum: (ns: string, key: string) => string;
+  disabled?: boolean;
 }
 
-export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Props) {
+export default function TicketCard({ ticket, tags, members, onClick, tEnum, disabled }: Props) {
   const { t } = useTranslation();
   const {
     attributes,
@@ -29,7 +30,7 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: ticket.id });
+  } = useSortable({ id: ticket.id, disabled });
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -59,11 +60,17 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum }: Pr
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`group bg-surface border border-border-card border-l-[3px] ${PRIORITY_BORDER[ticket.priority] ?? "border-l-gray-300"} rounded-lg px-2.5 py-2 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-px transition-all ${
-        isDragging ? "opacity-40 rotate-1 scale-[1.02] shadow-lg" : ""
-      }`}
+      className={`group bg-surface border border-border-card border-l-[3px] ${PRIORITY_BORDER[ticket.priority] ?? "border-l-gray-300"} rounded-lg px-2.5 py-2 hover:shadow-md hover:-translate-y-px transition-all ${
+        disabled ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+      } ${isDragging ? "opacity-40 rotate-1 scale-[1.02] shadow-lg" : ""}`}
     >
       <div className="flex items-start justify-between gap-2 mb-0.5">
+        {disabled && (
+          <svg className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        )}
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (
             <span

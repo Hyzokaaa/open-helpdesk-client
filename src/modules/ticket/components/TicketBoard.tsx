@@ -78,9 +78,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
     const id = event.active.id as string;
     const status = findColumn(id);
     if (status && !BOARD_STATUSES.includes(id as any)) {
-      const ticket = columns[status as BoardStatus].find((t) => t.id === id);
-      if (ticket && isTicketReadonly(ticket)) return;
-      setActiveTicket(ticket ?? null);
+      setActiveTicket(columns[status as BoardStatus].find((t) => t.id === id) ?? null);
       dragStartColumns.current = structuredClone(columns);
       dragStartStatus.current = status;
       setDraggingFromStatus(status);
@@ -215,6 +213,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
             onTicketClick={onTicketClick}
             tEnum={tEnum}
             blocked={status === "open" && draggingFromStatus !== null && draggingFromStatus !== "open" && !canMoveToOpen}
+            isTicketDisabled={isTicketReadonly}
           />
         ))}
       </div>
