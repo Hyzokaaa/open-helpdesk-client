@@ -22,6 +22,11 @@ import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import {
+  TicketParticipant,
+  listParticipants,
+  removeParticipant,
+} from "../services/ticket.service";
+import {
   TicketDetail,
   getTicket,
   updateTicket,
@@ -189,6 +194,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
+  const [participants, setParticipants] = useState<TicketParticipant[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
@@ -315,11 +321,17 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     listMembers(workspaceSlug).then(setMembers);
   };
 
+  const fetchParticipants = () => {
+    if (!workspaceSlug || !ticketId) return;
+    listParticipants(workspaceSlug, ticketId).then(setParticipants).catch(() => {});
+  };
+
   useEffect(() => {
     fetchTicket();
     fetchComments();
     fetchAttachments();
     fetchMembers();
+    fetchParticipants();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
@@ -367,15 +379,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const isCreator = ticket?.creatorId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
+  const isReadonly = ticket?.accessLevel === "readonly";
 
-  const canChangeStatus = isEditing && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
-  const canEditFields = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
-  const canEditName = isEditing && can(P.TICKET_EDIT_NAME);
-  const canAssign = isEditing && can(P.TICKET_ASSIGN);
-  const canDelete = isEditing && can(P.TICKET_DELETE);
-  const canEditTags = isEditing && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
-  const canEditCustomFields = isEditing && can(P.TICKET_EDIT_DESCRIPTION);
-  const canSwitchToEdit = mode === "view" && (
+  const canChangeStatus = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
+  const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
+  const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
+  const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
+  const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
+  const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
+  const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
+  const canSwitchToEdit = !isReadonly && mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
 
@@ -457,6 +470,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     try {
       await createComment(workspaceSlug, ticketId, content);
       fetchComments();
+      fetchParticipants();
       setActivityKey((k) => k + 1);
     } catch (err) {
       handlePlanLimitError(err, "Failed to add comment");
@@ -662,64 +676,67 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <p className="text-xs font-body-medium text-subtle uppercase mb-3">
               {t("ticketDetail.attachments")} ({attachments.length})
             </p>
-            <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
-              <div className="flex items-center justify-between">
-                <span className="text-exs text-subtle">
-                  {t("ticketCreate.pasteOrDrag")}
-                </span>
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    className="hidden"
-                    onChange={handleUpload}
-                  />
-                  <Button
-                    size="xs"
-                    color="light"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {t("ticketDetail.addFile")}
-                  </Button>
+            {!isReadonly && (
+              <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-exs text-subtle">
+                    {t("ticketCreate.pasteOrDrag")}
+                  </span>
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,video/*"
+                      className="hidden"
+                      onChange={handleUpload}
+                    />
+                    <Button
+                      size="xs"
+                      color="light"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {t("ticketDetail.addFile")}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-3">
-                  {attachments.map((a) => (
-                    <div key={a.id} className="relative group">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          isImage(a.mimeType) || isVideo(a.mimeType)
-                            ? setLightbox({
-                                src: a.downloadUrl,
-                                type: isImage(a.mimeType) ? "image" : "video",
-                              })
-                            : window.open(a.downloadUrl, "_blank")
-                        }
-                        className="block border border-border-input rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
-                      >
-                        {isImage(a.mimeType) ? (
-                          <img
-                            src={a.downloadUrl}
-                            alt={a.originalName}
-                            className="w-32 h-32 object-cover"
-                          />
-                        ) : isVideo(a.mimeType) ? (
-                          <video
-                            src={a.downloadUrl}
-                            className="w-32 h-32 object-cover"
-                          />
-                        ) : (
-                          <div className="w-32 h-32 flex items-center justify-center bg-surface-hover">
-                            <span className="text-exs text-muted text-center px-2 break-all">
-                              {a.originalName}
-                            </span>
-                          </div>
-                        )}
-                      </button>
+              </DropZone>
+            )}
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {attachments.map((a) => (
+                  <div key={a.id} className="relative group">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isImage(a.mimeType) || isVideo(a.mimeType)
+                          ? setLightbox({
+                              src: a.downloadUrl,
+                              type: isImage(a.mimeType) ? "image" : "video",
+                            })
+                          : window.open(a.downloadUrl, "_blank")
+                      }
+                      className="block border border-border-input rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
+                    >
+                      {isImage(a.mimeType) ? (
+                        <img
+                          src={a.downloadUrl}
+                          alt={a.originalName}
+                          className="w-32 h-32 object-cover"
+                        />
+                      ) : isVideo(a.mimeType) ? (
+                        <video
+                          src={a.downloadUrl}
+                          className="w-32 h-32 object-cover"
+                        />
+                      ) : (
+                        <div className="w-32 h-32 flex items-center justify-center bg-surface-hover">
+                          <span className="text-exs text-muted text-center px-2 break-all">
+                            {a.originalName}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                    {!isReadonly && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -729,11 +746,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       >
                         ✕
                       </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </DropZone>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Comments */}
@@ -761,12 +778,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               ))}
             </div>
 
-            <CommentInput
-              members={members}
-              loading={sendingComment}
-              onSubmit={handleAddComment}
-              cannedResponses={cannedResponses}
-            />
+            {!isReadonly && (
+              <CommentInput
+                members={members}
+                loading={sendingComment}
+                onSubmit={handleAddComment}
+                cannedResponses={cannedResponses}
+              />
+            )}
           </div>
 
           {/* Activity Feed */}
@@ -946,6 +965,42 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               )}
             </>
           )}
+
+          <Card className="p-4">
+            <p className="text-xs text-subtle font-body-medium mb-2">
+              {t("ticketDetail.followers")} ({participants.length})
+            </p>
+            {participants.length > 0 ? (
+              <div className="space-y-1.5">
+                {participants.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-exs font-body-bold text-primary">
+                          {p.firstName[0]}{p.lastName[0]}
+                        </span>
+                      </div>
+                      <span className="text-xs text-body">{p.firstName} {p.lastName}</span>
+                    </div>
+                    {canAssign && (
+                      <button
+                        onClick={async () => {
+                          if (!workspaceSlug || !ticketId) return;
+                          await removeParticipant(workspaceSlug, ticketId, p.userId);
+                          fetchParticipants();
+                        }}
+                        className="text-exs text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        {t("ticketDetail.removeFollower")}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-exs text-muted">{t("ticketDetail.followerHint")}</p>
+            )}
+          </Card>
 
           <Card className="p-4">
             <p className="text-xs text-subtle font-body-medium mb-2">

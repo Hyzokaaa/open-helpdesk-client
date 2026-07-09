@@ -36,6 +36,7 @@ export interface TicketDetail {
   discardReason: string | null;
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
+  accessLevel?: 'full' | 'readonly';
 }
 
 export interface TicketFilters {
@@ -200,4 +201,29 @@ export async function bulkDeleteTickets(
     ticketIds,
   });
   return res.data;
+}
+
+export interface TicketParticipant {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
+
+export async function listParticipants(
+  workspaceSlug: string,
+  ticketId: string,
+): Promise<TicketParticipant[]> {
+  const res = await http.get<TicketParticipant[]>(`/workspaces/${workspaceSlug}/tickets/${ticketId}/participants`);
+  return res.data;
+}
+
+export async function removeParticipant(
+  workspaceSlug: string,
+  ticketId: string,
+  userId: string,
+): Promise<void> {
+  await http.delete(`/workspaces/${workspaceSlug}/tickets/${ticketId}/participants/${userId}`);
 }
