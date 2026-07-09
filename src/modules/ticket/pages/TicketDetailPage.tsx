@@ -769,8 +769,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     className="text-sm text-body"
                     dangerouslySetInnerHTML={{
                       __html: c.content.replace(
-                        /@\[([^\]]+)\]\([^)]+\)/g,
-                        '<span class="text-primary font-body-semibold">@$1</span>',
+                        /@\[([^\]]+)\]\(([^)]+)\)/g,
+                        (_match, _name, userId) => {
+                          const current = members.find((m) => m.userId === userId);
+                          const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
+                          return `<span class="text-primary font-body-semibold">@${displayName}</span>`;
+                        },
                       ),
                     }}
                   />
