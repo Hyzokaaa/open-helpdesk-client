@@ -48,7 +48,16 @@ export default function Select<T>({
       ) return;
       setOpen(false);
     };
-    const handleScroll = () => setOpen(false);
+    const handleScroll = (e: Event) => {
+      if (dropRef.current?.contains(e.target as Node)) return;
+      if (!btnRef.current) return;
+      const rect = btnRef.current.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        setOpen(false);
+        return;
+      }
+      updatePosition();
+    };
 
     document.addEventListener("mousedown", handleClick);
     window.addEventListener("scroll", handleScroll, true);

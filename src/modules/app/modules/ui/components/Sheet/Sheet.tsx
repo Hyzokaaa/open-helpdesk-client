@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import clsx from "clsx";
 
 type SheetSize = "sm" | "md" | "lg";
@@ -16,8 +16,6 @@ interface Props {
 }
 
 export default function Sheet({ children, onClose, size = "lg" }: Props) {
-  const sheetRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     document.body.style.overflow = "hidden";
     const handleKey = (e: KeyboardEvent) => {
@@ -30,19 +28,13 @@ export default function Sheet({ children, onClose, size = "lg" }: Props) {
     };
   }, [onClose]);
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
-      onClose();
-    }
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop — only this element closes the sheet */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      {/* Content — clicks here don't propagate to backdrop */}
       <div
-        ref={sheetRef}
         className={clsx("relative bg-surface rounded-xl shadow-2xl w-full max-h-[90vh] overflow-auto mx-4 my-4", sizeClasses[size])}
       >
         <button
