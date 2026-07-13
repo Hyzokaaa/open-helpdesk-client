@@ -6,6 +6,7 @@ export interface ConfigContextProps {
   defaultGateway: string;
   paddleClientToken: string | null;
   paddleEnvironment: string;
+  aiEnabled: boolean;
   loading: boolean;
 }
 
@@ -15,5 +16,6 @@ export const ConfigContext = createContext<ConfigContextProps>({
   defaultGateway: "",
   paddleClientToken: null,
   paddleEnvironment: "sandbox",
+  aiEnabled: false,
   loading: true,
 });

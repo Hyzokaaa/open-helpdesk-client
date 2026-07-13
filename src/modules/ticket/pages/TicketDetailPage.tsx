@@ -63,6 +63,8 @@ import TagSelector from "@modules/tag/components/TagSelector";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
+import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 
 function formatResponseTime(createdAt: string, firstResponseAt: string): string {
@@ -188,10 +190,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
   const { isPlanLimitError, handlePlanLimitError } = useExtensions();
+  const { aiEnabled } = useConfig();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
   const [participants, setParticipants] = useState<TicketParticipant[]>([]);
@@ -665,9 +669,71 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 height={120}
               />
             ) : (
-              <p className="text-sm text-body whitespace-pre-wrap">
-                {ticket.description}
-              </p>
+              <>
+                <p className="text-sm text-body whitespace-pre-wrap">
+                  {ticket.description}
+                </p>
+                {aiEnabled && !isReadonly && (() => {
+                  const targetLang = user?.language === "es" ? "Spanish" : "English";
+                  const slug = workspaceSlug ?? "";
+                  const actions = [
+                    { key: "improve", label: t("ticketDetail.aiImprove"), action: () => improveText(ticket.description, slug) },
+                    { key: `translate:${targetLang}`, label: t("ticketDetail.aiTranslate"), action: () => translateText(ticket.description, slug, targetLang) },
+                  ];
+                  const cache = ticket.aiCache ?? {};
+                  const cachedEntries = Object.entries(cache).filter(([, v]) => v.source === ticket.description);
+
+                  return (
+                    <>
+                      <div className="flex gap-3 mt-3 pt-3 border-t border-border-row">
+                        {actions.map((item) => (
+                          <button
+                            key={item.key}
+                            onClick={async () => {
+                              if (aiProcessing) return;
+                              setAiProcessing(item.key);
+                              try {
+                                const result = await item.action();
+                                if (workspaceSlug && ticketId) {
+                                  await saveAiCache(workspaceSlug, ticketId, item.key, ticket.description, result);
+                                  fetchTicket();
+                                }
+                              } catch { /* ignore */ }
+                              finally { setAiProcessing(null); }
+                            }}
+                            disabled={!!aiProcessing}
+                            className="text-exs text-muted hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                            </svg>
+                            {aiProcessing === item.key ? t("ticketDetail.aiProcessing") : item.label}
+                          </button>
+                        ))}
+                      </div>
+                      {cachedEntries.map(([key, entry]) => (
+                        <div key={key} className="mt-3 p-3 bg-primary-50 dark:bg-primary-950/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-exs font-body-semibold text-primary">{t("ticketDetail.aiResult")}</p>
+                            <button
+                              onClick={async () => {
+                                if (workspaceSlug && ticketId) {
+                                  await clearAiCache(workspaceSlug, ticketId, key);
+                                  fetchTicket();
+                                }
+                              }}
+                              className="text-exs text-muted hover:text-danger cursor-pointer"
+                            >
+                              {t("ticketDetail.aiDismiss")}
+                            </button>
+                          </div>
+                          <p className="text-sm text-body whitespace-pre-wrap">{entry.result}</p>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+              </>
             )}
           </Card>
 

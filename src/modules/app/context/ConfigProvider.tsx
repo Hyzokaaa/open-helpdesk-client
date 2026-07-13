@@ -8,6 +8,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [defaultGateway, setDefaultGateway] = useState("");
   const [paddleClientToken, setPaddleClientToken] = useState<string | null>(null);
   const [paddleEnvironment, setPaddleEnvironment] = useState("sandbox");
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,12 +19,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         setDefaultGateway(config.defaultGateway ?? "");
         setPaddleClientToken(config.paddleClientToken ?? null);
         setPaddleEnvironment(config.paddleEnvironment ?? "sandbox");
+        setAiEnabled(config.aiEnabled ?? false);
       })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, loading }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, loading }}>
       {children}
     </ConfigContext.Provider>
   );

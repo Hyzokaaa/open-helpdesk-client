@@ -37,6 +37,7 @@ export interface TicketDetail {
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
   accessLevel?: 'full' | 'readonly';
+  aiCache?: Record<string, { source: string; result: string }>;
 }
 
 export interface TicketFilters {
