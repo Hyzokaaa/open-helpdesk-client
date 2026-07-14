@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import {
   listAllTickets,
   changeTicketStatus,
+  getTicket,
   type TicketListItem,
   type TicketFilters,
 } from "../services/ticket.service";
@@ -130,6 +131,19 @@ export function useBoardTickets(
     try {
       await changeTicketStatus(workspaceSlug, ticketId, newStatus);
       isDragging.current = false;
+      // Refetch only the moved ticket to get updated fields (assignee, etc.)
+      getTicket(workspaceSlug, ticketId).then((detail) => {
+        setColumns((prev) => {
+          const updated = { ...prev };
+          const col = updated[newStatus as BoardStatus];
+          if (col) {
+            updated[newStatus as BoardStatus] = col.map((t) =>
+              t.id === ticketId ? { ...t, status: detail.status, assigneeId: detail.assigneeId } : t,
+            );
+          }
+          return updated;
+        });
+      }).catch(() => {});
     } catch {
       setColumns(snapshot);
       saveOrder(workspaceSlug, snapshot);
