@@ -83,6 +83,7 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
+  const [ticketDirty, setTicketDirty] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createDirty, setCreateDirty] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
@@ -496,11 +497,12 @@ export default function TicketsPage() {
       )}
 
       {selectedTicketId && workspaceSlug && (
-        <Sheet onClose={() => { setSelectedTicketId(null); fetchTickets(); setBoardKey((k) => k + 1); }}>
+        <Sheet onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
           <TicketDetailPage
             workspaceSlugProp={workspaceSlug}
             ticketIdProp={selectedTicketId}
-            onClose={() => { setSelectedTicketId(null); fetchTickets(); setBoardKey((k) => k + 1); }}
+            onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}
+            onDirtyChange={setTicketDirty}
             initialMode={ticketMode}
           />
         </Sheet>

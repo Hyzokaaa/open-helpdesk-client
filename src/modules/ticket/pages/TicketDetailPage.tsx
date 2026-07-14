@@ -179,10 +179,11 @@ interface Props {
   workspaceSlugProp?: string;
   ticketIdProp?: string;
   onClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
   initialMode?: "view" | "edit";
 }
 
-export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onClose, initialMode = "view" }: Props = {}) {
+export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onClose, onDirtyChange, initialMode = "view" }: Props = {}) {
   const params = useParams();
   const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const ticketId = ticketIdProp || params.ticketId;
@@ -433,6 +434,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       setMode("view");
       setDraft(null);
       toast.success("Ticket updated");
+      onDirtyChange?.(true);
     } catch (err) {
       handlePlanLimitError(err, "Failed to save ticket");
     } finally {
