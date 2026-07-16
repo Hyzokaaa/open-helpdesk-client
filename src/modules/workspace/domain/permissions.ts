@@ -20,6 +20,8 @@ export const P = {
   TICKET_CHANGE_STATUS: "ticket.change.status",
   TICKET_CHANGE_STATUS_DISCARDED: "ticket.change.status.discarded",
   TICKET_ASSIGN: "ticket.assign",
+  TICKET_PICKUP: "ticket.pickup",
+  TICKET_TRANSFER: "ticket.transfer",
   TICKET_DELETE: "ticket.delete",
   TICKET_EDIT_DISCARDED: "ticket.edit.discarded",
 

@@ -167,6 +167,24 @@ export async function assignTicket(
   });
 }
 
+export async function pickupTicket(
+  workspaceSlug: string,
+  ticketId: string,
+): Promise<{ id: string; status: string; assigneeId: string }> {
+  const res = await http.post<{ id: string; status: string; assigneeId: string }>(
+    `/workspaces/${workspaceSlug}/tickets/${ticketId}/pickup`,
+  );
+  return res.data;
+}
+
+export async function transferTicket(
+  workspaceSlug: string,
+  ticketId: string,
+  assigneeId: string,
+): Promise<void> {
+  await http.patch(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer`, { assigneeId });
+}
+
 export async function deleteTicket(
   workspaceId: string,
   ticketId: string,

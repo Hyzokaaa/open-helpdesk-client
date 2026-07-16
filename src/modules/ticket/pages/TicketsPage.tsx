@@ -10,6 +10,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -19,6 +20,9 @@ import {
   listTickets,
   deleteTicket,
   changeTicketStatus,
+  assignTicket,
+  transferTicket,
+  pickupTicket,
 } from "../services/ticket.service";
 import {
   PRIORITY_COLORS,
@@ -87,6 +91,9 @@ export default function TicketsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createDirty, setCreateDirty] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
+  const [assignTicketId, setAssignTicketId] = useState<string | null>(null);
+  const [assignTarget, setAssignTarget] = useState<string | null>(null);
+  const [assignMode, setAssignMode] = useState<"assign" | "transfer">("assign");
 
   const fetchTickets = () => {
     if (!workspaceSlug) return;
@@ -332,12 +339,22 @@ export default function TicketsPage() {
                     <td className="px-2 py-3 sticky right-0 bg-surface">
                       <ActionMenu items={(() => {
                         const hasDirectAccess = ticket.assigneeId === user?.id || ticket.creatorId === user?.id || ticket.status === "open" || can(P.TICKET_VIEW);
-                        return [
+                        const isAssigneeOrCreator = ticket.assigneeId === user?.id || ticket.creatorId === user?.id;
+                        const isOpen = ticket.status === "open";
+                        const isClosed = ticket.status === "resolved" || ticket.status === "discarded";
+                        const items = [
                           { label: t("tickets.view"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); } },
                           ...(!isReporter && hasDirectAccess ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
                           ...(can(P.TICKET_CHANGE_STATUS) && hasDirectAccess ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
+                          // Admin/Supervisor: Assign (any ticket, any state except closed)
+                          ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
+                          // Agent: Pickup (only open tickets)
+                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { pickupTicket(workspaceSlug!, ticket.id).then(() => { toast.success(t("tickets.pickedUp")); fetchTickets(); setBoardKey((k) => k + 1); }).catch(() => toast.error("Failed to pick up")); } }] : []),
+                          // Agent: Transfer (only if assignee or creator, not closed)
+                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
                         ];
+                        return items;
                       })()} />
                     </td>
                   </tr>
@@ -479,6 +496,37 @@ export default function TicketsPage() {
           }}
           onCancel={() => bulk.setDeleteTicketId(null)}
         />
+      )}
+
+      {assignTicketId && workspaceSlug && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }} />
+          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
+            <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
+            <Select
+              options={members.filter((m) => m.role !== "reporter")}
+              value={(m) => m.userId === assignTarget}
+              onChange={(m) => setAssignTarget(m.userId)}
+              label={(m) => `${m.firstName} ${m.lastName}`}
+              placeholder={t("ticketDetail.selectAssignee")}
+            />
+            <div className="flex gap-2 mt-4 justify-end">
+              <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
+              <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
+                const action = assignMode === "transfer"
+                  ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
+                  : assignTicket(workspaceSlug, assignTicketId, assignTarget);
+                const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
+                action
+                  .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
+                  .catch(() => toast.error("Failed"));
+                setAssignTicketId(null);
+                setAssignTarget(null);
+              }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showDiscard && (
