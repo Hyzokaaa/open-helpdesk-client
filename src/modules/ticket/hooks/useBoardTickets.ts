@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import {
   listAllTickets,
   changeTicketStatus,
+  pickupTicket,
   getTicket,
   type TicketListItem,
   type TicketFilters,
@@ -129,7 +130,11 @@ export function useBoardTickets(
     saveOrder(workspaceSlug, currentColumns);
 
     try {
-      await changeTicketStatus(workspaceSlug, ticketId, newStatus);
+      if (originalStatus === 'open' && newStatus !== 'open') {
+        await pickupTicket(workspaceSlug, ticketId);
+      } else {
+        await changeTicketStatus(workspaceSlug, ticketId, newStatus);
+      }
       isDragging.current = false;
       // Refetch only the moved ticket to get updated fields (assignee, etc.)
       getTicket(workspaceSlug, ticketId).then((detail) => {
