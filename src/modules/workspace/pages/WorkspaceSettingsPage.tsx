@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -20,6 +20,9 @@ import {
   deleteWorkspace,
   listMembers,
   WorkspaceMember,
+  exportWorkspace,
+  importWorkspace,
+  importWorkspaceFromUrl,
 } from "../services/workspace.service";
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
@@ -56,6 +59,10 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customPaletteLocked, setCustomPaletteLocked] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -198,6 +205,74 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("webhooks.title")}>
               <WebhookSettings slug={workspaceSlug!} />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && (
+            <CollapsibleSection title={t("workspaceSettings.dataMigration")}>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-muted mb-2">{t("workspaceSettings.exportDesc")}</p>
+                  <Button size="xs" color="light" loading={exporting} onClick={async () => {
+                    if (!workspaceSlug) return;
+                    setExporting(true);
+                    try {
+                      const blob = await exportWorkspace(workspaceSlug);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${workspaceSlug}-export.json`;
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      URL.revokeObjectURL(url);
+                      toast.success(t("workspaceSettings.exportSuccess"));
+                    } catch { toast.error("Export failed"); }
+                    finally { setExporting(false); }
+                  }}>
+                    {exporting ? t("workspaceSettings.exporting") : t("workspaceSettings.export")}
+                  </Button>
+                </div>
+
+                <hr className="border-border-row" />
+
+                <div>
+                  <p className="text-xs text-muted mb-2">{t("workspaceSettings.importDesc")}</p>
+                  <input ref={importFileRef} type="file" accept=".json" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !workspaceSlug) return;
+                    setImporting(true);
+                    try {
+                      const text = await file.text();
+                      const data = JSON.parse(text);
+                      const result = await importWorkspace(workspaceSlug, data);
+                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} tickets, ${result.usersCreated} users created, ${result.commentsImported} comments`);
+                    } catch { toast.error(t("workspaceSettings.importError")); }
+                    finally { setImporting(false); if (importFileRef.current) importFileRef.current.value = ''; }
+                  }} />
+                  <div className="flex gap-2">
+                    <Button size="xs" color="light" loading={importing} onClick={() => importFileRef.current?.click()}>
+                      {importing ? t("workspaceSettings.importing") : t("workspaceSettings.import")}
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
+                    <Input value={importUrl} onChange={setImportUrl} size="sm" placeholder={t("workspaceSettings.importUrlPlaceholder")} />
+                    <Button size="xs" color="light" loading={importing} disabled={!importUrl.trim()} onClick={async () => {
+                      if (!workspaceSlug || !importUrl.trim()) return;
+                      setImporting(true);
+                      try {
+                        const result = await importWorkspaceFromUrl(workspaceSlug, importUrl.trim());
+                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} tickets, ${result.usersCreated} users created`);
+                        setImportUrl("");
+                      } catch { toast.error(t("workspaceSettings.importError")); }
+                      finally { setImporting(false); }
+                    }}>
+                      {t("workspaceSettings.importUrl")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </CollapsibleSection>
           )}
         </div>

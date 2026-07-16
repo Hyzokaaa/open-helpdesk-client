@@ -214,3 +214,32 @@ export async function downloadImportTemplate(slug: string): Promise<void> {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export async function exportWorkspace(slug: string): Promise<Blob> {
+  const res = await http.get(`/workspaces/${slug}/export`, { responseType: 'blob' });
+  return res.data;
+}
+
+export interface ImportResult {
+  usersCreated: number;
+  membersAdded: number;
+  tagsImported: number;
+  ticketsImported: number;
+  commentsImported: number;
+  attachmentsImported: number;
+  participantsImported: number;
+  cannedResponsesImported: number;
+  customFieldsImported: number;
+  csatResponsesImported: number;
+  auditLogImported: number;
+}
+
+export async function importWorkspace(slug: string, data: any): Promise<ImportResult> {
+  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, data);
+  return res.data;
+}
+
+export async function importWorkspaceFromUrl(slug: string, url: string): Promise<ImportResult> {
+  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, { url });
+  return res.data;
+}
