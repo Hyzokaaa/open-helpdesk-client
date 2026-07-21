@@ -32,6 +32,7 @@ import {
   updateTicket,
   changeTicketStatus,
   assignTicket,
+  transferTicket,
   deleteTicket,
 } from "../services/ticket.service";
 import {
@@ -390,6 +391,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
+  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.creatorId === user?.id);
   const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
@@ -941,10 +943,30 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     />
                   </FormInput>
                 </Card>
-              ) : draft.assigneeId ? (
+              ) : canTransfer ? (
+                <Card className="p-4">
+                  <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
+                    <Select
+                      options={assignableMembers}
+                      label={(m) => `${m.firstName} ${m.lastName}`}
+                      value={(m) => m.userId === ticket.assigneeId}
+                      onChange={async (m) => {
+                        if (!workspaceSlug || !ticketId) return;
+                        try {
+                          await transferTicket(workspaceSlug, ticketId, m.userId);
+                          fetchTicket();
+                          onDirtyChange?.(true);
+                          toast.success(t("tickets.transferred"));
+                        } catch { toast.error("Failed to transfer"); }
+                      }}
+                      placeholder={t("ticketDetail.selectAssignee")}
+                    />
+                  </FormInput>
+                </Card>
+              ) : ticket.assigneeId ? (
                 <Card className="p-4">
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-                  <p className="text-sm text-body font-body-medium">{getMemberName(draft.assigneeId)}</p>
+                  <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
                 </Card>
               ) : null}
 
