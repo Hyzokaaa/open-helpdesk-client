@@ -221,6 +221,8 @@ const translations = {
   "workspaceSettings.dataMigration": { en: "Data Migration", es: "Migración de Datos" },
   "workspaceSettings.exportDesc": { en: "Download all workspace data as a JSON file. Use this to migrate to another instance.", es: "Descarga todos los datos del workspace como JSON. Usa esto para migrar a otra instancia." },
   "workspaceSettings.export": { en: "Export Data", es: "Exportar Datos" },
+  "workspaceSettings.exportUrl": { en: "Generate Export URL", es: "Generar URL de Exportación" },
+  "workspaceSettings.exportUrlCopied": { en: "Export URL copied to clipboard (valid 24h, single use)", es: "URL de exportación copiada (válida 24h, un solo uso)" },
   "workspaceSettings.exporting": { en: "Exporting...", es: "Exportando..." },
   "workspaceSettings.importDesc": { en: "Import data from a self-hosted instance. Upload a JSON export file or paste an export URL.", es: "Importa datos desde una instancia self-hosted. Sube un archivo JSON de exportación o pega una URL." },
   "workspaceSettings.import": { en: "Import from File", es: "Importar desde Archivo" },

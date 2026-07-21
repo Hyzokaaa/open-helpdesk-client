@@ -243,3 +243,8 @@ export async function importWorkspaceFromUrl(slug: string, url: string): Promise
   const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, { url });
   return res.data;
 }
+
+export async function createExportToken(slug: string): Promise<{ url: string; expiresAt: string }> {
+  const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`);
+  return res.data;
+}

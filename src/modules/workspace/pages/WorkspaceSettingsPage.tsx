@@ -23,6 +23,7 @@ import {
   exportWorkspace,
   importWorkspace,
   importWorkspaceFromUrl,
+  createExportToken,
 } from "../services/workspace.service";
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
@@ -213,6 +214,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-muted mb-2">{t("workspaceSettings.exportDesc")}</p>
+                  <div className="flex gap-2">
                   <Button size="xs" color="light" loading={exporting} onClick={async () => {
                     if (!workspaceSlug) return;
                     setExporting(true);
@@ -232,6 +234,17 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                   }}>
                     {exporting ? t("workspaceSettings.exporting") : t("workspaceSettings.export")}
                   </Button>
+                  <Button size="xs" color="light" onClick={async () => {
+                    if (!workspaceSlug) return;
+                    try {
+                      const { url } = await createExportToken(workspaceSlug);
+                      await navigator.clipboard.writeText(url);
+                      toast.success(t("workspaceSettings.exportUrlCopied"));
+                    } catch { toast.error("Failed to generate URL"); }
+                  }}>
+                    {t("workspaceSettings.exportUrl")}
+                  </Button>
+                  </div>
                 </div>
 
                 <hr className="border-border-row" />
