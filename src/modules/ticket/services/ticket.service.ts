@@ -177,12 +177,61 @@ export async function pickupTicket(
   return res.data;
 }
 
+export interface TransferRequestResult {
+  id: string;
+  transferRequestId: string;
+  status: string;
+  expiresAt: string;
+}
+
+export interface PendingTransfer {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  targetUserId: string;
+  targetName: string;
+  expiresAt: string;
+}
+
 export async function transferTicket(
   workspaceSlug: string,
   ticketId: string,
   assigneeId: string,
+): Promise<TransferRequestResult> {
+  const res = await http.patch<TransferRequestResult>(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer`, { assigneeId });
+  return res.data;
+}
+
+export async function getPendingTransfer(
+  workspaceSlug: string,
+  ticketId: string,
+): Promise<PendingTransfer | null> {
+  const res = await http.get<PendingTransfer | null>(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/pending`);
+  return res.data;
+}
+
+export async function acceptTransfer(
+  workspaceSlug: string,
+  ticketId: string,
+  requestId: string,
 ): Promise<void> {
-  await http.patch(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer`, { assigneeId });
+  await http.post(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/${requestId}/accept`);
+}
+
+export async function rejectTransfer(
+  workspaceSlug: string,
+  ticketId: string,
+  requestId: string,
+): Promise<void> {
+  await http.post(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/${requestId}/reject`);
+}
+
+export async function cancelTransfer(
+  workspaceSlug: string,
+  ticketId: string,
+  requestId: string,
+): Promise<void> {
+  await http.post(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/${requestId}/cancel`);
 }
 
 export async function deleteTicket(

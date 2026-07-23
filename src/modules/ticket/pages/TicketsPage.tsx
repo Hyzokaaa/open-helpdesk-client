@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -94,6 +94,16 @@ export default function TicketsPage() {
   const [assignTicketId, setAssignTicketId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [assignMode, setAssignMode] = useState<"assign" | "transfer">("assign");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId) {
+      setSelectedTicketId(openId);
+      setTicketMode("view");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchTickets = () => {
     if (!workspaceSlug) return;

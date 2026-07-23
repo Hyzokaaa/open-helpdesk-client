@@ -28,12 +28,17 @@ import {
 } from "../services/ticket.service";
 import {
   TicketDetail,
+  PendingTransfer,
   getTicket,
   updateTicket,
   changeTicketStatus,
   assignTicket,
   transferTicket,
   deleteTicket,
+  getPendingTransfer,
+  acceptTransfer,
+  rejectTransfer,
+  cancelTransfer,
 } from "../services/ticket.service";
 import {
   STATUSES,
@@ -197,6 +202,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [pendingTransfer, setPendingTransfer] = useState<PendingTransfer | null>(null);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
@@ -305,6 +313,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       .then((t) => {
         setTicket(t);
         if (refreshActivity) setActivityKey((k) => k + 1);
+        getPendingTransfer(workspaceSlug, ticketId).then(setPendingTransfer).catch(() => setPendingTransfer(null));
       })
       .catch(() => toast.error("Ticket not found"))
       .finally(() => setLoading(false));
@@ -561,6 +570,34 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           onConfirm={confirmDiscard}
           onCancel={() => setShowDiscardModal(false)}
         />
+      )}
+
+      {showTransferModal && workspaceSlug && ticketId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowTransferModal(false)} />
+          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.transferTitle")}</h3>
+            <p className="text-sm text-muted mb-4">{t("tickets.transferMessage")}</p>
+            <Select
+              options={assignableMembers.filter((m) => m.userId !== user?.id)}
+              label={(m) => `${m.firstName} ${m.lastName}`}
+              value={(m) => m.userId === transferTarget}
+              onChange={(m) => setTransferTarget(m.userId)}
+              placeholder={t("ticketDetail.selectAssignee")}
+            />
+            <div className="flex gap-2 mt-4 justify-end">
+              <Button size="sm" color="light" onClick={() => setShowTransferModal(false)}>{t("ticketDetail.cancel")}</Button>
+              <Button size="sm" color="primary" disabled={!transferTarget} onClick={async () => {
+                try {
+                  await transferTicket(workspaceSlug, ticketId, transferTarget!);
+                  toast.success(t("tickets.transferred"));
+                  fetchTicket(true);
+                } catch { toast.error("Failed"); }
+                setShowTransferModal(false);
+              }}>{t("tickets.transfer")}</Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showChangesModal && (
@@ -943,32 +980,56 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     />
                   </FormInput>
                 </Card>
-              ) : canTransfer ? (
-                <Card className="p-4">
-                  <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
-                    <Select
-                      options={assignableMembers}
-                      label={(m) => `${m.firstName} ${m.lastName}`}
-                      value={(m) => m.userId === ticket.assigneeId}
-                      onChange={async (m) => {
-                        if (!workspaceSlug || !ticketId) return;
-                        try {
-                          await transferTicket(workspaceSlug, ticketId, m.userId);
-                          fetchTicket();
-                          onDirtyChange?.(true);
-                          toast.success(t("tickets.transferred"));
-                        } catch { toast.error("Failed to transfer"); }
-                      }}
-                      placeholder={t("ticketDetail.selectAssignee")}
-                    />
-                  </FormInput>
-                </Card>
               ) : ticket.assigneeId ? (
                 <Card className="p-4">
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
                   <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                  {canTransfer && !pendingTransfer && (
+                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setTransferTarget(null); setShowTransferModal(true); }}>
+                      {t("tickets.transfer")}
+                    </Button>
+                  )}
                 </Card>
               ) : null}
+
+              {pendingTransfer && workspaceSlug && ticketId && (
+                <Card className="p-4 border-amber-300 dark:border-amber-700">
+                  <p className="text-xs text-subtle font-body-medium mb-1">{t("tickets.pendingTransfer")}</p>
+                  <p className="text-xs text-muted mb-3">
+                    {pendingTransfer.targetUserId === user?.id
+                      ? t("tickets.pendingTransferFrom").replace("{name}", pendingTransfer.requesterName)
+                      : t("tickets.pendingTransferTo").replace("{name}", pendingTransfer.targetName)}
+                  </p>
+                  <div className="flex gap-2">
+                    {pendingTransfer.targetUserId === user?.id ? (
+                      <>
+                        <Button size="xs" color="primary" onClick={async () => {
+                          try {
+                            await acceptTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                            toast.success(t("tickets.transferAccepted"));
+                            fetchTicket(true);
+                          } catch { toast.error("Failed"); }
+                        }}>{t("tickets.accept")}</Button>
+                        <Button size="xs" color="light" onClick={async () => {
+                          try {
+                            await rejectTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                            toast.success(t("tickets.transferRejected"));
+                            fetchTicket(true);
+                          } catch { toast.error("Failed"); }
+                        }}>{t("tickets.reject")}</Button>
+                      </>
+                    ) : pendingTransfer.requesterId === user?.id ? (
+                      <Button size="xs" color="light" onClick={async () => {
+                        try {
+                          await cancelTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                          toast.success(t("tickets.transferCancelled"));
+                          fetchTicket(true);
+                        } catch { toast.error("Failed"); }
+                      }}>{t("tickets.cancelTransfer")}</Button>
+                    ) : null}
+                  </div>
+                </Card>
+              )}
 
               <Card className="p-4">
                 <FormInput label={t("ticketDetail.tags")} className="!mb-0">
@@ -1027,6 +1088,50 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <Card className="p-4">
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
                   <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                  {canTransfer && !pendingTransfer && (
+                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setTransferTarget(null); setShowTransferModal(true); }}>
+                      {t("tickets.transfer")}
+                    </Button>
+                  )}
+                </Card>
+              )}
+
+              {pendingTransfer && workspaceSlug && ticketId && (
+                <Card className="p-4 border-amber-300 dark:border-amber-700">
+                  <p className="text-xs text-subtle font-body-medium mb-1">{t("tickets.pendingTransfer")}</p>
+                  <p className="text-xs text-muted mb-3">
+                    {pendingTransfer.targetUserId === user?.id
+                      ? t("tickets.pendingTransferFrom").replace("{name}", pendingTransfer.requesterName)
+                      : t("tickets.pendingTransferTo").replace("{name}", pendingTransfer.targetName)}
+                  </p>
+                  <div className="flex gap-2">
+                    {pendingTransfer.targetUserId === user?.id ? (
+                      <>
+                        <Button size="xs" color="primary" onClick={async () => {
+                          try {
+                            await acceptTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                            toast.success(t("tickets.transferAccepted"));
+                            fetchTicket(true);
+                          } catch { toast.error("Failed"); }
+                        }}>{t("tickets.accept")}</Button>
+                        <Button size="xs" color="light" onClick={async () => {
+                          try {
+                            await rejectTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                            toast.success(t("tickets.transferRejected"));
+                            fetchTicket(true);
+                          } catch { toast.error("Failed"); }
+                        }}>{t("tickets.reject")}</Button>
+                      </>
+                    ) : pendingTransfer.requesterId === user?.id ? (
+                      <Button size="xs" color="light" onClick={async () => {
+                        try {
+                          await cancelTransfer(workspaceSlug, ticketId, pendingTransfer.id);
+                          toast.success(t("tickets.transferCancelled"));
+                          fetchTicket(true);
+                        } catch { toast.error("Failed"); }
+                      }}>{t("tickets.cancelTransfer")}</Button>
+                    ) : null}
+                  </div>
                 </Card>
               )}
 
