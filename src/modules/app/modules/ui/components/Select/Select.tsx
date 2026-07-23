@@ -12,6 +12,7 @@ interface Props<T> {
   placeholder?: string;
   size?: Size;
   disabled?: boolean;
+  searchable?: boolean;
 }
 
 export default function Select<T>({
@@ -22,13 +23,21 @@ export default function Select<T>({
   placeholder = "Select...",
   size = "sm",
   disabled = false,
+  searchable,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
   const selected = options.find((o) => isSelected(o));
+  const showSearch = searchable ?? options.length > 5;
+
+  const filtered = search
+    ? options.filter((o) => label(o).toLowerCase().includes(search.toLowerCase()))
+    : options;
 
   const updatePosition = useCallback(() => {
     if (!btnRef.current) return;
@@ -39,6 +48,7 @@ export default function Select<T>({
   useEffect(() => {
     if (!open) return;
     updatePosition();
+    setSearch("");
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -67,6 +77,12 @@ export default function Select<T>({
     };
   }, [open, updatePosition]);
 
+  useEffect(() => {
+    if (open && showSearch) {
+      setTimeout(() => searchRef.current?.focus(), 0);
+    }
+  }, [open, showSearch]);
+
   return (
     <div className="relative w-full">
       <button
@@ -88,25 +104,41 @@ export default function Select<T>({
       {open && createPortal(
         <div
           ref={dropRef}
-          className="fixed z-[9999] bg-surface border border-border-input rounded-lg shadow-lg max-h-48 overflow-auto"
+          className="fixed z-[9999] bg-surface border border-border-input rounded-lg shadow-lg max-h-64 overflow-hidden flex flex-col"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
-          {options.map((option, i) => (
-            <button
-              key={i}
-              type="button"
-              className={clsx(
-                "w-full text-left px-3 py-2 text-sm hover:bg-surface-active transition-colors cursor-pointer text-body",
-                { "bg-surface-active text-primary": isSelected(option) },
-              )}
-              onClick={() => {
-                onChange?.(option);
-                setOpen(false);
-              }}
-            >
-              {label(option)}
-            </button>
-          ))}
+          {showSearch && (
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full px-3 py-2 text-sm border-b border-border-input bg-surface text-body outline-none"
+            />
+          )}
+          <div className="overflow-auto">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-muted">No results</p>
+            ) : (
+              filtered.map((option, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={clsx(
+                    "w-full text-left px-3 py-2 text-sm hover:bg-surface-active transition-colors cursor-pointer text-body",
+                    { "bg-surface-active text-primary": isSelected(option) },
+                  )}
+                  onClick={() => {
+                    onChange?.(option);
+                    setOpen(false);
+                  }}
+                >
+                  {label(option)}
+                </button>
+              ))
+            )}
+          </div>
         </div>,
         document.body,
       )}
