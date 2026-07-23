@@ -78,7 +78,7 @@ export default function NotificationBell() {
     }
     setOpen(false);
     if (n.ticketId) {
-      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets`);
+      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets?open=${n.ticketId}`);
     }
   };
 
@@ -160,6 +160,15 @@ export default function NotificationBell() {
                 >
                   <NotificationIcon type={n.type} />
                   <div className="flex-1 min-w-0">
+                    <p className="text-exs text-subtle">
+                      {({
+                        "ticket-created": t("notifications.ticketCreated"),
+                        "ticket-assigned": t("notifications.ticketAssigned"),
+                        "status-changed": t("notifications.statusChanged"),
+                        "comment-created": t("notifications.commentCreated"),
+                        "transfer-request": t("notifications.transferRequest"),
+                      } as Record<string, string>)[n.type] ?? t("notifications.ticketCreated")}
+                    </p>
                     <p
                       className={clsx(
                         "text-xs truncate",
