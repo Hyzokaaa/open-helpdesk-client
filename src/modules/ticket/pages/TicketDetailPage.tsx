@@ -869,9 +869,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <div className="space-y-2 mb-4">
               {comments.map((c) => (
                 <Card key={c.id} className="p-4">
-                  <p className="text-exs text-subtle mb-1">
-                    {getMemberName(c.authorId)}
-                  </p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-exs text-subtle">
+                      {getMemberName(c.authorId)}
+                    </p>
+                    {c.createdAt && (
+                      <p className="text-exs text-subtle">
+                        {new Date(c.createdAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                      </p>
+                    )}
+                  </div>
                   <p
                     className="text-sm text-body"
                     dangerouslySetInnerHTML={{

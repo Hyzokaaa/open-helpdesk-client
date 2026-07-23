@@ -6,6 +6,7 @@ export interface CommentItem {
   content: string;
   authorId: string;
   mentionedUserIds: string[];
+  createdAt: string | null;
 }
 
 export async function listComments(
