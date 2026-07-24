@@ -42,6 +42,12 @@ export interface Extensions {
 
   /** Update a user's subscription (admin only) */
   adminUpdateSubscription: (userId: string, data: Record<string, unknown>) => Promise<void>;
+
+  /** Get max agents per workspace for the current plan (null = unlimited or no billing) */
+  getAgentLimit: () => Promise<number | null>;
+
+  /** Check if a feature is locked by plan (returns false in core = always available) */
+  isFeatureLocked: (feature: string) => Promise<boolean>;
 }
 
 const noopAsync = () => Promise.resolve(null);
@@ -62,6 +68,8 @@ export const defaultExtensions: Extensions = {
   extraAdminNav: [],
   getUserPlans: noopAsyncEmpty,
   adminUpdateSubscription: noopAsyncVoid as any,
+  getAgentLimit: noopAsync as any,
+  isFeatureLocked: () => Promise.resolve(false),
 };
 
 export const ExtensionContext = createContext<Extensions>(defaultExtensions);

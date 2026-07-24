@@ -28,6 +28,7 @@ import {
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
 import MailboxSettings from "../components/MailboxSettings";
+import EmailSenderSettings from "../components/EmailSenderSettings";
 import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
@@ -50,7 +51,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const { can } = usePermissions(workspaceSlug);
   const { setPalette } = useContext(PaletteContext);
   const { saasMode } = useConfig();
-  const { getSubscription } = useExtensions();
+  const { handlePlanLimitError, isFeatureLocked } = useExtensions();
 
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -75,13 +76,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
         setMembers(m);
       })
       .finally(() => setLoading(false));
+    isFeatureLocked("customPalette").then(setCustomPaletteLocked).catch(() => {});
   }, [workspaceSlug]);
-
-  useEffect(() => {
-    getSubscription().then((sub: any) => {
-      if (sub) setCustomPaletteLocked(sub.planId === "free");
-    }).catch(() => {});
-  }, []);
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
   if (!workspace) return null;
@@ -99,7 +95,11 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
       setWorkspace({ ...workspace, palette: palette === "green" ? null : palette });
       toast.success(t("workspaceSettings.updated"));
     } catch (err: any) {
-      if (!err?.handled) toast.error(t("workspaceSettings.updateError"));
+      if (handlePlanLimitError(err)) {
+        setCustomPaletteLocked(true);
+      } else if (!err?.handled) {
+        toast.error(t("workspaceSettings.updateError"));
+      }
     }
   };
 
@@ -188,6 +188,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("mailbox.title")}>
               <MailboxSettings slug={workspaceSlug!} />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && (
+            <CollapsibleSection title={t("emailSender.title")}>
+              <EmailSenderSettings slug={workspaceSlug!} />
             </CollapsibleSection>
           )}
 

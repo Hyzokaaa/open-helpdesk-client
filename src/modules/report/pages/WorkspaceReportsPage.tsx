@@ -30,13 +30,12 @@ function toFullOverview(basic: ReportOverviewBasic): ReportOverview {
 export default function WorkspaceReportsPage() {
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
-  const { isPlanLimitError, PlanGate, getSubscription } = useExtensions();
+  const { isPlanLimitError, PlanGate } = useExtensions();
   const [preset, setPreset] = useState("30d");
   const [overview, setOverview] = useState<ReportOverview | null>(null);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartsLocked, setChartsLocked] = useState(false);
-  const [csatLocked, setCsatLocked] = useState(false);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -55,12 +54,6 @@ export default function WorkspaceReportsPage() {
 
     Promise.all([overviewPromise, reportPromise]).finally(() => setLoading(false));
   }, [workspaceSlug, preset]);
-
-  useEffect(() => {
-    getSubscription().then((sub: any) => {
-      if (sub) setCsatLocked(sub.planId === "free");
-    }).catch(() => {});
-  }, []);
 
   return (
     <div className="w-full">
@@ -98,7 +91,7 @@ export default function WorkspaceReportsPage() {
                 data={data.csatBreakdown}
                 score={data.overview.csatScore}
                 total={data.overview.csatResponseCount}
-                locked={csatLocked}
+                locked={chartsLocked}
               />
             </>
           ) : null}

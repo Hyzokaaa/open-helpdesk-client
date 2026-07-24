@@ -5,7 +5,6 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
-import useConfig from "@modules/app/hooks/useConfig";
 import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -21,8 +20,7 @@ interface Props {
 
 export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   const { t } = useTranslation();
-  const { saasMode } = useConfig();
-  const { getPlans, getSubscription } = useExtensions();
+  const { getAgentLimit } = useExtensions();
   const [rows, setRows] = useState([{ email: "", role: "reporter" }]);
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -40,23 +38,18 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
       setMembers(m);
       setPendingInvitations(inv);
 
-      if (saasMode) {
-        try {
-          const [plans, subscription] = await Promise.all([getPlans(), getSubscription()]) as [any[], any];
-          if (subscription && plans.length > 0) {
-            const plan = plans.find((p: any) => p.id === subscription.planId);
-            if (plan && plan.limits.maxAgentsPerWorkspace !== -1) {
-              const agentMembers = m.filter((member) => isAgent(member.role)).length;
-              const pendingAgents = inv.filter((i) => isAgent(i.role)).length;
-              setAgentSlots(plan.limits.maxAgentsPerWorkspace - agentMembers - pendingAgents);
-            }
-          }
-        } catch {}
-      }
+      try {
+        const limit = await getAgentLimit();
+        if (limit !== null) {
+          const agentMembers = m.filter((member) => isAgent(member.role)).length;
+          const pendingAgents = inv.filter((i) => isAgent(i.role)).length;
+          setAgentSlots(limit - agentMembers - pendingAgents);
+        }
+      } catch {}
     };
 
     load();
-  }, [workspaceSlug, saasMode]);
+  }, [workspaceSlug]);
 
   const memberEmails = useMemo(
     () => new Set(members.map((m) => m.email.toLowerCase())),

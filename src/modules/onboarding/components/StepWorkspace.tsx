@@ -21,7 +21,7 @@ interface Props {
 
 export default function StepWorkspace({ onDone, onSkip }: Props) {
   const { t } = useTranslation();
-  const { getPlans, getSubscription } = useExtensions();
+  const { getAgentLimit } = useExtensions();
   const [workspaceName, setWorkspaceName] = useState("");
   const [invites, setInvites] = useState<Invite[]>([{ email: "", role: "agent" }]);
   const [loading, setLoading] = useState(false);
@@ -29,14 +29,7 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
   const [supportEmail, setSupportEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([getPlans(), getSubscription()]).then(([plans, sub]: [any[], any]) => {
-      if (sub && plans.length > 0) {
-        const plan = plans.find((p: any) => p.id === sub.planId);
-        if (plan && plan.limits.maxAgentsPerWorkspace !== -1) {
-          setMaxAgents(plan.limits.maxAgentsPerWorkspace);
-        }
-      }
-    }).catch(() => {});
+    getAgentLimit().then(setMaxAgents).catch(() => {});
   }, []);
 
   const agentInvites = invites.filter((i) => i.role === "agent" || i.role === "admin");
