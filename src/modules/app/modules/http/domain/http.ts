@@ -51,19 +51,8 @@ http.interceptors.response.use(
           typeof error.response.data?.message === "string" &&
           error.response.data.message.includes("Upgrade")
         ) {
-          const msg = error.response.data.message;
-          toast.warning(
-            ({ closeToast }) =>
-              createElement('div', null,
-                createElement('p', null, msg),
-                createElement('a', {
-                  href: '/dashboard/settings/billing',
-                  onClick: closeToast,
-                  style: { color: '#60a5fa', textDecoration: 'underline', fontSize: '0.85em' },
-                }, t("planLimit.viewPlans")),
-              ),
-            { toastId: "plan-limit" },
-          );
+          const code = error.response.data.errorCode || "PLAN_LIMIT";
+          toast.warning(`${t("planLimit.featureNotAvailable")} (${code})`, { toastId: "plan-limit" });
           handled = true;
         }
       }
