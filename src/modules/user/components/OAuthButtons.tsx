@@ -40,7 +40,7 @@ export default function OAuthButtons({ providers, onSuccess }: Props & { onSucce
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     window.open(
-      `${API_URL}/auth/${provider}`,
+      `${API_URL}/auth/${provider}?redirect=${encodeURIComponent(window.location.origin)}`,
       `oauth-${provider}`,
       `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
     );
