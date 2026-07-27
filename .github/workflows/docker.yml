@@ -40,3 +40,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
+
+  deploy-cloud-client:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -X POST "${{ secrets.COOLIFY_URL }}/api/v1/deploy" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"uuid": "${{ secrets.COOLIFY_CLOUD_CLIENT_UUID }}", "force": true}'
