@@ -45,4 +45,10 @@ export const P = {
   REPORT_VIEW: "report.view",
 
   AUDIT_LOG_VIEW: "audit-log.view",
+
+  KB_ARTICLE_CREATE: "kb.article.create",
+  KB_ARTICLE_EDIT: "kb.article.edit",
+  KB_ARTICLE_DELETE: "kb.article.delete",
+  KB_ARTICLE_VIEW: "kb.article.view",
+  KB_CATEGORY_MANAGE: "kb.category.manage",
 } as const;

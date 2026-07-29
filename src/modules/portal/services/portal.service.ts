@@ -101,6 +101,51 @@ export async function addPortalComment(portalToken: string, content: string): Pr
   await portalHttp.post(`/portal/tickets/${portalToken}/comments`, { content });
 }
 
+// Knowledge Base (public)
+
+export interface PortalKbCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  articleCount: number;
+}
+
+export interface PortalKbArticlePreview {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+}
+
+export interface PortalKbArticleDetail {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  category: { name: string; slug: string } | null;
+}
+
+export async function getPortalKbCategories(slug: string): Promise<PortalKbCategory[]> {
+  const res = await portalHttp.get<PortalKbCategory[]>(`/portal/${slug}/kb/categories`);
+  return res.data;
+}
+
+export async function getPortalKbArticles(slug: string, categorySlug: string): Promise<PortalKbArticlePreview[]> {
+  const res = await portalHttp.get<PortalKbArticlePreview[]>(`/portal/${slug}/kb/categories/${categorySlug}/articles`);
+  return res.data;
+}
+
+export async function getPortalKbArticle(slug: string, articleSlug: string): Promise<PortalKbArticleDetail> {
+  const res = await portalHttp.get<PortalKbArticleDetail>(`/portal/${slug}/kb/articles/${articleSlug}`);
+  return res.data;
+}
+
+export async function searchPortalKb(slug: string, query: string): Promise<PortalKbArticlePreview[]> {
+  const res = await portalHttp.get<PortalKbArticlePreview[]>(`/portal/${slug}/kb/search`, { params: { q: query } });
+  return res.data;
+}
+
 export async function portalStageUpload(
   slug: string,
   file: File,

@@ -43,6 +43,11 @@ import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
+import PortalKbPage from "@modules/portal/pages/PortalKbPage";
+import PortalKbCategoryPage from "@modules/portal/pages/PortalKbCategoryPage";
+import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
+import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
+import ProseStyles from "@modules/app/components/ProseStyles";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -64,6 +69,9 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
+      <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
+      <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />
+      <Route path="/portal/:workspaceSlug/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
       <Route path="/portal/tickets/:portalToken" element={<PortalTicketPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
       <Route element={<ProtectedRoute />}>
@@ -78,6 +86,7 @@ function AppRoutes() {
           <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
           <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
           <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
+          <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
           <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
           <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
           <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
@@ -115,6 +124,7 @@ export default function App({ extensions }: AppProps) {
     <ExtensionProvider extensions={extensions}>
     <BrowserRouter>
       <UserProvider>
+        <ProseStyles />
         <ThemedToast />
         <AppRoutes />
       </UserProvider>

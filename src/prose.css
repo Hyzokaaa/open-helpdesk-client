@@ -1,0 +1,6 @@
+/*
+ * Prose styles are now injected via ProseStyles component (src/components/ProseStyles.tsx)
+ * to bypass @tailwindcss/vite CSS processing that was eating our rules.
+ *
+ * This file is kept as reference but NOT imported anywhere.
+ */

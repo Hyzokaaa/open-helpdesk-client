@@ -1,0 +1,58 @@
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router";
+import { getPortalKbArticles, getPortalKbCategories, PortalKbArticlePreview } from "../services/portal.service";
+
+function stripHtml(html: string): string {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || "";
+}
+
+export default function PortalKbCategoryPage() {
+  const { workspaceSlug, categorySlug } = useParams();
+  const [articles, setArticles] = useState<PortalKbArticlePreview[]>([]);
+  const [categoryName, setCategoryName] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!workspaceSlug || !categorySlug) return;
+    Promise.all([
+      getPortalKbArticles(workspaceSlug, categorySlug),
+      getPortalKbCategories(workspaceSlug),
+    ]).then(([arts, cats]) => {
+      setArticles(arts);
+      const cat = cats.find((c) => c.slug === categorySlug);
+      setCategoryName(cat?.name || categorySlug);
+    }).finally(() => setLoading(false));
+  }, [workspaceSlug, categorySlug]);
+
+  if (loading) return <div className="flex justify-center py-12 text-muted">Loading...</div>;
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <Link to={`/portal/${workspaceSlug}/kb`} className="text-xs text-primary hover:underline mb-4 inline-block">
+        ← Back to Help Center
+      </Link>
+
+      <h1 className="text-xl font-bold text-heading mb-6">{categoryName}</h1>
+
+      {articles.length === 0 ? (
+        <p className="text-sm text-muted text-center py-8">No articles in this category.</p>
+      ) : (
+        <div className="space-y-3">
+          {articles.map((a) => (
+            <Link key={a.id} to={`/portal/${workspaceSlug}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
+              <p className="text-sm font-semibold text-heading">{a.title}</p>
+              <p className="text-xs text-muted mt-1 line-clamp-2">{stripHtml(a.content)}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8 text-center">
+        <p className="text-sm text-muted mb-2">Didn't find what you need?</p>
+        <Link to={`/portal/${workspaceSlug}`} className="text-sm text-primary hover:underline">Create a ticket</Link>
+      </div>
+    </div>
+  );
+}
