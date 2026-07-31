@@ -98,6 +98,13 @@ export default function WorkspaceInvitationsPage() {
                   <td className="px-2 py-3">
                     <ActionMenu items={[
                       {
+                        label: t("invitations.copyLink"),
+                        onClick: () => {
+                          navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`);
+                          toast.success(t("invitations.linkCopied"));
+                        },
+                      },
+                      {
                         label: t("invitations.cancel"),
                         onClick: () => setCancelId(inv.id),
                         danger: true,

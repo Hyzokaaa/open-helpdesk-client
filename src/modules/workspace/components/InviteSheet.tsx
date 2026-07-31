@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -6,9 +7,11 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
+import { getEmailSender } from "../services/email-sender.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
 
 const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
 
@@ -20,12 +23,18 @@ interface Props {
 
 export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { emailConfigured } = useConfig();
   const { getAgentLimit } = useExtensions();
   const [rows, setRows] = useState([{ email: "", role: "reporter" }]);
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<InvitationItem[]>([]);
   const [agentSlots, setAgentSlots] = useState<number | null>(null);
+  const [hasWorkspaceSender, setHasWorkspaceSender] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(true);
+
+  const canSendEmail = emailConfigured || hasWorkspaceSender;
 
   useEffect(() => {
     const isAgent = (role: string) => role === "admin" || role === "agent";
@@ -34,6 +43,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
       const [m, inv] = await Promise.all([
         listMembers(workspaceSlug),
         listInvitations(workspaceSlug),
+        getEmailSender(workspaceSlug).then((s) => setHasWorkspaceSender(!!s)).catch(() => {}).finally(() => setCheckingEmail(false)),
       ]);
       setMembers(m);
       setPendingInvitations(inv);
@@ -101,7 +111,9 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
       );
       const sent = results.filter((r) => r.status === "sent").length;
       const errors = results.filter((r) => r.status === "error");
-      if (sent > 0) toast.success(`${sent} ${t("invitations.sent")}`);
+      if (sent > 0) {
+        toast.success(`${sent} ${t("invitations.sent")}`);
+      }
       for (const err of errors) {
         toast.error(`${err.email}: ${err.error}`);
       }
@@ -119,6 +131,27 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
     <Sheet onClose={onClose}>
       <div className="w-full">
         <h2 className="text-lg font-body-bold text-heading mb-3">{t("invitations.invite")}</h2>
+
+        {!checkingEmail && !canSendEmail && (
+          <div className="mb-4 p-3 bg-danger/10 border border-danger/30 rounded-lg">
+            <p className="text-xs text-danger">
+              {t("invitations.noEmailConfigured").split("<a>").map((part, i) => {
+                if (i === 0) return part;
+                const [linkText, rest] = part.split("</a>");
+                return (
+                  <span key={i}>
+                    <button
+                      type="button"
+                      className="underline font-body-semibold hover:opacity-80 cursor-pointer"
+                      onClick={() => { onClose(); navigate(`/dashboard/workspaces/${workspaceSlug}/settings`); }}
+                    >{linkText}</button>
+                    {rest}
+                  </span>
+                );
+              })}
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-3">
@@ -180,7 +213,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
               {t("members.cancel")}
             </Button>
             <Button type="submit" size="sm" loading={sending} disabled={!canSubmit}>
-              {t("invitations.send")}
+              {canSendEmail ? t("invitations.send") : t("invitations.createInvitation")}
             </Button>
           </div>
         </form>

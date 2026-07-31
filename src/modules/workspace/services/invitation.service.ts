@@ -5,6 +5,7 @@ export interface InvitationItem {
   email: string;
   role: string;
   status: string;
+  token: string;
   expiresAt: string;
   createdAt: string;
 }
