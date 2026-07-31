@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: #f8faf9;
+    position: relative;
+  }
+
+  /* Ambient background */
+  .bg-glow-1 {
+    position: absolute;
+    top: -120px;
+    left: -80px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .bg-glow-2 {
+    position: absolute;
+    bottom: -160px;
+    right: 100px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .bg-glow-3 {
+    position: absolute;
+    top: 50px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(5, 150, 105, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Subtle grid pattern */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 56px 64px;
+    gap: 48px;
+  }
+
+  /* Left column */
+  .left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+  }
+
+  /* Brand */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand svg {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    color: #0f1a14;
+    letter-spacing: 0.01em;
+  }
+
+  /* Headline */
+  .headline {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 46px;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: #0f1a14;
+    max-width: 480px;
+  }
+  .headline .accent {
+    color: #059669;
+  }
+
+  /* Subheadline */
+  .subheadline {
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: #4b5e54;
+    max-width: 440px;
+    font-weight: 400;
+  }
+
+  /* Badges */
+  .badges {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .badge-green {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1.5px solid #a7f3d0;
+  }
+  .badge-dark {
+    background: #f0fdf4;
+    color: #065f46;
+    border: 1.5px solid #bbf7d0;
+  }
+
+  /* Right column — app mockup */
+  .right {
+    flex-shrink: 0;
+    width: 540px;
+    position: relative;
+  }
+
+  .mockup-wrapper {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 20px 50px -12px rgba(16, 185, 129, 0.15),
+      0 0 0 1px rgba(16, 185, 129, 0.08);
+    background: #fff;
+  }
+
+  /* Browser chrome */
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #f87171; }
+  .dot-yellow { background: #fbbf24; }
+  .dot-green { background: #34d399; }
+  .address-bar {
+    flex: 1;
+    margin: 0 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-size: 11.5px;
+    color: #9ca3af;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .mockup-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Decorative floating elements */
+  .float-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(16, 185, 129, 0.15);
+  }
+  .float-ring-1 {
+    width: 80px;
+    height: 80px;
+    top: -20px;
+    right: -20px;
+  }
+  .float-ring-2 {
+    width: 50px;
+    height: 50px;
+    bottom: -10px;
+    left: -15px;
+  }
+
+  /* Bottom accent line */
+  .bottom-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #059669, #047857);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow-1"></div>
+<div class="bg-glow-2"></div>
+<div class="bg-glow-3"></div>
+<div class="bg-grid"></div>
+
+<div class="container">
+  <!-- Left -->
+  <div class="left">
+    <div class="brand">
+      <svg viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-43.228515,-90.531615)">
+          <path fill="#026134" d="m 66.086467,131.826 c 0,0 2.848914,-9.96048 10.910197,-12.32449 8.34503,-2.44721 16.16325,3.23265 16.16325,3.23265 0,0 3.511247,-10.00101 16.870386,-10.001 13.23368,0 18.28466,11.21325 18.28466,11.21325 0,0 10.51852,-3.00263 16.26427,0.80817 7.6071,5.04535 5.75815,15.96122 5.75815,15.96122 0,0 7.27446,3.12234 10.39333,8.04276 4.06757,6.417 3.83457,14.87936 1.16999,20.12671 -2.71868,5.3537 -7.86704,8.79225 -12.68972,9.73262 -4.82261,0.94037 -10.47144,-1.56941 -10.47144,-1.56941 0,0 -2.80485,8.23667 -14.78363,11.62242 -14.05116,3.97149 -24.128647,-6.33469 -24.128647,-6.33469 l -30.342858,16.90104 c 0,0 3.946278,-3.7964 7.105028,-9.803 3.127841,-5.94779 3.508231,-8.58271 3.508231,-8.58271 0,0 -13.214928,4.52223 -18.127641,-3.69907 -3.821966,-6.39596 -2.026353,-14.7938 -2.026353,-14.7938 0,0 -11.81009,-5.2408 -10.597858,-16.95916 C 50.558069,133.68114 66.086476,131.826 66.086476,131.826 Z"/>
+          <path fill="#00bf63" d="m 70.264586,129.48356 c 0,0 2.848918,-9.96048 10.910189,-12.32449 8.345025,-2.44722 16.163255,3.23265 16.163255,3.23265 0,0 3.51122,-10.00101 16.87039,-10.00101 13.23369,0 18.28468,11.21326 18.28468,11.21326 0,0 10.51859,-3.00263 16.26432,0.80817 7.60707,5.04535 5.75815,15.96122 5.75815,15.96122 0,0 7.27434,3.12234 10.39323,8.04276 4.06755,6.417 3.83461,14.87936 1.16998,20.12671 -2.71863,5.3537 -7.86705,8.79225 -12.68968,9.73262 -4.82265,0.94037 -10.47149,-1.56941 -10.47149,-1.56941 0,0 -2.80479,8.23667 -14.7836,11.62242 -14.0511,3.97149 -24.12865,-6.33469 -24.12865,-6.33469 l -30.342839,16.90104 c 0,0 3.946281,-3.7964 7.105037,-9.803 3.127831,-5.94779 3.508231,-8.58271 3.508231,-8.58271 0,0 -13.214933,4.52223 -18.127647,-3.69907 -3.821968,-6.39596 -2.026348,-14.7938 -2.026348,-14.7938 0,0 -11.810101,-5.2408 -10.597859,-16.95916 1.212247,-11.71837 16.74066,-13.57351 16.74066,-13.57351 z"/>
+          <ellipse fill="#049f54" stroke="#000000" stroke-width="1.426" cx="142.581" cy="152.149" rx="10" ry="10"/>
+          <ellipse fill="#7ed957" stroke="#000000" stroke-width="1.426" cx="112.581" cy="152.149" rx="10" ry="10"/>
+          <ellipse fill="#c1ff72" stroke="#000000" stroke-width="1.426" cx="82.581" cy="152.149" rx="10" ry="10"/>
+        </g>
+      </svg>
+      <span class="brand-name">Open Helpdesk</span>
+    </div>
+
+    <h1 class="headline">
+      Manage all your<br>clients' support<br><span class="accent">in one place</span>
+    </h1>
+
+    <div class="badges">
+      <span class="badge badge-green">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        Open Source
+      </span>
+      <span class="badge badge-dark">AGPL-3.0</span>
+      <span class="badge badge-green">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Free Forever
+      </span>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="right">
+    <div class="float-ring float-ring-1"></div>
+    <div class="float-ring float-ring-2"></div>
+    <div class="mockup-wrapper">
+      <div class="browser-bar">
+        <div class="dots">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="address-bar">app.openhelpdesk.dev</div>
+      </div>
+      <img class="mockup-img" src="screenshots/showcase-light.png" alt="Open Helpdesk">
+    </div>
+  </div>
+</div>
+
+<div class="bottom-accent"></div>
+
+</body>
+</html>
