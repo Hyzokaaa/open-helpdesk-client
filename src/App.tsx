@@ -41,6 +41,7 @@ import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
 import UserStatsPage from "@modules/report/pages/UserStatsPage";
 import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
+import SystemEmailPage from "@modules/settings/pages/SystemEmailPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
 import PortalKbPage from "@modules/portal/pages/PortalKbPage";
@@ -105,6 +106,7 @@ function AppRoutes() {
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+            <Route path="settings/email" element={<SystemEmailPage />} />
           </Route>
         </Route>
       </Route>

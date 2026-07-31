@@ -1108,6 +1108,19 @@ const translations = {
   "webhooks.deleteMessage": { en: "This webhook will stop receiving events. This action cannot be undone.", es: "Este webhook dejara de recibir eventos. Esta accion no se puede deshacer." },
   "webhooks.deleted": { en: "Webhook deleted", es: "Webhook eliminado" },
   "webhooks.deleteError": { en: "Failed to delete webhook", es: "Error al eliminar webhook" },
+
+  // System Email
+  "systemEmail.title": { en: "System Email", es: "Correo del Sistema" },
+  "systemEmail.description": { en: "Configure the system SMTP server for sending emails (password reset, verification, notifications).", es: "Configura el servidor SMTP del sistema para enviar correos (recuperación de contraseña, verificación, notificaciones)." },
+  "systemEmail.envActive": { en: "Using SMTP from environment variables.", es: "Usando SMTP de las variables de entorno." },
+  "systemEmail.noEmailConfigured": { en: "No email configured. Emails will not be sent until you configure SMTP here or via environment variables.", es: "No hay correo configurado. Los correos no se enviarán hasta que configures SMTP aquí o mediante variables de entorno." },
+  "systemEmail.saved": { en: "System email settings saved", es: "Configuración de correo del sistema guardada" },
+  "systemEmail.deleted": { en: "System email settings removed", es: "Configuración de correo del sistema eliminada" },
+  "systemEmail.saveError": { en: "Failed to save email settings", es: "Error al guardar la configuración de correo" },
+  "systemEmail.deleteError": { en: "Failed to remove email settings", es: "Error al eliminar la configuración de correo" },
+  "systemEmail.testSuccess": { en: "SMTP connection successful", es: "Conexión SMTP exitosa" },
+  "systemEmail.testFailed": { en: "SMTP connection failed", es: "Conexión SMTP fallida" },
+  "sidebar.adminEmail": { en: "System Email", es: "Correo del Sistema" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

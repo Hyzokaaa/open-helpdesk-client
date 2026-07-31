@@ -29,8 +29,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const [wsSwitcherOpen, setWsSwitcherOpen] = useState(false);
   const [lastSlug, setLastSlug] = useState<string | null>(null);
 
-  const isSettingsActive = location.pathname.startsWith("/dashboard/settings");
-  const isAdminActive = location.pathname.startsWith("/dashboard/admin");
+  const isSettingsActive = location.pathname.startsWith("/dashboard/settings") && !location.pathname.startsWith("/dashboard/settings/email");
+  const isAdminActive = location.pathname.startsWith("/dashboard/admin") || location.pathname.startsWith("/dashboard/settings/email");
   const isWorkspacesActive = location.pathname.startsWith("/dashboard/workspaces");
 
   const [wsOpen, setWsOpen] = useState(!!workspaceSlug);
@@ -100,6 +100,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const adminNav = [
     { label: t("sidebar.adminUsers"), path: "/dashboard/admin/users" },
     { label: t("sidebar.adminWorkspaces"), path: "/dashboard/admin/workspaces" },
+    { label: t("sidebar.adminEmail"), path: "/dashboard/settings/email" },
     ...extraAdminNav.map((item) => ({ ...item, label: t(item.label as any) })),
   ];
 
