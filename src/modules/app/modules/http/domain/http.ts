@@ -26,6 +26,8 @@ http.interceptors.request.use(
       config.headers.authorization = `Bearer ${token}`;
     }
 
+    config.headers['X-Frontend-URL'] = window.location.origin;
+
     return config;
   },
   (error) => Promise.reject(error),
