@@ -263,8 +263,8 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
           )}
         </div>
 
-        {folders.length > 0 && (
-          <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
+          {folders.length > 0 && (
             <FormInput label={t("mailbox.folder")}>
               <Select
                 options={folders}
@@ -273,11 +273,11 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
                 onChange={setImapFolder}
               />
             </FormInput>
-            <FormInput label={t("mailbox.pollInterval")}>
-              <Input value={pollInterval} onChange={setPollInterval} />
-            </FormInput>
-          </div>
-        )}
+          )}
+          <FormInput label={t("mailbox.pollInterval")}>
+            <Input value={pollInterval} onChange={setPollInterval} />
+          </FormInput>
+        </div>
 
         <div className="mt-4">
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
