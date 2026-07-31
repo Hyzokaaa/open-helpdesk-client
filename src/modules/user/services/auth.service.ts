@@ -7,6 +7,7 @@ interface SignupRequest {
   firstName: string;
   lastName: string;
   workspaceName?: string;
+  invitationToken?: string;
 }
 
 interface SignupResponse {

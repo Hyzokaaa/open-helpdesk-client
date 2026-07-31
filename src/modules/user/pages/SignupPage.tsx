@@ -21,7 +21,9 @@ export default function SignupPage() {
   const { t } = useTranslation();
 
   const inviteEmail = searchParams.get("email") || "";
-  const isInviteFlow = !!inviteEmail;
+  const redirect = searchParams.get("redirect") || "";
+  const invitationToken = redirect.startsWith("/invite/") ? redirect.replace("/invite/", "") : "";
+  const isInviteFlow = !!inviteEmail && !!invitationToken;
   const planParam = searchParams.get("plan") || "";
 
   const [firstName, setFirstName] = useState("");
@@ -52,15 +54,14 @@ export default function SignupPage() {
     try {
       const res = await signup({
         email, password, firstName, lastName,
-        ...(isInviteFlow ? {} : { workspaceName }),
+        ...(isInviteFlow ? { invitationToken } : { workspaceName }),
       });
       LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.accessToken);
 
       const profile = await getProfile();
       setUser(profile);
 
-      const redirect = searchParams.get("redirect");
-      navigate(redirect ? `${redirect}?from=signup` : "/dashboard");
+      navigate("/dashboard");
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || t("signup.failed"));
