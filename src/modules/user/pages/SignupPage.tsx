@@ -11,6 +11,7 @@ import {
 } from "@modules/app/domain/core/local-storage";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 import OAuthButtons from "../components/OAuthButtons";
 
@@ -19,6 +20,7 @@ export default function SignupPage() {
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
+  const { saasMode } = useConfig();
 
   const inviteEmail = searchParams.get("email") || "";
   const redirect = searchParams.get("redirect") || "";
@@ -40,10 +42,14 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!isInviteFlow) {
-      const onboardingUrl = planParam ? `/onboarding?plan=${planParam}` : "/onboarding";
-      navigate(onboardingUrl, { replace: true });
+      if (saasMode) {
+        const onboardingUrl = planParam ? `/onboarding?plan=${planParam}` : "/onboarding";
+        navigate(onboardingUrl, { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
     }
-  }, [isInviteFlow, planParam, navigate]);
+  }, [isInviteFlow, saasMode, planParam, navigate]);
 
   if (!isInviteFlow) return null;
 
@@ -79,11 +85,11 @@ export default function SignupPage() {
           </h1>
           <p className="text-sm text-muted mb-6">{t("signup.subtitle")}</p>
 
-          <OAuthButtons providers={providers} onSuccess={async () => {
+          {!isInviteFlow && <OAuthButtons providers={providers} onSuccess={async () => {
             const profile = await getProfile();
             setUser(profile);
             navigate("/onboarding?step=3", { replace: true });
-          }} />
+          }} />}
 
           <form onSubmit={handleSubmit}>
             <div className="flex gap-3">
