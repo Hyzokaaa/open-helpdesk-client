@@ -13,6 +13,7 @@ export interface MailboxDto {
   imapFolder?: string | null;
   pollInterval?: number | null;
   lastSyncAt?: string | null;
+  lastSyncDuration?: number | null;
   lastError?: string | null;
 }
 
@@ -66,8 +67,38 @@ export interface TestConnectionResult {
 
 export async function testMailboxConnection(
   slug: string,
-  data: { imapHost: string; imapPort: number; imapUser: string; imapPass: string; imapTls?: boolean },
+  data: { imapHost: string; imapPort: number; imapUser: string; imapPass: string; imapTls?: boolean; mailboxId?: string },
 ): Promise<TestConnectionResult> {
   const res = await http.post(`/workspaces/${slug}/mailboxes/test-connection`, data);
   return res.data;
+}
+
+export async function importMailboxEmails(
+  slug: string,
+  id: string,
+  since?: string | null,
+): Promise<{ processed: number; total: number }> {
+  const res = await http.post<{ processed: number; total: number }>(
+    `/workspaces/${slug}/mailboxes/${id}/import`,
+    { since: since || undefined },
+  );
+  return res.data;
+}
+
+export async function pollMailboxNow(
+  slug: string,
+  id: string,
+): Promise<{ processed: number; total: number }> {
+  const res = await http.post<{ processed: number; total: number }>(
+    `/workspaces/${slug}/mailboxes/${id}/poll-now`,
+  );
+  return res.data;
+}
+
+export async function pauseMailbox(slug: string, id: string): Promise<void> {
+  await http.post(`/workspaces/${slug}/mailboxes/${id}/pause`);
+}
+
+export async function resumeMailbox(slug: string, id: string): Promise<void> {
+  await http.post(`/workspaces/${slug}/mailboxes/${id}/resume`);
 }

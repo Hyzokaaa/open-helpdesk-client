@@ -17,24 +17,38 @@ import {
   updateMailbox,
   deleteMailbox,
   testMailboxConnection,
+  importMailboxEmails,
+  pollMailboxNow,
+  pauseMailbox,
+  resumeMailbox,
 } from "../services/mailbox.service";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
+  if (!m.isActive) return "bg-gray-400";
   if (m.lastError) return "bg-red-500";
   if (m.lastSyncAt) return "bg-green-500";
-  return "bg-gray-400";
+  return "bg-yellow-500";
 }
 
-function formatTimeAgo(dateStr: string, t: (key: any) => string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t("mailbox.justNow");
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `${days}d`;
+function NextPollCountdown({ lastSyncAt, pollInterval, lastSyncDuration, t }: { lastSyncAt: string; pollInterval: number; lastSyncDuration?: number | null; t: (key: any) => string }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [lastSyncAt]);
+
+  const lastSync = new Date(lastSyncAt).getTime();
+  const elapsed = Math.floor((now - lastSync) / 1000);
+  const nextPoll = lastSync + pollInterval * 1000;
+  const remaining = Math.max(0, Math.ceil((nextPoll - now) / 1000));
+  const durationStr = lastSyncDuration != null ? `${(lastSyncDuration / 1000).toFixed(1)}s` : null;
+
+  const lastStr = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m`;
+
+  if (remaining <= 0) return <span>{t("mailbox.pollingNow")}</span>;
+  return <span>{t("mailbox.lastPoll")} {lastStr} ago{durationStr ? ` (${t("mailbox.took")} ${durationStr})` : ""} · {t("mailbox.nextIn")} {remaining}s</span>;
 }
 
 interface Props {
@@ -51,6 +65,10 @@ export default function MailboxSettings({ slug }: Props) {
 
   useEffect(() => {
     listMailboxes(slug).then(setMailboxes).catch(() => {});
+    const refresh = setInterval(() => {
+      listMailboxes(slug).then(setMailboxes).catch(() => {});
+    }, 5000);
+    return () => clearInterval(refresh);
   }, [slug]);
 
   const handleSaved = async () => {
@@ -93,11 +111,13 @@ export default function MailboxSettings({ slug }: Props) {
                   <p className="text-exs text-muted">
                     {m.type === "webhook"
                       ? t("mailbox.typeWebhook")
-                      : m.lastError
-                        ? m.lastError
-                        : m.lastSyncAt
-                          ? `IMAP · ${t("mailbox.lastSync")} ${formatTimeAgo(m.lastSyncAt, t)}`
-                          : `IMAP · ${m.imapUser}@${m.imapHost}`}
+                      : !m.isActive
+                        ? `IMAP · ${t("mailbox.paused")}`
+                        : m.lastError
+                          ? m.lastError
+                          : m.isActive && m.lastSyncAt
+                            ? <span>IMAP · <NextPollCountdown lastSyncAt={m.lastSyncAt} pollInterval={m.pollInterval ?? 30} lastSyncDuration={m.lastSyncDuration} t={t} /></span>
+                            : `IMAP · ${t("mailbox.waitingFirstPoll")}`}
                   </p>
                 </div>
               </div>
@@ -105,6 +125,50 @@ export default function MailboxSettings({ slug }: Props) {
                 <ActionMenu
                   items={[
                     { label: t("common.edit"), onClick: () => { setEditMailbox(m); setShowSheet(true); } },
+                    {
+                      label: t("mailbox.pollNow"),
+                      onClick: async () => {
+                        try {
+                          toast.info(t("mailbox.pollingNow"));
+                          const result = await pollMailboxNow(slug, m.id);
+                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                          const updated = await listMailboxes(slug);
+                          setMailboxes(updated);
+                        } catch {
+                          toast.error(t("mailbox.importError"));
+                        }
+                      },
+                    },
+                    {
+                      label: m.isActive ? t("mailbox.pause") : t("mailbox.resume"),
+                      onClick: async () => {
+                        try {
+                          if (m.isActive) {
+                            await pauseMailbox(slug, m.id);
+                            setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: false } : mb));
+                          } else {
+                            await resumeMailbox(slug, m.id);
+                            setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: true, lastSyncAt: null } : mb));
+                          }
+                          const updated = await listMailboxes(slug);
+                          setMailboxes(updated);
+                        } catch {
+                          toast.error(t("mailbox.createError"));
+                        }
+                      },
+                    },
+                    {
+                      label: t("mailbox.import"),
+                      onClick: async () => {
+                        try {
+                          toast.info(t("mailbox.importStarted"));
+                          const result = await importMailboxEmails(slug, m.id);
+                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                        } catch {
+                          toast.error(t("mailbox.importError"));
+                        }
+                      },
+                    },
                     { label: t("common.delete"), onClick: () => setDeleteId(m.id), danger: true },
                   ]}
                 />
@@ -163,6 +227,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
         imapUser: imapUser.trim(),
         imapPass: imapPass || "__keep__",
         imapTls: true,
+        ...(isEdit && mailbox ? { mailboxId: mailbox.id } : {}),
       });
       setTestResult({ success: result.success, error: result.error });
       if (result.success && result.folders.length > 0) {
@@ -223,7 +288,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
       <h2 className="text-lg font-body-bold text-heading mb-1">{isEdit ? t("mailbox.editImap") : t("mailbox.connectMailbox")}</h2>
       <p className="text-sm text-muted mb-6">{t("mailbox.addImapDesc")}</p>
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={handleSave} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}>
         <FormInput label={t("mailbox.address")} required>
           <Input placeholder="support@example.com" value={address} onChange={setAddress} />
         </FormInput>
