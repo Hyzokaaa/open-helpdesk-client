@@ -11,6 +11,7 @@ import {
   InvitationItem,
   listInvitations,
   cancelInvitation,
+  getInvitationLink,
 } from "../services/invitation.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -99,9 +100,14 @@ export default function WorkspaceInvitationsPage() {
                     <ActionMenu items={[
                       {
                         label: t("invitations.copyLink"),
-                        onClick: () => {
-                          navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`);
-                          toast.success(t("invitations.linkCopied"));
+                        onClick: async () => {
+                          try {
+                            const link = await getInvitationLink(workspaceSlug!, inv.id);
+                            await navigator.clipboard.writeText(link);
+                            toast.success(t("invitations.linkCopied"));
+                          } catch {
+                            toast.error(t("invitations.sendError"));
+                          }
                         },
                       },
                       {

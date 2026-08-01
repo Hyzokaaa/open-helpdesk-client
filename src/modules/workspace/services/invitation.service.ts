@@ -5,7 +5,6 @@ export interface InvitationItem {
   email: string;
   role: string;
   status: string;
-  token: string;
   expiresAt: string;
   createdAt: string;
 }
@@ -53,6 +52,16 @@ export async function listInvitations(slug: string): Promise<InvitationItem[]> {
     `/workspaces/${slug}/invitations`,
   );
   return res.data;
+}
+
+export async function getInvitationLink(
+  slug: string,
+  id: string,
+): Promise<string> {
+  const res = await http.get<{ link: string }>(
+    `/workspaces/${slug}/invitations/${id}/link`,
+  );
+  return res.data.link;
 }
 
 export async function cancelInvitation(
