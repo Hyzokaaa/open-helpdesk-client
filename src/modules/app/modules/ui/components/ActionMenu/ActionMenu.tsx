@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
 
@@ -18,25 +18,46 @@ export default function ActionMenu({ items }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
-        menuRef.current && !menuRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.right });
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        buttonRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) return;
+      setOpen(false);
+    };
+
+    const handleScroll = (e: Event) => {
+      if (menuRef.current?.contains(e.target as Node)) return;
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        setOpen(false);
+        return;
+      }
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [open, updatePosition]);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 4, left: rect.right });
-    }
+    if (!open) updatePosition();
     setOpen(!open);
   };
 
