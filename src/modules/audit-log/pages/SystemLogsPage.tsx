@@ -4,6 +4,7 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { inputClass } from "@modules/app/modules/ui/shared/domain/input-class";
 import {
   AuditLogItem,
@@ -114,6 +115,7 @@ const LEVEL_COLORS: Record<string, string> = {
 
 export default function SystemLogsPage() {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
 
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -220,7 +222,7 @@ export default function SystemLogsPage() {
                   <tr key={item.id} className="border-b border-border-row">
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted whitespace-nowrap">
-                        {new Date(item.createdAt).toLocaleString()}
+                        {formatDate(item.createdAt)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -312,7 +314,7 @@ export default function SystemLogsPage() {
               <button onClick={() => setSelected(null)} className="text-muted hover:text-body cursor-pointer text-lg">✕</button>
             </div>
             <div className="px-5 py-4 space-y-4">
-              <DetailRow label="Date" value={new Date(selected.createdAt).toLocaleString()} />
+              <DetailRow label="Date" value={formatDate(selected.createdAt)} />
               <DetailRow label="Action" value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
               <DetailRow label="Category" value={selected.category} />
               <DetailRow label="Level" value={selected.level} />

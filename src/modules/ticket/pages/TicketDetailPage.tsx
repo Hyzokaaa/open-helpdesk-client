@@ -72,6 +72,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 
 function formatResponseTime(createdAt: string, firstResponseAt: string): string {
   const ms = new Date(firstResponseAt).getTime() - new Date(createdAt).getTime();
@@ -198,6 +199,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { t, tEnum } = useTranslation();
   const { isPlanLimitError, handlePlanLimitError } = useExtensions();
   const { aiEnabled } = useConfig();
+  const formatDate = useFormatDate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
@@ -875,7 +877,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     </p>
                     {c.createdAt && (
                       <p className="text-exs text-subtle">
-                        {new Date(c.createdAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                        {formatDate(c.createdAt)}
                       </p>
                     )}
                   </div>
@@ -1241,7 +1243,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <div className="flex justify-between">
                   <span className="text-muted">{t("ticketDetail.resolved")}</span>
                   <span className="text-body font-body-medium">
-                    {new Date(ticket.resolvedAt).toLocaleDateString()}
+                    {formatDate(ticket.resolvedAt)}
                   </span>
                 </div>
               )}

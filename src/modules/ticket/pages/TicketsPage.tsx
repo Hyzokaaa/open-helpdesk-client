@@ -46,6 +46,7 @@ import useTicketSelection from "../hooks/useTicketSelection";
 import useBulkOperations from "../hooks/useBulkOperations";
 import TicketFilterBar from "../components/TicketFilterBar";
 import TicketBulkActions from "../components/TicketBulkActions";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 
 interface Column {
   key: string;
@@ -171,10 +172,7 @@ export default function TicketsPage() {
   const tickets = result?.items ?? [];
   const tagMap = new Map(tags.map((t) => [t.id, t]));
 
-  const formatDate = (date: string | null) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  };
+  const formatDate = useFormatDate();
 
   return (
     <div className="w-full flex flex-col h-full">
@@ -343,7 +341,7 @@ export default function TicketsPage() {
                             })}
                           </div>
                         )}
-                        {col.key === "createdAt" && <span className="text-xs text-muted">{formatDate(ticket.createdAt)}</span>}
+                        {col.key === "createdAt" && <span className="text-xs text-muted">{ticket.createdAt ? formatDate(ticket.createdAt) : "-"}</span>}
                       </td>
                     ))}
                     <td className="px-2 py-3 sticky right-0 bg-surface">

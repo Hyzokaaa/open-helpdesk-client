@@ -9,6 +9,7 @@ import { P } from "@modules/workspace/domain/permissions";
 import { listMembers, WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import {
   AuditLogItem,
   AuditLogFilters,
@@ -140,6 +141,7 @@ export default function WorkspaceAuditLogPage() {
   const { can } = usePermissions(workspaceSlug);
   const { t } = useTranslation();
   const { PlanGate } = useExtensions();
+  const formatDate = useFormatDate();
 
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -282,7 +284,7 @@ export default function WorkspaceAuditLogPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">
-                        {new Date(item.createdAt).toLocaleString()}
+                        {formatDate(item.createdAt)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -344,7 +346,7 @@ export default function WorkspaceAuditLogPage() {
               <button onClick={() => setSelected(null)} className="text-muted hover:text-body cursor-pointer text-lg">✕</button>
             </div>
             <div className="px-5 py-4 space-y-4">
-              <DetailRow label="Date" value={new Date(selected.createdAt).toLocaleString()} />
+              <DetailRow label="Date" value={formatDate(selected.createdAt)} />
               <DetailRow label="Action" value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
               <DetailRow label="Category" value={selected.category} />
               <DetailRow label="Level" value={selected.level} />

@@ -6,7 +6,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useUser from "../hooks/useUser";
 import useTheme from "@modules/app/hooks/useTheme";
 import { Theme } from "@modules/app/context/theme-context";
-import { updateLanguage, updateTheme } from "../services/auth.service";
+import { updateLanguage, updateTheme, updateDateFormat } from "../services/auth.service";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -21,6 +21,12 @@ const THEMES = [
   { code: "light-border", labelKey: "settings.themeLightBorder" },
   { code: "dark", labelKey: "settings.themeDark" },
   { code: "dark-deep", labelKey: "settings.themeDarkDeep" },
+] as const;
+
+const DATE_FORMATS = [
+  { code: "DD/MM/YYYY", labelKey: "preferences.dateFormatDD" },
+  { code: "MM/DD/YYYY", labelKey: "preferences.dateFormatMM" },
+  { code: "YYYY-MM-DD", labelKey: "preferences.dateFormatISO" },
 ] as const;
 
 export default function PreferencesSection() {
@@ -66,6 +72,19 @@ export default function PreferencesSection() {
     }
   };
 
+  const handleDateFormatChange = async (option: { code: string; labelKey: string }) => {
+    setSaving(true);
+    try {
+      await updateDateFormat(option.code);
+      setUser({ ...user, dateFormat: option.code });
+      toast.success(t("settings.preferences"));
+    } catch {
+      toast.error("Failed to update date format");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-lg">
     <Card className="p-5">
@@ -89,6 +108,16 @@ export default function PreferencesSection() {
           label={(o) => t(o.labelKey)}
           value={(o) => o.code === user.theme}
           onChange={handleThemeChange}
+          disabled={saving}
+        />
+      </FormInput>
+
+      <FormInput label={t("preferences.dateFormat")}>
+        <Select
+          options={[...DATE_FORMATS]}
+          label={(o) => t(o.labelKey)}
+          value={(o) => o.code === user.dateFormat}
+          onChange={handleDateFormatChange}
           disabled={saving}
         />
       </FormInput>

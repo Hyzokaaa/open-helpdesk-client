@@ -40,6 +40,7 @@ interface ProfileResponse {
   isEmailVerified: boolean;
   language: string;
   theme: string;
+  dateFormat: string;
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<void> {
@@ -52,6 +53,10 @@ export async function updateLanguage(language: string): Promise<void> {
 
 export async function updateTheme(theme: string): Promise<void> {
   await http.patch("/users/me/theme", { theme });
+}
+
+export async function updateDateFormat(dateFormat: string): Promise<void> {
+  await http.patch("/users/me/date-format", { dateFormat });
 }
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
