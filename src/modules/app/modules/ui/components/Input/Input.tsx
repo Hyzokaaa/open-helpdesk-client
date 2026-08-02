@@ -12,6 +12,7 @@ interface Props {
   full?: boolean;
   disabled?: boolean;
   autoFocus?: boolean;
+  required?: boolean;
 }
 
 export default function Input({
@@ -24,6 +25,7 @@ export default function Input({
   full = true,
   disabled,
   autoFocus,
+  required,
 }: Props) {
   const CLASS = useMemo(
     () => inputClass({ size, full, disabled }),
@@ -42,6 +44,7 @@ export default function Input({
         name={name}
         placeholder={placeholder}
         disabled={disabled}
+        required={required}
         value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
       />

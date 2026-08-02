@@ -81,7 +81,7 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
             <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-border-card border-2 border-surface" />
             <div>
               <p className="text-xs text-body">
-                <span className="font-body-semibold">{getMemberName(item.userId)}</span>
+                <span className="font-body-semibold">{item.userId ? getMemberName(item.userId) : "System"}</span>
                 {" "}
                 <span className="text-muted">{describeAction(item, t as any, getMemberName)}</span>
               </p>

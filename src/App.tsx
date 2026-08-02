@@ -35,6 +35,7 @@ import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
+import SystemLogsPage from "@modules/audit-log/pages/SystemLogsPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
@@ -106,6 +107,7 @@ function AppRoutes() {
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
+            <Route path="admin/logs" element={<SystemLogsPage />} />
             <Route path="settings/email" element={<SystemEmailPage />} />
           </Route>
         </Route>
