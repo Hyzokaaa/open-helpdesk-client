@@ -563,7 +563,7 @@ const translations = {
   "preferences.dateFormatMM": { en: "MM/DD/YYYY (08/02/2026)", es: "MM/DD/AAAA (08/02/2026)" },
   "preferences.dateFormatISO": { en: "YYYY-MM-DD (2026-08-02)", es: "AAAA-MM-DD (2026-08-02)" },
   "preferences.timezone": { en: "Timezone", es: "Zona Horaria" },
-  "preferences.timezoneAuto": { en: "Auto (browser)", es: "Automático (navegador)" },
+  "preferences.timezoneAuto": { en: "Auto", es: "Automático" },
   "settings.firstName": { en: "First name", es: "Nombre" },
   "settings.lastName": { en: "Last name", es: "Apellido" },
   "settings.name": { en: "Name", es: "Nombre" },
