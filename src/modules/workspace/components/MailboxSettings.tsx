@@ -208,7 +208,17 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
   const [imapUser, setImapUser] = useState(mailbox?.imapUser ?? "");
   const [imapPass, setImapPass] = useState("");
   const [imapFolder, setImapFolder] = useState(mailbox?.imapFolder ?? "INBOX");
+  const [encryption, setEncryption] = useState(mailbox?.encryption ?? "tls");
   const [pollInterval, setPollInterval] = useState(String(mailbox?.pollInterval ?? "30"));
+
+  const [addressMode, setAddressMode] = useState<'address' | 'aliases' | 'all'>(
+    (mailbox?.addressMode as 'address' | 'aliases' | 'all') ?? 'address'
+  );
+  const [acceptedAddresses, setAcceptedAddresses] = useState<string[]>(
+    mailbox?.acceptedAddresses ?? []
+  );
+  const [autoReply, setAutoReply] = useState(mailbox?.autoReply ?? true);
+  const [newAddress, setNewAddress] = useState('');
 
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
@@ -227,7 +237,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
         imapPort: parseInt(imapPort) || 993,
         imapUser: imapUser.trim(),
         imapPass: imapPass || "__keep__",
-        imapTls: true,
+        encryption,
         ...(isEdit && mailbox ? { mailboxId: mailbox.id } : {}),
       });
       setTestResult({ success: result.success, error: result.error });
@@ -257,9 +267,12 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
           imapPort: parseInt(imapPort) || 993,
           imapUser: imapUser.trim(),
           ...(imapPass.trim() && { imapPass: imapPass }),
-          imapTls: true,
+          encryption,
           imapFolder: imapFolder.trim() || "INBOX",
           pollInterval: parseInt(pollInterval) || 30,
+          addressMode,
+          acceptedAddresses,
+          autoReply,
         });
       } else {
         await createMailbox(slug, {
@@ -268,9 +281,12 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
           imapPort: parseInt(imapPort) || 993,
           imapUser: imapUser.trim(),
           imapPass: imapPass,
-          imapTls: true,
+          encryption,
           imapFolder: imapFolder.trim() || "INBOX",
           pollInterval: parseInt(pollInterval) || 30,
+          addressMode,
+          acceptedAddresses,
+          autoReply,
         });
       }
       toast.success(isEdit ? t("mailbox.updated") : t("mailbox.created"));
@@ -318,6 +334,15 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
           </FormInput>
         </div>
 
+        <FormInput label={t("mailbox.encryption")}>
+          <Select
+            options={['tls', 'tls-insecure', 'none']}
+            label={(e) => t(`mailbox.encryption.${e}` as any)}
+            value={(e) => e === encryption}
+            onChange={setEncryption}
+          />
+        </FormInput>
+
         <div className="flex items-center gap-3 mb-4">
           <Button size="xs" type="button" color="light" onClick={handleTest} loading={testing} disabled={!canTest}>
             {t("mailbox.testConnection")}
@@ -344,6 +369,112 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
             <Input value={pollInterval} onChange={setPollInterval} />
           </FormInput>
         </div>
+
+        <div className="border-t border-border-card my-4" />
+
+        <p className="text-xs font-body-semibold text-heading mb-3">{t("mailbox.addressMode")}</p>
+
+        <div className="flex flex-col gap-2 mb-3">
+          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
+            <input
+              type="radio"
+              name="addressMode"
+              checked={addressMode === 'address'}
+              onChange={() => setAddressMode('address')}
+              className="accent-primary"
+            />
+            {t("mailbox.addressModeAddress")}
+          </label>
+          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAddressDesc")}</p>
+          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
+            <input
+              type="radio"
+              name="addressMode"
+              checked={addressMode === 'aliases'}
+              onChange={() => setAddressMode('aliases')}
+              className="accent-primary"
+            />
+            {t("mailbox.addressModeAliases")}
+          </label>
+          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAliasesDesc")}</p>
+          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
+            <input
+              type="radio"
+              name="addressMode"
+              checked={addressMode === 'all'}
+              onChange={() => setAddressMode('all')}
+              className="accent-primary"
+            />
+            {t("mailbox.addressModeAll")}
+          </label>
+          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAllDesc")}</p>
+        </div>
+
+        {addressMode === 'aliases' && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary">
+                {address || '...'}
+              </span>
+              {acceptedAddresses.map((addr) => (
+                <span key={addr} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-hover border border-border-card text-xs text-body">
+                  {addr}
+                  <button
+                    type="button"
+                    className="text-muted hover:text-red-500 ml-0.5 cursor-pointer"
+                    onClick={() => setAcceptedAddresses((prev) => prev.filter((a) => a !== addr))}
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1" onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const trimmed = newAddress.trim().toLowerCase();
+                  if (trimmed && trimmed.includes('@') && !acceptedAddresses.includes(trimmed) && trimmed !== address.trim().toLowerCase()) {
+                    setAcceptedAddresses((prev) => [...prev, trimmed]);
+                    setNewAddress('');
+                  }
+                }
+              }}>
+                <Input
+                  placeholder="alias@example.com"
+                  value={newAddress}
+                  onChange={setNewAddress}
+                />
+              </div>
+              <Button
+                size="xs"
+                type="button"
+                color="light"
+                onClick={() => {
+                  const trimmed = newAddress.trim().toLowerCase();
+                  if (trimmed && trimmed.includes('@') && !acceptedAddresses.includes(trimmed) && trimmed !== address.trim().toLowerCase()) {
+                    setAcceptedAddresses((prev) => [...prev, trimmed]);
+                    setNewAddress('');
+                  }
+                }}
+              >
+                {t("mailbox.addAddress")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-border-card my-4" />
+        <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoReply}
+            onChange={(e) => setAutoReply(e.target.checked)}
+            className="w-4 h-4 accent-primary"
+          />
+          {t("mailbox.autoReply")}
+        </label>
+        <p className="text-exs text-muted mt-1 mb-4">{t("mailbox.autoReplyDesc")}</p>
 
         <div className="mt-4">
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
