@@ -317,7 +317,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <FormInput label={t("mailbox.imapHost")} required>
-              <Input placeholder="imap.gmail.com" value={imapHost} onChange={setImapHost} />
+              <Input placeholder="imap.example.com" value={imapHost} onChange={setImapHost} />
             </FormInput>
           </div>
           <FormInput label={t("mailbox.imapPort")}>
