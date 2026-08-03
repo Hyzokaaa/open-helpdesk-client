@@ -14,6 +14,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { inputClass } from "@modules/app/modules/ui/shared/domain/input-class";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import {
   PaddleDiscount,
   listDiscounts,
@@ -26,6 +27,7 @@ const TYPES = ["percentage", "flat"] as const;
 export default function AdminDiscountsPage() {
   const { user } = useUser();
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
 
   const [discounts, setDiscounts] = useState<PaddleDiscount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,11 +164,6 @@ export default function AdminDiscountsPage() {
   const formatUsage = (d: PaddleDiscount) => {
     if (d.usage_limit) return `${d.times_used} / ${d.usage_limit}`;
     return `${d.times_used} / ∞`;
-  };
-
-  const formatDate = (iso: string | null) => {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   };
 
   const numericInputClass = (field: string) =>
@@ -339,7 +336,7 @@ export default function AdminDiscountsPage() {
                       size="xs"
                     />
                   </td>
-                  <td className="px-4 py-3 text-muted">{formatDate(d.expires_at)}</td>
+                  <td className="px-4 py-3 text-muted">{d.expires_at ? formatDate(d.expires_at) : "—"}</td>
                   <td className="px-4 py-3">
                     <ActionMenu
                       items={[

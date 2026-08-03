@@ -10,11 +10,13 @@ import {
   markAllAsRead,
 } from "../services/notification.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import NotificationIcon from "./NotificationIcon";
 
 export default function NotificationBell() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -86,19 +88,6 @@ export default function NotificationBell() {
     await markAllAsRead();
     setUnreadCount(0);
     setNotifications((prev) => prev.map((x) => ({ ...x, isRead: true })));
-  };
-
-  const timeAgo = (date: string | undefined) => {
-    if (!date) return "";
-    const ms = Date.now() - new Date(date).getTime();
-    if (isNaN(ms) || ms < 0) return "";
-    if (ms < 60000) return "now";
-    const mins = Math.floor(ms / 60000);
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
   };
 
   return (
@@ -178,7 +167,7 @@ export default function NotificationBell() {
                       {n.title}
                     </p>
                     <p className="text-exs text-subtle mt-0.5">
-                      {timeAgo(n.createdAt)}
+                      {n.createdAt ? formatDate(n.createdAt) : ""}
                     </p>
                   </div>
                   {!n.isRead && (

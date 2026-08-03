@@ -4,6 +4,7 @@ import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 
 const PRIORITY_BORDER: Record<string, string> = {
   low: "border-l-gray-300",
@@ -23,6 +24,7 @@ interface Props {
 
 export default function TicketCard({ ticket, tags, members, onClick, tEnum, disabled }: Props) {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const {
     attributes,
     listeners,
@@ -46,8 +48,8 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum, disa
     .map((id) => tags.find((t) => t.id === id))
     .filter(Boolean) as Tag[];
 
-  const timeAgo = ticket.createdAt
-    ? formatTimeAgo(new Date(ticket.createdAt))
+  const dateLabel = ticket.createdAt
+    ? formatDate(ticket.createdAt)
     : "";
 
   const ticketId = ticket.ticketNumber ? `#${ticket.ticketNumber}` : "";
@@ -104,19 +106,8 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum, disa
         {ticketTags.length > 2 && (
           <span className="text-[10px] text-muted">+{ticketTags.length - 2}</span>
         )}
-        <span className="text-[10px] text-muted/60 ml-auto">{timeAgo}</span>
+        <span className="text-[10px] text-muted/60 ml-auto">{dateLabel}</span>
       </div>
     </div>
   );
-}
-
-function formatTimeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `${days}d`;
 }

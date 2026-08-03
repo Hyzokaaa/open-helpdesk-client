@@ -9,11 +9,13 @@ import {
   markAllAsRead,
 } from "../services/notification.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import NotificationIcon from "../components/NotificationIcon";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [filter, setFilter] = useState<"all" | "unread">("all");
@@ -45,19 +47,6 @@ export default function NotificationsPage() {
     await markAllAsRead();
     setUnreadCount(0);
     setNotifications((prev) => prev.map((x) => ({ ...x, isRead: true })));
-  };
-
-  const timeAgo = (date: string | undefined) => {
-    if (!date) return "";
-    const ms = Date.now() - new Date(date).getTime();
-    if (isNaN(ms) || ms < 0) return "";
-    if (ms < 60000) return "now";
-    const mins = Math.floor(ms / 60000);
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
   };
 
   return (
@@ -127,7 +116,7 @@ export default function NotificationsPage() {
                     {n.title}
                   </p>
                   <p className="text-exs text-subtle mt-1">
-                    {timeAgo(n.createdAt)}
+                    {n.createdAt ? formatDate(n.createdAt) : ""}
                   </p>
                 </div>
                 {!n.isRead && (
