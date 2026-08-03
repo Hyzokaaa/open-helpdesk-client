@@ -1,13 +1,23 @@
 export type DateFormatOption = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
-export function formatDate(date: string | Date, format: DateFormatOption = 'DD/MM/YYYY'): string {
+export function formatDate(date: string | Date, format: DateFormatOption = 'DD/MM/YYYY', timezone?: string): string {
+  const tz = timezone && timezone !== 'auto' ? timezone : undefined;
   const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(d);
+
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+  const day = get('day');
+  const month = get('month');
+  const year = get('year');
+  const hours = get('hour');
+  const minutes = get('minute');
+  const seconds = get('second');
   const time = `${hours}:${minutes}:${seconds}`;
 
   switch (format) {

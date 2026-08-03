@@ -10,6 +10,7 @@ import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import {
   MailboxDto,
   listMailboxes,
@@ -33,6 +34,7 @@ function mailboxStatusColor(m: MailboxDto): string {
 
 function NextPollCountdown({ lastSyncAt, pollInterval, lastSyncDuration, t }: { lastSyncAt: string; pollInterval: number; lastSyncDuration?: number | null; t: (key: any) => string }) {
   const [now, setNow] = useState(Date.now());
+  const fmt = useFormatDate();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -40,15 +42,14 @@ function NextPollCountdown({ lastSyncAt, pollInterval, lastSyncDuration, t }: { 
   }, [lastSyncAt]);
 
   const lastSync = new Date(lastSyncAt).getTime();
-  const elapsed = Math.floor((now - lastSync) / 1000);
   const nextPoll = lastSync + pollInterval * 1000;
   const remaining = Math.max(0, Math.ceil((nextPoll - now) / 1000));
   const durationStr = lastSyncDuration != null ? `${(lastSyncDuration / 1000).toFixed(1)}s` : null;
 
-  const lastStr = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m`;
+  const lastStr = fmt(lastSyncAt);
 
   if (remaining <= 0) return <span>{t("mailbox.pollingNow")}</span>;
-  return <span>{t("mailbox.lastPoll")} {lastStr} ago{durationStr ? ` (${t("mailbox.took")} ${durationStr})` : ""} · {t("mailbox.nextIn")} {remaining}s</span>;
+  return <span>{t("mailbox.lastPoll")} {lastStr}{durationStr ? ` · ${t("mailbox.took")} ${durationStr}` : ""} · {t("mailbox.nextIn")} {remaining}s</span>;
 }
 
 interface Props {

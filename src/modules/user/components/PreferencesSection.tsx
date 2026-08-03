@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
@@ -6,9 +6,38 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useUser from "../hooks/useUser";
 import useTheme from "@modules/app/hooks/useTheme";
 import { Theme } from "@modules/app/context/theme-context";
-import { updateLanguage, updateTheme, updateDateFormat } from "../services/auth.service";
+import { updateLanguage, updateTheme, updateDateFormat, updateTimezone } from "../services/auth.service";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import useTranslation from "@modules/app/i18n/useTranslation";
+
+function getTimezoneOffset(tz: string): string {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'shortOffset' });
+    const parts = formatter.formatToParts(now);
+    const offset = parts.find(p => p.type === 'timeZoneName')?.value ?? '';
+    return offset.replace('GMT', 'UTC');
+  } catch { return ''; }
+}
+
+const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+interface TimezoneOption {
+  code: string;
+  label: string;
+}
+
+function buildTimezoneOptions(autoLabel: string): TimezoneOption[] {
+  const ianaTimezones = Intl.supportedValuesOf('timeZone');
+  const options: TimezoneOption[] = [
+    { code: 'auto', label: `${autoLabel} — ${browserTimezone}` },
+  ];
+  for (const tz of ianaTimezones) {
+    const offset = getTimezoneOffset(tz);
+    options.push({ code: tz, label: `${tz} (${offset})` });
+  }
+  return options;
+}
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -85,6 +114,21 @@ export default function PreferencesSection() {
     }
   };
 
+  const timezoneOptions = useMemo(() => buildTimezoneOptions(t("preferences.timezoneAuto")), [t]);
+
+  const handleTimezoneChange = async (option: TimezoneOption) => {
+    setSaving(true);
+    try {
+      await updateTimezone(option.code);
+      setUser({ ...user, timezone: option.code });
+      toast.success(t("settings.preferences"));
+    } catch {
+      toast.error("Failed to update timezone");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-lg">
     <Card className="p-5">
@@ -118,6 +162,16 @@ export default function PreferencesSection() {
           label={(o) => t(o.labelKey)}
           value={(o) => o.code === user.dateFormat}
           onChange={handleDateFormatChange}
+          disabled={saving}
+        />
+      </FormInput>
+
+      <FormInput label={t("preferences.timezone")}>
+        <Select
+          options={timezoneOptions}
+          label={(o) => o.label}
+          value={(o) => o.code === user.timezone}
+          onChange={handleTimezoneChange}
           disabled={saving}
         />
       </FormInput>

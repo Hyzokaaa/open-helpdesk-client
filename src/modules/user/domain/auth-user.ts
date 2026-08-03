@@ -9,4 +9,5 @@ export interface AuthUser {
   language: string;
   theme: string;
   dateFormat: string;
+  timezone: string;
 }
