@@ -55,6 +55,14 @@ export async function deleteSystemMailbox(): Promise<void> {
   await http.delete("/admin/platform-mailbox");
 }
 
+export async function pauseSystemMailbox(): Promise<void> {
+  await http.post("/admin/platform-mailbox/pause");
+}
+
+export async function resumeSystemMailbox(): Promise<void> {
+  await http.post("/admin/platform-mailbox/resume");
+}
+
 export async function testSystemMailboxConnection(data: {
   imapHost: string;
   imapPort: number;

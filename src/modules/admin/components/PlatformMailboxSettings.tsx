@@ -15,6 +15,8 @@ import {
   updateSystemMailbox,
   deleteSystemMailbox,
   testSystemMailboxConnection,
+  pauseSystemMailbox,
+  resumeSystemMailbox,
 } from "../services/system-mailbox.service";
 
 function statusColor(mailbox: SystemMailboxDto): string {
@@ -109,6 +111,23 @@ export default function PlatformMailboxSettings() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {mailbox!.isActive ? (
+            <Button size="xs" color="light" onClick={async () => {
+              await pauseSystemMailbox();
+              const updated = await getSystemMailbox();
+              setMailbox(updated);
+            }}>
+              {t("mailbox.pause")}
+            </Button>
+          ) : (
+            <Button size="xs" color="light" onClick={async () => {
+              await resumeSystemMailbox();
+              const updated = await getSystemMailbox();
+              setMailbox(updated);
+            }}>
+              {t("mailbox.resume")}
+            </Button>
+          )}
           <Button size="xs" color="light" onClick={() => setShowForm(true)}>
             {t("common.edit")}
           </Button>
