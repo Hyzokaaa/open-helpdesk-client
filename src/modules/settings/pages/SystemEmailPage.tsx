@@ -26,7 +26,11 @@ function deriveSmtpHost(email: string): string {
   return known[domain] || `smtp.${domain}`;
 }
 
-export default function SystemEmailPage() {
+interface SystemEmailPageProps {
+  embedded?: boolean;
+}
+
+export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {}) {
   const { t } = useTranslation();
   const [sender, setSender] = useState<SystemEmailDto | null>(null);
   const [envConfigured, setEnvConfigured] = useState(false);
@@ -129,13 +133,7 @@ export default function SystemEmailPage() {
   const showForm = editing || !isConfigured;
   const canSave = email.trim() && resolvedHost && (password || isConfigured);
 
-  return (
-    <div className="max-w-xl mx-auto py-8 px-4">
-      <h1 className="text-lg font-body-bold text-heading mb-1">
-        {t("systemEmail.title")}
-      </h1>
-      <p className="text-xs text-muted mb-4">{t("systemEmail.description")}</p>
-
+  const content = (
       <div className="space-y-3">
         {!isConfigured && !editing && (
           <p className={`text-xs italic ${envConfigured ? "text-muted" : "text-danger"}`}>
@@ -285,6 +283,17 @@ export default function SystemEmailPage() {
           </div>
         )}
       </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <div className="max-w-xl mx-auto py-8 px-4">
+      <h1 className="text-lg font-body-bold text-heading mb-1">
+        {t("systemEmail.title")}
+      </h1>
+      <p className="text-xs text-muted mb-4">{t("systemEmail.description")}</p>
+      {content}
     </div>
   );
 }

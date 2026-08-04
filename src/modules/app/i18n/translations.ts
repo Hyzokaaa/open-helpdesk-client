@@ -354,6 +354,8 @@ const translations = {
   "mailbox.encryption.none": { en: "None", es: "Ninguna" },
   "mailbox.autoReply": { en: "Send confirmation when ticket is created", es: "Enviar confirmación al crear ticket" },
   "mailbox.autoReplyDesc": { en: "Sends an automatic email to the sender confirming their ticket was received", es: "Envía un email automático al remitente confirmando que su ticket fue recibido" },
+  "mailbox.systemMailbox": { en: "Platform mailbox", es: "Buzón de plataforma" },
+  "mailbox.systemMailboxDesc": { en: "Receive emails from the platform catch-all mailbox", es: "Recibir emails del buzón catch-all de la plataforma" },
 
   // Custom palette
   "customPalette.custom": { en: "Custom", es: "Personalizado" },
@@ -1018,6 +1020,7 @@ const translations = {
   "auditLog.action.transfer-request-expired": { en: "Transfer Expired", es: "Transferencia Expirada" },
   "auditLog.action.workspace-palette-updated": { en: "Theme Updated", es: "Tema Actualizado" },
   "auditLog.action.workspace-sla-updated": { en: "SLA Updated", es: "SLA Actualizado" },
+  "auditLog.action.workspace-system-mailbox-toggled": { en: "Platform Mailbox Toggled", es: "Buzón de Plataforma Cambiado" },
   "auditLog.action.workspace-import-started": { en: "Import Started", es: "Importación Iniciada" },
   "auditLog.action.workspace-members-imported": { en: "Members Imported", es: "Miembros Importados" },
   "auditLog.action.workspace-export-created": { en: "Export Created", es: "Exportación Creada" },
@@ -1287,6 +1290,21 @@ const translations = {
   "systemEmail.testSuccess": { en: "SMTP connection successful", es: "Conexión SMTP exitosa" },
   "systemEmail.testFailed": { en: "SMTP connection failed", es: "Conexión SMTP fallida" },
   "sidebar.adminEmail": { en: "System Email", es: "Correo del Sistema" },
+  "sidebar.adminSettings": { en: "Settings", es: "Configuración" },
+  "adminSettings.title": { en: "System Settings", es: "Configuración del Sistema" },
+  "adminSettings.emailSending": { en: "Email Sending", es: "Envío de Email" },
+  "adminSettings.emailReceiving": { en: "Email Receiving", es: "Recepción de Email" },
+  "adminSettings.emailReceivingDesc": { en: "Inbound emails are received through IMAP mailboxes configured in each workspace's settings. Use 'All emails in this mailbox' mode for catch-all configurations.", es: "Los emails entrantes se reciben a través de buzones IMAP configurados en la configuración de cada workspace. Usa el modo 'Todos los emails de este buzón' para configuraciones catch-all." },
+  "platformMailbox.description": { en: "Configure an IMAP mailbox to receive emails across all workspaces. Emails are automatically routed to the correct workspace based on the recipient address.", es: "Configura un buzón IMAP para recibir emails de todos los workspaces. Los emails se enrutan automáticamente al workspace correcto según la dirección del destinatario." },
+  "platformMailbox.notConfigured": { en: "No platform mailbox configured", es: "No hay buzón de plataforma configurado" },
+  "platformMailbox.configure": { en: "Configure", es: "Configurar" },
+  "platformMailbox.saved": { en: "Platform mailbox saved", es: "Buzón de plataforma guardado" },
+  "platformMailbox.updated": { en: "Platform mailbox updated", es: "Buzón de plataforma actualizado" },
+  "platformMailbox.deleted": { en: "Platform mailbox removed", es: "Buzón de plataforma eliminado" },
+  "platformMailbox.deleteConfirm": { en: "Are you sure? This will stop receiving emails for all workspaces.", es: "¿Estás seguro? Esto dejará de recibir emails para todos los workspaces." },
+  "auditLog.action.system-mailbox-configured": { en: "Platform Mailbox Configured", es: "Buzón de Plataforma Configurado" },
+  "auditLog.action.system-mailbox-deleted": { en: "Platform Mailbox Deleted", es: "Buzón de Plataforma Eliminado" },
+  "auditLog.action.system-mailbox-test-connection": { en: "Platform Mailbox Test", es: "Prueba Buzón de Plataforma" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
