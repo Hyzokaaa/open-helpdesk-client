@@ -66,6 +66,7 @@ export default function MailboxSettings({ slug }: Props) {
   const [editMailbox, setEditMailbox] = useState<MailboxDto | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [hasSystemMailbox, setHasSystemMailbox] = useState(false);
+  const [systemMailboxActive, setSystemMailboxActive] = useState(true);
   const [systemMailboxEnabled, setSystemMailboxEnabled] = useState(true);
 
   useEffect(() => {
@@ -77,7 +78,10 @@ export default function MailboxSettings({ slug }: Props) {
   }, [slug]);
 
   useEffect(() => {
-    getSystemMailbox().then((sm) => setHasSystemMailbox(!!sm)).catch(() => {});
+    getSystemMailbox().then((sm) => {
+      setHasSystemMailbox(!!sm);
+      setSystemMailboxActive(sm?.isActive ?? true);
+    }).catch(() => {});
     getWorkspace(slug).then((ws) => setSystemMailboxEnabled(ws.systemMailboxEnabled)).catch(() => {});
   }, [slug]);
 
@@ -117,17 +121,25 @@ export default function MailboxSettings({ slug }: Props) {
         <div className="flex items-center justify-between p-3 bg-surface-active rounded-lg mb-4">
           <div>
             <p className="text-sm text-body font-body-medium">{t("mailbox.systemMailbox")}</p>
-            <p className="text-exs text-muted">{t("mailbox.systemMailboxDesc")}</p>
+            <p className="text-exs text-muted">
+              {!systemMailboxActive
+                ? t("mailbox.systemMailboxPaused")
+                : t("mailbox.systemMailboxDesc")}
+            </p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={systemMailboxEnabled}
-              onChange={handleToggleSystemMailbox}
-              className="sr-only peer"
-            />
-            <div className="w-9 h-5 bg-gray-300 peer-checked:bg-primary rounded-full peer-focus:ring-2 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
-          </label>
+          {systemMailboxActive ? (
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={systemMailboxEnabled}
+                onChange={handleToggleSystemMailbox}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-300 peer-checked:bg-primary rounded-full peer-focus:ring-2 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+            </label>
+          ) : (
+            <span className="text-xs text-yellow-600 font-body-medium">{t("mailbox.paused")}</span>
+          )}
         </div>
       )}
 

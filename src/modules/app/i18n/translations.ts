@@ -356,6 +356,7 @@ const translations = {
   "mailbox.autoReplyDesc": { en: "Sends an automatic email to the sender confirming their ticket was received", es: "Envía un email automático al remitente confirmando que su ticket fue recibido" },
   "mailbox.systemMailbox": { en: "Platform mailbox", es: "Buzón de plataforma" },
   "mailbox.systemMailboxDesc": { en: "Receive emails from the platform catch-all mailbox", es: "Recibir emails del buzón catch-all de la plataforma" },
+  "mailbox.systemMailboxPaused": { en: "Platform mailbox is paused by system admin", es: "El buzón de plataforma está pausado por el administrador del sistema" },
 
   // Custom palette
   "customPalette.custom": { en: "Custom", es: "Personalizado" },
