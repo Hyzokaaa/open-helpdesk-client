@@ -117,11 +117,16 @@ export default function MailboxSettings({ slug }: Props) {
 
   return (
     <div>
-      {hasSystemMailbox && (
+      {hasSystemMailbox && (() => {
+        const webhookMailbox = mailboxes.find((m) => m.type === "webhook");
+        return (
         <div className="flex items-center justify-between p-3 bg-surface-active rounded-lg mb-4">
           <div>
             <p className="text-sm text-body font-body-medium">{t("mailbox.systemMailbox")}</p>
-            <p className="text-exs text-muted">
+            {webhookMailbox && (
+              <p className="text-xs text-body mt-0.5">{webhookMailbox.address}</p>
+            )}
+            <p className="text-exs text-muted mt-0.5">
               {!systemMailboxActive
                 ? t("mailbox.systemMailboxPaused")
                 : t("mailbox.systemMailboxDesc")}
@@ -141,7 +146,8 @@ export default function MailboxSettings({ slug }: Props) {
             <span className="text-xs text-yellow-600 font-body-medium">{t("mailbox.paused")}</span>
           )}
         </div>
-      )}
+        );
+      })()}
 
       <div className="flex justify-end mb-3">
         <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
@@ -149,11 +155,13 @@ export default function MailboxSettings({ slug }: Props) {
         </Button>
       </div>
 
-      {mailboxes.length === 0 ? (
+      {(() => {
+        const imapMailboxes = mailboxes.filter((m) => m.type === "imap");
+        return imapMailboxes.length === 0 ? (
         <p className="text-xs text-muted">{t("mailbox.empty")}</p>
       ) : (
         <div className="space-y-2">
-          {mailboxes.map((m) => (
+          {imapMailboxes.map((m) => (
             <div key={m.id} className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className={`w-2 h-2 rounded-full shrink-0 ${mailboxStatusColor(m)}`} />
@@ -227,7 +235,8 @@ export default function MailboxSettings({ slug }: Props) {
             </div>
           ))}
         </div>
-      )}
+      );
+      })()}
 
       {showSheet && (
         <Sheet onClose={() => { setShowSheet(false); setEditMailbox(null); }}>
