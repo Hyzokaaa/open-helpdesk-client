@@ -17,6 +17,7 @@ export interface WorkspaceDetail {
   description: string;
   palette: string | null;
   supportEmail: string | null;
+  systemMailboxEnabled: boolean;
 }
 
 export interface WorkspaceMember {
@@ -213,6 +214,11 @@ export async function downloadImportTemplate(slug: string): Promise<void> {
   a.click();
   a.remove();
   window.URL.revokeObjectURL(url);
+}
+
+export async function toggleSystemMailbox(slug: string, enabled: boolean): Promise<{ systemMailboxEnabled: boolean }> {
+  const res = await http.patch<{ systemMailboxEnabled: boolean }>(`/workspaces/${slug}/system-mailbox`, { enabled });
+  return res.data;
 }
 
 export async function exportWorkspace(slug: string): Promise<Blob> {

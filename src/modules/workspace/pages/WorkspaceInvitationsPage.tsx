@@ -11,13 +11,16 @@ import {
   InvitationItem,
   listInvitations,
   cancelInvitation,
+  resendInvitation,
   getInvitationLink,
 } from "../services/invitation.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 
 export default function WorkspaceInvitationsPage() {
   const { workspaceSlug } = useParams();
   const { t, tEnum } = useTranslation();
+  const formatDate = useFormatDate();
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
@@ -52,9 +55,6 @@ export default function WorkspaceInvitationsPage() {
     if (r === "agent") return "blue" as const;
     return "gray" as const;
   };
-
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
   return (
     <div className="w-full">
@@ -105,6 +105,18 @@ export default function WorkspaceInvitationsPage() {
                             const link = await getInvitationLink(workspaceSlug!, inv.id);
                             await navigator.clipboard.writeText(link);
                             toast.success(t("invitations.linkCopied"));
+                          } catch {
+                            toast.error(t("invitations.sendError"));
+                          }
+                        },
+                      },
+                      {
+                        label: t("invitations.resend"),
+                        onClick: async () => {
+                          try {
+                            await resendInvitation(workspaceSlug!, inv.id);
+                            toast.success(t("invitations.resent"));
+                            fetchInvitations();
                           } catch {
                             toast.error(t("invitations.sendError"));
                           }

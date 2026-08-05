@@ -66,11 +66,13 @@ http.interceptors.response.use(
         handled = true;
       }
 
+      const rawMessage = error.response.data?.message;
+      const message = Array.isArray(rawMessage)
+        ? rawMessage.join(", ")
+        : rawMessage || error.response.statusText || "Request error";
+
       const e: HttpResponseError = {
-        message:
-          error.response.data?.message ||
-          error.response.statusText ||
-          "Request error",
+        message,
         status: error.response.status,
         handled,
       };

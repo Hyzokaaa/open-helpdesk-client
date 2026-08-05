@@ -35,13 +35,14 @@ import NotificationsPage from "@modules/notification/pages/NotificationsPage";
 import ChangelogPage from "@modules/app/pages/ChangelogPage";
 import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
+import SystemLogsPage from "@modules/audit-log/pages/SystemLogsPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
 import UserStatsPage from "@modules/report/pages/UserStatsPage";
 import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
-import SystemEmailPage from "@modules/settings/pages/SystemEmailPage";
+import AdminSettingsPage from "@modules/admin/pages/AdminSettingsPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
 import PortalKbPage from "@modules/portal/pages/PortalKbPage";
@@ -106,7 +107,8 @@ function AppRoutes() {
             <Route path="admin" element={<Navigate to="users" replace />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
-            <Route path="settings/email" element={<SystemEmailPage />} />
+            <Route path="admin/logs" element={<SystemLogsPage />} />
+            <Route path="admin/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
       </Route>

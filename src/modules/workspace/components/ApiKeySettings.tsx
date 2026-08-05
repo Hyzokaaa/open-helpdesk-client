@@ -7,6 +7,7 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import {
   ApiKeyDto,
   API_KEY_SCOPES,
@@ -15,16 +16,13 @@ import {
   deleteApiKey,
 } from "../services/api-key.service";
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString();
-}
-
 interface Props {
   slug: string;
 }
 
 export default function ApiKeySettings({ slug }: Props) {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const [keys, setKeys] = useState<ApiKeyDto[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);

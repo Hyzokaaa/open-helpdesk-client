@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import { AuditLogItem, listAuditLog } from "../services/audit-log.service";
 
@@ -17,6 +18,7 @@ interface Props {
 export default function TicketActivityFeed({ workspaceSlug, ticketId, members, refreshKey }: Props) {
   const { t } = useTranslation();
   const { isPlanLimitError } = useExtensions();
+  const formatDate = useFormatDate();
   const [items, setItems] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [locked, setLocked] = useState(false);
@@ -81,12 +83,12 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
             <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-border-card border-2 border-surface" />
             <div>
               <p className="text-xs text-body">
-                <span className="font-body-semibold">{getMemberName(item.userId)}</span>
+                <span className="font-body-semibold">{item.userId ? getMemberName(item.userId) : "System"}</span>
                 {" "}
                 <span className="text-muted">{describeAction(item, t as any, getMemberName)}</span>
               </p>
               <p className="text-exs text-muted mt-0.5">
-                {new Date(item.createdAt).toLocaleString()}
+                {formatDate(item.createdAt)}
               </p>
             </div>
           </div>

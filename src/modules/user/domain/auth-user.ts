@@ -8,4 +8,6 @@ export interface AuthUser {
   isEmailVerified: boolean;
   language: string;
   theme: string;
+  dateFormat: string;
+  timezone: string;
 }

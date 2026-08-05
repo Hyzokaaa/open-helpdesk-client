@@ -10,11 +10,15 @@ export interface MailboxDto {
   imapUser?: string | null;
   hasPassword?: boolean;
   imapTls?: boolean | null;
+  encryption?: string;
   imapFolder?: string | null;
   pollInterval?: number | null;
   lastSyncAt?: string | null;
   lastSyncDuration?: number | null;
   lastError?: string | null;
+  addressMode?: string;
+  acceptedAddresses?: string[];
+  autoReply?: boolean;
 }
 
 export interface CreateMailboxRequest {
@@ -24,8 +28,12 @@ export interface CreateMailboxRequest {
   imapUser: string;
   imapPass: string;
   imapTls?: boolean;
+  encryption?: string;
   imapFolder?: string;
   pollInterval?: number;
+  addressMode?: string;
+  acceptedAddresses?: string[];
+  autoReply?: boolean;
 }
 
 export interface UpdateMailboxRequest {
@@ -36,8 +44,12 @@ export interface UpdateMailboxRequest {
   imapUser?: string | null;
   imapPass?: string | null;
   imapTls?: boolean | null;
+  encryption?: string;
   imapFolder?: string | null;
   pollInterval?: number | null;
+  addressMode?: string;
+  acceptedAddresses?: string[];
+  autoReply?: boolean;
 }
 
 export async function listMailboxes(slug: string): Promise<MailboxDto[]> {
@@ -67,7 +79,7 @@ export interface TestConnectionResult {
 
 export async function testMailboxConnection(
   slug: string,
-  data: { imapHost: string; imapPort: number; imapUser: string; imapPass: string; imapTls?: boolean; mailboxId?: string },
+  data: { imapHost: string; imapPort: number; imapUser: string; imapPass: string; imapTls?: boolean; encryption?: string; mailboxId?: string },
 ): Promise<TestConnectionResult> {
   const res = await http.post(`/workspaces/${slug}/mailboxes/test-connection`, data);
   return res.data;

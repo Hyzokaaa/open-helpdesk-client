@@ -147,18 +147,18 @@ export default function AdminUsersPage() {
           <form onSubmit={handleCreateUser}>
             <div className="flex gap-4">
               <FormInput label={t("admin.firstName")} required className="flex-1">
-                <Input placeholder="John" value={firstName} onChange={setFirstName} />
+                <Input placeholder="John" value={firstName} onChange={setFirstName} required />
               </FormInput>
               <FormInput label={t("admin.lastName")} required className="flex-1">
-                <Input placeholder="Doe" value={lastName} onChange={setLastName} />
+                <Input placeholder="Doe" value={lastName} onChange={setLastName} required />
               </FormInput>
             </div>
             <div className="flex gap-4">
               <FormInput label={t("admin.email")} required className="flex-1">
-                <Input type="email" placeholder="user@example.com" value={email} onChange={setEmail} />
+                <Input type="email" placeholder="user@example.com" value={email} onChange={setEmail} required />
               </FormInput>
               <FormInput label={t("admin.password")} required className="flex-1">
-                <Input type="password" placeholder={t("admin.passwordPlaceholder")} value={password} onChange={setPassword} />
+                <Input type="password" placeholder={t("admin.passwordPlaceholder")} value={password} onChange={setPassword} required />
               </FormInput>
             </div>
             <div className="flex gap-6 mb-4">
