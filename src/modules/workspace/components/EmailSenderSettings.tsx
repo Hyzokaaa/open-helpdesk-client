@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -47,6 +48,7 @@ export default function EmailSenderSettings({ slug }: Props) {
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("587");
   const [smtpUser, setSmtpUser] = useState("");
+  const [encryption, setEncryption] = useState("tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
@@ -60,6 +62,7 @@ export default function EmailSenderSettings({ slug }: Props) {
           setSmtpHost(s.smtpHost);
           setSmtpPort(String(s.smtpPort));
           setSmtpUser(s.smtpUser);
+          setEncryption(s.encryption ?? "tls");
         }
       })
       .catch((err) => {
@@ -81,6 +84,7 @@ export default function EmailSenderSettings({ slug }: Props) {
         smtpPort: resolvedPort,
         smtpUser: resolvedUser,
         smtpPass: password || "__keep__",
+        encryption,
       });
       setTestResult(result);
     } catch {
@@ -99,6 +103,7 @@ export default function EmailSenderSettings({ slug }: Props) {
         smtpUser: resolvedUser,
         smtpPass: password,
         smtpFrom: email,
+        encryption,
       });
       toast.success(t("emailSender.saved"));
       const updated = await getEmailSender(slug);
@@ -122,6 +127,7 @@ export default function EmailSenderSettings({ slug }: Props) {
       setSmtpHost("");
       setSmtpPort("587");
       setSmtpUser("");
+      setEncryption("tls");
       setEditing(false);
       setShowAdvanced(false);
       toast.success(t("emailSender.deleted"));
@@ -197,6 +203,14 @@ export default function EmailSenderSettings({ slug }: Props) {
                   <Input value={smtpUser} onChange={setSmtpUser} size="sm" placeholder={email || "user@company.com"} />
                 </FormInput>
               </div>
+              <FormInput label={t("mailbox.encryption")}>
+                <Select
+                  options={['tls', 'tls-insecure', 'none']}
+                  label={(e) => t(`mailbox.encryption.${e}` as any)}
+                  value={(e) => e === encryption}
+                  onChange={setEncryption}
+                />
+              </FormInput>
             </div>
           )}
 

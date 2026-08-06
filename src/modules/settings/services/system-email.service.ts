@@ -6,6 +6,7 @@ export interface SystemEmailDto {
   smtpUser: string;
   hasPassword: boolean;
   smtpFrom: string;
+  encryption?: string;
 }
 
 export interface SystemEmailResponse {
@@ -26,6 +27,7 @@ export async function saveSystemEmail(data: {
   smtpUser: string;
   smtpPass: string;
   smtpFrom: string;
+  encryption?: string;
 }): Promise<void> {
   await http.post("/system/email-settings", data);
 }
@@ -39,6 +41,7 @@ export async function testSystemEmail(data: {
   smtpPort: number;
   smtpUser: string;
   smtpPass: string;
+  encryption?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const res = await http.post<{ success: boolean; error?: string }>(
     "/system/email-settings/test",

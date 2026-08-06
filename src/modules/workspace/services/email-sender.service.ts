@@ -7,6 +7,7 @@ export interface EmailSenderDto {
   smtpUser: string;
   hasPassword: boolean;
   smtpFrom: string;
+  encryption?: string;
 }
 
 export async function getEmailSender(slug: string): Promise<EmailSenderDto | null> {
@@ -22,6 +23,7 @@ export async function saveEmailSender(slug: string, data: {
   smtpUser: string;
   smtpPass: string;
   smtpFrom: string;
+  encryption?: string;
 }): Promise<{ id: string }> {
   const res = await http.post<{ id: string }>(`/workspaces/${slug}/email-sender`, data);
   return res.data;
@@ -36,6 +38,7 @@ export async function testEmailSender(slug: string, data: {
   smtpPort: number;
   smtpUser: string;
   smtpPass: string;
+  encryption?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const res = await http.post<{ success: boolean; error?: string }>(`/workspaces/${slug}/email-sender/test`, data);
   return res.data;
