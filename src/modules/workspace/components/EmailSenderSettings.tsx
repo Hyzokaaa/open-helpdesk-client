@@ -35,7 +35,7 @@ function deriveSmtpHost(email: string): string {
 
 export default function EmailSenderSettings({ slug }: Props) {
   const { t } = useTranslation();
-  const { emailConfigured } = useConfig();
+  const { emailConfigured, systemEmailFrom } = useConfig();
   const { isPlanLimitError, PlanGate } = useExtensions();
   const [sender, setSender] = useState<EmailSenderDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +145,16 @@ export default function EmailSenderSettings({ slug }: Props) {
 
   return (
     <div className="space-y-3">
+      {!isConfigured && emailConfigured && systemEmailFrom && (
+        <div className="flex items-center gap-2.5 p-3 bg-surface-active rounded-lg">
+          <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+          <div>
+            <p className="text-xs text-body font-body-medium">{systemEmailFrom}</p>
+            <p className="text-exs text-muted">{t("emailSender.usingSystem")}</p>
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-muted">
         {isConfigured
           ? t("emailSender.activeDescription")

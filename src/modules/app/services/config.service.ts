@@ -8,6 +8,7 @@ export interface PublicConfig {
   paddleEnvironment: string;
   aiEnabled: boolean;
   emailConfigured: boolean;
+  systemEmailFrom: string | null;
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {
@@ -15,6 +16,6 @@ export async function getPublicConfig(): Promise<PublicConfig> {
     const res = await http.get<PublicConfig>("/config/public");
     return res.data;
   } catch {
-    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false };
+    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null };
   }
 }

@@ -10,6 +10,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [paddleEnvironment, setPaddleEnvironment] = useState("sandbox");
   const [aiEnabled, setAiEnabled] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
+  const [systemEmailFrom, setSystemEmailFrom] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,12 +23,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         setPaddleEnvironment(config.paddleEnvironment ?? "sandbox");
         setAiEnabled(config.aiEnabled ?? false);
         setEmailConfigured(config.emailConfigured ?? false);
+        setSystemEmailFrom(config.systemEmailFrom ?? null);
       })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, loading }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, loading }}>
       {children}
     </ConfigContext.Provider>
   );

@@ -280,6 +280,7 @@ const translations = {
   "emailSender.description": { en: "Notifications are currently sent from the system's default address. Configure your own email to send notifications from your brand.", es: "Las notificaciones se envían actualmente desde la dirección predeterminada del sistema. Configura tu propio email para enviar notificaciones desde tu marca." },
   "emailSender.activeDescription": { en: "Notifications for this workspace are sent from the address below instead of the system default.", es: "Las notificaciones de este workspace se envían desde la dirección de abajo en vez del sistema predeterminado." },
   "emailSender.noGlobalDescription": { en: "No system email is configured. Set up your own email to enable notifications for this workspace.", es: "No hay email del sistema configurado. Configura tu propio email para habilitar notificaciones en este workspace." },
+  "emailSender.usingSystem": { en: "Using system email configuration", es: "Usando configuración de email del sistema" },
   "emailSender.email": { en: "Email Address", es: "Dirección de Email" },
   "emailSender.password": { en: "Password", es: "Contraseña" },
   "emailSender.autoDetected": { en: "Auto-detected", es: "Auto-detectado" },
