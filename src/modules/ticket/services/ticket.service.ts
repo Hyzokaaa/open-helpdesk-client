@@ -26,6 +26,7 @@ export interface TicketDetail {
   category: string;
   workspaceId: string;
   creatorId: string;
+  registeredById: string | null;
   assigneeId: string | null;
   firstResponseAt: string | null;
   resolvedAt: string | null;

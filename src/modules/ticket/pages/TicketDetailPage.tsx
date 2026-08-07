@@ -1221,6 +1221,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   {getMemberName(ticket.creatorId)}
                 </span>
               </div>
+              {ticket.registeredById && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{t("ticketDetail.registeredBy")}</span>
+                  <span className="text-body font-body-medium">
+                    {getMemberName(ticket.registeredById)}
+                  </span>
+                </div>
+              )}
               {ticket.assigneeId && (
                 <div className="flex justify-between">
                   <span className="text-muted">{t("ticketDetail.assignee")}</span>
