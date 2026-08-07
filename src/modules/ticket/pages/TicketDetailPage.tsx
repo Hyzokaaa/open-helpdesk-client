@@ -882,7 +882,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     )}
                   </div>
                   <p
-                    className="text-sm text-body"
+                    className="text-sm text-body whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{
                       __html: c.content.replace(
                         /@\[([^\]]+)\]\(([^)]+)\)/g,
