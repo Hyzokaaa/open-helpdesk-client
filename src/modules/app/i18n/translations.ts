@@ -513,6 +513,8 @@ const translations = {
   "ticketCreate.attachments": { en: "Attachments", es: "Adjuntos" },
   "ticketCreate.addFiles": { en: "Add files", es: "Agregar archivos" },
   "ticketCreate.pasteOrDrag": { en: "or paste / drag & drop", es: "o pegar / arrastrar" },
+  "ticketCreate.onBehalfOf": { en: "On behalf of", es: "En nombre de" },
+  "ticketCreate.onBehalfOfPlaceholder": { en: "Email of the requester (leave empty for yourself)", es: "Email del solicitante (dejar vacio para ti mismo)" },
   "ticketCreate.submit": { en: "Create Ticket", es: "Crear Ticket" },
   "ticketCreate.cancel": { en: "Cancel", es: "Cancelar" },
   "ticketCreate.success": { en: "Ticket created", es: "Ticket creado" },
