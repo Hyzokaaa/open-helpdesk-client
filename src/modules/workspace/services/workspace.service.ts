@@ -27,6 +27,7 @@ export interface WorkspaceMember {
   firstName: string;
   lastName: string;
   role: string;
+  autoCreated: boolean;
 }
 
 export interface UserListItem {
@@ -62,9 +63,13 @@ export async function createWorkspace(data: {
   return res.data;
 }
 
-export async function listMembers(slug: string): Promise<WorkspaceMember[]> {
+export async function listMembers(
+  slug: string,
+  autoCreated?: boolean,
+): Promise<WorkspaceMember[]> {
+  const params = autoCreated !== undefined ? `?autoCreated=${autoCreated}` : '';
   const res = await http.get<WorkspaceMember[]>(
-    `/workspaces/${slug}/members`,
+    `/workspaces/${slug}/members${params}`,
   );
   return res.data;
 }

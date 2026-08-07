@@ -420,6 +420,8 @@ const translations = {
   "members.changeRole": { en: "Change role", es: "Cambiar rol" },
   "members.remove": { en: "Remove", es: "Eliminar" },
   "members.empty": { en: "No members.", es: "Sin miembros." },
+  "members.contacts": { en: "Contacts", es: "Contactos" },
+  "members.noContacts": { en: "No contacts created from emails yet.", es: "Aun no hay contactos creados por email." },
   "members.roleUpdated": { en: "Role updated", es: "Rol actualizado" },
   "members.roleError": { en: "Failed to update role", es: "Error al actualizar rol" },
   "members.viewStats": { en: "View Stats", es: "Ver Estadísticas" },

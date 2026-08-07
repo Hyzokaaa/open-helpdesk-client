@@ -20,6 +20,8 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
+type Tab = "members" | "contacts";
+
 const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
 
 export default function WorkspaceMembersPage() {
@@ -34,11 +36,12 @@ export default function WorkspaceMembersPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("members");
 
   const fetchMembers = () => {
     if (!workspaceSlug) return;
     setLoading(true);
-    listMembers(workspaceSlug)
+    listMembers(workspaceSlug, activeTab === "contacts" ? true : false)
       .then(setMembers)
       .catch(() => toast.error("Failed to load members"))
       .finally(() => setLoading(false));
@@ -46,7 +49,7 @@ export default function WorkspaceMembersPage() {
 
   useEffect(() => {
     fetchMembers();
-  }, [workspaceSlug]);
+  }, [workspaceSlug, activeTab]);
 
   const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
 
@@ -90,6 +93,13 @@ export default function WorkspaceMembersPage() {
     return "gray" as const;
   };
 
+  const tabClass = (tab: Tab) =>
+    `px-4 py-2 text-sm font-body-semibold cursor-pointer border-b-2 transition-colors ${
+      activeTab === tab
+        ? "border-primary text-primary"
+        : "border-transparent text-muted hover:text-heading"
+    }`;
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -113,6 +123,15 @@ export default function WorkspaceMembersPage() {
         </div>
       </div>
 
+      <div className="flex border-b border-border-card mb-4">
+        <button className={tabClass("members")} onClick={() => setActiveTab("members")}>
+          {t("members.title")}
+        </button>
+        <button className={tabClass("contacts")} onClick={() => setActiveTab("contacts")}>
+          {t("members.contacts")}
+        </button>
+      </div>
+
       {showAdd && workspaceSlug && (
         <AddMemberSheet
           workspaceSlug={workspaceSlug}
@@ -125,7 +144,9 @@ export default function WorkspaceMembersPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : members.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("members.empty")}</p>
+        <p className="text-sm text-muted text-center py-12">
+          {activeTab === "contacts" ? t("members.noContacts") : t("members.empty")}
+        </p>
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
           <table className="w-full">
