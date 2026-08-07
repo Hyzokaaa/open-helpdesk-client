@@ -665,6 +665,8 @@ const translations = {
   "notifications.statusChanged": { en: "Status change", es: "Cambio de estado" },
   "notifications.commentCreated": { en: "New comment", es: "Nuevo comentario" },
   "notifications.transferRequest": { en: "Transfer request", es: "Solicitud de transferencia" },
+  "notifications.csatSurvey": { en: "Satisfaction survey", es: "Encuesta de satisfacción" },
+  "notifications.emailOnly": { en: "Email only", es: "Solo email" },
   "notifications.events": { en: "Notify me about", es: "Notificarme sobre" },
   "notifications.viewAll": { en: "View all notifications", es: "Ver todas las notificaciones" },
   "notifications.filterAll": { en: "All", es: "Todas" },
