@@ -498,6 +498,24 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     }
   };
 
+  const handleAddCommentAndResolve = async (content: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    setSendingComment(true);
+    try {
+      await createComment(workspaceSlug, ticketId, content);
+      await changeTicketStatus(workspaceSlug, ticketId, "resolved");
+      fetchTicket();
+      fetchComments();
+      fetchParticipants();
+      setActivityKey((k) => k + 1);
+      toast.success(t("ticketDetail.resolvedSuccess"));
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to send and resolve");
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
   const handleDeleteAttachment = (attachmentId: string) => {
     setConfirmAction({
       title: t("ticketDetail.deleteAttachmentTitle"),
@@ -903,6 +921,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 members={members}
                 loading={sendingComment}
                 onSubmit={handleAddComment}
+                onSubmitAndResolve={handleAddCommentAndResolve}
+                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
                 cannedResponses={cannedResponses}
               />
             )}

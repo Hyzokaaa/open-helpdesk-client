@@ -530,6 +530,8 @@ const translations = {
   "ticketDetail.addFile": { en: "Add file", es: "Agregar archivo" },
   "ticketDetail.comments": { en: "Comments", es: "Comentarios" },
   "ticketDetail.send": { en: "Send", es: "Enviar" },
+  "ticketDetail.sendAndResolve": { en: "Send & Resolve", es: "Enviar y Resolver" },
+  "ticketDetail.resolvedSuccess": { en: "Ticket resolved", es: "Ticket resuelto" },
   "ticketDetail.commentPlaceholder": { en: "Write a comment... Use @ to mention, / for canned responses", es: "Escribe un comentario... Usa @ para mencionar, / para respuestas predefinidas" },
   "ticketDetail.status": { en: "Status", es: "Estado" },
   "ticketDetail.priority": { en: "Priority", es: "Prioridad" },
