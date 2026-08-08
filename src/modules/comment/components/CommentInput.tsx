@@ -368,6 +368,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
               size="sm"
               loading={loading}
               onClick={handleSubmit}
+              disabled={isEmpty()}
               className={canResolve ? "!rounded-r-none !border-r-0" : ""}
             >
               {t("ticketDetail.send")}
@@ -375,8 +376,11 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
             {canResolve && (
               <button
                 type="button"
-                onClick={() => setShowSendMenu(!showSendMenu)}
-                className="flex items-center px-1.5 bg-primary hover:bg-primary-hover text-white rounded-r-button cursor-pointer transition-colors"
+                onClick={() => !isEmpty() && setShowSendMenu(!showSendMenu)}
+                className={clsx(
+                  "flex items-center px-1.5 text-white rounded-r-button transition-colors",
+                  isEmpty() ? "bg-primary/50 cursor-not-allowed" : "bg-primary hover:bg-primary-hover cursor-pointer",
+                )}
               >
                 <svg className={clsx("w-3 h-3 transition-transform", showSendMenu && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -389,9 +393,9 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
               <button
                 type="button"
                 onClick={handleSubmitAndResolve}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-body-semibold text-white bg-primary hover:bg-primary-hover rounded-button cursor-pointer transition-colors shadow-lg whitespace-nowrap"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-body-semibold text-white bg-primary hover:bg-primary-hover rounded-button cursor-pointer transition-colors shadow-lg whitespace-nowrap"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 {t("ticketDetail.sendAndResolve")}
