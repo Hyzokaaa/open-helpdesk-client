@@ -1215,13 +1215,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {t("ticketDetail.details")}
             </p>
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted">{t("ticketDetail.reportedBy")}</span>
-                <div className="text-right">
-                  <span className="text-body font-body-medium block">
+              <div className="flex justify-between gap-2">
+                <span className="text-muted shrink-0">{t("ticketDetail.reportedBy")}</span>
+                <div className="text-right min-w-0">
+                  <span className="text-body font-body-medium block truncate">
                     {getMemberName(ticket.reporterId)}
                   </span>
-                  {(() => { const m = members.find((m) => m.userId === ticket.reporterId); return m ? <span className="text-muted block">{m.email}</span> : null; })()}
+                  {(() => { const m = members.find((m) => m.userId === ticket.reporterId); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
                 </div>
               </div>
               {ticket.registeredById && (
