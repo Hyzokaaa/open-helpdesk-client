@@ -1225,11 +1225,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 </div>
               </div>
               {ticket.registeredById && (
-                <div className="flex justify-between">
-                  <span className="text-muted">{t("ticketDetail.registeredBy")}</span>
-                  <span className="text-body font-body-medium">
-                    {getMemberName(ticket.registeredById)}
-                  </span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted shrink-0">{t("ticketDetail.registeredBy")}</span>
+                  <div className="text-right min-w-0">
+                    <span className="text-body font-body-medium block truncate">
+                      {getMemberName(ticket.registeredById)}
+                    </span>
+                    {(() => { const m = members.find((m) => m.userId === ticket.registeredById); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
+                  </div>
                 </div>
               )}
               {ticket.assigneeId && (
