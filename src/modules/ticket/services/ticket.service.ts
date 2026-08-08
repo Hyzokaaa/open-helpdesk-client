@@ -7,7 +7,7 @@ export interface TicketListItem {
   priority: string;
   status: string;
   category: string;
-  creatorId: string;
+  reporterId: string;
   assigneeId: string | null;
   ticketNumber: number;
   createdAt: string | null;
@@ -25,7 +25,7 @@ export interface TicketDetail {
   status: string;
   category: string;
   workspaceId: string;
-  creatorId: string;
+  reporterId: string;
   registeredById: string | null;
   assigneeId: string | null;
   firstResponseAt: string | null;
@@ -47,7 +47,7 @@ export interface TicketFilters {
   excludeStatus?: string;
   priority?: string;
   assigneeId?: string;
-  creatorId?: string;
+  reporterId?: string;
   tagIds?: string[];
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
@@ -65,7 +65,7 @@ export async function listTickets(
   if (filters.excludeStatus) params.set("excludeStatus", filters.excludeStatus);
   if (filters.priority) params.set("priority", filters.priority);
   if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);
-  if (filters.creatorId) params.set("creatorId", filters.creatorId);
+  if (filters.reporterId) params.set("reporterId", filters.reporterId);
   if (filters.tagIds && filters.tagIds.length > 0)
     params.set("tagIds", filters.tagIds.join(","));
   if (filters.sortBy) params.set("sortBy", filters.sortBy);

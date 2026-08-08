@@ -95,7 +95,7 @@ export function useBoardTickets(
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [workspaceSlug, filters.search, filters.priority, filters.tagIds?.join(","), filters.creatorId]);
+  }, [workspaceSlug, filters.search, filters.priority, filters.tagIds?.join(","), filters.reporterId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

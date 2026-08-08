@@ -393,7 +393,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     }
   }, [workspaceSlug, can(P.CANNED_RESPONSE_VIEW)]);
 
-  const isCreator = ticket?.creatorId === user?.id;
+  const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
   const isReadonly = ticket?.accessLevel === "readonly";
@@ -402,7 +402,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
-  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.creatorId === user?.id);
+  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
   const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
@@ -1216,10 +1216,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted">{t("ticketDetail.creator")}</span>
-                <span className="text-body font-body-medium">
-                  {getMemberName(ticket.creatorId)}
-                </span>
+                <span className="text-muted">{t("ticketDetail.reportedBy")}</span>
+                <div className="text-right">
+                  <span className="text-body font-body-medium block">
+                    {getMemberName(ticket.reporterId)}
+                  </span>
+                  {(() => { const m = members.find((m) => m.userId === ticket.reporterId); return m ? <span className="text-muted block">{m.email}</span> : null; })()}
+                </div>
               </div>
               {ticket.registeredById && (
                 <div className="flex justify-between">
