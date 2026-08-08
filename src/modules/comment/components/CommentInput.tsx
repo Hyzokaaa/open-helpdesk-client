@@ -248,6 +248,18 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
   };
 
   const [showSendMenu, setShowSendMenu] = useState(false);
+  const sendMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSendMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sendMenuRef.current && !sendMenuRef.current.contains(e.target as Node)) {
+        setShowSendMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSendMenu]);
 
   const handleSubmit = () => {
     const content = buildContent();
@@ -350,13 +362,13 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
             </div>
           )}
         </div>
-        <div className="self-end relative">
+        <div className="self-end relative" ref={sendMenuRef}>
           <div className="flex">
             <Button
               size="sm"
               loading={loading}
               onClick={handleSubmit}
-              className={canResolve ? "rounded-r-none" : ""}
+              className={canResolve ? "!rounded-r-none !border-r-0" : ""}
             >
               {t("ticketDetail.send")}
             </Button>
@@ -364,21 +376,24 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
               <button
                 type="button"
                 onClick={() => setShowSendMenu(!showSendMenu)}
-                className="px-1.5 bg-primary hover:bg-primary-hover text-white rounded-r-button border-l border-white/20 cursor-pointer"
+                className="flex items-center px-1.5 bg-primary hover:bg-primary-hover text-white rounded-r-button cursor-pointer transition-colors"
               >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className={clsx("w-3 h-3 transition-transform", showSendMenu && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
             )}
           </div>
           {showSendMenu && (
-            <div className="absolute bottom-full mb-1 right-0 bg-surface border border-border-input rounded-lg shadow-lg z-50 min-w-[160px]">
+            <div className="absolute bottom-full mb-1.5 right-0 bg-surface border border-border-card rounded-lg shadow-lg z-50 min-w-[170px] py-1">
               <button
                 type="button"
-                onMouseDown={(e) => { e.preventDefault(); handleSubmitAndResolve(); }}
-                className="w-full text-left px-3 py-2 text-sm text-body hover:bg-surface-hover cursor-pointer rounded-lg"
+                onClick={handleSubmitAndResolve}
+                className="w-full text-left px-3 py-2 text-sm text-body hover:bg-surface-hover cursor-pointer transition-colors flex items-center gap-2"
               >
+                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 {t("ticketDetail.sendAndResolve")}
               </button>
             </div>
