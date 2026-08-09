@@ -536,6 +536,7 @@ const translations = {
   "ticketDetail.status": { en: "Status", es: "Estado" },
   "ticketDetail.priority": { en: "Priority", es: "Prioridad" },
   "ticketDetail.category": { en: "Category", es: "Categoría" },
+  "ticketDetail.source": { en: "Source", es: "Origen" },
   "ticketDetail.assignee": { en: "Assignee", es: "Asignado" },
   "ticketDetail.selectAssignee": { en: "Select assignee...", es: "Seleccionar asignado..." },
   "ticketDetail.tags": { en: "Tags", es: "Etiquetas" },
@@ -887,6 +888,12 @@ const translations = {
   "enum.category.bug": { en: "Bug", es: "Error" },
   "enum.category.issue": { en: "Issue", es: "Incidencia" },
   "enum.category.task": { en: "Task", es: "Tarea" },
+
+  // Enums - Sources
+  "enum.source.ui": { en: "Manual", es: "Manual" },
+  "enum.source.email": { en: "Email", es: "Email" },
+  "enum.source.portal": { en: "Portal", es: "Portal" },
+  "enum.source.api": { en: "API", es: "API" },
 
   // Enums - Discard Reasons
   "enum.discardReason.duplicate": { en: "Duplicate", es: "Duplicado" },

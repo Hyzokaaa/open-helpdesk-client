@@ -1113,6 +1113,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <StatusBadge label={tEnum("category", ticket.category)} color="primary" size="xs" />
               </Card>
 
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.source")}</p>
+                <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
+              </Card>
+
               {ticket.assigneeId && (
                 <Card className="p-4">
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
