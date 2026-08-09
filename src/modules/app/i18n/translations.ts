@@ -533,6 +533,8 @@ const translations = {
   "ticketDetail.sendAndResolve": { en: "Send & Resolve", es: "Enviar y Resolver" },
   "ticketDetail.resolvedSuccess": { en: "Ticket resolved", es: "Ticket resuelto" },
   "ticketDetail.commentPlaceholder": { en: "Write a comment... Use @ to mention, / for canned responses", es: "Escribe un comentario... Usa @ para mencionar, / para respuestas predefinidas" },
+  "ticketDetail.hintList": { en: "Enter to add item · Enter on empty to exit list", es: "Enter para agregar elemento · Enter en vacío para salir de la lista" },
+  "ticketDetail.hintCodeBlock": { en: "Shift+Enter to add line · Type outside the block to exit", es: "Shift+Enter para nueva línea · Escribe fuera del bloque para salir" },
   "ticketDetail.status": { en: "Status", es: "Estado" },
   "ticketDetail.priority": { en: "Priority", es: "Prioridad" },
   "ticketDetail.category": { en: "Category", es: "Categoría" },

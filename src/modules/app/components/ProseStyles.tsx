@@ -185,6 +185,24 @@ export default function ProseStyles() {
         font-weight: 600;
         background-color: var(--th-surface-hover);
       }
+
+      /* Comment editor — compact variant */
+      .comment-editor p {
+        margin-bottom: 0.25rem;
+      }
+      .comment-editor p:last-child {
+        margin-bottom: 0;
+      }
+      .comment-editor pre {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125em;
+      }
+      .comment-editor ul, .comment-editor ol {
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+      }
     `}</style>
   );
 }

@@ -899,15 +899,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       </p>
                     )}
                   </div>
-                  <p
-                    className="text-sm text-body whitespace-pre-wrap"
+                  <div
+                    className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
                     dangerouslySetInnerHTML={{
                       __html: c.content.replace(
                         /@\[([^\]]+)\]\(([^)]+)\)/g,
                         (_match, _name, userId) => {
                           const current = members.find((m) => m.userId === userId);
                           const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                          return `<span class="text-primary font-body-semibold">@${displayName}</span>`;
+                          return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
                         },
                       ),
                     }}
