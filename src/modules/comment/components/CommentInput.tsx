@@ -4,6 +4,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Mention from "@tiptap/extension-mention";
+import { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -71,7 +73,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
         HTMLAttributes: {
           class: "inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5",
         },
-        renderLabel({ node }) {
+        renderLabel({ node }: { node: ProseMirrorNode }) {
           return `@${node.attrs.label}`;
         },
         suggestion: {
@@ -85,7 +87,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
           },
           render: () => {
             return {
-              onStart: (props) => {
+              onStart: (props: SuggestionProps) => {
                 mentionCommandRef.current = props.command;
                 setMentionQuery(props.query);
                 setMentionIndex(0);
@@ -95,7 +97,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
                   if (rect) setMentionPos({ top: rect.bottom - container.top, left: rect.left - container.left });
                 }
               },
-              onUpdate(props) {
+              onUpdate(props: SuggestionProps) {
                 mentionCommandRef.current = props.command;
                 setMentionQuery(props.query);
                 if (props.clientRect && editorContainerRef.current) {
@@ -104,7 +106,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
                   if (rect) setMentionPos({ top: rect.bottom - container.top, left: rect.left - container.left });
                 }
               },
-              onKeyDown(props) {
+              onKeyDown(props: SuggestionKeyDownProps) {
                 if (props.event.key === "Escape") {
                   setMentionQuery(null);
                   return true;
