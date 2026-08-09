@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import {
   SystemEmailDto,
@@ -43,6 +44,7 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("587");
   const [smtpUser, setSmtpUser] = useState("");
+  const [encryption, setEncryption] = useState("tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -60,6 +62,7 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
           setSmtpHost(res.settings.smtpHost);
           setSmtpPort(String(res.settings.smtpPort));
           setSmtpUser(res.settings.smtpUser);
+          setEncryption(res.settings.encryption ?? "tls");
         }
       })
       .finally(() => setLoading(false));
@@ -78,6 +81,7 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
         smtpPort: resolvedPort,
         smtpUser: resolvedUser,
         smtpPass: password || "__keep__",
+        encryption,
       });
       setTestResult(result);
     } catch {
@@ -96,6 +100,7 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
         smtpUser: resolvedUser,
         smtpPass: password,
         smtpFrom: email,
+        encryption,
       });
       toast.success(t("systemEmail.saved"));
       const updated = await getSystemEmail();
@@ -119,6 +124,7 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
       setSmtpHost("");
       setSmtpPort("587");
       setSmtpUser("");
+      setEncryption("tls");
       setEditing(false);
       setShowAdvanced(false);
       toast.success(t("systemEmail.deleted"));
@@ -231,6 +237,14 @@ export default function SystemEmailPage({ embedded }: SystemEmailPageProps = {})
                     />
                   </FormInput>
                 </div>
+                <FormInput label={t("mailbox.encryption")}>
+                  <Select
+                    options={['tls', 'tls-insecure', 'none']}
+                    label={(e) => t(`mailbox.encryption.${e}` as any)}
+                    value={(e) => e === encryption}
+                    onChange={setEncryption}
+                  />
+                </FormInput>
               </div>
             )}
 

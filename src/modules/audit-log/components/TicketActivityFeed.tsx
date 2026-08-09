@@ -140,7 +140,11 @@ function describeAction(
     case "comment-created": {
       const content = meta.content as string | undefined;
       if (content) {
-        const clean = content.replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1");
+        const clean = content
+          .replace(/<[^>]+>/g, "") // Strip HTML tags
+          .replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1") // Clean mentions
+          .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"') // Unescape entities
+          .trim();
         const preview = clean.length > 60 ? clean.slice(0, 60) + "..." : clean;
         return `${t("auditLog.feed.commented")}: "${preview}"`;
       }

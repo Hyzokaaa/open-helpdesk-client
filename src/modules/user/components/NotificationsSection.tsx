@@ -14,6 +14,11 @@ const EVENT_KEYS = [
   { key: "TicketAssigned", labelKey: "notifications.ticketAssigned" },
   { key: "StatusChanged", labelKey: "notifications.statusChanged" },
   { key: "CommentCreated", labelKey: "notifications.commentCreated" },
+  { key: "TransferRequest", labelKey: "notifications.transferRequest" },
+] as const;
+
+const EMAIL_ONLY_KEYS = [
+  { key: "emailCsatSurvey", labelKey: "notifications.csatSurvey" },
 ] as const;
 
 function Toggle({
@@ -176,6 +181,27 @@ export default function NotificationsSection() {
               </div>
             ))}
           </div>
+
+          {prefs.emailEnabled && EMAIL_ONLY_KEYS.length > 0 && (
+            <>
+              <p className="text-xs text-subtle font-body-medium mb-2 mt-4">
+                {t("notifications.emailOnly")}
+              </p>
+              <div className="rounded-lg border border-border-card divide-y divide-border-card">
+                {EMAIL_ONLY_KEYS.map(({ key, labelKey }) => (
+                  <div key={key} className="flex items-center gap-2 px-3 py-2.5">
+                    <span className="flex-1 text-xs text-body">{t(labelKey)}</span>
+                    <div className="w-14 flex justify-center">
+                      <Toggle
+                        checked={prefs[key as keyof NotificationPreferences] as boolean}
+                        onChange={(v) => handleChange(key, v)}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </Card>

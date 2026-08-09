@@ -71,7 +71,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
 
   const isTicketReadonly = useCallback((ticket: TicketListItem) => {
     if (canViewAll) return false;
-    return ticket.assigneeId !== userId && ticket.creatorId !== userId && ticket.status !== 'open';
+    return ticket.assigneeId !== userId && ticket.reporterId !== userId && ticket.status !== 'open';
   }, [canViewAll, userId]);
 
   const handleDragStart = (event: DragStartEvent) => {

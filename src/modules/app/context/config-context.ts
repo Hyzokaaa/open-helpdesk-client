@@ -8,6 +8,7 @@ export interface ConfigContextProps {
   paddleEnvironment: string;
   aiEnabled: boolean;
   emailConfigured: boolean;
+  systemEmailFrom: string | null;
   loading: boolean;
 }
 
@@ -19,5 +20,6 @@ export const ConfigContext = createContext<ConfigContextProps>({
   paddleEnvironment: "sandbox",
   aiEnabled: false,
   emailConfigured: false,
+  systemEmailFrom: null,
   loading: true,
 });

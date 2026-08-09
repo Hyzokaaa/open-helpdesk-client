@@ -393,7 +393,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     }
   }, [workspaceSlug, can(P.CANNED_RESPONSE_VIEW)]);
 
-  const isCreator = ticket?.creatorId === user?.id;
+  const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
   const isReadonly = ticket?.accessLevel === "readonly";
@@ -402,7 +402,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
-  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.creatorId === user?.id);
+  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
   const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
@@ -493,6 +493,24 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       setActivityKey((k) => k + 1);
     } catch (err) {
       handlePlanLimitError(err, "Failed to add comment");
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
+  const handleAddCommentAndResolve = async (content: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    setSendingComment(true);
+    try {
+      await createComment(workspaceSlug, ticketId, content);
+      await changeTicketStatus(workspaceSlug, ticketId, "resolved");
+      fetchTicket();
+      fetchComments();
+      fetchParticipants();
+      setActivityKey((k) => k + 1);
+      toast.success(t("ticketDetail.resolvedSuccess"));
+    } catch (err) {
+      handlePlanLimitError(err, "Failed to send and resolve");
     } finally {
       setSendingComment(false);
     }
@@ -881,15 +899,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       </p>
                     )}
                   </div>
-                  <p
-                    className="text-sm text-body"
+                  <div
+                    className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
                     dangerouslySetInnerHTML={{
                       __html: c.content.replace(
                         /@\[([^\]]+)\]\(([^)]+)\)/g,
                         (_match, _name, userId) => {
                           const current = members.find((m) => m.userId === userId);
                           const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                          return `<span class="text-primary font-body-semibold">@${displayName}</span>`;
+                          return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
                         },
                       ),
                     }}
@@ -903,6 +921,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 members={members}
                 loading={sendingComment}
                 onSubmit={handleAddComment}
+                onSubmitAndResolve={handleAddCommentAndResolve}
+                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
                 cannedResponses={cannedResponses}
               />
             )}
@@ -1093,6 +1113,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <StatusBadge label={tEnum("category", ticket.category)} color="primary" size="xs" />
               </Card>
 
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.source")}</p>
+                <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
+              </Card>
+
               {ticket.assigneeId && (
                 <Card className="p-4">
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
@@ -1215,12 +1240,26 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {t("ticketDetail.details")}
             </p>
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted">{t("ticketDetail.creator")}</span>
-                <span className="text-body font-body-medium">
-                  {getMemberName(ticket.creatorId)}
-                </span>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted shrink-0">{t("ticketDetail.reportedBy")}</span>
+                <div className="text-right min-w-0">
+                  <span className="text-body font-body-medium block truncate">
+                    {getMemberName(ticket.reporterId)}
+                  </span>
+                  {(() => { const m = members.find((m) => m.userId === ticket.reporterId); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
+                </div>
               </div>
+              {ticket.registeredById && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted shrink-0">{t("ticketDetail.registeredBy")}</span>
+                  <div className="text-right min-w-0">
+                    <span className="text-body font-body-medium block truncate">
+                      {getMemberName(ticket.registeredById)}
+                    </span>
+                    {(() => { const m = members.find((m) => m.userId === ticket.registeredById); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
+                  </div>
+                </div>
+              )}
               {ticket.assigneeId && (
                 <div className="flex justify-between">
                   <span className="text-muted">{t("ticketDetail.assignee")}</span>

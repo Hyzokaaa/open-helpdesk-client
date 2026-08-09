@@ -15,9 +15,12 @@ export interface NotificationPreferences {
   emailTicketAssigned: boolean;
   emailStatusChanged: boolean;
   emailCommentCreated: boolean;
+  emailCsatSurvey: boolean;
+  emailTransferRequest: boolean;
   inAppTicketCreated: boolean;
   inAppTicketAssigned: boolean;
   inAppStatusChanged: boolean;
   inAppCommentCreated: boolean;
+  inAppTransferRequest: boolean;
   bellUnreadOnly: boolean;
 }

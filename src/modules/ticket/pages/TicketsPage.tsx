@@ -118,7 +118,7 @@ export default function TicketsPage() {
       params.excludeStatus = "resolved,discarded";
     }
     if (filterTagIds.length > 0) params.tagIds = filterTagIds;
-    if (isReporter && user) params.creatorId = user.id;
+    if (isReporter && user) params.reporterId = user.id;
     listTickets(workspaceSlug, params)
       .then(setResult)
       .catch(() => toast.error("Failed to load tickets"))
@@ -210,7 +210,7 @@ export default function TicketsPage() {
               search: filters.search,
               priority: filters.priority,
               tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
-              creatorId: isReporter ? user?.id : undefined,
+              reporterId: isReporter ? user?.id : undefined,
             }}
             tags={tags}
             members={members}
@@ -346,8 +346,8 @@ export default function TicketsPage() {
                     ))}
                     <td className="px-2 py-3 sticky right-0 bg-surface">
                       <ActionMenu items={(() => {
-                        const hasDirectAccess = ticket.assigneeId === user?.id || ticket.creatorId === user?.id || ticket.status === "open" || can(P.TICKET_VIEW);
-                        const isAssigneeOrCreator = ticket.assigneeId === user?.id || ticket.creatorId === user?.id;
+                        const hasDirectAccess = ticket.assigneeId === user?.id || ticket.reporterId === user?.id || ticket.status === "open" || can(P.TICKET_VIEW);
+                        const isAssigneeOrCreator = ticket.assigneeId === user?.id || ticket.reporterId === user?.id;
                         const isOpen = ticket.status === "open";
                         const isClosed = ticket.status === "resolved" || ticket.status === "discarded";
                         const items = [

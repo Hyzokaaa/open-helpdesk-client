@@ -49,6 +49,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
+  const [onBehalfOf, setOnBehalfOf] = useState("");
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
@@ -134,6 +135,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         tagIds,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
+        onBehalfOf: onBehalfOf.trim() || undefined,
       });
 
       toast.success(t("ticketCreate.success"));
@@ -211,6 +213,15 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
           <FormInput label={t("ticketCreate.tags")}>
             <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
+          </FormInput>
+
+          <FormInput label={t("ticketCreate.onBehalfOf")}>
+            <Input
+              placeholder={t("ticketCreate.onBehalfOfPlaceholder")}
+              value={onBehalfOf}
+              onChange={setOnBehalfOf}
+              type="email"
+            />
           </FormInput>
 
           <CustomFieldsForm
