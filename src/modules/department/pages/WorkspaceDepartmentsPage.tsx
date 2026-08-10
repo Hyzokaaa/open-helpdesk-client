@@ -7,6 +7,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -173,24 +174,32 @@ export default function WorkspaceDepartmentsPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-heading">{t("departments.title")}</h2>
         {canManage && (
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? t("tags.cancel") : t("departments.new")}
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            {t("departments.new")}
           </Button>
         )}
       </div>
 
       {showCreate && (
-        <Card className="p-5 mb-6">
+        <Sheet onClose={() => setShowCreate(false)}>
+          <h2 className="text-lg font-body-bold text-heading mb-6">
+            {t("departments.new")}
+          </h2>
           <form onSubmit={handleCreate}>
             <FormInput label={t("departments.name")} required>
-              <Input placeholder={t("departments.name")} value={name} onChange={setName} />
+              <Input placeholder={t("departments.name")} value={name} onChange={setName} autoFocus />
             </FormInput>
             <FormInput label={t("departments.description")}>
               <Input placeholder={t("departments.description")} value={description} onChange={setDescription} />
             </FormInput>
-            <Button type="submit" size="sm" loading={creating}>{t("departments.create")}</Button>
+            <div className="flex justify-end gap-3">
+              <Button size="sm" color="light" onClick={() => setShowCreate(false)}>
+                {t("tags.cancel")}
+              </Button>
+              <Button type="submit" size="sm" loading={creating}>{t("departments.create")}</Button>
+            </div>
           </form>
-        </Card>
+        </Sheet>
       )}
 
       {loading ? (

@@ -232,12 +232,12 @@ export default function WorkspaceCannedResponsesPage() {
                 onChange={(e) => setContent(e.target.value)}
               />
             </FormInput>
-            <div className="flex gap-3">
-              <Button type="submit" size="sm" loading={saving}>
-                {editingId ? t("cannedResponses.save") : t("cannedResponses.create")}
-              </Button>
+            <div className="flex justify-end gap-3">
               <Button size="sm" color="light" onClick={handleClose}>
                 {t("cannedResponses.cancel")}
+              </Button>
+              <Button type="submit" size="sm" loading={saving}>
+                {editingId ? t("cannedResponses.save") : t("cannedResponses.create")}
               </Button>
             </div>
           </form>

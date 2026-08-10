@@ -337,15 +337,15 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
             </DropZone>
           </FormInput>
 
-          <div className="flex gap-3 mt-2">
-            <Button type="submit" loading={loading} disabled={hasFilesPending}>
-              {t("ticketCreate.submit")}
-            </Button>
+          <div className="flex justify-end gap-3 mt-2">
             <Button
               color="light"
               onClick={handleCancel}
             >
               {t("ticketCreate.cancel")}
+            </Button>
+            <Button type="submit" loading={loading} disabled={hasFilesPending}>
+              {t("ticketCreate.submit")}
             </Button>
           </div>
         </form>
