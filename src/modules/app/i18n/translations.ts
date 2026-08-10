@@ -543,6 +543,8 @@ const translations = {
   "ticketDetail.selectAssignee": { en: "Select assignee...", es: "Seleccionar asignado..." },
   "ticketDetail.tags": { en: "Tags", es: "Etiquetas" },
   "ticketDetail.details": { en: "Details", es: "Detalles" },
+  "ticketDetail.tabDetails": { en: "Details", es: "Detalles" },
+  "ticketDetail.tabActivity": { en: "Activity", es: "Actividad" },
   "ticketDetail.reportedBy": { en: "Reported by", es: "Reportado por" },
   "ticketDetail.registeredBy": { en: "Registered by", es: "Registrado por" },
   "ticketDetail.firstResponse": { en: "First Response", es: "Primera Respuesta" },
