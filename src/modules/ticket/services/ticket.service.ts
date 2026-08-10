@@ -12,6 +12,7 @@ export interface TicketListItem {
   ticketNumber: number;
   createdAt: string | null;
   tagIds: string[];
+  departmentId: string | null;
   customFields: Record<string, unknown>;
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
@@ -34,6 +35,7 @@ export interface TicketDetail {
   ticketNumber: number;
   createdAt: string | null;
   tagIds: string[];
+  departmentId: string | null;
   customFields: Record<string, unknown>;
   discardReason: string | null;
   firstResponseBreached: boolean;
@@ -50,6 +52,7 @@ export interface TicketFilters {
   assigneeId?: string;
   reporterId?: string;
   tagIds?: string[];
+  departmentId?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   page?: number;
@@ -69,6 +72,7 @@ export async function listTickets(
   if (filters.reporterId) params.set("reporterId", filters.reporterId);
   if (filters.tagIds && filters.tagIds.length > 0)
     params.set("tagIds", filters.tagIds.join(","));
+  if (filters.departmentId) params.set("departmentId", filters.departmentId);
   if (filters.sortBy) params.set("sortBy", filters.sortBy);
   if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
   params.set("page", String(filters.page ?? 1));
@@ -124,6 +128,7 @@ export async function createTicket(
     priority: string;
     category: string;
     tagIds: string[];
+    departmentId?: string;
     customFields?: Record<string, unknown>;
     uploadTokens?: string[];
     onBehalfOf?: string;
@@ -142,6 +147,7 @@ export async function updateTicket(
     priority: string;
     category: string;
     tagIds: string[];
+    departmentId: string | null;
     customFields: Record<string, unknown>;
   }>,
 ): Promise<void> {

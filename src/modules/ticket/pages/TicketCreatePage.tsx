@@ -12,6 +12,7 @@ import { createTicket } from "../services/ticket.service";
 import { stageUpload, StagedUpload } from "@modules/attachment/services/attachment.service";
 import { PRIORITIES, CATEGORIES } from "../domain/ticket-enums";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
+import { Department, listDepartments } from "@modules/department/services/department.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -41,6 +42,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [category, setCategory] = useState("issue");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [departmentId, setDepartmentId] = useState<string | undefined>(undefined);
   interface StagedFile {
     file: File;
     status: "pending" | "uploading" | "done" | "error";
@@ -67,6 +70,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   useEffect(() => {
     if (workspaceSlug) {
       listTags(workspaceSlug).then(setTags);
+      listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     }
   }, [workspaceSlug]);
@@ -133,6 +137,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         priority,
         category,
         tagIds,
+        departmentId: departmentId || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
         onBehalfOf: onBehalfOf.trim() || undefined,
@@ -210,6 +215,17 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
               />
             </FormInput>
           </div>
+
+          {departments.length > 0 && (
+            <FormInput label={t("ticketCreate.department")}>
+              <Select
+                options={[{ id: "", name: "—" } as Department, ...departments]}
+                label={(d) => d.name}
+                value={(d) => d.id === (departmentId ?? "")}
+                onChange={(d) => setDepartmentId(d.id || undefined)}
+              />
+            </FormInput>
+          )}
 
           <FormInput label={t("ticketCreate.tags")}>
             <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />

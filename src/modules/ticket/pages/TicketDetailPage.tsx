@@ -65,6 +65,7 @@ import {
   getSlaPolicy,
 } from "@modules/workspace/services/workspace.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
+import { Department, listDepartments } from "@modules/department/services/department.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
@@ -213,6 +214,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [participants, setParticipants] = useState<TicketParticipant[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
@@ -237,6 +239,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     status: string;
     assigneeId: string | null;
     tagIds: string[];
+    departmentId: string | null;
     customFields: Record<string, unknown>;
     discardReason?: string;
   }
@@ -252,6 +255,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       status: ticket.status,
       assigneeId: ticket.assigneeId,
       tagIds: [...ticket.tagIds],
+      departmentId: ticket.departmentId,
       customFields: { ...(ticket.customFields ?? {}) },
     });
     setMode("edit");
@@ -270,6 +274,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (draft.category !== ticket.category) changes.push({ field: t("ticketDetail.category"), from: tEnum("category", ticket.category), to: tEnum("category", draft.category) });
     if (draft.assigneeId !== ticket.assigneeId) changes.push({ field: t("ticketDetail.assignee"), from: ticket.assigneeId ? getMemberName(ticket.assigneeId) : "—", to: draft.assigneeId ? getMemberName(draft.assigneeId) : "—" });
     if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) changes.push({ field: t("ticketDetail.tags"), from: ticket.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—", to: draft.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—" });
+    if (draft.departmentId !== ticket.departmentId) changes.push({ field: t("ticketDetail.department"), from: departments.find((d) => d.id === ticket.departmentId)?.name ?? "—", to: departments.find((d) => d.id === draft.departmentId)?.name ?? "—" });
     const origCf = ticket.customFields ?? {};
     for (const def of customFieldDefs) {
       const origVal = origCf[def.id];
@@ -350,6 +355,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchMembers();
     fetchParticipants();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
+    if (workspaceSlug) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
   }, [workspaceSlug, ticketId]);
@@ -423,12 +429,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId || !ticket || !draft) return;
     setSaving(true);
     try {
-      const updates: Partial<{ name: string; description: string; priority: string; category: string; tagIds: string[]; customFields: Record<string, unknown> }> = {};
+      const updates: Partial<{ name: string; description: string; priority: string; category: string; tagIds: string[]; departmentId: string | null; customFields: Record<string, unknown> }> = {};
       if (draft.name !== ticket.name) updates.name = draft.name;
       if (draft.description !== ticket.description) updates.description = draft.description;
       if (draft.priority !== ticket.priority) updates.priority = draft.priority;
       if (draft.category !== ticket.category) updates.category = draft.category;
       if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) updates.tagIds = draft.tagIds;
+      if (draft.departmentId !== ticket.departmentId) updates.departmentId = draft.departmentId;
       if (JSON.stringify(draft.customFields) !== JSON.stringify(ticket.customFields ?? {})) updates.customFields = draft.customFields;
 
       if (Object.keys(updates).length > 0) {
@@ -997,6 +1004,30 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 )}
               </Card>
 
+              {departments.length > 0 && (
+                <Card className="p-4">
+                  {canAssign ? (
+                    <FormInput label={t("ticketDetail.department")} className="!mb-0">
+                      <Select
+                        options={[{ id: "", name: "—", description: "" } as Department, ...departments]}
+                        label={(d) => d.name}
+                        value={(d) => d.id === (draft.departmentId ?? "")}
+                        onChange={(d) => setDraft((prev) => prev ? { ...prev, departmentId: d.id || null } : prev)}
+                      />
+                    </FormInput>
+                  ) : (
+                    <>
+                      <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
+                      {draft.departmentId ? (
+                        <StatusBadge label={departments.find((d) => d.id === draft.departmentId)?.name ?? "—"} color="primary" size="xs" />
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
+                    </>
+                  )}
+                </Card>
+              )}
+
               {canAssign ? (
                 <Card className="p-4">
                   <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
@@ -1117,6 +1148,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.source")}</p>
                 <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
               </Card>
+
+              {ticket.departmentId && (() => {
+                const dept = departments.find((d) => d.id === ticket.departmentId);
+                return dept ? (
+                  <Card className="p-4">
+                    <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
+                    <StatusBadge label={dept.name} color="primary" size="xs" />
+                  </Card>
+                ) : null;
+              })()}
 
               {ticket.assigneeId && (
                 <Card className="p-4">

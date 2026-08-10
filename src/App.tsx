@@ -18,6 +18,7 @@ import DashboardLayout from "@modules/app/components/DashboardLayout";
 import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import WorkspaceMembersPage from "@modules/workspace/pages/WorkspaceMembersPage";
 import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
+import WorkspaceDepartmentsPage from "@modules/department/pages/WorkspaceDepartmentsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
@@ -86,6 +87,7 @@ function AppRoutes() {
           <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
           <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
           <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+          <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
           <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
           <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
           <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
