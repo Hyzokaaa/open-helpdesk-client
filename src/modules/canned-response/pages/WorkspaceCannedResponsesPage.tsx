@@ -170,7 +170,7 @@ export default function WorkspaceCannedResponsesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-subtle truncate block max-w-md">
-                      {r.content}
+                      {r.content.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')}
                     </span>
                   </td>
                   <td className="px-2 py-3">
