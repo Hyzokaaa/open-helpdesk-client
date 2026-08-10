@@ -282,7 +282,8 @@ export default function WorkspaceDepartmentsPage() {
                           {t("departments.members")} ({detail.members.length})
                         </p>
 
-                        {canManage && availableMembers.length > 0 && (
+                        {canManage && (
+                          availableMembers.length > 0 ? (
                           <div className="flex gap-2 mb-3">
                             <div className="flex-1">
                               <Select
@@ -297,6 +298,9 @@ export default function WorkspaceDepartmentsPage() {
                               {t("departments.addMember")}
                             </Button>
                           </div>
+                          ) : (
+                          <p className="text-xs text-muted mb-3">{t("departments.allMembersAssigned")}</p>
+                          )
                         )}
 
                         {detail.members.length === 0 ? (

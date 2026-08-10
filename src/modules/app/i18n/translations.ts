@@ -1346,6 +1346,7 @@ const translations = {
   "departments.addMember": { en: "Add Member", es: "Agregar Miembro" },
   "departments.memberAdded": { en: "Member added", es: "Miembro agregado" },
   "departments.memberRemoved": { en: "Member removed", es: "Miembro eliminado" },
+  "departments.allMembersAssigned": { en: "All workspace members are already assigned to this department.", es: "Todos los miembros del workspace ya están asignados a este departamento." },
   "departments.confirmDelete": { en: "Are you sure you want to delete this department?", es: "¿Está seguro de que desea eliminar este departamento?" },
   "ticketCreate.department": { en: "Department", es: "Departamento" },
   "ticketDetail.department": { en: "Department", es: "Departamento" },
