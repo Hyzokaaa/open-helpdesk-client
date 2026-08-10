@@ -450,6 +450,9 @@ const translations = {
   "cannedResponses.updated": { en: "Response updated", es: "Respuesta actualizada" },
   "cannedResponses.deleted": { en: "Response deleted", es: "Respuesta eliminada" },
   "cannedResponses.empty": { en: "No canned responses yet.", es: "Sin respuestas predefinidas." },
+  "cannedResponses.titleRequired": { en: "Title is required", es: "El titulo es requerido" },
+  "cannedResponses.contentRequired": { en: "Content is required", es: "El contenido es requerido" },
+  "cannedResponses.error": { en: "Failed to save response", es: "Error al guardar respuesta" },
   "cannedResponses.edit": { en: "Edit", es: "Editar" },
   "cannedResponses.confirmDelete": { en: "Delete this response?", es: "��Eliminar esta respuesta?" },
 

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -34,6 +35,7 @@ export default function WorkspaceCannedResponsesPage() {
   const [saving, setSaving] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const editorRef = useRef<MiniEditorRef>(null);
   const [originalTitle, setOriginalTitle] = useState("");
   const [originalContent, setOriginalContent] = useState("");
   const [denied, setDenied] = useState(false);
@@ -84,17 +86,23 @@ export default function WorkspaceCannedResponsesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workspaceSlug) return;
+    if (!title.trim()) { toast.error(t("cannedResponses.titleRequired")); return; }
+    const html = editorRef.current?.getHTML() || content;
+    const finalContent = html === "<p></p>" ? "" : html;
+    if (!finalContent) { toast.error(t("cannedResponses.contentRequired")); return; }
     setSaving(true);
     try {
       if (editingId) {
-        await updateCannedResponse(workspaceSlug, editingId, { title, content });
+        await updateCannedResponse(workspaceSlug, editingId, { title: title.trim(), content: finalContent });
         toast.success(t("cannedResponses.updated"));
       } else {
-        await createCannedResponse(workspaceSlug, { title, content });
+        await createCannedResponse(workspaceSlug, { title: title.trim(), content: finalContent });
         toast.success(t("cannedResponses.created"));
       }
       setShowSheet(false);
       fetchResponses();
+    } catch {
+      toast.error(t("cannedResponses.error"));
     } finally {
       setSaving(false);
     }
@@ -107,9 +115,6 @@ export default function WorkspaceCannedResponsesPage() {
     fetchResponses();
     toast.success(t("cannedResponses.deleted"));
   };
-
-  const textareaClass =
-    "w-full bg-surface rounded-input border-input transition-all duration-200 outline-none shadow-input text-body border-input-effect px-3 py-1.5 text-sm resize-none";
 
   if (denied) {
     return (
@@ -224,12 +229,10 @@ export default function WorkspaceCannedResponsesPage() {
               />
             </FormInput>
             <FormInput label={t("cannedResponses.content")} required>
-              <textarea
-                className={textareaClass}
-                rows={6}
+              <MiniEditor
+                ref={editorRef}
+                initialValue={content}
                 placeholder="e.g. Hello! How can I help you today?"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
               />
             </FormInput>
             <div className="flex justify-end gap-3">
