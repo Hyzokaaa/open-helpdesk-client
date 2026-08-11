@@ -20,7 +20,7 @@ import {
   createUser,
   toggleSystemAdmin,
   toggleUserActive,
-  updateUserName,
+  updateUserProfile,
 } from "../services/admin.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -47,6 +47,7 @@ export default function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
   const columnKeys = ["name", "email", "role", "status"];
   const sensors = useSensors(useSensor(PointerSensor));
@@ -108,16 +109,24 @@ export default function AdminUsersPage() {
     setEditingUser(u);
     setEditFirstName(u.firstName);
     setEditLastName(u.lastName);
+    setEditEmail(u.email);
   };
 
-  const handleSaveUserName = async () => {
+  const handleSaveUserProfile = async () => {
     if (!editingUser) return;
     try {
-      await updateUserName(editingUser.id, editFirstName, editLastName);
+      await updateUserProfile(editingUser.id, {
+        firstName: editFirstName,
+        lastName: editLastName,
+        email: editEmail,
+      });
       setEditingUser(null);
       fetchData();
-      toast.success(t("members.nameUpdated"));
-    } catch { toast.error("Failed to update name"); }
+      toast.success(t("admin.profileUpdated"));
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to update profile";
+      toast.error(msg);
+    }
   };
 
   const handleToggleActive = async (target: UserItem) => {
@@ -197,8 +206,8 @@ export default function AdminUsersPage() {
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
-        <table className="w-full">
+      <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
+        <table className="w-full table-fixed">
           <thead>
             <SortableContext items={order} strategy={horizontalListSortingStrategy}>
             <tr className="border-b border-border-card bg-surface-hover">
@@ -227,10 +236,10 @@ export default function AdminUsersPage() {
                 {reorder(columns).map((col) => (
                   <td key={col.key} className="px-4 py-3">
                     {col.key === "name" && (
-                      <span className="text-sm font-body-semibold text-heading">{u.firstName} {u.lastName}</span>
+                      <span className="text-sm font-body-semibold text-heading block truncate">{u.firstName} {u.lastName}</span>
                     )}
                     {col.key === "email" && (
-                      <span className="text-sm text-muted">{u.email}</span>
+                      <span className="text-sm text-muted block truncate" title={u.email}>{u.email}</span>
                     )}
                     {col.key === "role" && (
                       u.isSystemAdmin
@@ -248,7 +257,7 @@ export default function AdminUsersPage() {
                   {u.id !== user.id && (
                     <ActionMenu items={[
                       {
-                        label: t("members.editName"),
+                        label: t("admin.editProfile"),
                         onClick: () => handleEditUser(u),
                       },
                       {
@@ -271,9 +280,8 @@ export default function AdminUsersPage() {
       </DndContext>
       {editingUser && (
         <Sheet onClose={() => setEditingUser(null)}>
-          <h3 className="text-lg font-body-bold text-heading mb-4">{t("members.editName")}</h3>
-          <p className="text-xs text-muted mb-3">{editingUser.email}</p>
-          <div className="flex gap-3 mb-4">
+          <h3 className="text-lg font-body-bold text-heading mb-4">{t("admin.editProfile")}</h3>
+          <div className="flex gap-3 mb-3">
             <FormInput label={t("admin.firstName")} className="flex-1">
               <Input value={editFirstName} onChange={setEditFirstName} />
             </FormInput>
@@ -281,9 +289,12 @@ export default function AdminUsersPage() {
               <Input value={editLastName} onChange={setEditLastName} />
             </FormInput>
           </div>
+          <FormInput label={t("admin.email")} className="mb-4">
+            <Input type="email" value={editEmail} onChange={setEditEmail} />
+          </FormInput>
           <div className="flex gap-2 justify-end">
             <Button size="sm" color="light" onClick={() => setEditingUser(null)}>{t("admin.cancel")}</Button>
-            <Button size="sm" onClick={handleSaveUserName}>{t("members.save")}</Button>
+            <Button size="sm" onClick={handleSaveUserProfile}>{t("members.save")}</Button>
           </div>
         </Sheet>
       )}

@@ -622,6 +622,8 @@ const translations = {
   "admin.subtitle": { en: "Manage users", es: "Gestionar usuarios" },
   "admin.newUser": { en: "New User", es: "Nuevo Usuario" },
   "admin.cancel": { en: "Cancel", es: "Cancelar" },
+  "admin.editProfile": { en: "Edit Profile", es: "Editar Perfil" },
+  "admin.profileUpdated": { en: "Profile updated", es: "Perfil actualizado" },
   "admin.firstName": { en: "First Name", es: "Nombre" },
   "admin.lastName": { en: "Last Name", es: "Apellido" },
   "admin.email": { en: "Email", es: "Correo" },

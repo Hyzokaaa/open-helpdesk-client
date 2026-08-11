@@ -44,10 +44,9 @@ export async function toggleUserActive(
   await http.patch(`/users/${userId}/active`, { isActive });
 }
 
-export async function updateUserName(
+export async function updateUserProfile(
   userId: string,
-  firstName: string,
-  lastName: string,
+  data: { firstName?: string; lastName?: string; email?: string },
 ): Promise<void> {
-  await http.patch(`/users/${userId}/name`, { firstName, lastName });
+  await http.patch(`/users/${userId}/profile`, data);
 }
