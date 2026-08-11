@@ -192,7 +192,7 @@ export default function TicketsPage() {
       </div>
 
       {departments.length > 0 && (
-        <div className="flex gap-1 mb-3 overflow-x-auto">
+        <div className="flex gap-1 mb-3 py-1 overflow-x-auto">
           <button
             onClick={() => setFilterDepartmentId(undefined)}
             className={clsx(
