@@ -148,7 +148,7 @@ export default function WorkspaceDepartmentsPage() {
       await addDepartmentMember(workspaceSlug, expandedId, addMemberUserId);
       setAddMemberUserId(null);
       fetchDetail(expandedId);
-      toast.success(t("departments.memberAdded"));
+      toast.success(t("departments.agentAdded"));
     } catch {
       toast.error("Failed to add member");
     }
@@ -159,14 +159,15 @@ export default function WorkspaceDepartmentsPage() {
     try {
       await removeDepartmentMember(workspaceSlug, expandedId, userId);
       fetchDetail(expandedId);
-      toast.success(t("departments.memberRemoved"));
+      toast.success(t("departments.agentRemoved"));
     } catch {
       toast.error("Failed to remove member");
     }
   };
 
+  const agentRoles = ["admin", "supervisor", "agent"];
   const availableMembers = members.filter(
-    (m) => !detail?.members.some((dm) => dm.userId === m.userId),
+    (m) => agentRoles.includes(m.role) && !detail?.members.some((dm) => dm.userId === m.userId),
   );
 
   return (
@@ -234,7 +235,7 @@ export default function WorkspaceDepartmentsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                    <span className="text-xs text-muted">{dept.memberCount ?? 0} {t("departments.members").toLowerCase()}</span>
+                    <span className="text-xs text-muted">{dept.memberCount ?? 0} {t("departments.agents").toLowerCase()}</span>
                     {canManage && (
                       <ActionMenu items={[
                         { label: t("ticketDetail.edit"), onClick: () => { setExpandedId(dept.id); fetchDetail(dept.id); setEditingId(dept.id); setEditName(dept.name); setEditDescription(dept.description ?? ""); } },
@@ -279,7 +280,7 @@ export default function WorkspaceDepartmentsPage() {
 
                         {/* Members section */}
                         <p className="text-xs font-body-semibold text-subtle uppercase mb-3">
-                          {t("departments.members")} ({detail.members.length})
+                          {t("departments.agents")} ({detail.members.length})
                         </p>
 
                         {canManage && (
@@ -291,15 +292,15 @@ export default function WorkspaceDepartmentsPage() {
                                 label={(m) => `${m.firstName} ${m.lastName} (${m.email})`}
                                 value={(m) => m.userId === addMemberUserId}
                                 onChange={(m) => setAddMemberUserId(m.userId)}
-                                placeholder={t("departments.addMember")}
+                                placeholder={t("departments.addAgent")}
                               />
                             </div>
                             <Button size="sm" disabled={!addMemberUserId} onClick={handleAddMember}>
-                              {t("departments.addMember")}
+                              {t("departments.addAgent")}
                             </Button>
                           </div>
                           ) : (
-                          <p className="text-xs text-muted mb-3">{t("departments.allMembersAssigned")}</p>
+                          <p className="text-xs text-muted mb-3">{t("departments.allAgentsAssigned")}</p>
                           )
                         )}
 
