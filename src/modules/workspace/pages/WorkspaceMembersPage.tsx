@@ -6,14 +6,18 @@ import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBa
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import InviteSheet from "../components/InviteSheet";
 import AddMemberSheet from "../components/AddMemberSheet";
 import ImportMembersSheet from "../components/ImportMembersSheet";
+import Input from "@modules/app/modules/ui/components/Input/Input";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import {
   WorkspaceMember,
   listMembers,
   removeMember,
   changeMemberRole,
+  updateContactName,
 } from "../services/workspace.service";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -36,6 +40,9 @@ export default function WorkspaceMembersPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<WorkspaceMember | null>(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("members");
 
   const fetchMembers = () => {
@@ -73,6 +80,24 @@ export default function WorkspaceMembersPage() {
       toast.success(t("members.roleUpdated"));
     } catch (err: any) {
       if (!err?.handled) toast.error(t("members.roleError"));
+    }
+  };
+
+  const handleEditContact = (m: WorkspaceMember) => {
+    setEditingContact(m);
+    setEditFirstName(m.firstName);
+    setEditLastName(m.lastName);
+  };
+
+  const handleSaveContactName = async () => {
+    if (!workspaceSlug || !editingContact) return;
+    try {
+      await updateContactName(workspaceSlug, editingContact.userId, editFirstName, editLastName);
+      setEditingContact(null);
+      fetchMembers();
+      toast.success(t("members.nameUpdated"));
+    } catch {
+      toast.error("Failed to update name");
     }
   };
 
@@ -148,24 +173,24 @@ export default function WorkspaceMembersPage() {
           {activeTab === "contacts" ? t("members.noContacts") : t("members.empty")}
         </p>
       ) : (
-        <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
-          <table className="w-full">
+        <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
+          <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-border-card bg-surface-hover">
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.name")}</th>
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[200px]">{t("admin.col.name")}</th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.role")}</th>
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[100px]">{t("admin.col.role")}</th>
                 <th className="px-2 py-3 w-10" />
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
                 <tr key={m.id} className="border-b border-border-row">
-                  <td className="px-4 py-3">
-                    <span className="text-sm font-body-semibold text-heading">{m.firstName} {m.lastName}</span>
+                  <td className="px-4 py-3 max-w-[200px]">
+                    <span className="text-sm font-body-semibold text-heading block truncate">{m.firstName} {m.lastName}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-muted">{m.email}</span>
+                    <span className="text-sm text-muted block truncate" title={m.email}>{m.email}</span>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge label={tEnum("role", m.role)} color={roleColor(m.role)} size="xs" />
@@ -176,6 +201,10 @@ export default function WorkspaceMembersPage() {
                         ...(can(P.REPORT_VIEW) ? [{
                           label: t("members.viewStats"),
                           onClick: () => navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${m.userId}`),
+                        }] : []),
+                        ...(canManageMembers && m.autoCreated ? [{
+                          label: t("members.editName"),
+                          onClick: () => handleEditContact(m),
                         }] : []),
                         ...(canEditRole(m) ? availableRoles()
                           .filter((r) => r !== m.role)
@@ -196,6 +225,24 @@ export default function WorkspaceMembersPage() {
             </tbody>
           </table>
         </div>
+      )}
+      {editingContact && (
+        <Sheet onClose={() => setEditingContact(null)}>
+          <h3 className="text-lg font-body-bold text-heading mb-4">{t("members.editName")}</h3>
+          <p className="text-xs text-muted mb-3">{editingContact.email}</p>
+          <div className="flex gap-3 mb-4">
+            <FormInput label={t("admin.firstName")} className="flex-1">
+              <Input value={editFirstName} onChange={setEditFirstName} />
+            </FormInput>
+            <FormInput label={t("admin.lastName")} className="flex-1">
+              <Input value={editLastName} onChange={setEditLastName} />
+            </FormInput>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" color="light" onClick={() => setEditingContact(null)}>{t("members.cancel")}</Button>
+            <Button size="sm" onClick={handleSaveContactName}>{t("members.save")}</Button>
+          </div>
+        </Sheet>
       )}
       {removeMemberId && (
         <ConfirmModal

@@ -20,6 +20,7 @@ import {
   createUser,
   toggleSystemAdmin,
   toggleUserActive,
+  updateUserName,
 } from "../services/admin.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -43,6 +44,9 @@ export default function AdminUsersPage() {
 
   const [confirmToggleAdmin, setConfirmToggleAdmin] = useState<UserItem | null>(null);
   const [confirmToggleActive, setConfirmToggleActive] = useState<UserItem | null>(null);
+  const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
 
   const columnKeys = ["name", "email", "role", "status"];
   const sensors = useSensors(useSensor(PointerSensor));
@@ -98,6 +102,22 @@ export default function AdminUsersPage() {
       setConfirmToggleAdmin(null);
       fetchData();
     } catch { toast.error("Failed to update admin status"); }
+  };
+
+  const handleEditUser = (u: UserItem) => {
+    setEditingUser(u);
+    setEditFirstName(u.firstName);
+    setEditLastName(u.lastName);
+  };
+
+  const handleSaveUserName = async () => {
+    if (!editingUser) return;
+    try {
+      await updateUserName(editingUser.id, editFirstName, editLastName);
+      setEditingUser(null);
+      fetchData();
+      toast.success(t("members.nameUpdated"));
+    } catch { toast.error("Failed to update name"); }
   };
 
   const handleToggleActive = async (target: UserItem) => {
@@ -228,6 +248,10 @@ export default function AdminUsersPage() {
                   {u.id !== user.id && (
                     <ActionMenu items={[
                       {
+                        label: t("members.editName"),
+                        onClick: () => handleEditUser(u),
+                      },
+                      {
                         label: u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin"),
                         onClick: () => setConfirmToggleAdmin(u),
                       },
@@ -245,6 +269,24 @@ export default function AdminUsersPage() {
         </table>
       </div>
       </DndContext>
+      {editingUser && (
+        <Sheet onClose={() => setEditingUser(null)}>
+          <h3 className="text-lg font-body-bold text-heading mb-4">{t("members.editName")}</h3>
+          <p className="text-xs text-muted mb-3">{editingUser.email}</p>
+          <div className="flex gap-3 mb-4">
+            <FormInput label={t("admin.firstName")} className="flex-1">
+              <Input value={editFirstName} onChange={setEditFirstName} />
+            </FormInput>
+            <FormInput label={t("admin.lastName")} className="flex-1">
+              <Input value={editLastName} onChange={setEditLastName} />
+            </FormInput>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" color="light" onClick={() => setEditingUser(null)}>{t("admin.cancel")}</Button>
+            <Button size="sm" onClick={handleSaveUserName}>{t("members.save")}</Button>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }
