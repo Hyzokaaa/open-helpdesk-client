@@ -105,6 +105,15 @@ export async function changeMemberRole(
   await http.patch(`/workspaces/${slug}/members/${userId}/role`, { role });
 }
 
+export async function updateContactName(
+  slug: string,
+  userId: string,
+  firstName: string,
+  lastName: string,
+): Promise<void> {
+  await http.patch(`/workspaces/${slug}/members/${userId}/name`, { firstName, lastName });
+}
+
 export async function removeMember(
   slug: string,
   userId: string,

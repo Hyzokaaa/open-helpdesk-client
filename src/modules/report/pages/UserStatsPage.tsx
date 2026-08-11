@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { subDays, startOfDay, endOfDay, format } from "date-fns";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import useColumnDrag from "@modules/shared/hooks/useColumnDrag";
+import SortableTh from "@modules/app/modules/ui/components/SortableTh/SortableTh";
 import {
   AreaChart,
   Area,
@@ -17,8 +21,10 @@ import {
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useFormatDate from "@modules/app/hooks/useFormatDate";
 import DateRangeSelector from "../components/DateRangeSelector";
 import { UserStatsData, getUserStats } from "../services/user-stats.service";
+import { listTickets, type TicketListItem } from "@modules/ticket/services/ticket.service";
 
 const STATUS_COLORS: Record<string, string> = {
   open: "#eab308",
@@ -38,6 +44,7 @@ const CARD_BORDERS = [
 ];
 
 function getDateRange(preset: string) {
+  if (preset === "all") return { dateFrom: "", dateTo: "" };
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
   return {
@@ -48,19 +55,63 @@ function getDateRange(preset: string) {
 
 export default function UserStatsPage() {
   const { workspaceSlug, userId } = useParams();
+  const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
+  const formatDate = useFormatDate();
   const [preset, setPreset] = useState("30d");
+  const [dateField, setDateField] = useState<"received" | "sent">("received");
   const [data, setData] = useState<UserStatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState<TicketListItem[]>([]);
+  const [ticketPage, setTicketPage] = useState(1);
+  const [ticketTotal, setTicketTotal] = useState(0);
+  const [ticketSortBy, setTicketSortBy] = useState("createdAt");
+  const [ticketSortOrder, setTicketSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [ticketStatus, setTicketStatus] = useState("");
+  const [ticketView, setTicketView] = useState<"assigned" | "reported">("assigned");
+
+  const TICKET_COLUMNS = [
+    { key: "ticketNumber", label: t("tickets.col.number"), sortable: true },
+    { key: "name", label: t("tickets.col.name"), sortable: true },
+    { key: "status", label: t("tickets.col.status"), sortable: true },
+    { key: "priority", label: t("tickets.col.priority"), sortable: true },
+    { key: "createdAt", label: t("tickets.col.created"), sortable: true },
+  ];
+  const sensors = useSensors(useSensor(PointerSensor));
+  const { order: colOrder, handleDragEnd, reorder } = useColumnDrag(TICKET_COLUMNS.map((c) => c.key));
+
+  const toggleTicketSort = (key: string) => {
+    if (ticketSortBy === key) {
+      setTicketSortOrder((o) => (o === "ASC" ? "DESC" : "ASC"));
+    } else {
+      setTicketSortBy(key);
+      setTicketSortOrder("ASC");
+    }
+    setTicketPage(1);
+  };
 
   useEffect(() => {
     if (!workspaceSlug) return;
     setLoading(true);
     const { dateFrom, dateTo } = getDateRange(preset);
-    getUserStats(workspaceSlug, dateFrom, dateTo, userId)
+    getUserStats(workspaceSlug, dateFrom, dateTo, userId, dateField)
       .then(setData)
       .finally(() => setLoading(false));
-  }, [workspaceSlug, preset, userId]);
+  }, [workspaceSlug, preset, userId, dateField]);
+
+  useEffect(() => {
+    if (!workspaceSlug || !userId || !data) return;
+    const filter = data.isReporter
+      ? { reporterId: userId }
+      : ticketView === "reported"
+        ? { reporterId: userId }
+        : { assigneeId: userId };
+    listTickets(workspaceSlug, {
+      ...filter,
+      ...(ticketStatus ? { status: ticketStatus } : {}),
+      page: ticketPage, limit: 10, sortBy: ticketSortBy, sortOrder: ticketSortOrder,
+    }).then((res) => { setTickets(res.items); setTicketTotal(res.total); });
+  }, [workspaceSlug, userId, data?.isReporter, ticketPage, ticketSortBy, ticketSortOrder, ticketStatus, ticketView]);
 
   const formatHours = (hours: number | null) => {
     if (hours === null) return "N/A";
@@ -117,7 +168,22 @@ export default function UserStatsPage() {
             )}
           </div>
         </div>
-        <DateRangeSelector selected={preset} onChange={setPreset} />
+        <div className="flex items-center gap-3">
+          {data?.isReporter && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted whitespace-nowrap">{t("stats.dateBy")}</span>
+              <select
+                value={dateField}
+                onChange={(e) => setDateField(e.target.value as "received" | "sent")}
+                className="text-sm bg-surface border border-border-card rounded px-2 py-1 text-body cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="received">{t("stats.dateImport")}</option>
+                <option value="sent">{t("stats.dateEmail")}</option>
+              </select>
+            </div>
+          )}
+          <DateRangeSelector selected={preset} onChange={setPreset} />
+        </div>
       </div>
 
       {loading ? (
@@ -232,6 +298,106 @@ export default function UserStatsPage() {
               )}
             </div>
           </div>
+
+          {/* Tickets Table */}
+          {userId && (
+            <div className="bg-surface border border-border-card rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-border-card flex items-center justify-between">
+                <p className="text-sm font-semibold text-heading">
+                  {isReporter
+                    ? t("stats.reportedTickets")
+                    : ticketView === "reported"
+                      ? t("stats.reportedTickets")
+                      : t("stats.assignedTickets")} ({ticketTotal})
+                </p>
+                <div className="flex items-center gap-2">
+                {!isReporter && (
+                  <select
+                    value={ticketView}
+                    onChange={(e) => { setTicketView(e.target.value as "assigned" | "reported"); setTicketPage(1); }}
+                    className="text-sm bg-surface border border-border-card rounded px-2 py-1 text-body cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  >
+                    <option value="assigned">{t("stats.viewAssigned")}</option>
+                    <option value="reported">{t("stats.viewReported")}</option>
+                  </select>
+                )}
+                <select
+                  value={ticketStatus}
+                  onChange={(e) => { setTicketStatus(e.target.value); setTicketPage(1); }}
+                  className="text-sm bg-surface border border-border-card rounded px-2 py-1 text-body cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-500"
+                >
+                  <option value="">{t("tickets.allStatuses")}</option>
+                  {["open", "pending", "in-progress", "resolved", "discarded"].map((s) => (
+                    <option key={s} value={s}>{tEnum("status", s)}</option>
+                  ))}
+                </select>
+                </div>
+              </div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <table className="w-full table-fixed">
+                <thead>
+                  <SortableContext items={colOrder} strategy={horizontalListSortingStrategy}>
+                  <tr className="border-b border-border-card bg-surface-hover">
+                    {reorder(TICKET_COLUMNS).map((col) => (
+                      <SortableTh key={col.key} id={col.key} sortable={col.sortable} onClick={() => col.sortable && toggleTicketSort(col.key)}>
+                        {col.label}
+                        {col.sortable && ticketSortBy === col.key && (
+                          <span className="text-primary ml-1">{ticketSortOrder === "ASC" ? "↑" : "↓"}</span>
+                        )}
+                      </SortableTh>
+                    ))}
+                  </tr>
+                  </SortableContext>
+                </thead>
+                <tbody>
+                  {tickets.length === 0 && (
+                    <tr><td colSpan={TICKET_COLUMNS.length} className="px-4 py-8 text-center text-sm text-muted">{t("reports.noData")}</td></tr>
+                  )}
+                  {tickets.map((tk) => (
+                    <tr
+                      key={tk.id}
+                      className="border-b border-border-row hover:bg-surface-hover cursor-pointer transition-colors"
+                      onClick={() => navigate(`/dashboard/workspaces/${workspaceSlug}/tickets/${tk.id}`)}
+                    >
+                      {reorder(TICKET_COLUMNS).map((col) => (
+                        <td key={col.key} className="px-4 py-2">
+                          {col.key === "ticketNumber" && <span className="text-xs text-muted">#{tk.ticketNumber}</span>}
+                          {col.key === "name" && <span className="text-sm text-heading block truncate">{tk.name}</span>}
+                          {col.key === "status" && <StatusBadge label={tEnum("status", tk.status)} color={tk.status === "resolved" ? "green" : tk.status === "open" ? "yellow" : "blue"} size="xs" />}
+                          {col.key === "priority" && <StatusBadge label={tEnum("priority", tk.priority)} color={tk.priority === "urgent" ? "red" : tk.priority === "high" ? "yellow" : "gray"} size="xs" />}
+                          {col.key === "createdAt" && <span className="text-xs text-muted">{tk.createdAt ? formatDate(tk.createdAt) : "—"}</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </DndContext>
+              {ticketTotal > 10 && (
+                <div className="flex items-center justify-between px-4 py-2 border-t border-border-card">
+                  <span className="text-xs text-muted">
+                    {(ticketPage - 1) * 10 + 1}–{Math.min(ticketPage * 10, ticketTotal)} of {ticketTotal}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      disabled={ticketPage <= 1}
+                      onClick={() => setTicketPage((p) => p - 1)}
+                      className="px-2 py-1 text-xs text-muted hover:text-heading disabled:opacity-30 cursor-pointer disabled:cursor-default"
+                    >
+                      ← {t("tickets.previous")}
+                    </button>
+                    <button
+                      disabled={ticketPage * 10 >= ticketTotal}
+                      onClick={() => setTicketPage((p) => p + 1)}
+                      className="px-2 py-1 text-xs text-muted hover:text-heading disabled:opacity-30 cursor-pointer disabled:cursor-default"
+                    >
+                      {t("tickets.next")} →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

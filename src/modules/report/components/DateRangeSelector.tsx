@@ -10,6 +10,7 @@ const PRESETS = [
   { key: "7d", labelKey: "reports.last7d" },
   { key: "30d", labelKey: "reports.last30d" },
   { key: "90d", labelKey: "reports.last90d" },
+  { key: "all", labelKey: "reports.all" },
 ] as const;
 
 export default function DateRangeSelector({ selected, onChange }: Props) {

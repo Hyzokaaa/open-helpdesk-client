@@ -34,6 +34,7 @@ export interface TicketDetail {
   resolvedAt: string | null;
   ticketNumber: number;
   createdAt: string | null;
+  originDate: string | null;
   tagIds: string[];
   departmentId: string | null;
   customFields: Record<string, unknown>;
@@ -51,6 +52,7 @@ export interface TicketFilters {
   priority?: string;
   assigneeId?: string;
   reporterId?: string;
+  registeredById?: string;
   tagIds?: string[];
   departmentId?: string;
   sortBy?: string;

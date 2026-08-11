@@ -1221,6 +1221,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
               </Card>
 
+              {ticket.originDate && (
+                <Card className="p-4">
+                  <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.originalDate")}</p>
+                  <p className="text-sm text-body">{formatDate(ticket.originDate)}</p>
+                </Card>
+              )}
+
               {ticket.departmentId && (() => {
                 const dept = departments.find((d) => d.id === ticket.departmentId);
                 return dept ? (
