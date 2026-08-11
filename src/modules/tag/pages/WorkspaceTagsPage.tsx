@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
-import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { Tag, listTags, createTag, deleteTag } from "../services/tag.service";
 import ColorPicker from "@modules/app/modules/ui/components/ColorPicker/ColorPicker";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -18,7 +18,7 @@ export default function WorkspaceTagsPage() {
   const { t } = useTranslation();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState("");
   const [creating, setCreating] = useState(false);
@@ -47,7 +47,7 @@ export default function WorkspaceTagsPage() {
       });
       setName("");
       setColor("");
-      setShowCreate(false);
+      setShowSheet(false);
       fetchTags();
       toast.success(t("tags.created"));
     } catch {
@@ -73,31 +73,11 @@ export default function WorkspaceTagsPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-body-bold text-heading">{t("tags.title")}</h2>
         {can(P.TAG_CREATE) && (
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? t("tags.cancel") : t("tags.new")}
+          <Button size="sm" onClick={() => setShowSheet(true)}>
+            {t("tags.new")}
           </Button>
         )}
       </div>
-
-      {showCreate && (
-        <Card className="p-5 mb-6">
-          <form onSubmit={handleCreate}>
-            <FormInput label={t("tags.name")} required>
-              <Input
-                placeholder="Tag name"
-                value={name}
-                onChange={setName}
-              />
-            </FormInput>
-            <FormInput label={t("tags.color")}>
-              <ColorPicker value={color || null} onChange={setColor} />
-            </FormInput>
-            <Button type="submit" size="sm" loading={creating}>
-              {t("tags.create")}
-            </Button>
-          </form>
-        </Card>
-      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -134,6 +114,35 @@ export default function WorkspaceTagsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {showSheet && (
+        <Sheet onClose={() => setShowSheet(false)}>
+          <h2 className="text-lg font-body-bold text-heading mb-6">
+            {t("tags.new")}
+          </h2>
+          <form onSubmit={handleCreate}>
+            <FormInput label={t("tags.name")} required>
+              <Input
+                placeholder="Tag name"
+                value={name}
+                onChange={setName}
+                autoFocus
+              />
+            </FormInput>
+            <FormInput label={t("tags.color")}>
+              <ColorPicker value={color || null} onChange={setColor} />
+            </FormInput>
+            <div className="flex justify-end gap-3">
+              <Button size="sm" color="light" onClick={() => setShowSheet(false)}>
+                {t("tags.cancel")}
+              </Button>
+              <Button type="submit" size="sm" loading={creating}>
+                {t("tags.create")}
+              </Button>
+            </div>
+          </form>
+        </Sheet>
       )}
     </div>
   );

@@ -80,6 +80,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
         ...(can(P.WORKSPACE_INVITATIONS_MANAGE) ? [{ label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` }] : []),
         ...(can(P.TAG_VIEW) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
+        ...(can(P.DEPARTMENT_VIEW) ? [{ label: t("sidebar.departments"), path: `/dashboard/workspaces/${currentSlug}/departments` }] : []),
         ...(can(P.CANNED_RESPONSE_VIEW) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
         ...(can(P.CUSTOM_FIELD_MANAGE) ? [{ label: t("sidebar.customFields"), path: `/dashboard/workspaces/${currentSlug}/custom-fields` }] : []),
         ...(can(P.KB_ARTICLE_VIEW) ? [{ label: t("sidebar.knowledgeBase"), path: `/dashboard/workspaces/${currentSlug}/knowledge-base` }] : []),

@@ -286,12 +286,12 @@ export default function WorkspaceCustomFieldsPage() {
               />
               <span className="text-sm text-body">{t("customFields.required")}</span>
             </label>
-            <div className="flex gap-3">
-              <Button type="submit" size="sm" loading={saving}>
-                {editingId ? t("customFields.save") : t("customFields.create")}
-              </Button>
+            <div className="flex justify-end gap-3">
               <Button size="sm" color="light" onClick={handleClose}>
                 {t("customFields.cancel")}
+              </Button>
+              <Button type="submit" size="sm" loading={saving}>
+                {editingId ? t("customFields.save") : t("customFields.create")}
               </Button>
             </div>
           </form>

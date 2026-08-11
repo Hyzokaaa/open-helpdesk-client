@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -65,6 +66,7 @@ import {
   getSlaPolicy,
 } from "@modules/workspace/services/workspace.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
+import { Department, listDepartments } from "@modules/department/services/department.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
@@ -73,6 +75,54 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
+
+function MemberLink({ userId, members, getMemberName, navigate, workspaceSlug }: {
+  userId: string;
+  members: { userId: string; firstName: string; lastName: string; email: string; role: string }[];
+  getMemberName: (id: string) => string;
+  navigate: (path: string) => void;
+  workspaceSlug?: string;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const m = members.find((m) => m.userId === userId);
+
+  const handleEnter = () => {
+    if (!ref.current || !m) return;
+    const rect = ref.current.getBoundingClientRect();
+    setPos({
+      top: rect.bottom + 4,
+      left: rect.right,
+    });
+    setShow(true);
+  };
+
+  return (
+    <span className="text-right min-w-0">
+      <button
+        ref={ref}
+        onClick={() => workspaceSlug && navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${userId}`)}
+        onMouseEnter={handleEnter}
+        onMouseLeave={() => setShow(false)}
+        className="text-body font-body-medium truncate block cursor-pointer hover:text-primary transition-colors text-right"
+      >
+        {getMemberName(userId)}
+      </button>
+      {show && m && createPortal(
+        <div
+          className="fixed z-[9999] bg-surface border border-border-card rounded-lg shadow-lg p-3 min-w-[200px] text-left pointer-events-none"
+          style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
+        >
+          <p className="text-sm font-body-semibold text-heading">{m.firstName} {m.lastName}</p>
+          <p className="text-xs text-muted mt-0.5">{m.email}</p>
+          {m.role && <p className="text-xs text-subtle mt-1 capitalize">{m.role}</p>}
+        </div>,
+        document.body,
+      )}
+    </span>
+  );
+}
 
 function formatResponseTime(createdAt: string, firstResponseAt: string): string {
   const ms = new Date(firstResponseAt).getTime() - new Date(createdAt).getTime();
@@ -213,6 +263,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [participants, setParticipants] = useState<TicketParticipant[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
@@ -221,6 +272,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [sendingComment, setSendingComment] = useState(false);
   const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
   const [activityKey, setActivityKey] = useState(0);
+  const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
@@ -237,6 +289,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     status: string;
     assigneeId: string | null;
     tagIds: string[];
+    departmentId: string | null;
     customFields: Record<string, unknown>;
     discardReason?: string;
   }
@@ -252,6 +305,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       status: ticket.status,
       assigneeId: ticket.assigneeId,
       tagIds: [...ticket.tagIds],
+      departmentId: ticket.departmentId,
       customFields: { ...(ticket.customFields ?? {}) },
     });
     setMode("edit");
@@ -270,6 +324,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (draft.category !== ticket.category) changes.push({ field: t("ticketDetail.category"), from: tEnum("category", ticket.category), to: tEnum("category", draft.category) });
     if (draft.assigneeId !== ticket.assigneeId) changes.push({ field: t("ticketDetail.assignee"), from: ticket.assigneeId ? getMemberName(ticket.assigneeId) : "—", to: draft.assigneeId ? getMemberName(draft.assigneeId) : "—" });
     if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) changes.push({ field: t("ticketDetail.tags"), from: ticket.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—", to: draft.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—" });
+    if (draft.departmentId !== ticket.departmentId) changes.push({ field: t("ticketDetail.department"), from: departments.find((d) => d.id === ticket.departmentId)?.name ?? "—", to: departments.find((d) => d.id === draft.departmentId)?.name ?? "—" });
     const origCf = ticket.customFields ?? {};
     for (const def of customFieldDefs) {
       const origVal = origCf[def.id];
@@ -350,6 +405,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchMembers();
     fetchParticipants();
     if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
+    if (workspaceSlug) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
   }, [workspaceSlug, ticketId]);
@@ -423,12 +479,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId || !ticket || !draft) return;
     setSaving(true);
     try {
-      const updates: Partial<{ name: string; description: string; priority: string; category: string; tagIds: string[]; customFields: Record<string, unknown> }> = {};
+      const updates: Partial<{ name: string; description: string; priority: string; category: string; tagIds: string[]; departmentId: string | null; customFields: Record<string, unknown> }> = {};
       if (draft.name !== ticket.name) updates.name = draft.name;
       if (draft.description !== ticket.description) updates.description = draft.description;
       if (draft.priority !== ticket.priority) updates.priority = draft.priority;
       if (draft.category !== ticket.category) updates.category = draft.category;
       if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) updates.tagIds = draft.tagIds;
+      if (draft.departmentId !== ticket.departmentId) updates.departmentId = draft.departmentId;
       if (JSON.stringify(draft.customFields) !== JSON.stringify(ticket.customFields ?? {})) updates.customFields = draft.customFields;
 
       if (Object.keys(updates).length > 0) {
@@ -719,6 +776,24 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Tabs: Details / Activity */}
+          <div className="flex border-b border-border-card">
+            <button
+              className={`px-4 py-2 text-sm font-body-semibold cursor-pointer border-b-2 transition-colors ${detailTab === "details" ? "border-primary text-primary" : "border-transparent text-muted hover:text-heading"}`}
+              onClick={() => setDetailTab("details")}
+            >
+              {t("ticketDetail.tabDetails")}
+            </button>
+            <button
+              className={`px-4 py-2 text-sm font-body-semibold cursor-pointer border-b-2 transition-colors ${detailTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted hover:text-heading"}`}
+              onClick={() => setDetailTab("activity")}
+            >
+              {t("ticketDetail.tabActivity")}
+            </button>
+          </div>
+
+          {detailTab === "details" ? (
+          <>
           <Card className="p-5">
             <p className="text-xs font-body-medium text-subtle uppercase mb-2">
               {t("ticketDetail.description")}
@@ -797,6 +872,54 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               </>
             )}
           </Card>
+
+          {/* Comments */}
+          <div>
+            <p className="text-sm font-body-semibold text-body mb-3">
+              {t("ticketDetail.comments")} ({comments.length})
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {comments.map((c) => (
+                <Card key={c.id} className="p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-exs text-subtle">
+                      {getMemberName(c.authorId)}
+                    </p>
+                    {c.createdAt && (
+                      <p className="text-exs text-subtle">
+                        {formatDate(c.createdAt)}
+                      </p>
+                    )}
+                  </div>
+                  <div
+                    className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
+                    dangerouslySetInnerHTML={{
+                      __html: c.content.replace(
+                        /@\[([^\]]+)\]\(([^)]+)\)/g,
+                        (_match, _name, userId) => {
+                          const current = members.find((m) => m.userId === userId);
+                          const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
+                          return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
+                        },
+                      ),
+                    }}
+                  />
+                </Card>
+              ))}
+            </div>
+
+            {!isReadonly && (
+              <CommentInput
+                members={members}
+                loading={sendingComment}
+                onSubmit={handleAddComment}
+                onSubmitAndResolve={handleAddCommentAndResolve}
+                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
+                cannedResponses={cannedResponses}
+              />
+            )}
+          </div>
 
           {/* Attachments */}
           <Card className="p-5">
@@ -880,62 +1003,18 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             )}
           </Card>
 
-          {/* Comments */}
-          <div>
-            <p className="text-sm font-body-semibold text-body mb-3">
-              {t("ticketDetail.comments")} ({comments.length})
-            </p>
-
-            <div className="space-y-2 mb-4">
-              {comments.map((c) => (
-                <Card key={c.id} className="p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-exs text-subtle">
-                      {getMemberName(c.authorId)}
-                    </p>
-                    {c.createdAt && (
-                      <p className="text-exs text-subtle">
-                        {formatDate(c.createdAt)}
-                      </p>
-                    )}
-                  </div>
-                  <div
-                    className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
-                    dangerouslySetInnerHTML={{
-                      __html: c.content.replace(
-                        /@\[([^\]]+)\]\(([^)]+)\)/g,
-                        (_match, _name, userId) => {
-                          const current = members.find((m) => m.userId === userId);
-                          const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                          return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
-                        },
-                      ),
-                    }}
-                  />
-                </Card>
-              ))}
-            </div>
-
-            {!isReadonly && (
-              <CommentInput
+          </>
+          ) : (
+          <>
+            {workspaceSlug && ticketId && (
+              <TicketActivityFeed
+                workspaceSlug={workspaceSlug}
+                ticketId={ticketId}
                 members={members}
-                loading={sendingComment}
-                onSubmit={handleAddComment}
-                onSubmitAndResolve={handleAddCommentAndResolve}
-                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
-                cannedResponses={cannedResponses}
+                refreshKey={activityKey}
               />
             )}
-          </div>
-
-          {/* Activity Feed */}
-          {workspaceSlug && ticketId && (
-            <TicketActivityFeed
-              workspaceSlug={workspaceSlug}
-              ticketId={ticketId}
-              members={members}
-              refreshKey={activityKey}
-            />
+          </>
           )}
         </div>
 
@@ -996,6 +1075,30 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   </>
                 )}
               </Card>
+
+              {departments.length > 0 && (
+                <Card className="p-4">
+                  {canAssign ? (
+                    <FormInput label={t("ticketDetail.department")} className="!mb-0">
+                      <Select
+                        options={[{ id: "", name: "—", description: "" } as Department, ...departments]}
+                        label={(d) => d.name}
+                        value={(d) => d.id === (draft.departmentId ?? "")}
+                        onChange={(d) => setDraft((prev) => prev ? { ...prev, departmentId: d.id || null } : prev)}
+                      />
+                    </FormInput>
+                  ) : (
+                    <>
+                      <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
+                      {draft.departmentId ? (
+                        <StatusBadge label={departments.find((d) => d.id === draft.departmentId)?.name ?? "—"} color="primary" size="xs" />
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
+                    </>
+                  )}
+                </Card>
+              )}
 
               {canAssign ? (
                 <Card className="p-4">
@@ -1117,6 +1220,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.source")}</p>
                 <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
               </Card>
+
+              {ticket.departmentId && (() => {
+                const dept = departments.find((d) => d.id === ticket.departmentId);
+                return dept ? (
+                  <Card className="p-4">
+                    <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
+                    <StatusBadge label={dept.name} color="primary" size="xs" />
+                  </Card>
+                ) : null;
+              })()}
 
               {ticket.assigneeId && (
                 <Card className="p-4">
@@ -1242,22 +1355,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between gap-2">
                 <span className="text-muted shrink-0">{t("ticketDetail.reportedBy")}</span>
-                <div className="text-right min-w-0">
-                  <span className="text-body font-body-medium block truncate">
-                    {getMemberName(ticket.reporterId)}
-                  </span>
-                  {(() => { const m = members.find((m) => m.userId === ticket.reporterId); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
-                </div>
+                <MemberLink userId={ticket.reporterId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
               </div>
               {ticket.registeredById && (
                 <div className="flex justify-between gap-2">
                   <span className="text-muted shrink-0">{t("ticketDetail.registeredBy")}</span>
-                  <div className="text-right min-w-0">
-                    <span className="text-body font-body-medium block truncate">
-                      {getMemberName(ticket.registeredById)}
-                    </span>
-                    {(() => { const m = members.find((m) => m.userId === ticket.registeredById); return m ? <span className="text-muted block truncate" title={m.email}>{m.email}</span> : null; })()}
-                  </div>
+                  <MemberLink userId={ticket.registeredById} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
                 </div>
               )}
               {ticket.assigneeId && (

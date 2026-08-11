@@ -51,4 +51,7 @@ export const P = {
   KB_ARTICLE_DELETE: "kb.article.delete",
   KB_ARTICLE_VIEW: "kb.article.view",
   KB_CATEGORY_MANAGE: "kb.category.manage",
+
+  DEPARTMENT_MANAGE: "department.manage",
+  DEPARTMENT_VIEW: "department.view",
 } as const;

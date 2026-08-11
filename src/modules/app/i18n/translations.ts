@@ -450,6 +450,9 @@ const translations = {
   "cannedResponses.updated": { en: "Response updated", es: "Respuesta actualizada" },
   "cannedResponses.deleted": { en: "Response deleted", es: "Respuesta eliminada" },
   "cannedResponses.empty": { en: "No canned responses yet.", es: "Sin respuestas predefinidas." },
+  "cannedResponses.titleRequired": { en: "Title is required", es: "El titulo es requerido" },
+  "cannedResponses.contentRequired": { en: "Content is required", es: "El contenido es requerido" },
+  "cannedResponses.error": { en: "Failed to save response", es: "Error al guardar respuesta" },
   "cannedResponses.edit": { en: "Edit", es: "Editar" },
   "cannedResponses.confirmDelete": { en: "Delete this response?", es: "��Eliminar esta respuesta?" },
 
@@ -543,6 +546,8 @@ const translations = {
   "ticketDetail.selectAssignee": { en: "Select assignee...", es: "Seleccionar asignado..." },
   "ticketDetail.tags": { en: "Tags", es: "Etiquetas" },
   "ticketDetail.details": { en: "Details", es: "Detalles" },
+  "ticketDetail.tabDetails": { en: "Details", es: "Detalles" },
+  "ticketDetail.tabActivity": { en: "Activity", es: "Actividad" },
   "ticketDetail.reportedBy": { en: "Reported by", es: "Reportado por" },
   "ticketDetail.registeredBy": { en: "Registered by", es: "Registrado por" },
   "ticketDetail.firstResponse": { en: "First Response", es: "Primera Respuesta" },
@@ -1325,6 +1330,27 @@ const translations = {
   "auditLog.action.system-mailbox-configured": { en: "Platform Mailbox Configured", es: "Buzón de Plataforma Configurado" },
   "auditLog.action.system-mailbox-deleted": { en: "Platform Mailbox Deleted", es: "Buzón de Plataforma Eliminado" },
   "auditLog.action.system-mailbox-test-connection": { en: "Platform Mailbox Test", es: "Prueba Buzón de Plataforma" },
+
+  // Departments
+  "sidebar.departments": { en: "Departments", es: "Departamentos" },
+  "departments.title": { en: "Departments", es: "Departamentos" },
+  "departments.new": { en: "New Department", es: "Nuevo Departamento" },
+  "departments.name": { en: "Name", es: "Nombre" },
+  "departments.description": { en: "Description", es: "Descripción" },
+  "departments.create": { en: "Create", es: "Crear" },
+  "departments.created": { en: "Department created", es: "Departamento creado" },
+  "departments.updated": { en: "Department updated", es: "Departamento actualizado" },
+  "departments.deleted": { en: "Department deleted", es: "Departamento eliminado" },
+  "departments.empty": { en: "No departments yet.", es: "Sin departamentos aún." },
+  "departments.members": { en: "Members", es: "Miembros" },
+  "departments.addMember": { en: "Add Member", es: "Agregar Miembro" },
+  "departments.memberAdded": { en: "Member added", es: "Miembro agregado" },
+  "departments.memberRemoved": { en: "Member removed", es: "Miembro eliminado" },
+  "departments.allMembersAssigned": { en: "All workspace members are already assigned to this department.", es: "Todos los miembros del workspace ya están asignados a este departamento." },
+  "departments.confirmDelete": { en: "Are you sure you want to delete this department?", es: "¿Está seguro de que desea eliminar este departamento?" },
+  "ticketCreate.department": { en: "Department", es: "Departamento" },
+  "ticketDetail.department": { en: "Department", es: "Departamento" },
+  "tickets.allDepartments": { en: "All", es: "Todos" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
