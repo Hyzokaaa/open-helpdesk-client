@@ -35,12 +35,15 @@ export async function getUserStats(
   dateFrom: string,
   dateTo: string,
   userId?: string,
+  dateField?: "received" | "sent",
 ): Promise<UserStatsData> {
   const path = userId
     ? `/workspaces/${workspaceSlug}/stats/${userId}`
     : `/workspaces/${workspaceSlug}/stats/me`;
-  const res = await http.get<UserStatsData>(
-    `${path}?dateFrom=${dateFrom}&dateTo=${dateTo}`,
-  );
+  const parts: string[] = [];
+  if (dateFrom) parts.push(`dateFrom=${dateFrom}`);
+  if (dateTo) parts.push(`dateTo=${dateTo}`);
+  if (dateField) parts.push(`dateField=${dateField}`);
+  const res = await http.get<UserStatsData>(`${path}${parts.length ? `?${parts.join("&")}` : ""}`);
   return res.data;
 }

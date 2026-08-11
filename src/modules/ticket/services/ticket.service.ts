@@ -34,6 +34,7 @@ export interface TicketDetail {
   resolvedAt: string | null;
   ticketNumber: number;
   createdAt: string | null;
+  originDate: string | null;
   tagIds: string[];
   departmentId: string | null;
   customFields: Record<string, unknown>;

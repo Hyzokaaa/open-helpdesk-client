@@ -15,6 +15,7 @@ import TopAgentsChart from "../components/TopAgentsChart";
 import CsatChart from "../components/CsatChart";
 
 function getDateRange(preset: string) {
+  if (preset === "all") return { dateFrom: "", dateTo: "" };
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
   return {

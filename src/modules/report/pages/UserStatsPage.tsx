@@ -38,6 +38,7 @@ const CARD_BORDERS = [
 ];
 
 function getDateRange(preset: string) {
+  if (preset === "all") return { dateFrom: "", dateTo: "" };
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
   return {
@@ -50,6 +51,7 @@ export default function UserStatsPage() {
   const { workspaceSlug, userId } = useParams();
   const { t, tEnum } = useTranslation();
   const [preset, setPreset] = useState("30d");
+  const [dateField, setDateField] = useState<"received" | "sent">("received");
   const [data, setData] = useState<UserStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,10 +59,10 @@ export default function UserStatsPage() {
     if (!workspaceSlug) return;
     setLoading(true);
     const { dateFrom, dateTo } = getDateRange(preset);
-    getUserStats(workspaceSlug, dateFrom, dateTo, userId)
+    getUserStats(workspaceSlug, dateFrom, dateTo, userId, dateField)
       .then(setData)
       .finally(() => setLoading(false));
-  }, [workspaceSlug, preset, userId]);
+  }, [workspaceSlug, preset, userId, dateField]);
 
   const formatHours = (hours: number | null) => {
     if (hours === null) return "N/A";
@@ -117,7 +119,22 @@ export default function UserStatsPage() {
             )}
           </div>
         </div>
-        <DateRangeSelector selected={preset} onChange={setPreset} />
+        <div className="flex items-center gap-3">
+          {data?.isReporter && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted whitespace-nowrap">{t("stats.dateBy")}</span>
+              <select
+                value={dateField}
+                onChange={(e) => setDateField(e.target.value as "received" | "sent")}
+                className="text-sm bg-surface border border-border-card rounded px-2 py-1 text-body cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="received">{t("stats.dateImport")}</option>
+                <option value="sent">{t("stats.dateEmail")}</option>
+              </select>
+            </div>
+          )}
+          <DateRangeSelector selected={preset} onChange={setPreset} />
+        </div>
       </div>
 
       {loading ? (

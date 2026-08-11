@@ -28,13 +28,20 @@ export interface ReportData {
   csatBreakdown: { rating: string; count: number }[];
 }
 
+function buildDateParams(dateFrom: string, dateTo: string): string {
+  const parts: string[] = [];
+  if (dateFrom) parts.push(`dateFrom=${dateFrom}`);
+  if (dateTo) parts.push(`dateTo=${dateTo}`);
+  return parts.length ? `?${parts.join("&")}` : "";
+}
+
 export async function getReportOverview(
   workspaceSlug: string,
   dateFrom: string,
   dateTo: string,
 ): Promise<ReportOverviewBasic> {
   const res = await http.get<ReportOverviewBasic>(
-    `/workspaces/${workspaceSlug}/reports/overview?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+    `/workspaces/${workspaceSlug}/reports/overview${buildDateParams(dateFrom, dateTo)}`,
   );
   return res.data;
 }
@@ -46,7 +53,7 @@ export async function getReport(
   options?: { silent?: boolean },
 ): Promise<ReportData> {
   const res = await http.get<ReportData>(
-    `/workspaces/${workspaceSlug}/reports?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+    `/workspaces/${workspaceSlug}/reports${buildDateParams(dateFrom, dateTo)}`,
     options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
   );
   return res.data;
