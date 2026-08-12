@@ -17,6 +17,7 @@ import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
 import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import WorkspaceMembersPage from "@modules/workspace/pages/WorkspaceMembersPage";
+import WorkspaceContactsPage from "@modules/workspace/pages/WorkspaceContactsPage";
 import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import WorkspaceDepartmentsPage from "@modules/department/pages/WorkspaceDepartmentsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
@@ -86,6 +87,7 @@ function AppRoutes() {
           <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
           <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
           <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+          <Route path="workspaces/:workspaceSlug/contacts" element={<WorkspaceContactsPage />} />
           <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
           <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
           <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
