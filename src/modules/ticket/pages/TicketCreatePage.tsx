@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
-import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
+import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -35,9 +35,9 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const { t, tEnum } = useTranslation();
   const { handlePlanLimitError } = useExtensions();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<MiniEditorRef>(null);
 
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [category, setCategory] = useState("issue");
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -56,7 +56,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
-  const isDirty = name.trim() !== "" || description.trim() !== "" || files.length > 0 || tagIds.length > 0;
+  const isDirty = name.trim() !== "" || files.length > 0 || tagIds.length > 0;
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -131,9 +131,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         .filter((f) => f.status === "done" && f.token)
         .map((f) => f.token!);
 
+      const descriptionHtml = editorRef.current?.getHTML() || "";
       const res = await createTicket(workspaceSlug, {
         name,
-        description,
+        description: descriptionHtml,
         priority,
         category,
         tagIds,
@@ -188,11 +189,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
           </FormInput>
 
           <FormInput label={t("ticketCreate.description")} required>
-            <Textarea
+            <MiniEditor
+              ref={editorRef}
+              initialValue=""
               placeholder={t("ticketCreate.descriptionPlaceholder")}
-              value={description}
-              onChange={setDescription}
-              height={150}
             />
           </FormInput>
 

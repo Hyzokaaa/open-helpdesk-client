@@ -806,9 +806,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               />
             ) : (
               <>
-                <p className="text-sm text-body whitespace-pre-wrap break-words overflow-hidden">
-                  {ticket.description}
-                </p>
+                <div
+                  className="text-sm text-body break-words overflow-hidden tiptap"
+                  dangerouslySetInnerHTML={{ __html: ticket.description }}
+                />
                 {aiEnabled && !isReadonly && (() => {
                   const targetLang = user?.language === "es" ? "Spanish" : "English";
                   const slug = workspaceSlug ?? "";
