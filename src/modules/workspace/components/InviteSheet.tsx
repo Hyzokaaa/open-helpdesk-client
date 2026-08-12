@@ -133,22 +133,15 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
         <h2 className="text-lg font-body-bold text-heading mb-3">{t("invitations.invite")}</h2>
 
         {!checkingEmail && !canSendEmail && (
-          <div className="mb-4 p-3 bg-danger/10 border border-danger/30 rounded-lg">
-            <p className="text-xs text-danger">
-              {t("invitations.noEmailConfigured").split("<a>").map((part, i) => {
-                if (i === 0) return part;
-                const [linkText, rest] = part.split("</a>");
-                return (
-                  <span key={i}>
-                    <button
-                      type="button"
-                      className="underline font-body-semibold hover:opacity-80 cursor-pointer"
-                      onClick={() => { onClose(); navigate(`/dashboard/workspaces/${workspaceSlug}/settings`); }}
-                    >{linkText}</button>
-                    {rest}
-                  </span>
-                );
-              })}
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-800/40">
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              {t("invitations.noEmailInfo")}
+              {" "}
+              <button
+                type="button"
+                className="underline font-body-semibold hover:opacity-80 cursor-pointer"
+                onClick={() => { onClose(); navigate(`/dashboard/workspaces/${workspaceSlug}/settings`); }}
+              >{t("invitations.configureEmail")}</button>
             </p>
           </div>
         )}

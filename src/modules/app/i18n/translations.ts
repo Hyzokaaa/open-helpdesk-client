@@ -36,6 +36,8 @@ const translations = {
   "invitations.send": { en: "Send Invitation", es: "Enviar Invitación" },
   "invitations.sent": { en: "Invitation sent", es: "Invitación enviada" },
   "invitations.noEmailConfigured": { en: "No email service configured. <a>Set up a Custom Email Sender</a> or configure system SMTP to send invitations by email.", es: "No hay servicio de correo configurado. <a>Configura un Custom Email Sender</a> o configura el SMTP del sistema para enviar invitaciones por correo." },
+  "invitations.noEmailInfo": { en: "No email service is configured. Invitations will be created but not sent automatically — you will need to copy the invitation link and share it manually.", es: "No hay servicio de correo configurado. Las invitaciones se crearán pero no se enviarán automáticamente — deberás copiar el enlace de invitación y compartirlo manualmente." },
+  "invitations.configureEmail": { en: "Configure email service.", es: "Configurar servicio de correo." },
   "invitations.createInvitation": { en: "Create Invitation", es: "Crear Invitación" },
   "invitations.copyLink": { en: "Copy Link", es: "Copiar Enlace" },
   "invitations.linkCopied": { en: "Invitation link copied to clipboard", es: "Enlace de invitación copiado al portapapeles" },
