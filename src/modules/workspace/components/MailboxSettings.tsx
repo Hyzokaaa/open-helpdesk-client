@@ -537,7 +537,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
 
         <div className="mt-4">
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
-            {t("mailbox.save")}
+            {isEdit ? t("mailbox.save") : t("mailbox.add")}
           </Button>
         </div>
       </form>

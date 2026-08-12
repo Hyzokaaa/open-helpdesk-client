@@ -109,15 +109,20 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
         workspaceSlug,
         validRows.map((r) => ({ email: r.email.trim(), role: r.role })),
       );
-      const sent = results.filter((r) => r.status === "sent").length;
+      const created = results.filter((r) => r.status === "sent");
+      const emailed = created.filter((r) => (r as any).emailSent).length;
       const errors = results.filter((r) => r.status === "error");
-      if (sent > 0) {
-        toast.success(`${sent} ${t("invitations.sent")}`);
+      if (created.length > 0) {
+        if (emailed > 0) {
+          toast.success(`${emailed} ${t("invitations.sent")}`);
+        } else {
+          toast.success(`${created.length} ${t("invitations.createdNotSent")}`);
+        }
       }
       for (const err of errors) {
         toast.error(`${err.email}: ${err.error}`);
       }
-      if (sent > 0) {
+      if (created.length > 0) {
         onSent?.();
         onClose();
       }

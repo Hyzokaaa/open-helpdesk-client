@@ -16,15 +16,27 @@ import {
 } from "../services/invitation.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
+import useConfig from "@modules/app/hooks/useConfig";
+import { getEmailSender } from "../services/email-sender.service";
 
 export default function WorkspaceInvitationsPage() {
   const { workspaceSlug } = useParams();
   const { t, tEnum } = useTranslation();
   const formatDate = useFormatDate();
+  const { emailConfigured } = useConfig();
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const [hasWorkspaceSender, setHasWorkspaceSender] = useState(false);
+
+  useEffect(() => {
+    if (workspaceSlug) {
+      getEmailSender(workspaceSlug).then((s) => setHasWorkspaceSender(!!s)).catch(() => {});
+    }
+  }, [workspaceSlug]);
+
+  const canSendEmail = emailConfigured || hasWorkspaceSender;
 
   const fetchInvitations = () => {
     if (!workspaceSlug) return;
@@ -110,18 +122,18 @@ export default function WorkspaceInvitationsPage() {
                           }
                         },
                       },
-                      {
+                      ...(canSendEmail ? [{
                         label: t("invitations.resend"),
                         onClick: async () => {
                           try {
-                            await resendInvitation(workspaceSlug!, inv.id);
-                            toast.success(t("invitations.resent"));
+                            const result = await resendInvitation(workspaceSlug!, inv.id);
+                            toast.success(result.emailSent ? t("invitations.resent") : t("invitations.createdNotSent"));
                             fetchInvitations();
                           } catch {
                             toast.error(t("invitations.sendError"));
                           }
                         },
-                      },
+                      }] : []),
                       {
                         label: t("invitations.cancel"),
                         onClick: () => setCancelId(inv.id),
