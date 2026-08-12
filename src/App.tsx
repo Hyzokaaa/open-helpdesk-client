@@ -38,6 +38,7 @@ import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import SystemLogsPage from "@modules/audit-log/pages/SystemLogsPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
+import WorkspaceEmailRulesPage from "@modules/email-rule/pages/WorkspaceEmailRulesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
 import UserStatsPage from "@modules/report/pages/UserStatsPage";
@@ -89,6 +90,7 @@ function AppRoutes() {
           <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
           <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
           <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
+          <Route path="workspaces/:workspaceSlug/email-rules" element={<WorkspaceEmailRulesPage />} />
           <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
           <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
           <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />

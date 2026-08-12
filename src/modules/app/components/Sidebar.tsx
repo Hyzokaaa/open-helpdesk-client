@@ -82,6 +82,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         ...(can(P.TAG_VIEW) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
         ...(can(P.DEPARTMENT_VIEW) ? [{ label: t("sidebar.departments"), path: `/dashboard/workspaces/${currentSlug}/departments` }] : []),
         ...(can(P.CANNED_RESPONSE_VIEW) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
+        ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.emailRules"), path: `/dashboard/workspaces/${currentSlug}/email-rules` }] : []),
         ...(can(P.CUSTOM_FIELD_MANAGE) ? [{ label: t("sidebar.customFields"), path: `/dashboard/workspaces/${currentSlug}/custom-fields` }] : []),
         ...(can(P.KB_ARTICLE_VIEW) ? [{ label: t("sidebar.knowledgeBase"), path: `/dashboard/workspaces/${currentSlug}/knowledge-base` }] : []),
         ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),

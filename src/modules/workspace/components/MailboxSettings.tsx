@@ -187,14 +187,14 @@ export default function MailboxSettings({ slug }: Props) {
                     {
                       label: t("mailbox.pollNow"),
                       onClick: async () => {
+                        const toastId = toast.info(t("mailbox.pollingNow"), { autoClose: false });
                         try {
-                          toast.info(t("mailbox.pollingNow"));
                           const result = await pollMailboxNow(slug, m.id);
-                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
                           const updated = await listMailboxes(slug);
                           setMailboxes(updated);
                         } catch {
-                          toast.error(t("mailbox.importError"));
+                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
                     },
@@ -219,12 +219,12 @@ export default function MailboxSettings({ slug }: Props) {
                     {
                       label: t("mailbox.import"),
                       onClick: async () => {
+                        const toastId = toast.info(t("mailbox.importStarted"), { autoClose: false });
                         try {
-                          toast.info(t("mailbox.importStarted"));
                           const result = await importMailboxEmails(slug, m.id);
-                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
                         } catch {
-                          toast.error(t("mailbox.importError"));
+                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
                     },

@@ -89,8 +89,8 @@ export async function importMailboxEmails(
   slug: string,
   id: string,
   since?: string | null,
-): Promise<{ processed: number; total: number }> {
-  const res = await http.post<{ processed: number; total: number }>(
+): Promise<{ processed: number; rejected: number; total: number }> {
+  const res = await http.post<{ processed: number; rejected: number; total: number }>(
     `/workspaces/${slug}/mailboxes/${id}/import`,
     { since: since || undefined },
   );
@@ -100,8 +100,8 @@ export async function importMailboxEmails(
 export async function pollMailboxNow(
   slug: string,
   id: string,
-): Promise<{ processed: number; total: number }> {
-  const res = await http.post<{ processed: number; total: number }>(
+): Promise<{ processed: number; rejected: number; total: number }> {
+  const res = await http.post<{ processed: number; rejected: number; total: number }>(
     `/workspaces/${slug}/mailboxes/${id}/poll-now`,
   );
   return res.data;

@@ -806,7 +806,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               />
             ) : (
               <>
-                <p className="text-sm text-body whitespace-pre-wrap">
+                <p className="text-sm text-body whitespace-pre-wrap break-words overflow-hidden">
                   {ticket.description}
                 </p>
                 {aiEnabled && !isReadonly && (() => {
