@@ -30,7 +30,7 @@ const translations = {
   "invitations.pageTitle": { en: "Invitations", es: "Invitaciones" },
   "invitations.empty": { en: "No pending invitations", es: "No hay invitaciones pendientes" },
   "invitations.sentAt": { en: "Sent", es: "Enviada" },
-  "invitations.addAnother": { en: "Add another member", es: "Agregar otro miembro" },
+  "invitations.addAnother": { en: "Add", es: "Agregar" },
   "invitations.invite": { en: "Invite", es: "Invitar" },
   "invitations.email": { en: "Email", es: "Correo" },
   "invitations.send": { en: "Send Invitation", es: "Enviar Invitación" },
