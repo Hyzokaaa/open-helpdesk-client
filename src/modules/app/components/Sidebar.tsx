@@ -264,7 +264,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           onClick={() => setSettingsOpen(!settingsOpen)}
           className={sectionToggleClass(isSettingsActive)}
         >
-          {t("sidebar.settings")}
+          {t("nav.userSettings")}
           <span className="text-exs">{settingsOpen ? "▾" : "▸"}</span>
         </button>
 

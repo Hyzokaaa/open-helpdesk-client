@@ -5,6 +5,7 @@ const translations = {
 
   // Navbar
   "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
+  "nav.userSettings": { en: "User Settings", es: "Configuración de Usuario" },
   "nav.lightMode": { en: "Light", es: "Claro" },
   "nav.darkMode": { en: "Dark", es: "Oscuro" },
 
@@ -608,6 +609,7 @@ const translations = {
   "settings.email": { en: "Email", es: "Correo" },
   "settings.save": { en: "Save", es: "Guardar" },
   "settings.security": { en: "Security", es: "Seguridad" },
+  "settings.notifications": { en: "Notifications", es: "Notificaciones" },
   "settings.password": { en: "Change Password", es: "Cambiar Contraseña" },
   "settings.currentPassword": { en: "Current password", es: "Contraseña actual" },
   "settings.newPassword": { en: "New password", es: "Nueva contraseña" },
