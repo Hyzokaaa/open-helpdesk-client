@@ -338,7 +338,7 @@ function AddressModePicker({ value, onChange, t }: {
   );
 }
 
-function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean }) {
+export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
