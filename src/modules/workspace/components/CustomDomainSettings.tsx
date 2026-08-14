@@ -156,7 +156,7 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
           {/* Active domain confirmation */}
           {(verified || !saasMode) && (
             <p className="text-xs text-success">
-              {t("customDomain.activeAt")} <span className="font-mono font-body-medium">https://{currentDomain}</span>
+              {t("customDomain.activeAt")} <a href={`https://${currentDomain}`} target="_blank" rel="noopener noreferrer" className="font-mono font-body-medium underline">https://{currentDomain}</a>
             </p>
           )}
         </div>
