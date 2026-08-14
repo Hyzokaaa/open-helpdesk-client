@@ -216,7 +216,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             </CollapsibleSection>
           )}
 
-          {canManageSettings && saasMode && (
+          {canManageSettings && (
             <CollapsibleSection title={t("customDomain.title")}>
               <CustomDomainSettings
                 slug={workspaceSlug!}
@@ -224,6 +224,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 verified={workspace.customDomainVerified}
                 verificationToken={workspace.domainVerificationToken}
                 cnameTarget={workspace.cnameTarget}
+                saasMode={saasMode}
                 onUpdate={(d, v, t) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: t })}
               />
             </CollapsibleSection>

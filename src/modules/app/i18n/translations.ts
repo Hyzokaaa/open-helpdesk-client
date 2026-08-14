@@ -1349,6 +1349,9 @@ const translations = {
 
   // Custom Domain
   "customDomain.title": { en: "Custom Domain", es: "Dominio Personalizado" },
+  "customDomain.descSaas": { en: "Connect your own domain so users access your helpdesk at your URL. You'll need to configure DNS records at your domain provider.", es: "Conecta tu propio dominio para que los usuarios accedan a tu helpdesk desde tu URL. Necesitaras configurar registros DNS en tu proveedor de dominio." },
+  "customDomain.descSelfhosted": { en: "Set the hostname where this workspace is accessible. Users who visit this hostname will see this workspace's portal directly.", es: "Configura el hostname donde este workspace es accesible. Los usuarios que visiten este hostname veran el portal de este workspace directamente." },
+  "customDomain.proxyReminder": { en: "Make sure your reverse proxy (nginx, Caddy, etc.) is configured to serve this hostname and proxy requests to your Open Helpdesk instance.", es: "Asegurate de que tu reverse proxy (nginx, Caddy, etc.) esta configurado para servir este hostname y redirigir las peticiones a tu instancia de Open Helpdesk." },
   "customDomain.label": { en: "Domain", es: "Dominio" },
   "customDomain.saved": { en: "Custom domain saved", es: "Dominio guardado" },
   "customDomain.removed": { en: "Custom domain removed", es: "Dominio eliminado" },

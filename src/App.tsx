@@ -56,6 +56,7 @@ import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
 import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
 import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
+import RootRedirect from "@modules/app/components/RootRedirect";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -143,6 +144,7 @@ function AppRoutes() {
           </Route>
         </Route>
       </Route>
+      <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
     </DomainGate>

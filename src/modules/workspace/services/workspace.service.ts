@@ -281,8 +281,8 @@ export async function createExportToken(slug: string): Promise<{ url: string; ex
   return res.data;
 }
 
-export async function setCustomDomain(slug: string, domain: string | null): Promise<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }> {
-  const res = await http.patch<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }>(`/workspaces/${slug}/custom-domain`, { domain });
+export async function setCustomDomain(slug: string, domain: string | null, autoVerify?: boolean): Promise<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }> {
+  const res = await http.patch<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }>(`/workspaces/${slug}/custom-domain`, { domain, autoVerify });
   return res.data;
 }
 

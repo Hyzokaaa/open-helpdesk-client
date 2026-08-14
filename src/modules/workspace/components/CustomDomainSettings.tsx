@@ -16,10 +16,11 @@ interface Props {
   verified: boolean;
   verificationToken: string | null;
   cnameTarget: string;
+  saasMode: boolean;
   onUpdate: (domain: string | null, verified: boolean, token: string | null, cnameTarget?: string) => void;
 }
 
-export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, cnameTarget, onUpdate }: Props) {
+export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, cnameTarget, saasMode, onUpdate }: Props) {
   const { t } = useTranslation();
   const [domain, setDomain] = useState(currentDomain ?? "");
   const [saving, setSaving] = useState(false);
@@ -33,7 +34,7 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await setCustomDomain(slug, domain.trim() || null);
+      const res = await setCustomDomain(slug, domain.trim() || null, !saasMode);
       if (res.cnameTarget) setActiveCnameTarget(res.cnameTarget);
       onUpdate(res.customDomain, res.customDomainVerified, res.domainVerificationToken);
       setResult(null);
@@ -78,6 +79,10 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted">
+        {saasMode ? t("customDomain.descSaas") : t("customDomain.descSelfhosted")}
+      </p>
+
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <label className="text-xs text-subtle font-body-medium mb-1 block">{t("customDomain.label")}</label>
@@ -96,12 +101,14 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
       {hasDomain && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <StatusBadge
-              label={verified ? t("customDomain.verified") : t("customDomain.pending")}
-              color={verified ? "green" : "yellow"}
-              size="xs"
-            />
-            {!verified && (
+            {saasMode && (
+              <StatusBadge
+                label={verified ? t("customDomain.verified") : t("customDomain.pending")}
+                color={verified ? "green" : "yellow"}
+                size="xs"
+              />
+            )}
+            {saasMode && !verified && (
               <Button size="xs" color="light" onClick={handleVerify} loading={verifying}>
                 {t("customDomain.verify")}
               </Button>
@@ -111,7 +118,8 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </Button>
           </div>
 
-          {!verified && verificationToken && (
+          {/* SaaS: DNS verification instructions */}
+          {saasMode && !verified && verificationToken && (
             <div className="bg-surface-hover rounded-lg p-3 space-y-2">
               <p className="text-xs font-body-medium text-heading">{t("customDomain.dnsInstructions")}</p>
               <div className="space-y-1.5">
@@ -138,7 +146,15 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </div>
           )}
 
-          {verified && (
+          {/* Selfhosted: simple reminder */}
+          {!saasMode && (
+            <div className="bg-surface-hover rounded-lg p-3">
+              <p className="text-xs text-muted">{t("customDomain.proxyReminder")}</p>
+            </div>
+          )}
+
+          {/* Active domain confirmation */}
+          {(verified || !saasMode) && (
             <p className="text-xs text-success">
               {t("customDomain.activeAt")} <span className="font-mono font-body-medium">https://{currentDomain}</span>
             </p>
