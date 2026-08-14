@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, Outlet } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
+import useConfig from "@modules/app/hooks/useConfig";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
 import EmailVerificationBanner from "@modules/user/components/EmailVerificationBanner";
 import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
@@ -10,10 +11,11 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 
 export default function DashboardLayout() {
   const { user, loading } = useUser();
+  const { loading: configLoading } = useConfig();
   const { DashboardBanner } = useExtensions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (loading) return <PageLoader />;
+  if (loading || configLoading) return <PageLoader />;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.isEmailVerified) return <EmailVerificationBanner />;
 

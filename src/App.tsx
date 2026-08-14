@@ -7,6 +7,8 @@ import ExtensionProvider from "@modules/app/extensions/ExtensionProvider";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import type { Extensions } from "@modules/app/extensions/extension-context";
 import useTheme from "@modules/app/hooks/useTheme";
+import useConfig from "@modules/app/hooks/useConfig";
+import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import SignupPage from "@modules/user/pages/SignupPage";
@@ -53,6 +55,7 @@ import PortalKbCategoryPage from "@modules/portal/pages/PortalKbCategoryPage";
 import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
 import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
 import ProseStyles from "@modules/app/components/ProseStyles";
+import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -60,10 +63,30 @@ function ThemedToast() {
   return <ToastContainer position="top-right" autoClose={3000} theme={toastTheme} />;
 }
 
+function DomainGate({ children }: { children: React.ReactNode }) {
+  const { loading, domainError } = useConfig();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  if (domainError) {
+    return (
+      <div className="w-full h-dvh flex flex-col items-center justify-center bg-page">
+        <h1 className="text-2xl font-body-bold text-heading mb-2">Domain not configured</h1>
+        <p className="text-sm text-muted">This domain is not associated with any helpdesk.</p>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { extraPublicRoutes, extraDashboardRoutes } = useExtensions();
 
   return (
+    <DomainGate>
     <Routes>
       {extraPublicRoutes}
       <Route path="/login" element={<LoginPage />} />
@@ -83,24 +106,26 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<WorkspacesPage />} />
           <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
-          <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
-          <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
-          <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
-          <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
-          <Route path="workspaces/:workspaceSlug/contacts" element={<WorkspaceContactsPage />} />
-          <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
-          <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
-          <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
-          <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
-          <Route path="workspaces/:workspaceSlug/email-rules" element={<WorkspaceEmailRulesPage />} />
-          <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
-          <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
-          <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
-          <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
-          <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
-          <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
-          <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
-          <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+          <Route element={<WorkspaceGuard />}>
+            <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
+            <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+            <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
+            <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+            <Route path="workspaces/:workspaceSlug/contacts" element={<WorkspaceContactsPage />} />
+            <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
+            <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+            <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
+            <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
+            <Route path="workspaces/:workspaceSlug/email-rules" element={<WorkspaceEmailRulesPage />} />
+            <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
+            <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
+            <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
+            <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
+            <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
+            <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
+            <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
+            <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+          </Route>
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<Navigate to="account" replace />} />
           <Route path="settings/account" element={<AccountSection />} />
@@ -120,6 +145,7 @@ function AppRoutes() {
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </DomainGate>
   );
 }
 
