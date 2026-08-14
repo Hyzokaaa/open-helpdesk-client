@@ -18,6 +18,18 @@ export interface WorkspaceDetail {
   palette: string | null;
   supportEmail: string | null;
   systemMailboxEnabled: boolean;
+  customDomain: string | null;
+  customDomainVerified: boolean;
+  domainVerificationToken: string | null;
+  cnameTarget: string;
+}
+
+export interface DomainVerificationResult {
+  verified: boolean;
+  cnameValid: boolean;
+  txtValid: boolean;
+  cnameTarget: string;
+  txtRecord: string;
 }
 
 export interface WorkspaceMember {
@@ -266,5 +278,15 @@ export async function importWorkspaceFromUrl(slug: string, url: string): Promise
 
 export async function createExportToken(slug: string): Promise<{ url: string; expiresAt: string }> {
   const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`);
+  return res.data;
+}
+
+export async function setCustomDomain(slug: string, domain: string | null): Promise<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }> {
+  const res = await http.patch<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }>(`/workspaces/${slug}/custom-domain`, { domain });
+  return res.data;
+}
+
+export async function verifyCustomDomain(slug: string): Promise<DomainVerificationResult> {
+  const res = await http.post<DomainVerificationResult>(`/workspaces/${slug}/custom-domain/verify`);
   return res.data;
 }

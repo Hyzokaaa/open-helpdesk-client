@@ -32,6 +32,7 @@ import EmailSenderSettings from "../components/EmailSenderSettings";
 import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
+import CustomDomainSettings from "../components/CustomDomainSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -212,6 +213,19 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("webhooks.title")}>
               <WebhookSettings slug={workspaceSlug!} />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && saasMode && (
+            <CollapsibleSection title={t("customDomain.title")}>
+              <CustomDomainSettings
+                slug={workspaceSlug!}
+                currentDomain={workspace.customDomain}
+                verified={workspace.customDomainVerified}
+                verificationToken={workspace.domainVerificationToken}
+                cnameTarget={workspace.cnameTarget}
+                onUpdate={(d, v, t) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: t })}
+              />
             </CollapsibleSection>
           )}
 

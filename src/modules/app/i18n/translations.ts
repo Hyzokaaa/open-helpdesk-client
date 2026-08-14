@@ -1347,6 +1347,21 @@ const translations = {
   "webhooks.deleted": { en: "Webhook deleted", es: "Webhook eliminado" },
   "webhooks.deleteError": { en: "Failed to delete webhook", es: "Error al eliminar webhook" },
 
+  // Custom Domain
+  "customDomain.title": { en: "Custom Domain", es: "Dominio Personalizado" },
+  "customDomain.label": { en: "Domain", es: "Dominio" },
+  "customDomain.saved": { en: "Custom domain saved", es: "Dominio guardado" },
+  "customDomain.removed": { en: "Custom domain removed", es: "Dominio eliminado" },
+  "customDomain.saveError": { en: "Failed to save domain", es: "Error al guardar dominio" },
+  "customDomain.verify": { en: "Verify DNS", es: "Verificar DNS" },
+  "customDomain.verified": { en: "Verified", es: "Verificado" },
+  "customDomain.pending": { en: "Pending verification", es: "Verificacion pendiente" },
+  "customDomain.verifyError": { en: "Verification failed", es: "Error en la verificacion" },
+  "customDomain.remove": { en: "Remove", es: "Eliminar" },
+  "customDomain.dnsInstructions": { en: "Add these DNS records at your domain provider:", es: "Agrega estos registros DNS en tu proveedor de dominio:" },
+  "customDomain.dnsPropagation": { en: "DNS changes can take up to 48 hours to propagate, but usually take just a few minutes.", es: "Los cambios de DNS pueden tardar hasta 48 horas en propagarse, pero normalmente toman solo unos minutos." },
+  "customDomain.activeAt": { en: "Your helpdesk is accessible at", es: "Tu helpdesk esta accesible en" },
+
   // System Email
   "systemEmail.title": { en: "System Email", es: "Correo del Sistema" },
   "systemEmail.description": { en: "Configure the system SMTP server for sending emails (password reset, verification, notifications).", es: "Configura el servidor SMTP del sistema para enviar correos (recuperación de contraseña, verificación, notificaciones)." },
