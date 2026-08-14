@@ -29,12 +29,16 @@ export default function WorkspacesPage() {
     }
     listWorkspaces()
       .then((ws) => {
+        let filtered = ws;
         if (domainWorkspaces) {
           const slugs = domainWorkspaces.map((d) => d.slug);
-          setWorkspaces(ws.filter((w) => slugs.includes(w.slug)));
-        } else {
-          setWorkspaces(ws);
+          filtered = ws.filter((w) => slugs.includes(w.slug));
         }
+        if (filtered.length === 1 && !showCreate) {
+          navigate(`/dashboard/workspaces/${filtered[0].slug}/tickets`, { replace: true });
+          return;
+        }
+        setWorkspaces(filtered);
       })
       .finally(() => setLoading(false));
   }, [lockedSlug]);

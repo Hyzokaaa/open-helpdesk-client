@@ -52,6 +52,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const configReady = !configLoading;
   const domainSlugs = domainWorkspaces?.map((w) => w.slug) ?? null;
   const showCreateWorkspace = canCreateWorkspace(saasMode, isCustomDomain, user?.isSystemAdmin ?? false);
+  const filteredWorkspaces = domainSlugs ? workspaces.filter((ws) => domainSlugs.includes(ws.slug)) : workspaces;
+  const isSingleWorkspace = filteredWorkspaces.length <= 1 && !showCreateWorkspace;
 
   useEffect(() => {
     if (user) listWorkspaces().then(setWorkspaces);
@@ -170,7 +172,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         <div className="w-full flex items-center justify-center px-4 py-5 border-b border-border-card">
           <Spinner width={16} />
         </div>
-      ) : isLocked ? (
+      ) : isLocked || isSingleWorkspace ? (
         <div className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-card">
           {activeWs && (
             <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
