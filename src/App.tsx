@@ -56,6 +56,7 @@ import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
 import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
 import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
+import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
 
 function ThemedToast() {
@@ -97,10 +98,12 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
-      <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
-      <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />
-      <Route path="/portal/:workspaceSlug/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
+      <Route element={<PortalGuard />}>
+        <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
+        <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
+        <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />
+        <Route path="/portal/:workspaceSlug/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
+      </Route>
       <Route path="/portal/tickets/:portalToken" element={<PortalTicketPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
       <Route element={<ProtectedRoute />}>
