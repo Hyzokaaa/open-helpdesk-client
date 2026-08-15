@@ -1231,6 +1231,8 @@ const translations = {
   "auditLog.systemDescription": { en: "All events across the platform", es: "Todos los eventos de la plataforma" },
 
   // Portal
+  "portal.selectWorkspace": { en: "Select a helpdesk", es: "Selecciona un helpdesk" },
+  "portal.agentLogin": { en: "Agent login", es: "Acceso para agentes" },
   "portal.subtitle": { en: "Submit a support request", es: "Enviar una solicitud de soporte" },
   "portal.browseKb": { en: "Browse help articles before submitting", es: "Consulta los artículos de ayuda antes de enviar" },
   "portal.name": { en: "Name", es: "Nombre" },
