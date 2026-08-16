@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import type { DomainWorkspace } from "@modules/app/context/config-context";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
+import useConfig from "@modules/app/hooks/useConfig";
 
 interface Props {
   workspaces: DomainWorkspace[];
@@ -9,6 +9,7 @@ interface Props {
 
 export default function PortalSelector({ workspaces }: Props) {
   const { t } = useTranslation();
+  const { brandName, brandSubtitle, brandLogo } = useConfig();
 
   const initials = (name: string) => {
     const parts = name.trim().split(/\s+/);
@@ -19,9 +20,10 @@ export default function PortalSelector({ workspaces }: Props) {
   return (
     <div className="w-full min-h-dvh flex flex-col items-center justify-center bg-page px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-xl font-body-bold text-heading">{APP_NAME}</h1>
-          {APP_SUBTITLE && <p className="text-xs text-subtle">{APP_SUBTITLE}</p>}
+        <div className="flex flex-col items-center mb-8">
+          {brandLogo && <img src={brandLogo} alt="" className="w-10 h-10 object-contain mb-2" />}
+          <h1 className="text-xl font-body-bold text-heading">{brandName}</h1>
+          {brandSubtitle && <p className="text-xs text-subtle">{brandSubtitle}</p>}
         </div>
 
         <p className="text-sm text-muted text-center mb-4">{t("portal.selectWorkspace")}</p>

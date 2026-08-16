@@ -24,6 +24,9 @@ export interface ResolvedWorkspace {
   slug: string;
   name: string;
   palette: string | null;
+  appName: string | null;
+  appSubtitle: string | null;
+  logo: string | null;
 }
 
 export async function resolveDomain(host: string): Promise<ResolvedWorkspace[] | null> {

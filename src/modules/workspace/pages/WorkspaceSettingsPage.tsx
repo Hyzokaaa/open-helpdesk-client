@@ -33,6 +33,7 @@ import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
+import BrandingSettings from "../components/BrandingSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -213,6 +214,18 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("webhooks.title")}>
               <WebhookSettings slug={workspaceSlug!} />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && (
+            <CollapsibleSection title={t("branding.title")}>
+              <BrandingSettings
+                slug={workspaceSlug!}
+                appName={workspace.appName}
+                appSubtitle={workspace.appSubtitle}
+                logo={workspace.logo}
+                onUpdate={(appName, appSubtitle, logo) => setWorkspace({ ...workspace, appName, appSubtitle, logo })}
+              />
             </CollapsibleSection>
           )}
 

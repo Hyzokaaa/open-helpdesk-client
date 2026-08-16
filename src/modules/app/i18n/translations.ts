@@ -1374,6 +1374,22 @@ const translations = {
   "customDomain.thisWorkspace": { en: "this workspace", es: "este workspace" },
   "customDomain.openPortal": { en: "Open portal", es: "Abrir portal" },
 
+  // Branding
+  "branding.title": { en: "Branding", es: "Marca" },
+  "branding.appName": { en: "App Name", es: "Nombre de la App" },
+  "branding.appNameHint": { en: "If it ends with \"Helpdesk\", it splits automatically into name + subtitle.", es: "Si termina en \"Helpdesk\", se separa automaticamente en nombre + subtitulo." },
+  "branding.subtitle": { en: "Subtitle (override)", es: "Subtitulo (override)" },
+  "branding.subtitleHint": { en: "Leave empty to use the auto-split from the app name", es: "Deja vacio para usar el split automatico del nombre" },
+  "branding.logo": { en: "Logo", es: "Logo" },
+  "branding.uploadLogo": { en: "Upload logo", es: "Subir logo" },
+  "branding.changeLogo": { en: "Change logo", es: "Cambiar logo" },
+  "branding.removeLogo": { en: "Remove", es: "Eliminar" },
+  "branding.logoTooLarge": { en: "Logo must be 1MB or less", es: "El logo debe ser de 1MB o menos" },
+  "branding.save": { en: "Save", es: "Guardar" },
+  "branding.saved": { en: "Branding saved", es: "Marca guardada" },
+  "branding.saveError": { en: "Failed to save branding", es: "Error al guardar la marca" },
+  "branding.activationNote": { en: "Branding is displayed when users access this workspace through a custom domain. On the main platform URL, the default platform branding is shown.", es: "La marca se muestra cuando los usuarios acceden a este workspace a traves de un dominio personalizado. En la URL principal de la plataforma, se muestra la marca por defecto." },
+
   // System Email
   "systemEmail.title": { en: "System Email", es: "Correo del Sistema" },
   "systemEmail.description": { en: "Configure the system SMTP server for sending emails (password reset, verification, notifications).", es: "Configura el servidor SMTP del sistema para enviar correos (recuperación de contraseña, verificación, notificaciones)." },

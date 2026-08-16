@@ -1,9 +1,13 @@
 import { createContext } from "react";
+import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
 
 export interface DomainWorkspace {
   slug: string;
   name: string;
   palette: string | null;
+  appName: string | null;
+  appSubtitle: string | null;
+  logo: string | null;
 }
 
 export interface ConfigContextProps {
@@ -18,6 +22,9 @@ export interface ConfigContextProps {
   loading: boolean;
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
+  brandName: string;
+  brandSubtitle: string;
+  brandLogo: string | null;
 }
 
 export const ConfigContext = createContext<ConfigContextProps>({
@@ -31,4 +38,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   systemEmailFrom: null,
   loading: true,
   domainWorkspaces: null,
+  brandName: APP_NAME,
+  brandSubtitle: APP_SUBTITLE,
+  brandLogo: null,
 });

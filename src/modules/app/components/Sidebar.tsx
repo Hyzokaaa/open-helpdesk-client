@@ -4,7 +4,6 @@ import clsx from "clsx";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
-import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -26,7 +25,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const { t } = useTranslation();
   const { extraSettingsNav, extraAdminNav } = useExtensions();
   const { clearWorkspacePalette } = useContext(PaletteContext);
-  const { domainWorkspaces, loading: configLoading, saasMode } = useConfig();
+  const { domainWorkspaces, loading: configLoading, saasMode, brandName, brandSubtitle, brandLogo } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
   const lockedWorkspace = domainWorkspaces?.length === 1 ? domainWorkspaces[0] : null;
 
@@ -161,10 +160,13 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
       <Link
         to="/dashboard"
         onClick={() => { setLastSlug(null); clearWorkspacePalette(); }}
-        className="block px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
+        className="flex items-center gap-2.5 px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
       >
-        <h1 className="text-base font-body-bold text-primary">{APP_NAME}</h1>
-        {APP_SUBTITLE && <p className="text-exs text-subtle font-body-medium">{APP_SUBTITLE}</p>}
+        {brandLogo && <img src={brandLogo} alt="" className="w-7 h-7 object-contain shrink-0" />}
+        <div>
+          <h1 className="text-base font-body-bold text-primary">{brandName}</h1>
+          {brandSubtitle && <p className="text-exs text-subtle font-body-medium">{brandSubtitle}</p>}
+        </div>
       </Link>
 
       {/* Workspace switcher */}

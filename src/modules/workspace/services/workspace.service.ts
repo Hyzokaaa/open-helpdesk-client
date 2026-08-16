@@ -24,6 +24,9 @@ export interface WorkspaceDetail {
   customDomainVerified: boolean;
   domainVerificationToken: string | null;
   cnameTarget: string;
+  appName: string | null;
+  appSubtitle: string | null;
+  logo: string | null;
 }
 
 export interface DomainVerificationResult {
@@ -291,4 +294,20 @@ export async function setCustomDomain(slug: string, domain: string | null, autoV
 export async function verifyCustomDomain(slug: string): Promise<DomainVerificationResult> {
   const res = await http.post<DomainVerificationResult>(`/workspaces/${slug}/custom-domain/verify`);
   return res.data;
+}
+
+export async function setBranding(slug: string, data: { appName?: string | null; appSubtitle?: string | null }): Promise<{ appName: string | null; appSubtitle: string | null }> {
+  const res = await http.patch<{ appName: string | null; appSubtitle: string | null }>(`/workspaces/${slug}/branding`, data);
+  return res.data;
+}
+
+export async function uploadLogo(slug: string, file: File): Promise<{ logo: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<{ logo: string }>(`/workspaces/${slug}/branding/logo`, formData);
+  return res.data;
+}
+
+export async function deleteLogo(slug: string): Promise<void> {
+  await http.delete(`/workspaces/${slug}/branding/logo`);
 }
