@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConfigContext, type DomainWorkspace } from "./config-context";
-import { getPublicConfig, resolveDomain } from "../services/config.service";
+import { getPublicConfig, resolveDomain, type PublicConfig } from "../services/config.service";
 import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
+
+function applyNameSplit(fullName: string): { name: string; subtitle: string } {
+  const endsWithHelpdesk = fullName.toLowerCase().endsWith("helpdesk");
+  return {
+    name: endsWithHelpdesk ? fullName.replace(/\s*[Hh]elpdesk$/, "") : fullName,
+    subtitle: endsWithHelpdesk ? "Helpdesk" : "",
+  };
+}
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [saasMode, setSaasMode] = useState(false);
@@ -14,6 +22,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [systemEmailFrom, setSystemEmailFrom] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
+  const [systemBranding, setSystemBranding] = useState<{ appName: string | null; appSubtitle: string | null; logo: string | null }>({ appName: null, appSubtitle: null, logo: null });
 
   useEffect(() => {
     const init = async () => {
@@ -26,8 +35,12 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setAiEnabled(config.aiEnabled ?? false);
       setEmailConfigured(config.emailConfigured ?? false);
       setSystemEmailFrom(config.systemEmailFrom ?? null);
+      setSystemBranding({
+        appName: config.brandingAppName ?? null,
+        appSubtitle: config.brandingAppSubtitle ?? null,
+        logo: config.brandingLogo ?? null,
+      });
 
-      // Always try to resolve — backend returns 404 if hostname has no verified custom domain
       const resolved = await resolveDomain(window.location.hostname);
       if (resolved) setDomainWorkspaces(resolved);
     };
@@ -35,18 +48,34 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const { brandName, brandSubtitle, brandLogo } = useMemo(() => {
-    const source = domainWorkspaces?.find((ws) => ws.appName) ?? null;
-    if (!source || !source.appName) {
-      return { brandName: APP_NAME, brandSubtitle: APP_SUBTITLE, brandLogo: null as string | null };
+    // System branding (from DB) with env var fallback
+    const sysName = systemBranding.appName ?? null;
+    const sysSplit = sysName ? applyNameSplit(sysName) : null;
+    const systemName = sysSplit?.name ?? APP_NAME;
+    const systemSubtitle = systemBranding.appSubtitle ?? sysSplit?.subtitle ?? APP_SUBTITLE;
+    const systemLogo = systemBranding.logo ?? null;
+
+    // Determine if workspace branding should apply
+    // SaaS: only via custom domain. Selfhosted: always.
+    const shouldApplyWorkspace = !saasMode || !!domainWorkspaces;
+    const wsSource = shouldApplyWorkspace
+      ? domainWorkspaces?.find((ws) => ws.appName || ws.appSubtitle || ws.logo) ?? null
+      : null;
+
+    if (!wsSource) {
+      return { brandName: systemName, brandSubtitle: systemSubtitle, brandLogo: systemLogo };
     }
 
-    const fullName = source.appName;
-    const endsWithHelpdesk = fullName.toLowerCase().endsWith("helpdesk");
-    const name = endsWithHelpdesk ? fullName.replace(/\s*[Hh]elpdesk$/, "") : fullName;
-    const subtitle = source.appSubtitle ?? (endsWithHelpdesk ? "Helpdesk" : "");
+    // Workspace branding with field-by-field inheritance from system
+    const wsAppName = wsSource.appName;
+    const wsSplit = wsAppName ? applyNameSplit(wsAppName) : null;
 
-    return { brandName: name, brandSubtitle: subtitle, brandLogo: source.logo };
-  }, [domainWorkspaces]);
+    const name = wsSplit?.name ?? systemName;
+    const subtitle = wsSource.appSubtitle ?? wsSplit?.subtitle ?? systemSubtitle;
+    const logo = wsSource.logo ?? systemLogo;
+
+    return { brandName: name, brandSubtitle: subtitle, brandLogo: logo };
+  }, [domainWorkspaces, systemBranding, saasMode]);
 
   useEffect(() => {
     document.title = brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName;

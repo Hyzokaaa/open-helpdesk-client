@@ -116,6 +116,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const adminNav = [
     { label: t("sidebar.adminUsers"), path: "/dashboard/admin/users" },
     { label: t("sidebar.adminWorkspaces"), path: "/dashboard/admin/workspaces" },
+    { label: t("sidebar.adminBranding"), path: "/dashboard/admin/branding" },
     { label: t("sidebar.adminSettings"), path: "/dashboard/admin/settings" },
     { label: t("sidebar.adminLogs"), path: "/dashboard/admin/logs" },
     ...extraAdminNav.map((item) => ({ ...item, label: t(item.label as any) })),

@@ -1388,7 +1388,9 @@ const translations = {
   "branding.save": { en: "Save", es: "Guardar" },
   "branding.saved": { en: "Branding saved", es: "Marca guardada" },
   "branding.saveError": { en: "Failed to save branding", es: "Error al guardar la marca" },
-  "branding.activationNote": { en: "Branding is displayed when users access this workspace through a custom domain. On the main platform URL, the default platform branding is shown.", es: "La marca se muestra cuando los usuarios acceden a este workspace a traves de un dominio personalizado. En la URL principal de la plataforma, se muestra la marca por defecto." },
+  "branding.resetToSystem": { en: "Reset to system", es: "Restaurar del sistema" },
+  "branding.inheritedFromSystem": { en: "(inherited from system)", es: "(heredado del sistema)" },
+  "branding.activationNote": { en: "Branding is displayed when users access this workspace through a custom domain. On the main platform URL, the default platform branding is shown. Empty fields inherit from system branding.", es: "La marca se muestra cuando los usuarios acceden a este workspace a traves de un dominio personalizado. En la URL principal de la plataforma, se muestra la marca por defecto. Los campos vacios heredan de la marca del sistema." },
 
   // System Email
   "systemEmail.title": { en: "System Email", es: "Correo del Sistema" },
@@ -1402,7 +1404,11 @@ const translations = {
   "systemEmail.testSuccess": { en: "SMTP connection successful", es: "Conexión SMTP exitosa" },
   "systemEmail.testFailed": { en: "SMTP connection failed", es: "Conexión SMTP fallida" },
   "sidebar.adminEmail": { en: "System Email", es: "Correo del Sistema" },
+  "sidebar.adminBranding": { en: "Branding", es: "Marca" },
   "sidebar.adminSettings": { en: "Settings", es: "Configuración" },
+  "adminBranding.title": { en: "System Branding", es: "Marca del Sistema" },
+  "adminBranding.description": { en: "Default branding for the entire platform. Workspaces can override individual fields.", es: "Marca por defecto para toda la plataforma. Los workspaces pueden sobreescribir campos individuales." },
+  "adminBranding.note": { en: "This is the default branding shown across the platform. Individual workspaces can override these values with their own branding.", es: "Esta es la marca por defecto de la plataforma. Los workspaces individuales pueden sobreescribir estos valores con su propia marca." },
   "adminSettings.title": { en: "System Settings", es: "Configuración del Sistema" },
   "adminSettings.emailSending": { en: "Email Sending", es: "Envío de Email" },
   "adminSettings.emailReceiving": { en: "Email Receiving", es: "Recepción de Email" },
