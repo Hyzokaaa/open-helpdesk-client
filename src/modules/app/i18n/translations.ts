@@ -1350,6 +1350,10 @@ const translations = {
   "webhooks.deleteError": { en: "Failed to delete webhook", es: "Error al eliminar webhook" },
 
   // Custom Domain
+  // Routing
+  "routing.portal": { en: "Portal:", es: "Portal:" },
+  "routing.agentDashboard": { en: "Agent dashboard", es: "Panel de agentes" },
+
   "customDomain.title": { en: "Custom Domain", es: "Dominio Personalizado" },
   "customDomain.descSaas": { en: "Connect your own domain so users access your helpdesk at your URL. You'll need to configure DNS records at your domain provider.", es: "Conecta tu propio dominio para que los usuarios accedan a tu helpdesk desde tu URL. Necesitaras configurar registros DNS en tu proveedor de dominio." },
   "customDomain.descSelfhosted": { en: "Set the hostname where this workspace is accessible. Users who visit this hostname will see this workspace's portal directly.", es: "Configura el hostname donde este workspace es accesible. Los usuarios que visiten este hostname veran el portal de este workspace directamente." },
@@ -1366,6 +1370,9 @@ const translations = {
   "customDomain.dnsInstructions": { en: "Add these DNS records at your domain provider:", es: "Agrega estos registros DNS en tu proveedor de dominio:" },
   "customDomain.dnsPropagation": { en: "DNS changes can take up to 48 hours to propagate, but usually take just a few minutes.", es: "Los cambios de DNS pueden tardar hasta 48 horas en propagarse, pero normalmente toman solo unos minutos." },
   "customDomain.activeAt": { en: "Your helpdesk is accessible at", es: "Tu helpdesk esta accesible en" },
+  "customDomain.routing": { en: "Routing", es: "Enrutamiento" },
+  "customDomain.thisWorkspace": { en: "this workspace", es: "este workspace" },
+  "customDomain.openPortal": { en: "Open portal", es: "Abrir portal" },
 
   // System Email
   "systemEmail.title": { en: "System Email", es: "Correo del Sistema" },

@@ -153,11 +153,24 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </div>
           )}
 
-          {/* Active domain confirmation */}
+          {/* Routing info */}
           {(verified || !saasMode) && (
-            <p className="text-xs text-success">
-              {t("customDomain.activeAt")} <a href={`https://${currentDomain}`} target="_blank" rel="noopener noreferrer" className="font-mono font-body-medium underline">https://{currentDomain}</a>
-            </p>
+            <div className="bg-surface-hover rounded-lg p-3 space-y-1.5">
+              <p className="text-exs font-body-semibold text-subtle uppercase tracking-wider">{t("customDomain.routing")}</p>
+              <div className="flex items-center gap-2 text-xs">
+                <code className="text-exs text-primary bg-primary/5 px-1.5 py-0.5 rounded font-body-medium">{currentDomain}/</code>
+                <span className="text-muted">→</span>
+                <span className="text-body">{t("routing.portal")} {t("customDomain.thisWorkspace")}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <code className="text-exs text-primary bg-primary/5 px-1.5 py-0.5 rounded font-body-medium">{currentDomain}/dashboard</code>
+                <span className="text-muted">→</span>
+                <span className="text-body">{t("routing.agentDashboard")}</span>
+              </div>
+              <a href={`https://${currentDomain}`} target="_blank" rel="noopener noreferrer" className="text-exs text-primary hover:underline inline-block mt-1">
+                {t("customDomain.openPortal")} →
+              </a>
+            </div>
           )}
         </div>
       )}

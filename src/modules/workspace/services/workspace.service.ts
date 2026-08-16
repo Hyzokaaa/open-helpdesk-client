@@ -8,6 +8,8 @@ export interface Workspace {
   role: string;
   ownerName?: string;
   palette: string | null;
+  customDomain: string | null;
+  customDomainVerified: boolean;
 }
 
 export interface WorkspaceDetail {
