@@ -11,9 +11,8 @@ export default function LanguageToggle() {
     LocalStorage.set(LOCAL_STORAGE_KEY.LANGUAGE, next);
     if (user) {
       setUser({ ...user, language: next });
-    } else {
-      window.dispatchEvent(new Event("languagechange"));
     }
+    window.dispatchEvent(new Event("languagechange"));
   };
 
   return (
