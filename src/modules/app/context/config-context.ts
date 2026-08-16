@@ -18,7 +18,6 @@ export interface ConfigContextProps {
   loading: boolean;
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
-  domainError: boolean;
 }
 
 export const ConfigContext = createContext<ConfigContextProps>({
@@ -32,5 +31,4 @@ export const ConfigContext = createContext<ConfigContextProps>({
   systemEmailFrom: null,
   loading: true,
   domainWorkspaces: null,
-  domainError: false,
 });

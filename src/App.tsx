@@ -66,19 +66,10 @@ function ThemedToast() {
 }
 
 function DomainGate({ children }: { children: React.ReactNode }) {
-  const { loading, domainError } = useConfig();
+  const { loading } = useConfig();
 
   if (loading) {
     return <PageLoader />;
-  }
-
-  if (domainError) {
-    return (
-      <div className="w-full h-dvh flex flex-col items-center justify-center bg-page">
-        <h1 className="text-2xl font-body-bold text-heading mb-2">Domain not configured</h1>
-        <p className="text-sm text-muted">This domain is not associated with any helpdesk.</p>
-      </div>
-    );
   }
 
   return <>{children}</>;
