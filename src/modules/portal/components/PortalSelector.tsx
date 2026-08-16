@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import type { DomainWorkspace } from "@modules/app/context/config-context";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
+import LanguageToggle from "@modules/app/components/LanguageToggle";
 
 interface Props {
   workspaces: DomainWorkspace[];
@@ -20,7 +21,10 @@ export default function PortalSelector({ workspaces }: Props) {
   return (
     <div className="w-full min-h-dvh flex flex-col items-center justify-center bg-page px-4">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8">
+        <div className="relative flex flex-col items-center mb-8">
+          <div className="absolute right-0 top-0">
+            <LanguageToggle />
+          </div>
           {brandLogo && <img src={brandLogo} alt="" className="w-10 h-10 object-contain mb-2" />}
           <h1 className="text-xl font-body-bold text-heading">{brandName}</h1>
           {brandSubtitle && <p className="text-xs text-subtle">{brandSubtitle}</p>}

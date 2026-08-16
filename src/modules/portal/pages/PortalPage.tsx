@@ -18,6 +18,7 @@ import {
 import { needsDarkText } from "@modules/workspace/domain/color-scale";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import translations from "@modules/app/i18n/translations";
+import LanguageToggle from "@modules/app/components/LanguageToggle";
 
 function t(key: string): string {
   const lang = LocalStorage.get(LOCAL_STORAGE_KEY.LANGUAGE) || navigator.language?.slice(0, 2) || "en";
@@ -60,6 +61,13 @@ export default function PortalPage() {
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ ticketNumber: number; portalToken: string } | null>(null);
+  const [, forceRender] = useState(0);
+
+  useEffect(() => {
+    const onLangChange = () => forceRender((n) => n + 1);
+    window.addEventListener("languagechange", onLangChange);
+    return () => window.removeEventListener("languagechange", onLangChange);
+  }, []);
 
   useEffect(() => {
     if (!workspaceSlug) return;
@@ -320,7 +328,10 @@ export default function PortalPage() {
             </button>
           </div>
         ) : (
-          <div className="text-center mb-8">
+          <div className="relative text-center mb-8">
+            <div className="absolute right-0 top-0">
+              <LanguageToggle />
+            </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{info.name}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {t("portal.subtitle")}
