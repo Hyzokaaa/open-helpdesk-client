@@ -1387,6 +1387,7 @@ const translations = {
   "branding.logoTooLarge": { en: "Logo must be 1MB or less", es: "El logo debe ser de 1MB o menos" },
   "branding.save": { en: "Save", es: "Guardar" },
   "branding.saved": { en: "Branding saved", es: "Marca guardada" },
+  "branding.savedReload": { en: "Branding saved. Reload to see changes.", es: "Marca guardada. Recarga para ver los cambios." },
   "branding.saveError": { en: "Failed to save branding", es: "Error al guardar la marca" },
   "branding.resetToSystem": { en: "Reset to system", es: "Restaurar del sistema" },
   "branding.inheritedFromSystem": { en: "(inherited from system)", es: "(heredado del sistema)" },

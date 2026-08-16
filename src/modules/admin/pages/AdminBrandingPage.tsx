@@ -16,6 +16,8 @@ export default function AdminBrandingPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [subtitle, setSubtitle] = useState("");
+  const [savedName, setSavedName] = useState("");
+  const [savedSubtitle, setSavedSubtitle] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -27,10 +29,14 @@ export default function AdminBrandingPage() {
       .then((b) => {
         setName(b.appName ?? "");
         setSubtitle(b.appSubtitle ?? "");
+        setSavedName(b.appName ?? "");
+        setSavedSubtitle(b.appSubtitle ?? "");
         setLogo(b.logo);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const hasChanges = name.trim() !== savedName || subtitle.trim() !== savedSubtitle;
 
   const handleSave = async () => {
     setSaving(true);
@@ -39,9 +45,13 @@ export default function AdminBrandingPage() {
         appName: name.trim() || null,
         appSubtitle: subtitle.trim() || null,
       });
-      setName(result.appName ?? "");
-      setSubtitle(result.appSubtitle ?? "");
-      toast.success(t("branding.saved"));
+      const n = result.appName ?? "";
+      const s = result.appSubtitle ?? "";
+      setName(n);
+      setSubtitle(s);
+      setSavedName(n);
+      setSavedSubtitle(s);
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -60,7 +70,7 @@ export default function AdminBrandingPage() {
     try {
       const result = await uploadSystemLogo(file);
       setLogo(result.logo);
-      toast.success(t("branding.saved"));
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -74,7 +84,7 @@ export default function AdminBrandingPage() {
     try {
       await deleteSystemLogo();
       setLogo(null);
-      toast.success(t("branding.saved"));
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -104,7 +114,9 @@ export default function AdminBrandingPage() {
           <p className="text-exs text-muted mt-1">{t("branding.subtitleHint")}</p>
         </div>
 
-        <Button size="xs" loading={saving} onClick={handleSave}>{t("branding.save")}</Button>
+        <div className="flex justify-end">
+          <Button size="xs" loading={saving} onClick={handleSave} disabled={!hasChanges}>{t("branding.save")}</Button>
+        </div>
 
         <div className="border-t border-border-card pt-4 mt-4">
           <p className="text-xs font-body-bold text-heading mb-2">{t("branding.logo")}</p>

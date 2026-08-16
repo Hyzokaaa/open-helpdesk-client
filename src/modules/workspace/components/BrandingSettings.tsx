@@ -3,7 +3,6 @@ import { toast } from "react-toastify";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import useConfig from "@modules/app/hooks/useConfig";
 import { setBranding, uploadLogo, deleteLogo } from "../services/workspace.service";
 import { getSystemBranding, type SystemBranding } from "@modules/admin/services/system-branding.service";
 
@@ -33,6 +32,10 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
   const systemSubtitle = system?.appSubtitle ?? "";
   const systemLogo = system?.logo ?? null;
 
+  const nameChanged = name.trim() !== (appName ?? "");
+  const subtitleChanged = subtitle.trim() !== (appSubtitle ?? "");
+  const hasChanges = nameChanged || subtitleChanged;
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -41,7 +44,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
         appSubtitle: subtitle.trim() || null,
       });
       onUpdate(result.appName, result.appSubtitle, logo);
-      toast.success(t("branding.saved"));
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -56,6 +59,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
       if (field === "appName") setName("");
       if (field === "appSubtitle") setSubtitle("");
       onUpdate(result.appName, result.appSubtitle, logo);
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -74,7 +78,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
     try {
       const result = await uploadLogo(slug, file);
       onUpdate(appName, appSubtitle, result.logo);
-      toast.success(t("branding.saved"));
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -88,7 +92,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
     try {
       await deleteLogo(slug);
       onUpdate(appName, appSubtitle, null);
-      toast.success(t("branding.saved"));
+      toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
@@ -122,7 +126,9 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
         </p>
       </div>
 
-      <Button size="xs" loading={saving} onClick={handleSave}>{t("branding.save")}</Button>
+      <div className="flex justify-end">
+        <Button size="xs" loading={saving} onClick={handleSave} disabled={!hasChanges}>{t("branding.save")}</Button>
+      </div>
 
       <div className="border-t border-border-card pt-4 mt-4">
         <div className="flex items-center justify-between mb-2">
