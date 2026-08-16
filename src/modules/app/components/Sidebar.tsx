@@ -8,7 +8,10 @@ import { APP_NAME, APP_SUBTITLE } from "@modules/app/domain/constants/env";
 import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace.service";
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
+import useConfig from "@modules/app/hooks/useConfig";
 import { P } from "@modules/workspace/domain/permissions";
+import { canCreateWorkspace } from "@modules/workspace/domain/can-create-workspace";
+import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -23,6 +26,9 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const { t } = useTranslation();
   const { extraSettingsNav, extraAdminNav } = useExtensions();
   const { clearWorkspacePalette } = useContext(PaletteContext);
+  const { domainWorkspaces, loading: configLoading, saasMode } = useConfig();
+  const isCustomDomain = !!domainWorkspaces;
+  const lockedWorkspace = domainWorkspaces?.length === 1 ? domainWorkspaces[0] : null;
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const wsSwitcherRef = useRef<HTMLDivElement>(null);
@@ -37,9 +43,17 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
   const [adminOpen, setAdminOpen] = useState(isAdminActive);
 
-  const currentSlug = workspaceSlug ?? lastSlug;
-  const activeWs = workspaces.find((ws) => ws.slug === currentSlug);
+  const currentSlug = lockedWorkspace?.slug ?? workspaceSlug ?? lastSlug;
+  const activeWs = lockedWorkspace
+    ? { id: "", name: lockedWorkspace.name, slug: lockedWorkspace.slug, description: "", role: "admin", palette: lockedWorkspace.palette }
+    : workspaces.find((ws) => ws.slug === currentSlug);
   const { can } = usePermissions(currentSlug ?? undefined);
+  const isLocked = !!lockedWorkspace;
+  const configReady = !configLoading;
+  const domainSlugs = domainWorkspaces?.map((w) => w.slug) ?? null;
+  const showCreateWorkspace = canCreateWorkspace(saasMode, isCustomDomain, user?.isSystemAdmin ?? false);
+  const filteredWorkspaces = domainSlugs ? workspaces.filter((ws) => domainSlugs.includes(ws.slug)) : workspaces;
+  const isSingleWorkspace = filteredWorkspaces.length <= 1 && !showCreateWorkspace;
 
   useEffect(() => {
     if (user) listWorkspaces().then(setWorkspaces);
@@ -77,11 +91,13 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
     ? [
         { label: t("sidebar.tickets"), path: `/dashboard/workspaces/${currentSlug}/tickets` },
         { label: t("sidebar.myStats"), path: `/dashboard/workspaces/${currentSlug}/stats` },
-        ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.members"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
+        ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.team"), path: `/dashboard/workspaces/${currentSlug}/members` }] : []),
+        ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.contacts"), path: `/dashboard/workspaces/${currentSlug}/contacts` }] : []),
         ...(can(P.WORKSPACE_INVITATIONS_MANAGE) ? [{ label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` }] : []),
         ...(can(P.TAG_VIEW) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
         ...(can(P.DEPARTMENT_VIEW) ? [{ label: t("sidebar.departments"), path: `/dashboard/workspaces/${currentSlug}/departments` }] : []),
         ...(can(P.CANNED_RESPONSE_VIEW) ? [{ label: t("sidebar.cannedResponses"), path: `/dashboard/workspaces/${currentSlug}/canned-responses` }] : []),
+        ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.emailRules"), path: `/dashboard/workspaces/${currentSlug}/email-rules` }] : []),
         ...(can(P.CUSTOM_FIELD_MANAGE) ? [{ label: t("sidebar.customFields"), path: `/dashboard/workspaces/${currentSlug}/custom-fields` }] : []),
         ...(can(P.KB_ARTICLE_VIEW) ? [{ label: t("sidebar.knowledgeBase"), path: `/dashboard/workspaces/${currentSlug}/knowledge-base` }] : []),
         ...(can(P.WORKSPACE_SETTINGS_MANAGE) ? [{ label: t("sidebar.settings"), path: `/dashboard/workspaces/${currentSlug}/settings` }] : []),
@@ -152,9 +168,26 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
       </Link>
 
       {/* Workspace switcher */}
+      {!configReady ? (
+        <div className="w-full flex items-center justify-center px-4 py-5 border-b border-border-card">
+          <Spinner width={16} />
+        </div>
+      ) : isLocked || isSingleWorkspace ? (
+        <div className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-card">
+          {activeWs && (
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-xs font-body-bold text-primary">{initials(activeWs.name)}</span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-body-bold text-heading truncate">{activeWs?.name}</p>
+            <p className="text-exs text-subtle font-body-medium truncate">{activeWs?.slug}</p>
+          </div>
+        </div>
+      ) : (
       <div ref={wsSwitcherRef} className="relative">
         <button
-          onClick={() => workspaces.length > 0 ? setWsSwitcherOpen(!wsSwitcherOpen) : navigate("/dashboard/workspaces/new")}
+          onClick={() => workspaces.length > 0 ? setWsSwitcherOpen(!wsSwitcherOpen) : showCreateWorkspace ? navigate("/dashboard/workspaces/new") : undefined}
           className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-card hover:bg-surface-hover transition-colors cursor-pointer text-left"
         >
           {activeWs && (
@@ -183,7 +216,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
 
         {wsSwitcherOpen && (
           <div className="absolute left-3 right-3 z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg py-1 max-h-64 overflow-auto">
-            {workspaces.map((ws) => (
+            {(domainSlugs ? workspaces.filter((ws) => domainSlugs.includes(ws.slug)) : workspaces).map((ws) => (
               <button
                 key={ws.id}
                 onClick={() => {
@@ -215,19 +248,22 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
                 </div>
               </button>
             ))}
-            <div className="border-t border-border-card mt-1 pt-1">
-              <Link
-                to="/dashboard/workspaces/new"
-                onClick={() => setWsSwitcherOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-body-medium text-subtle hover:text-primary hover:bg-surface-hover transition-colors rounded-md"
-              >
-                <span className="w-7 h-7 rounded-md bg-surface-hover flex items-center justify-center text-sm">+</span>
-                {t("workspaces.newWorkspace")}
-              </Link>
-            </div>
+            {showCreateWorkspace && (
+              <div className="border-t border-border-card mt-1 pt-1">
+                <Link
+                  to="/dashboard/workspaces/new"
+                  onClick={() => setWsSwitcherOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-body-medium text-subtle hover:text-primary hover:bg-surface-hover transition-colors rounded-md"
+                >
+                  <span className="w-7 h-7 rounded-md bg-surface-hover flex items-center justify-center text-sm">+</span>
+                  {t("workspaces.newWorkspace")}
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>
+      )}
 
       <nav className="flex flex-col px-3 py-3 gap-y-0.5 flex-1 overflow-auto">
         {/* Workspace nav */}
@@ -263,7 +299,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           onClick={() => setSettingsOpen(!settingsOpen)}
           className={sectionToggleClass(isSettingsActive)}
         >
-          {t("sidebar.settings")}
+          {t("nav.userSettings")}
           <span className="text-exs">{settingsOpen ? "▾" : "▸"}</span>
         </button>
 
@@ -281,8 +317,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           </div>
         )}
 
-        {/* System admin */}
-        {user?.isSystemAdmin && (
+        {/* System admin — hidden in custom domain mode for SaaS only */}
+        {user?.isSystemAdmin && configReady && !(isCustomDomain && saasMode) && (
           <>
             <div className="border-t border-border-card my-2" />
             <button

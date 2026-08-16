@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -187,14 +188,14 @@ export default function MailboxSettings({ slug }: Props) {
                     {
                       label: t("mailbox.pollNow"),
                       onClick: async () => {
+                        const toastId = toast.info(t("mailbox.pollingNow"), { autoClose: false });
                         try {
-                          toast.info(t("mailbox.pollingNow"));
                           const result = await pollMailboxNow(slug, m.id);
-                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
                           const updated = await listMailboxes(slug);
                           setMailboxes(updated);
                         } catch {
-                          toast.error(t("mailbox.importError"));
+                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
                     },
@@ -219,12 +220,12 @@ export default function MailboxSettings({ slug }: Props) {
                     {
                       label: t("mailbox.import"),
                       onClick: async () => {
+                        const toastId = toast.info(t("mailbox.importStarted"), { autoClose: false });
                         try {
-                          toast.info(t("mailbox.importStarted"));
                           const result = await importMailboxEmails(slug, m.id);
-                          toast.success(t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{total}", String(result.total)));
+                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
                         } catch {
-                          toast.error(t("mailbox.importError"));
+                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
                     },
@@ -258,7 +259,86 @@ export default function MailboxSettings({ slug }: Props) {
   );
 }
 
-function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean }) {
+const ADDRESS_MODES = [
+  { value: "address" as const, labelKey: "mailbox.addressModeAddress", descKey: "mailbox.addressModeAddressDesc" },
+  { value: "aliases" as const, labelKey: "mailbox.addressModeAliases", descKey: "mailbox.addressModeAliasesDesc" },
+  { value: "all" as const, labelKey: "mailbox.addressModeAll", descKey: "mailbox.addressModeAllDesc" },
+];
+
+function AddressModePicker({ value, onChange, t }: {
+  value: string;
+  onChange: (v: 'address' | 'aliases' | 'all') => void;
+  t: (key: any) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const selected = ADDRESS_MODES.find((m) => m.value === value) ?? ADDRESS_MODES[0];
+
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+    const handle = (e: MouseEvent) => {
+      if (buttonRef.current?.contains(e.target as Node) || menuRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      document.removeEventListener("mousedown", handle);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
+  return (
+    <div className="mb-4">
+      <p className="text-xs font-body-semibold text-heading mb-1.5">{t("mailbox.addressMode")}</p>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full text-left bg-surface border border-border-card rounded px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors relative"
+      >
+        <span className="text-sm text-body font-body-medium">{t(selected.labelKey)}</span>
+        <span className="text-exs text-muted block mt-0.5">{t(selected.descKey)}</span>
+        <svg className="absolute right-3 top-3 text-muted" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="bg-surface border border-border-card rounded-lg shadow-lg overflow-hidden"
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+        >
+          {ADDRESS_MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              onClick={() => { onChange(mode.value); setOpen(false); }}
+              className={`w-full text-left px-3 py-2.5 cursor-pointer transition-colors ${
+                mode.value === value ? "bg-primary/5 border-l-2 border-primary" : "hover:bg-surface-hover border-l-2 border-transparent"
+              }`}
+            >
+              <span className="text-sm text-body font-body-medium">{t(mode.labelKey)}</span>
+              <span className="text-exs text-muted block mt-0.5">{t(mode.descKey)}</span>
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
+
+export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
@@ -431,43 +511,11 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
 
         <div className="border-t border-border-card my-4" />
 
-        <p className="text-xs font-body-semibold text-heading mb-3">{t("mailbox.addressMode")}</p>
-
-        <div className="flex flex-col gap-2 mb-3">
-          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
-            <input
-              type="radio"
-              name="addressMode"
-              checked={addressMode === 'address'}
-              onChange={() => setAddressMode('address')}
-              className="accent-primary"
-            />
-            {t("mailbox.addressModeAddress")}
-          </label>
-          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAddressDesc")}</p>
-          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
-            <input
-              type="radio"
-              name="addressMode"
-              checked={addressMode === 'aliases'}
-              onChange={() => setAddressMode('aliases')}
-              className="accent-primary"
-            />
-            {t("mailbox.addressModeAliases")}
-          </label>
-          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAliasesDesc")}</p>
-          <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
-            <input
-              type="radio"
-              name="addressMode"
-              checked={addressMode === 'all'}
-              onChange={() => setAddressMode('all')}
-              className="accent-primary"
-            />
-            {t("mailbox.addressModeAll")}
-          </label>
-          <p className="text-exs text-muted ml-6 mb-1">{t("mailbox.addressModeAllDesc")}</p>
-        </div>
+        <AddressModePicker
+          value={addressMode}
+          onChange={setAddressMode}
+          t={t}
+        />
 
         {addressMode === 'aliases' && (
           <div className="mb-4">
@@ -537,7 +585,7 @@ function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; ma
 
         <div className="mt-4">
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
-            {t("mailbox.save")}
+            {isEdit ? t("mailbox.save") : t("mailbox.add")}
           </Button>
         </div>
       </form>

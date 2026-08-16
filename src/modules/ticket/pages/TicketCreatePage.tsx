@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
-import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
+import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -13,6 +13,7 @@ import { stageUpload, StagedUpload } from "@modules/attachment/services/attachme
 import { PRIORITIES, CATEGORIES } from "../domain/ticket-enums";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
+import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import TagSelector from "@modules/tag/components/TagSelector";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -35,9 +36,9 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const { t, tEnum } = useTranslation();
   const { handlePlanLimitError } = useExtensions();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<MiniEditorRef>(null);
 
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [category, setCategory] = useState("issue");
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -53,10 +54,11 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [onBehalfOf, setOnBehalfOf] = useState("");
+  const [allMembers, setAllMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
-  const isDirty = name.trim() !== "" || description.trim() !== "" || files.length > 0 || tagIds.length > 0;
+  const isDirty = name.trim() !== "" || files.length > 0 || tagIds.length > 0;
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -72,8 +74,15 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
       listTags(workspaceSlug).then(setTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
+      listMembers(workspaceSlug).then(setAllMembers).catch(() => {});
     }
   }, [workspaceSlug]);
+
+  const onBehalfOfTrimmed = onBehalfOf.trim().toLowerCase();
+  const matchedMember = onBehalfOfTrimmed
+    ? allMembers.find((m) => m.email.toLowerCase() === onBehalfOfTrimmed)
+    : null;
+  const isNewContact = onBehalfOfTrimmed && onBehalfOfTrimmed.includes("@") && !matchedMember;
 
   const stageFiles = useCallback(async (newFiles: File[]) => {
     const staged: StagedFile[] = newFiles.map((file) => ({ file, status: "pending" as const }));
@@ -131,9 +140,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         .filter((f) => f.status === "done" && f.token)
         .map((f) => f.token!);
 
+      const descriptionHtml = editorRef.current?.getHTML() || "";
       const res = await createTicket(workspaceSlug, {
         name,
-        description,
+        description: descriptionHtml,
         priority,
         category,
         tagIds,
@@ -188,11 +198,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
           </FormInput>
 
           <FormInput label={t("ticketCreate.description")} required>
-            <Textarea
+            <MiniEditor
+              ref={editorRef}
+              initialValue=""
               placeholder={t("ticketCreate.descriptionPlaceholder")}
-              value={description}
-              onChange={setDescription}
-              height={150}
             />
           </FormInput>
 
@@ -238,6 +247,16 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
               onChange={setOnBehalfOf}
               type="email"
             />
+            {matchedMember && (
+              <p className="text-exs text-green-600 mt-1">
+                ✓ {matchedMember.firstName} {matchedMember.lastName}
+              </p>
+            )}
+            {isNewContact && (
+              <p className="text-exs text-amber-600 mt-1">
+                {t("ticketCreate.newContactWillBeCreated")}
+              </p>
+            )}
           </FormInput>
 
           <CustomFieldsForm

@@ -1,5 +1,11 @@
 import { createContext } from "react";
 
+export interface DomainWorkspace {
+  slug: string;
+  name: string;
+  palette: string | null;
+}
+
 export interface ConfigContextProps {
   saasMode: boolean;
   paymentGateways: string[];
@@ -10,6 +16,8 @@ export interface ConfigContextProps {
   emailConfigured: boolean;
   systemEmailFrom: string | null;
   loading: boolean;
+  /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
+  domainWorkspaces: DomainWorkspace[] | null;
 }
 
 export const ConfigContext = createContext<ConfigContextProps>({
@@ -22,4 +30,5 @@ export const ConfigContext = createContext<ConfigContextProps>({
   emailConfigured: false,
   systemEmailFrom: null,
   loading: true,
+  domainWorkspaces: null,
 });

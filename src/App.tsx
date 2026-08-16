@@ -7,6 +7,8 @@ import ExtensionProvider from "@modules/app/extensions/ExtensionProvider";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import type { Extensions } from "@modules/app/extensions/extension-context";
 import useTheme from "@modules/app/hooks/useTheme";
+import useConfig from "@modules/app/hooks/useConfig";
+import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
 import { UserProvider } from "@modules/user/context/UserProvider";
 import LoginPage from "@modules/user/pages/LoginPage";
 import SignupPage from "@modules/user/pages/SignupPage";
@@ -17,6 +19,7 @@ import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
 import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import WorkspaceMembersPage from "@modules/workspace/pages/WorkspaceMembersPage";
+import WorkspaceContactsPage from "@modules/workspace/pages/WorkspaceContactsPage";
 import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import WorkspaceDepartmentsPage from "@modules/department/pages/WorkspaceDepartmentsPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
@@ -38,6 +41,7 @@ import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
 import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
 import SystemLogsPage from "@modules/audit-log/pages/SystemLogsPage";
 import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
+import WorkspaceEmailRulesPage from "@modules/email-rule/pages/WorkspaceEmailRulesPage";
 import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
 import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
 import UserStatsPage from "@modules/report/pages/UserStatsPage";
@@ -51,6 +55,9 @@ import PortalKbCategoryPage from "@modules/portal/pages/PortalKbCategoryPage";
 import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
 import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
 import ProseStyles from "@modules/app/components/ProseStyles";
+import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
+import PortalGuard from "@modules/app/components/PortalGuard";
+import RootRedirect from "@modules/app/components/RootRedirect";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -58,10 +65,21 @@ function ThemedToast() {
   return <ToastContainer position="top-right" autoClose={3000} theme={toastTheme} />;
 }
 
+function DomainGate({ children }: { children: React.ReactNode }) {
+  const { loading } = useConfig();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { extraPublicRoutes, extraDashboardRoutes } = useExtensions();
 
   return (
+    <DomainGate>
     <Routes>
       {extraPublicRoutes}
       <Route path="/login" element={<LoginPage />} />
@@ -71,32 +89,38 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
-      <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
-      <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />
-      <Route path="/portal/:workspaceSlug/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
+      <Route element={<PortalGuard />}>
+        <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
+        <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
+        <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />
+        <Route path="/portal/:workspaceSlug/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
+      </Route>
       <Route path="/portal/tickets/:portalToken" element={<PortalTicketPage />} />
       <Route path="/invite/:token" element={<InvitationPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<WorkspacesPage />} />
           <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
-          <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
-          <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
-          <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
-          <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
-          <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
-          <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
-          <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
-          <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
-          <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
-          <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
-          <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
-          <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
-          <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
-          <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
-          <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
-          <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+          <Route element={<WorkspaceGuard />}>
+            <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
+            <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+            <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
+            <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
+            <Route path="workspaces/:workspaceSlug/contacts" element={<WorkspaceContactsPage />} />
+            <Route path="workspaces/:workspaceSlug/invitations" element={<WorkspaceInvitationsPage />} />
+            <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
+            <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
+            <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
+            <Route path="workspaces/:workspaceSlug/email-rules" element={<WorkspaceEmailRulesPage />} />
+            <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />
+            <Route path="workspaces/:workspaceSlug/knowledge-base" element={<WorkspaceKbPage />} />
+            <Route path="workspaces/:workspaceSlug/reports" element={<WorkspaceReportsPage />} />
+            <Route path="workspaces/:workspaceSlug/stats" element={<UserStatsPage />} />
+            <Route path="workspaces/:workspaceSlug/stats/:userId" element={<UserStatsPage />} />
+            <Route path="workspaces/:workspaceSlug/tickets" element={<TicketsPage />} />
+            <Route path="workspaces/:workspaceSlug/tickets/new" element={<TicketCreatePage />} />
+            <Route path="workspaces/:workspaceSlug/tickets/:ticketId" element={<TicketDetailPage />} />
+          </Route>
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<Navigate to="account" replace />} />
           <Route path="settings/account" element={<AccountSection />} />
@@ -114,8 +138,10 @@ function AppRoutes() {
           </Route>
         </Route>
       </Route>
+      <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </DomainGate>
   );
 }
 

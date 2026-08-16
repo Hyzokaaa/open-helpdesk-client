@@ -67,8 +67,9 @@ export async function getInvitationLink(
 export async function resendInvitation(
   slug: string,
   id: string,
-): Promise<void> {
-  await http.post(`/workspaces/${slug}/invitations/${id}/resend`);
+): Promise<{ emailSent: boolean }> {
+  const res = await http.post<{ emailSent: boolean }>(`/workspaces/${slug}/invitations/${id}/resend`);
+  return res.data;
 }
 
 export async function cancelInvitation(
