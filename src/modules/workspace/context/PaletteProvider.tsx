@@ -3,6 +3,7 @@ import { useParams, useLocation } from "react-router";
 import { getWorkspace } from "../services/workspace.service";
 import { getPalette, DEFAULT_PALETTE, PALETTES, PaletteDefinition } from "../domain/palettes";
 import { needsDarkText } from "../domain/color-scale";
+import useConfig from "@modules/app/hooks/useConfig";
 
 interface PaletteContextValue {
   palette: string;
@@ -43,28 +44,35 @@ function clearPalette() {
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const { workspaceSlug } = useParams();
   const location = useLocation();
+  const { domainWorkspaces } = useConfig();
   const [palette, setPaletteState] = useState<string>(DEFAULT_PALETTE);
   const lastSlugRef = useRef<string | null>(null);
 
+  const domainPalette = domainWorkspaces?.length === 1 ? domainWorkspaces[0].palette : null;
   const isHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
 
   useEffect(() => {
-    if (isHome) {
+    if (isHome && !domainWorkspaces) {
       lastSlugRef.current = null;
       clearPalette();
       setPaletteState(DEFAULT_PALETTE);
       return;
     }
 
-    const slug = workspaceSlug ?? lastSlugRef.current;
+    const slug = workspaceSlug ?? lastSlugRef.current ?? domainWorkspaces?.[0]?.slug;
 
     if (workspaceSlug) {
       lastSlugRef.current = workspaceSlug;
     }
 
     if (!slug) {
-      clearPalette();
-      setPaletteState(DEFAULT_PALETTE);
+      if (domainPalette && domainPalette !== DEFAULT_PALETTE) {
+        applyPalette(getPalette(domainPalette));
+        setPaletteState(domainPalette);
+      } else {
+        clearPalette();
+        setPaletteState(DEFAULT_PALETTE);
+      }
       return;
     }
 
