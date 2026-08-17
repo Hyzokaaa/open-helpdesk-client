@@ -5,10 +5,12 @@ import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import {
   getPortalInfo,
   getPortalCustomFields,
+  getPortalDepartments,
   createPortalTicket,
   portalStageUpload,
   PortalInfo,
   PortalCustomField,
+  PortalDepartment,
 } from "../services/portal.service";
 import {
   getPalette,
@@ -18,6 +20,7 @@ import {
 import { needsDarkText } from "@modules/workspace/domain/color-scale";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import translations from "@modules/app/i18n/translations";
+import LanguageToggle from "@modules/app/components/LanguageToggle";
 
 function t(key: string): string {
   const lang = LocalStorage.get(LOCAL_STORAGE_KEY.LANGUAGE) || navigator.language?.slice(0, 2) || "en";
@@ -57,19 +60,30 @@ export default function PortalPage() {
   const [description, setDescription] = useState("");
   const [customFieldDefs, setCustomFieldDefs] = useState<PortalCustomField[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
+  const [departments, setDepartments] = useState<PortalDepartment[]>([]);
+  const [departmentId, setDepartmentId] = useState("");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ ticketNumber: number; portalToken: string } | null>(null);
+  const [, forceRender] = useState(0);
+
+  useEffect(() => {
+    const onLangChange = () => forceRender((n) => n + 1);
+    window.addEventListener("languagechange", onLangChange);
+    return () => window.removeEventListener("languagechange", onLangChange);
+  }, []);
 
   useEffect(() => {
     if (!workspaceSlug) return;
     Promise.all([
       getPortalInfo(workspaceSlug),
       getPortalCustomFields(workspaceSlug),
+      getPortalDepartments(workspaceSlug),
     ])
-      .then(([data, fields]) => {
+      .then(([data, fields, depts]) => {
         setInfo(data);
         setCustomFieldDefs(fields);
+        setDepartments(depts);
         const paletteName = data.palette ?? DEFAULT_PALETTE;
         const def = getPalette(paletteName);
         if (paletteName !== DEFAULT_PALETTE) {
@@ -151,6 +165,7 @@ export default function PortalPage() {
         description,
         uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
         customFields: hasCustomFields ? customFieldValues : undefined,
+        departmentId: departmentId || undefined,
       });
 
       setSubmitted({ ticketNumber: res.ticketNumber, portalToken: res.portalToken });
@@ -287,6 +302,7 @@ export default function PortalPage() {
               setEmail("");
               setSubject("");
               setDescription("");
+              setDepartmentId("");
               setCustomFieldValues({});
               setFiles([]);
             }}
@@ -320,7 +336,10 @@ export default function PortalPage() {
             </button>
           </div>
         ) : (
-          <div className="text-center mb-8">
+          <div className="relative text-center mb-8">
+            <div className="absolute right-0 top-0">
+              <LanguageToggle />
+            </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{info.name}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {t("portal.subtitle")}
@@ -384,6 +403,24 @@ export default function PortalPage() {
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
               />
             </div>
+
+            {departments.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("portal.department")}
+                </label>
+                <select
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                >
+                  <option value="">{t("portal.selectDepartment")}</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

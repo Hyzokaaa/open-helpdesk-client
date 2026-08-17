@@ -9,6 +9,9 @@ export interface PublicConfig {
   aiEnabled: boolean;
   emailConfigured: boolean;
   systemEmailFrom: string | null;
+  brandingAppName: string | null;
+  brandingAppSubtitle: string | null;
+  brandingLogo: string | null;
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {
@@ -16,7 +19,7 @@ export async function getPublicConfig(): Promise<PublicConfig> {
     const res = await http.get<PublicConfig>("/config/public");
     return res.data;
   } catch {
-    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null };
+    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null, brandingAppName: null, brandingAppSubtitle: null, brandingLogo: null };
   }
 }
 
@@ -24,6 +27,9 @@ export interface ResolvedWorkspace {
   slug: string;
   name: string;
   palette: string | null;
+  appName: string | null;
+  appSubtitle: string | null;
+  logo: string | null;
 }
 
 export async function resolveDomain(host: string): Promise<ResolvedWorkspace[] | null> {

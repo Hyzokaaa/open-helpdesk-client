@@ -13,7 +13,6 @@ import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
-import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 import OAuthButtons from "../components/OAuthButtons";
 
 export default function LoginPage() {
@@ -21,7 +20,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
-  const { saasMode } = useConfig();
+  const { saasMode, brandName, brandSubtitle, brandLogo } = useConfig();
 
   const inviteEmail = searchParams.get("email") || "";
 
@@ -66,9 +65,12 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="bg-surface rounded-card border-card p-8">
             <div className="flex items-start justify-between mb-1">
-              <h1 className="text-xl font-body-bold text-heading">
-                {APP_FULL_NAME}
-              </h1>
+              <div className="flex items-center gap-2.5">
+                {brandLogo && <img src={brandLogo} alt="" className="w-8 h-8 object-contain" />}
+                <h1 className="text-xl font-body-bold text-heading">
+                  {brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName}
+                </h1>
+              </div>
               <LanguageToggle />
             </div>
             <p className="text-sm text-muted mb-6">

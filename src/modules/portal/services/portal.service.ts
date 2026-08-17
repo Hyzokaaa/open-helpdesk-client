@@ -17,6 +17,11 @@ export interface PortalCustomField {
   options: string[] | null;
 }
 
+export interface PortalDepartment {
+  id: string;
+  name: string;
+}
+
 export interface CreatePortalTicketData {
   name: string;
   email: string;
@@ -24,6 +29,7 @@ export interface CreatePortalTicketData {
   description: string;
   uploadTokens?: string[];
   customFields?: Record<string, unknown>;
+  departmentId?: string;
 }
 
 export interface CreatePortalTicketResponse {
@@ -78,6 +84,11 @@ export async function getPortalInfo(slug: string): Promise<PortalInfo> {
 
 export async function getPortalCustomFields(slug: string): Promise<PortalCustomField[]> {
   const res = await portalHttp.get<PortalCustomField[]>(`/portal/${slug}/custom-fields`);
+  return res.data;
+}
+
+export async function getPortalDepartments(slug: string): Promise<PortalDepartment[]> {
+  const res = await portalHttp.get<PortalDepartment[]>(`/portal/${slug}/departments`);
   return res.data;
 }
 

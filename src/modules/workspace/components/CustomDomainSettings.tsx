@@ -39,8 +39,9 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
       onUpdate(res.customDomain, res.customDomainVerified, res.domainVerificationToken);
       setResult(null);
       toast.success(res.customDomain ? t("customDomain.saved") : t("customDomain.removed"));
-    } catch {
-      toast.error(t("customDomain.saveError"));
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || t("customDomain.saveError");
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
