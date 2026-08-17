@@ -1369,6 +1369,8 @@ const translations = {
   "customDomain.pending": { en: "Pending verification", es: "Verificacion pendiente" },
   "customDomain.verifyError": { en: "Verification failed", es: "Error en la verificacion" },
   "customDomain.remove": { en: "Remove", es: "Eliminar" },
+  "customDomain.dnsRecord": { en: "DNS record", es: "Registro DNS" },
+  "customDomain.dnsRecordHint": { en: "You can use a CNAME or an A record pointing to your server IP.", es: "Puedes usar un CNAME o un registro A apuntando a la IP de tu servidor." },
   "customDomain.dnsInstructions": { en: "Add these DNS records at your domain provider:", es: "Agrega estos registros DNS en tu proveedor de dominio:" },
   "customDomain.dnsPropagation": { en: "DNS changes can take up to 48 hours to propagate, but usually take just a few minutes.", es: "Los cambios de DNS pueden tardar hasta 48 horas en propagarse, pero normalmente toman solo unos minutos." },
   "customDomain.activeAt": { en: "Your helpdesk is accessible at", es: "Tu helpdesk esta accesible en" },

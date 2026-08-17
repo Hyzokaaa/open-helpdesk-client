@@ -125,13 +125,14 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
               <p className="text-xs font-body-medium text-heading">{t("customDomain.dnsInstructions")}</p>
               <div className="space-y-1.5">
                 <div className="text-xs">
-                  <span className="text-subtle">1. CNAME</span>
+                  <span className="text-subtle">1. {t("customDomain.dnsRecord")}</span>
                   <div className="font-mono text-xs bg-surface p-1.5 rounded mt-0.5 text-body">
-                    {currentDomain} → {result?.cnameTarget ?? activeCnameTarget}
+                    CNAME {currentDomain} → {result?.cnameTarget ?? activeCnameTarget}
                     {result && (
-                      <StatusBadge label={result.cnameValid ? "OK" : "Missing"} color={result.cnameValid ? "green" : "red"} size="xs" />
+                      <StatusBadge label={result.dnsValid ? "OK" : "Missing"} color={result.dnsValid ? "green" : "red"} size="xs" />
                     )}
                   </div>
+                  <p className="text-exs text-muted mt-0.5">{t("customDomain.dnsRecordHint")}</p>
                 </div>
                 <div className="text-xs">
                   <span className="text-subtle">2. TXT</span>
