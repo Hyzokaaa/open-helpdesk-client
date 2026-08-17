@@ -5,6 +5,7 @@ const translations = {
 
   // Navbar
   "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
+  "dashboard.noAccess": { en: "You don't have access to any workspace on this domain. Contact your administrator to get an invitation.", es: "No tienes acceso a ningun workspace en este dominio. Contacta a tu administrador para obtener una invitacion." },
   "nav.userSettings": { en: "User Settings", es: "Configuración de Usuario" },
   "nav.lightMode": { en: "Light", es: "Claro" },
   "nav.darkMode": { en: "Dark", es: "Oscuro" },

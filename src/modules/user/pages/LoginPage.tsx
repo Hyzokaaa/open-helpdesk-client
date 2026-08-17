@@ -20,7 +20,8 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
-  const { saasMode, brandName, brandSubtitle, brandLogo } = useConfig();
+  const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces } = useConfig();
+  const isCustomDomain = !!domainWorkspaces;
 
   const inviteEmail = searchParams.get("email") || "";
 
@@ -113,7 +114,7 @@ export default function LoginPage() {
               <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                 {t("login.forgotPassword")}
               </Link>
-              {saasMode && (
+              {saasMode && !isCustomDomain && (
                 <Link to="/signup" className="text-xs text-primary hover:underline">
                   {t("login.noAccount")}
                 </Link>
@@ -121,7 +122,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {saasMode && (
+          {saasMode && !isCustomDomain && (
             <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">
               <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
               <span>·</span>
