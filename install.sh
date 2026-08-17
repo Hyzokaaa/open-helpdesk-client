@@ -1,15 +1,34 @@
 #!/bin/bash
 set -e
 
-INSTALL_DIR="/opt/open-helpdesk/client"
-WEB_ROOT="/var/www/openhelpdesk"
+# Open Helpdesk Client - Installation Script
+# Requirements: Node.js 22+, nginx.
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/Hyzokaaa/open-helpdesk-client/main/install.sh | bash
+#
+# Custom install:
+#   INSTALL_DIR=/opt/oh-test/client WEB_ROOT=/var/www/oh-test \
+#     NGINX_PORT=8080 NGINX_SITE=oh-test BACKEND_PORT=3001 bash install.sh
 
+INSTALL_DIR="${INSTALL_DIR:-/opt/open-helpdesk/client}"
+WEB_ROOT="${WEB_ROOT:-/var/www/openhelpdesk}"
+NGINX_PORT="${NGINX_PORT:-80}"
+NGINX_SITE="${NGINX_SITE:-openhelpdesk}"
+BACKEND_PORT="${BACKEND_PORT:-3000}"
+
+echo ""
 echo "=== Open Helpdesk Client Installer ==="
+echo ""
+echo "  Install dir:  $INSTALL_DIR"
+echo "  Web root:     $WEB_ROOT"
+echo "  Nginx port:   $NGINX_PORT"
+echo "  Backend port: $BACKEND_PORT"
 echo ""
 
 # Check Node.js
 if ! command -v node &> /dev/null; then
-  echo "ERROR: Node.js is not installed. Install Node.js 22+ first."
+  echo "[ERROR] Node.js is not installed. Install Node.js 22+ first."
   echo "  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -"
   echo "  sudo apt-get install -y nodejs"
   exit 1
@@ -17,14 +36,14 @@ fi
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 if [ "$NODE_VERSION" -lt 22 ]; then
-  echo "ERROR: Node.js 22+ required. Found: $(node -v)"
+  echo "[ERROR] Node.js 22+ required. Found: $(node -v)"
   exit 1
 fi
 echo "[OK] Node.js $(node -v)"
 
 # Check nginx
 if ! command -v nginx &> /dev/null; then
-  echo "WARNING: nginx not found. You will need a web server to serve the client."
+  echo "[WARNING] nginx not found. You will need a web server to serve the client."
   echo "  sudo apt-get install -y nginx"
 fi
 
@@ -49,8 +68,8 @@ echo ""
 echo "=== Configuration ==="
 echo ""
 
-read -p "Backend API URL (e.g. https://helpdesk.yourcompany.com/api): " VITE_API_URL
-VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
+read -p "Backend API URL (e.g. https://helpdesk.yourcompany.com/api) [http://localhost:$BACKEND_PORT]: " VITE_API_URL
+VITE_API_URL=${VITE_API_URL:-http://localhost:$BACKEND_PORT}
 
 read -p "App name [Open Helpdesk]: " VITE_APP_NAME
 VITE_APP_NAME=${VITE_APP_NAME:-Open Helpdesk}
@@ -79,15 +98,15 @@ sudo cp -r "$INSTALL_DIR/dist/"* "$WEB_ROOT/"
 
 # Configure nginx if available
 if command -v nginx &> /dev/null; then
-  NGINX_CONF="/etc/nginx/sites-available/openhelpdesk"
+  NGINX_CONF="/etc/nginx/sites-available/$NGINX_SITE"
 
   if [ ! -f "$NGINX_CONF" ]; then
-    read -p "Server hostname (e.g. helpdesk.yourcompany.com): " SERVER_NAME
+    read -p "Server hostname (e.g. helpdesk.yourcompany.com) [localhost]: " SERVER_NAME
     SERVER_NAME=${SERVER_NAME:-localhost}
 
     sudo tee "$NGINX_CONF" > /dev/null << EOF
 server {
-    listen 80;
+    listen $NGINX_PORT;
     server_name $SERVER_NAME;
 
     root $WEB_ROOT;
@@ -103,7 +122,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://localhost:3000/;
+        proxy_pass http://localhost:$BACKEND_PORT/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -114,7 +133,7 @@ EOF
 
     sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
     sudo nginx -t && sudo systemctl reload nginx
-    echo "[OK] Nginx configured for $SERVER_NAME"
+    echo "[OK] Nginx configured for $SERVER_NAME on port $NGINX_PORT"
   else
     echo "[OK] Using existing nginx config"
     sudo nginx -t && sudo systemctl reload nginx
