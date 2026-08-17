@@ -1240,6 +1240,8 @@ const translations = {
   "portal.email": { en: "Email", es: "Correo electrónico" },
   "portal.emailPlaceholder": { en: "you@example.com", es: "tu@ejemplo.com" },
   "portal.subject": { en: "Subject", es: "Asunto" },
+  "portal.department": { en: "Department", es: "Departamento" },
+  "portal.selectDepartment": { en: "Select a department (optional)", es: "Selecciona un departamento (opcional)" },
   "portal.subjectPlaceholder": { en: "Brief summary of your issue", es: "Resumen breve de tu problema" },
   "portal.description": { en: "Description", es: "Descripción" },
   "portal.descriptionPlaceholder": { en: "Describe your issue in detail...", es: "Describe tu problema en detalle..." },

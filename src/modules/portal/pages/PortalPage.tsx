@@ -5,10 +5,12 @@ import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import {
   getPortalInfo,
   getPortalCustomFields,
+  getPortalDepartments,
   createPortalTicket,
   portalStageUpload,
   PortalInfo,
   PortalCustomField,
+  PortalDepartment,
 } from "../services/portal.service";
 import {
   getPalette,
@@ -58,6 +60,8 @@ export default function PortalPage() {
   const [description, setDescription] = useState("");
   const [customFieldDefs, setCustomFieldDefs] = useState<PortalCustomField[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
+  const [departments, setDepartments] = useState<PortalDepartment[]>([]);
+  const [departmentId, setDepartmentId] = useState("");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ ticketNumber: number; portalToken: string } | null>(null);
@@ -74,10 +78,12 @@ export default function PortalPage() {
     Promise.all([
       getPortalInfo(workspaceSlug),
       getPortalCustomFields(workspaceSlug),
+      getPortalDepartments(workspaceSlug),
     ])
-      .then(([data, fields]) => {
+      .then(([data, fields, depts]) => {
         setInfo(data);
         setCustomFieldDefs(fields);
+        setDepartments(depts);
         const paletteName = data.palette ?? DEFAULT_PALETTE;
         const def = getPalette(paletteName);
         if (paletteName !== DEFAULT_PALETTE) {
@@ -159,6 +165,7 @@ export default function PortalPage() {
         description,
         uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
         customFields: hasCustomFields ? customFieldValues : undefined,
+        departmentId: departmentId || undefined,
       });
 
       setSubmitted({ ticketNumber: res.ticketNumber, portalToken: res.portalToken });
@@ -295,6 +302,7 @@ export default function PortalPage() {
               setEmail("");
               setSubject("");
               setDescription("");
+              setDepartmentId("");
               setCustomFieldValues({});
               setFiles([]);
             }}
@@ -395,6 +403,24 @@ export default function PortalPage() {
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
               />
             </div>
+
+            {departments.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("portal.department")}
+                </label>
+                <select
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                >
+                  <option value="">{t("portal.selectDepartment")}</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
