@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router";
+import { Link } from "react-router";
 import { getPortalKbCategories, searchPortalKb, PortalKbCategory, PortalKbArticlePreview } from "../services/portal.service";
+import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 
 function stripHtml(html: string): string {
   const div = document.createElement("div");
@@ -9,7 +10,8 @@ function stripHtml(html: string): string {
 }
 
 export default function PortalKbPage() {
-  const { workspaceSlug } = useParams();
+  const workspaceSlug = usePortalSlug();
+  const basePath = usePortalBasePath();
   const [categories, setCategories] = useState<PortalKbCategory[]>([]);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<PortalKbArticlePreview[] | null>(null);
@@ -51,7 +53,7 @@ export default function PortalKbPage() {
           ) : (
             <div className="space-y-3">
               {results.map((a) => (
-                <Link key={a.id} to={`/portal/${workspaceSlug}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
+                <Link key={a.id} to={`${basePath}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
                   <p className="text-sm font-semibold text-heading">{a.title}</p>
                   <p className="text-xs text-muted mt-1 line-clamp-2">{stripHtml(a.content)}</p>
                 </Link>
@@ -62,7 +64,7 @@ export default function PortalKbPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {categories.map((cat) => (
-            <Link key={cat.id} to={`/portal/${workspaceSlug}/kb/${cat.slug}`} className="p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
+            <Link key={cat.id} to={`${basePath}/kb/${cat.slug}`} className="p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
               <p className="text-sm font-semibold text-heading">{cat.name}</p>
               <p className="text-xs text-muted mt-1">{cat.articleCount} article{cat.articleCount !== 1 ? "s" : ""}</p>
             </Link>
@@ -75,7 +77,7 @@ export default function PortalKbPage() {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-muted mb-2">Didn't find what you need?</p>
-        <Link to={`/portal/${workspaceSlug}`} className="text-sm text-primary hover:underline">Create a ticket</Link>
+        <Link to={`${basePath}`} className="text-sm text-primary hover:underline">Create a ticket</Link>
       </div>
     </div>
   );

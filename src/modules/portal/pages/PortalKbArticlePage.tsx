@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
 import { getPortalKbArticle, PortalKbArticleDetail } from "../services/portal.service";
+import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 
 export default function PortalKbArticlePage() {
-  const { workspaceSlug, articleSlug } = useParams();
+  const workspaceSlug = usePortalSlug();
+  const { articleSlug } = useParams();
+  const basePath = usePortalBasePath();
   const [article, setArticle] = useState<PortalKbArticleDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,11 +21,11 @@ export default function PortalKbArticlePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center gap-2 mb-4">
-        <Link to={`/portal/${workspaceSlug}/kb`} className="text-xs text-primary hover:underline">Help Center</Link>
+        <Link to={`${basePath}/kb`} className="text-xs text-primary hover:underline">Help Center</Link>
         {article.category && (
           <>
             <span className="text-xs text-muted">/</span>
-            <Link to={`/portal/${workspaceSlug}/kb/${article.category.slug}`} className="text-xs text-primary hover:underline">{article.category.name}</Link>
+            <Link to={`${basePath}/kb/${article.category.slug}`} className="text-xs text-primary hover:underline">{article.category.name}</Link>
           </>
         )}
       </div>
@@ -33,7 +36,7 @@ export default function PortalKbArticlePage() {
 
       <div className="mt-12 pt-6 border-t border-border-card text-center">
         <p className="text-sm text-muted mb-2">Didn't find what you need?</p>
-        <Link to={`/portal/${workspaceSlug}`} className="text-sm text-primary hover:underline">Create a ticket</Link>
+        <Link to={basePath} className="text-sm text-primary hover:underline">Create a ticket</Link>
       </div>
     </div>
   );

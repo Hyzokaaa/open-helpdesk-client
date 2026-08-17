@@ -18,9 +18,9 @@ export default function RootRedirect() {
       .finally(() => setChecked(true));
   }, [domainWorkspaces]);
 
-  // Custom domain with 1 workspace → portal directly
+  // Custom domain with 1 workspace → portal directly (clean URL)
   if (domainWorkspaces?.length === 1) {
-    return <Navigate to={`/portal/${domainWorkspaces[0].slug}`} replace />;
+    return <Navigate to="/portal" replace />;
   }
 
   // Custom domain with N workspaces → public portal selector

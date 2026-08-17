@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import {
@@ -21,6 +20,7 @@ import { needsDarkText } from "@modules/workspace/domain/color-scale";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import translations from "@modules/app/i18n/translations";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
+import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 
 function t(key: string): string {
   const lang = LocalStorage.get(LOCAL_STORAGE_KEY.LANGUAGE) || navigator.language?.slice(0, 2) || "en";
@@ -46,7 +46,8 @@ interface StagedFile {
 }
 
 export default function PortalPage() {
-  const { workspaceSlug } = useParams();
+  const workspaceSlug = usePortalSlug();
+  const basePath = usePortalBasePath();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isWidget = new URLSearchParams(window.location.search).get("mode") === "widget";
 
@@ -349,7 +350,7 @@ export default function PortalPage() {
 
         {!isWidget && (
           <a
-            href={`/portal/${workspaceSlug}/kb`}
+            href={`${basePath}/kb`}
             className="flex items-center justify-center gap-2 mb-6 px-4 py-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
