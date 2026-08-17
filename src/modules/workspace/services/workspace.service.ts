@@ -31,7 +31,7 @@ export interface WorkspaceDetail {
 
 export interface DomainVerificationResult {
   verified: boolean;
-  cnameValid: boolean;
+  dnsValid: boolean;
   txtValid: boolean;
   cnameTarget: string;
   txtRecord: string;
