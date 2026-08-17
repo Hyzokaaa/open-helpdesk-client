@@ -91,6 +91,10 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route element={<PortalGuard />}>
+        <Route path="/portal" element={<PortalPage />} />
+        <Route path="/portal/kb" element={<PortalKbPage />} />
+        <Route path="/portal/kb/:categorySlug" element={<PortalKbCategoryPage />} />
+        <Route path="/portal/kb/article/:articleSlug" element={<PortalKbArticlePage />} />
         <Route path="/portal/:workspaceSlug" element={<PortalPage />} />
         <Route path="/portal/:workspaceSlug/kb" element={<PortalKbPage />} />
         <Route path="/portal/:workspaceSlug/kb/:categorySlug" element={<PortalKbCategoryPage />} />

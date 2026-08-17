@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
 import { getPortalKbArticles, getPortalKbCategories, PortalKbArticlePreview } from "../services/portal.service";
+import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 
 function stripHtml(html: string): string {
   const div = document.createElement("div");
@@ -9,7 +10,9 @@ function stripHtml(html: string): string {
 }
 
 export default function PortalKbCategoryPage() {
-  const { workspaceSlug, categorySlug } = useParams();
+  const workspaceSlug = usePortalSlug();
+  const { categorySlug } = useParams();
+  const basePath = usePortalBasePath();
   const [articles, setArticles] = useState<PortalKbArticlePreview[]>([]);
   const [categoryName, setCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -30,7 +33,7 @@ export default function PortalKbCategoryPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to={`/portal/${workspaceSlug}/kb`} className="text-xs text-primary hover:underline mb-4 inline-block">
+      <Link to={`${basePath}/kb`} className="text-xs text-primary hover:underline mb-4 inline-block">
         ← Back to Help Center
       </Link>
 
@@ -41,7 +44,7 @@ export default function PortalKbCategoryPage() {
       ) : (
         <div className="space-y-3">
           {articles.map((a) => (
-            <Link key={a.id} to={`/portal/${workspaceSlug}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
+            <Link key={a.id} to={`${basePath}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
               <p className="text-sm font-semibold text-heading">{a.title}</p>
               <p className="text-xs text-muted mt-1 line-clamp-2">{stripHtml(a.content)}</p>
             </Link>
@@ -51,7 +54,7 @@ export default function PortalKbCategoryPage() {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-muted mb-2">Didn't find what you need?</p>
-        <Link to={`/portal/${workspaceSlug}`} className="text-sm text-primary hover:underline">Create a ticket</Link>
+        <Link to={basePath} className="text-sm text-primary hover:underline">Create a ticket</Link>
       </div>
     </div>
   );
