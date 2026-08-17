@@ -1,23 +1,61 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
 import useConfig from "@modules/app/hooks/useConfig";
+import useTranslation from "@modules/app/i18n/useTranslation";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
 import EmailVerificationBanner from "@modules/user/components/EmailVerificationBanner";
 import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
+import { listWorkspaces } from "@modules/workspace/services/workspace.service";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import useExtensions from "@modules/app/extensions/useExtensions";
 
+function NoAccessScreen() {
+  const { t } = useTranslation();
+  const { brandName, brandLogo } = useConfig();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
+  return (
+    <div className="min-h-dvh flex items-center justify-center bg-page">
+      <div className="text-center max-w-sm">
+        {brandLogo && <img src={brandLogo} alt="" className="w-12 h-12 object-contain mx-auto mb-4" />}
+        <h1 className="text-lg font-body-bold text-heading mb-2">{brandName}</h1>
+        <p className="text-sm text-muted mb-6">{t("dashboard.noAccess")}</p>
+        <button onClick={handleLogout} className="text-sm text-primary hover:underline">{t("nav.signOut")}</button>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardLayout() {
   const { user, loading } = useUser();
-  const { loading: configLoading } = useConfig();
+  const { loading: configLoading, domainWorkspaces } = useConfig();
   const { DashboardBanner } = useExtensions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [hasAccess, setHasAccess] = useState(true);
 
-  if (loading || configLoading) return <PageLoader />;
+  useEffect(() => {
+    if (!user || !domainWorkspaces) {
+      setAccessChecked(true);
+      return;
+    }
+    const domainSlugs = domainWorkspaces.map((w) => w.slug);
+    listWorkspaces().then((workspaces) => {
+      const match = workspaces.some((ws) => domainSlugs.includes(ws.slug));
+      setHasAccess(match);
+    }).catch(() => setHasAccess(false)).finally(() => setAccessChecked(true));
+  }, [user?.id, domainWorkspaces]);
+
+  if (loading || configLoading || !accessChecked) return <PageLoader />;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.isEmailVerified) return <EmailVerificationBanner />;
+  if (domainWorkspaces && !hasAccess) return <NoAccessScreen />;
 
   return (
     <PaletteProvider>
