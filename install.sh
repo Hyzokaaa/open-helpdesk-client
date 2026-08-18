@@ -98,9 +98,18 @@ sudo cp -r "$INSTALL_DIR/dist/"* "$WEB_ROOT/"
 
 # Configure nginx if available
 if command -v nginx &> /dev/null; then
-  NGINX_CONF="/etc/nginx/sites-available/$NGINX_SITE"
+  # Detect nginx config structure
+  if [ -d /etc/nginx/sites-available ]; then
+    NGINX_CONF="/etc/nginx/sites-available/$NGINX_SITE.conf"
+    NGINX_LINK="/etc/nginx/sites-enabled/$NGINX_SITE.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    NGINX_CONF="/etc/nginx/conf.d/$NGINX_SITE.conf"
+    NGINX_LINK=""
+  else
+    NGINX_CONF=""
+  fi
 
-  if [ ! -f "$NGINX_CONF" ]; then
+  if [ -n "$NGINX_CONF" ] && [ ! -f "$NGINX_CONF" ]; then
     read -p "Server hostname (e.g. helpdesk.yourcompany.com) [localhost]: " SERVER_NAME
     SERVER_NAME=${SERVER_NAME:-localhost}
 
@@ -131,7 +140,9 @@ server {
 }
 EOF
 
-    sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
+    if [ -n "$NGINX_LINK" ]; then
+      sudo ln -sf "$NGINX_CONF" "$NGINX_LINK"
+    fi
     sudo nginx -t && sudo systemctl reload nginx
     echo "[OK] Nginx configured for $SERVER_NAME on port $NGINX_PORT"
   else
