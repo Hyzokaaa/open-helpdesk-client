@@ -42,6 +42,7 @@ fi
 echo "[OK] Node.js $(node -v)"
 
 # Check nginx
+export PATH="$PATH:/usr/sbin"
 if ! command -v nginx &> /dev/null; then
   echo "[WARNING] nginx not found. You will need a web server to serve the client."
   echo "  sudo apt-get install -y nginx"
