@@ -13,6 +13,7 @@ import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
+import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 
 export default function LoginPage() {
@@ -67,7 +68,7 @@ export default function LoginPage() {
           <div className="bg-surface rounded-card border-card p-8">
             <div className="flex items-start justify-between mb-1">
               <div className="flex items-center gap-2.5">
-                {brandLogo && <img src={brandLogo} alt="" className="w-8 h-8 object-contain" />}
+                {brandLogo && <BrandLogo src={brandLogo} size="md" />}
                 <h1 className="text-xl font-body-bold text-heading">
                   {brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName}
                 </h1>

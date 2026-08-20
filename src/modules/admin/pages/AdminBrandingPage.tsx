@@ -10,6 +10,7 @@ import {
   uploadSystemLogo,
   deleteSystemLogo,
 } from "../services/system-branding.service";
+import BrandLogo from "@modules/app/components/BrandLogo";
 
 export default function AdminBrandingPage() {
   const { t } = useTranslation();
@@ -123,7 +124,7 @@ export default function AdminBrandingPage() {
 
           {logo && (
             <div className="flex items-center gap-3 mb-3">
-              <img src={logo} alt="" className="w-12 h-12 object-contain rounded border border-border-card p-1" />
+              <BrandLogo src={logo} size="xl" className="rounded border border-border-card p-1" />
               <Button size="xs" color="danger" loading={deleting} onClick={handleDeleteLogo}>
                 {t("branding.removeLogo")}
               </Button>

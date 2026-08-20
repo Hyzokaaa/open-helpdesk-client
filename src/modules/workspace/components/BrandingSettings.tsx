@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { setBranding, uploadLogo, deleteLogo } from "../services/workspace.service";
 import { getSystemBranding, type SystemBranding } from "@modules/admin/services/system-branding.service";
+import BrandLogo from "@modules/app/components/BrandLogo";
 
 interface Props {
   slug: string;
@@ -138,7 +139,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
 
         {(logo || (!logo && systemLogo)) && (
           <div className="flex items-center gap-3 mb-3">
-            <img src={logo ?? systemLogo!} alt="" className="w-12 h-12 object-contain rounded border border-border-card p-1" />
+            <BrandLogo src={logo ?? systemLogo!} size="xl" className="rounded border border-border-card p-1" />
             {logo ? (
               <Button size="xs" color="danger" loading={deleting} onClick={handleDeleteLogo}>
                 {t("branding.removeLogo")}
