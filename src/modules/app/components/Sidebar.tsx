@@ -164,7 +164,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         onClick={() => { setLastSlug(null); clearWorkspacePalette(); }}
         className="flex items-center gap-2.5 px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
       >
-        {brandLogo && <BrandLogo src={brandLogo} size="sm" />}
+        {brandLogo && <BrandLogo src={brandLogo} size="md" />}
         <div>
           <h1 className="text-base font-body-bold text-primary">{brandName}</h1>
           {brandSubtitle && <p className="text-exs text-subtle font-body-medium">{brandSubtitle}</p>}
