@@ -66,14 +66,13 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-sm">
           <div className="bg-surface rounded-card border-card p-8">
-            <div className="flex justify-end mb-2">
-              <LanguageToggle />
-            </div>
-            {brandLogo && (
-              <div className="flex justify-center mb-4">
-                <BrandLogo src={brandLogo} size="xl" />
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1" />
+              {brandLogo ? <BrandLogo src={brandLogo} size="xl" /> : <div />}
+              <div className="flex-1 flex justify-end">
+                <LanguageToggle />
               </div>
-            )}
+            </div>
             <h1 className="text-xl font-body-bold text-heading text-center">
               {brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName}
             </h1>
