@@ -3,6 +3,7 @@ import type { DomainWorkspace } from "@modules/app/context/config-context";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
+import BrandLogo from "@modules/app/components/BrandLogo";
 
 interface Props {
   workspaces: DomainWorkspace[];
@@ -25,7 +26,7 @@ export default function PortalSelector({ workspaces }: Props) {
           <div className="absolute right-0 top-0">
             <LanguageToggle />
           </div>
-          {brandLogo && <img src={brandLogo} alt="" className="w-10 h-10 object-contain mb-2" />}
+          {brandLogo && <BrandLogo src={brandLogo} size="lg" className="mb-2" />}
           <h1 className="text-xl font-body-bold text-heading">{brandName}</h1>
           {brandSubtitle && <p className="text-xs text-subtle">{brandSubtitle}</p>}
         </div>

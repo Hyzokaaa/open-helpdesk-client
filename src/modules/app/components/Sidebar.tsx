@@ -11,6 +11,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { P } from "@modules/workspace/domain/permissions";
 import { canCreateWorkspace } from "@modules/workspace/domain/can-create-workspace";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import BrandLogo from "./BrandLogo";
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -163,7 +164,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         onClick={() => { setLastSlug(null); clearWorkspacePalette(); }}
         className="flex items-center gap-2.5 px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
       >
-        {brandLogo && <img src={brandLogo} alt="" className="w-7 h-7 object-contain shrink-0" />}
+        {brandLogo && <BrandLogo src={brandLogo} size="sm" />}
         <div>
           <h1 className="text-base font-body-bold text-primary">{brandName}</h1>
           {brandSubtitle && <p className="text-exs text-subtle font-body-medium">{brandSubtitle}</p>}

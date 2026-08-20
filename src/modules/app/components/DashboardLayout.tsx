@@ -9,6 +9,7 @@ import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
 import { listWorkspaces } from "@modules/workspace/services/workspace.service";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import BrandLogo from "./BrandLogo";
 import useExtensions from "@modules/app/extensions/useExtensions";
 
 function NoAccessScreen() {
@@ -23,7 +24,7 @@ function NoAccessScreen() {
   return (
     <div className="min-h-dvh flex items-center justify-center bg-page">
       <div className="text-center max-w-sm">
-        {brandLogo && <img src={brandLogo} alt="" className="w-12 h-12 object-contain mx-auto mb-4" />}
+        {brandLogo && <BrandLogo src={brandLogo} size="xl" className="mx-auto mb-4" />}
         <h1 className="text-lg font-body-bold text-heading mb-2">{brandName}</h1>
         <p className="text-sm text-muted mb-6">{t("dashboard.noAccess")}</p>
         <button onClick={handleLogout} className="text-sm text-primary hover:underline">{t("nav.signOut")}</button>
