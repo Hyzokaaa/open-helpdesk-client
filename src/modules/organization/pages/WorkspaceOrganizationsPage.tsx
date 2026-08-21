@@ -153,17 +153,6 @@ export default function WorkspaceOrganizationsPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-body-bold text-heading">
-          {t("organizations.title")}{!loading && ` (${organizations.length})`}
-        </h2>
-        {canManage && (
-          <Button size="sm" onClick={openCreate}>
-            {t("organizations.new")}
-          </Button>
-        )}
-      </div>
-
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : organizations.length === 0 ? (
@@ -178,6 +167,17 @@ export default function WorkspaceOrganizationsPage() {
           )}
         </div>
       ) : (
+        <>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-body-bold text-heading">
+            {t("organizations.title")} ({organizations.length})
+          </h2>
+          {canManage && (
+            <Button size="sm" onClick={openCreate}>
+              {t("organizations.new")}
+            </Button>
+          )}
+        </div>
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
@@ -230,6 +230,7 @@ export default function WorkspaceOrganizationsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Create / Edit Sheet */}
