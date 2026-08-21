@@ -694,8 +694,12 @@ const translations = {
   // Common
   "common.confirm": { en: "Confirm", es: "Confirmar" },
   "common.cancel": { en: "Cancel", es: "Cancelar" },
+  "common.save": { en: "Save", es: "Guardar" },
   "common.edit": { en: "Edit", es: "Editar" },
   "common.delete": { en: "Delete", es: "Eliminar" },
+  "common.loadError": { en: "Failed to load data", es: "Error al cargar datos" },
+  "common.saveError": { en: "Failed to save", es: "Error al guardar" },
+  "common.deleteError": { en: "Failed to delete", es: "Error al eliminar" },
   "common.noTagsAvailable": { en: "No tags available", es: "Sin etiquetas disponibles" },
 
   // Discard confirmation
@@ -1464,6 +1468,10 @@ const translations = {
   "organizations.updated": { en: "Organization updated", es: "Organización actualizada" },
   "organizations.deleted": { en: "Organization deleted", es: "Organización eliminada" },
   "organizations.empty": { en: "No organizations yet.", es: "Sin organizaciones aún." },
+  "organizations.emptyTitle": { en: "No organizations yet", es: "Sin organizaciones aún" },
+  "organizations.emptyDescription": { en: "Organizations group your contacts by company. Tickets from matching email domains are auto-linked.", es: "Las organizaciones agrupan contactos por empresa. Los tickets con dominios de email coincidentes se vinculan automáticamente." },
+  "organizations.editTitle": { en: "Edit Organization", es: "Editar Organización" },
+  "organizations.descriptionPlaceholder": { en: "Optional description", es: "Descripción opcional" },
   "organizations.confirmDelete": { en: "Are you sure you want to delete this organization? Tickets and contacts will be unlinked.", es: "¿Está seguro de que desea eliminar esta organización? Los tickets y contactos serán desvinculados." },
   "organizations.logoUpdated": { en: "Logo updated", es: "Logo actualizado" },
   "organizations.logoRemoved": { en: "Logo removed", es: "Logo eliminado" },
