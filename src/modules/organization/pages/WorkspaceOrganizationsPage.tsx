@@ -106,12 +106,16 @@ export default function WorkspaceOrganizationsPage() {
     setSubmitting(true);
     try {
       if (sheet.mode === "create") {
-        await createOrganization(workspaceSlug, {
+        const created = await createOrganization(workspaceSlug, {
           name,
           description: description || undefined,
           domains: parseDomains(domainsInput),
         });
         toast.success(t("organizations.created"));
+        fetchOrganizations();
+        openEdit(created);
+        setSubmitting(false);
+        return;
       } else {
         await updateOrganization(workspaceSlug, sheet.org.id, {
           name,
