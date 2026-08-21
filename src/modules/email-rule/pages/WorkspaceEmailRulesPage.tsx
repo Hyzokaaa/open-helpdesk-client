@@ -44,6 +44,7 @@ const ACTION_TYPES = [
   { value: "set-category", labelKey: "emailRules.actionSetCategory" },
   { value: "add-tags", labelKey: "emailRules.actionAddTags" },
   { value: "assign-to", labelKey: "emailRules.actionAssignTo" },
+  { value: "set-organization", labelKey: "emailRules.actionSetOrganization" },
 ] as const;
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
