@@ -13,6 +13,7 @@ export interface TicketListItem {
   createdAt: string | null;
   tagIds: string[];
   departmentId: string | null;
+  organizationId: string | null;
   customFields: Record<string, unknown>;
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
@@ -37,6 +38,7 @@ export interface TicketDetail {
   originDate: string | null;
   tagIds: string[];
   departmentId: string | null;
+  organizationId: string | null;
   customFields: Record<string, unknown>;
   discardReason: string | null;
   firstResponseBreached: boolean;
@@ -55,6 +57,7 @@ export interface TicketFilters {
   registeredById?: string;
   tagIds?: string[];
   departmentId?: string;
+  organizationId?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   page?: number;
@@ -75,6 +78,7 @@ export async function listTickets(
   if (filters.tagIds && filters.tagIds.length > 0)
     params.set("tagIds", filters.tagIds.join(","));
   if (filters.departmentId) params.set("departmentId", filters.departmentId);
+  if (filters.organizationId) params.set("organizationId", filters.organizationId);
   if (filters.sortBy) params.set("sortBy", filters.sortBy);
   if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
   params.set("page", String(filters.page ?? 1));

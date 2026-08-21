@@ -33,6 +33,7 @@ import {
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
+import { Organization, listOrganizations } from "@modules/organization/services/organization.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
@@ -88,6 +89,8 @@ export default function TicketsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [filterDepartmentId, setFilterDepartmentId] = useState<string | undefined>(undefined);
+  const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [filterOrganizationId, setFilterOrganizationId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
@@ -122,6 +125,7 @@ export default function TicketsPage() {
     }
     if (filterTagIds.length > 0) params.tagIds = filterTagIds;
     if (filterDepartmentId) params.departmentId = filterDepartmentId;
+    if (filterOrganizationId) params.organizationId = filterOrganizationId;
     if (isReporter && user) params.reporterId = user.id;
     listTickets(workspaceSlug, params)
       .then(setResult)
@@ -153,6 +157,7 @@ export default function TicketsPage() {
     if (workspaceSlug) {
       listTags(workspaceSlug).then(setTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
+      listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
       listMembers(workspaceSlug).then(setMembers);
     }
   }, [workspaceSlug]);
@@ -160,12 +165,12 @@ export default function TicketsPage() {
   useEffect(() => {
     if (!permLoading) fetchTickets();
     setSelectedIds(new Set());
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, tab, permLoading, isReporter, viewMode]);
 
   const refetchAll = useCallback(() => {
     fetchTickets();
     setBoardKey((k) => k + 1);
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, tab, permLoading, isReporter, viewMode]);
 
   useWebSocket(workspaceSlug, {
     "ticket.created": refetchAll,
@@ -217,6 +222,32 @@ export default function TicketsPage() {
         </div>
       )}
 
+      {orgs.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          <button
+            onClick={() => setFilterOrganizationId(undefined)}
+            className={clsx(
+              "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
+              !filterOrganizationId ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
+            )}
+          >
+            {t("tickets.allOrganizations")}
+          </button>
+          {orgs.map((org) => (
+            <button
+              key={org.id}
+              onClick={() => setFilterOrganizationId(org.id)}
+              className={clsx(
+                "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
+                filterOrganizationId === org.id ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
+              )}
+            >
+              {org.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <TicketFilterBar
           tab={tab}
@@ -242,6 +273,7 @@ export default function TicketsPage() {
               priority: filters.priority,
               tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
               departmentId: filterDepartmentId,
+              organizationId: filterOrganizationId,
               reporterId: isReporter ? user?.id : undefined,
             }}
             tags={tags}

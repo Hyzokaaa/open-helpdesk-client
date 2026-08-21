@@ -25,6 +25,7 @@ export interface ReportData {
   ticketsByPriority: { priority: string; count: number }[];
   ticketsByCategory: { category: string; count: number }[];
   topAgents: { resolvedById: string; name: string; resolved: number }[];
+  ticketsByOrganization: { organizationId: string; name: string; count: number }[];
   csatBreakdown: { rating: string; count: number }[];
 }
 
