@@ -73,6 +73,44 @@ export async function uploadOrganizationLogo(
   return res.data;
 }
 
+export interface OrganizationMember {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export async function listOrganizationMembers(
+  workspaceSlug: string,
+  organizationId: string,
+): Promise<OrganizationMember[]> {
+  const res = await http.get<OrganizationMember[]>(
+    `/workspaces/${workspaceSlug}/organizations/${organizationId}/members`,
+  );
+  return res.data;
+}
+
+export async function addOrganizationMember(
+  workspaceSlug: string,
+  organizationId: string,
+  userId: string,
+): Promise<void> {
+  await http.post(
+    `/workspaces/${workspaceSlug}/organizations/${organizationId}/members`,
+    { userId },
+  );
+}
+
+export async function removeOrganizationMember(
+  workspaceSlug: string,
+  organizationId: string,
+  userId: string,
+): Promise<void> {
+  await http.delete(
+    `/workspaces/${workspaceSlug}/organizations/${organizationId}/members/${userId}`,
+  );
+}
+
 export async function deleteOrganizationLogo(
   workspaceSlug: string,
   organizationId: string,

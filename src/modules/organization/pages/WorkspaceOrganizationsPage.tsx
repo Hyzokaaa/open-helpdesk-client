@@ -12,15 +12,24 @@ import BrandLogo from "@modules/app/components/BrandLogo";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import {
   type Organization,
+  type OrganizationMember,
   listOrganizations,
   createOrganization,
   updateOrganization,
   deleteOrganization,
   uploadOrganizationLogo,
   deleteOrganizationLogo,
+  listOrganizationMembers,
+  addOrganizationMember,
+  removeOrganizationMember,
 } from "../services/organization.service";
+import {
+  listMembers,
+  type WorkspaceMember,
+} from "@modules/workspace/services/workspace.service";
 
 export default function WorkspaceOrganizationsPage() {
   const { workspaceSlug } = useParams();
@@ -41,6 +50,12 @@ export default function WorkspaceOrganizationsPage() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Members state (for edit sheet)
+  const [orgMembers, setOrgMembers] = useState<OrganizationMember[]>([]);
+  const [allContacts, setAllContacts] = useState<WorkspaceMember[]>([]);
+  const [addMemberUserId, setAddMemberUserId] = useState<string | null>(null);
+  const [membersLoading, setMembersLoading] = useState(false);
+
   const canManage = can(P.ORGANIZATION_MANAGE);
 
   const parseDomains = (input: string): string[] =>
@@ -57,6 +72,7 @@ export default function WorkspaceOrganizationsPage() {
 
   useEffect(() => {
     fetchOrganizations();
+    if (workspaceSlug) listMembers(workspaceSlug).then(setAllContacts).catch(() => {});
   }, [workspaceSlug]);
 
   const openCreate = () => {
@@ -71,6 +87,15 @@ export default function WorkspaceOrganizationsPage() {
     setDescription(org.description ?? "");
     setDomainsInput(org.domains.join(", "));
     setSheet({ mode: "edit", org });
+    setOrgMembers([]);
+    setAddMemberUserId(null);
+    if (workspaceSlug) {
+      setMembersLoading(true);
+      listOrganizationMembers(workspaceSlug, org.id)
+        .then(setOrgMembers)
+        .catch(() => {})
+        .finally(() => setMembersLoading(false));
+    }
   };
 
   const closeSheet = () => setSheet(null);
@@ -148,6 +173,34 @@ export default function WorkspaceOrganizationsPage() {
       toast.error(t("common.deleteError"));
     }
   };
+
+  const handleAddMember = async () => {
+    if (!workspaceSlug || !sheet || sheet.mode !== "edit" || !addMemberUserId) return;
+    try {
+      await addOrganizationMember(workspaceSlug, sheet.org.id, addMemberUserId);
+      setAddMemberUserId(null);
+      const members = await listOrganizationMembers(workspaceSlug, sheet.org.id);
+      setOrgMembers(members);
+      toast.success(t("organizations.memberAdded"));
+    } catch {
+      toast.error(t("common.saveError"));
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!workspaceSlug || !sheet || sheet.mode !== "edit") return;
+    try {
+      await removeOrganizationMember(workspaceSlug, sheet.org.id, userId);
+      setOrgMembers((prev) => prev.filter((m) => m.userId !== userId));
+      toast.success(t("organizations.memberRemoved"));
+    } catch {
+      toast.error(t("common.deleteError"));
+    }
+  };
+
+  const availableContacts = allContacts.filter(
+    (c) => !orgMembers.some((m) => m.userId === c.userId),
+  );
 
   const editingLogo = sheet?.mode === "edit" ? sheet.org.logo : null;
 
@@ -276,6 +329,73 @@ export default function WorkspaceOrganizationsPage() {
                   onChange={handleLogoUpload}
                 />
                 <p className="text-exs text-muted mt-1">PNG, SVG, JPEG, WebP. Max 1MB</p>
+              </div>
+            )}
+
+            {/* Members (only in edit mode) */}
+            {sheet.mode === "edit" && (
+              <div className="mb-4">
+                <p className="text-xs font-body-semibold text-heading mb-2">
+                  {t("organizations.members")} ({orgMembers.length})
+                </p>
+
+                {canManage && availableContacts.length > 0 && (
+                  <div className="flex gap-2 mb-3">
+                    <div className="flex-1">
+                      <Select
+                        options={availableContacts}
+                        label={(c) => `${c.firstName} ${c.lastName} (${c.email})`}
+                        value={(c) => c.userId === addMemberUserId}
+                        onChange={(c) => setAddMemberUserId(c.userId)}
+                        placeholder={t("organizations.addMember")}
+                      />
+                    </div>
+                    <Button type="button" size="sm" disabled={!addMemberUserId} onClick={handleAddMember}>
+                      {t("common.add")}
+                    </Button>
+                  </div>
+                )}
+
+                {membersLoading ? (
+                  <div className="flex justify-center py-4"><Spinner width={16} /></div>
+                ) : orgMembers.length === 0 ? (
+                  <p className="text-xs text-muted py-2">{t("organizations.noMembers")}</p>
+                ) : (
+                  <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border-card bg-surface-hover">
+                          <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.name")}</th>
+                          <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
+                          {canManage && <th className="px-2 py-2 w-10" />}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orgMembers.map((m) => (
+                          <tr key={m.userId} className="border-b border-border-row last:border-0">
+                            <td className="px-4 py-2">
+                              <span className="text-sm font-body-medium text-heading">{m.firstName} {m.lastName}</span>
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className="text-sm text-muted">{m.email}</span>
+                            </td>
+                            {canManage && (
+                              <td className="px-2 py-2 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMember(m.userId)}
+                                  className="text-xs text-muted hover:text-red-500 cursor-pointer transition-colors"
+                                >
+                                  ✕
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
