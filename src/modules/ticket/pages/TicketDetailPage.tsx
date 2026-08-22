@@ -1113,7 +1113,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   {canAssign ? (
                     <FormInput label={t("ticketDetail.organization")} className="!mb-0">
                       <Select
-                        options={[{ id: "", name: "—", description: null, domains: [], logo: null } as Organization, ...organizations]}
+                        options={[{ id: "", name: "—", description: null, notes: null, domains: [], logo: null } as Organization, ...organizations]}
                         label={(o) => o.name}
                         value={(o) => o.id === (draft.organizationId ?? "")}
                         onChange={(o) => setDraft((prev) => prev ? { ...prev, organizationId: o.id || null } : prev)}

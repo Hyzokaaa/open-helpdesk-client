@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -52,11 +52,11 @@ import useFormatDate from "@modules/app/hooks/useFormatDate";
 
 interface Column {
   key: string;
-  labelKey: "tickets.col.number" | "tickets.col.name" | "tickets.col.category" | "tickets.col.priority" | "tickets.col.status" | "tickets.col.tags" | "tickets.col.created";
+  labelKey: string;
   sortable: boolean;
 }
 
-const COLUMNS: Column[] = [
+const BASE_COLUMNS: Column[] = [
   { key: "ticketNumber", labelKey: "tickets.col.number", sortable: false },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
   { key: "category", labelKey: "tickets.col.category", sortable: true },
@@ -92,6 +92,14 @@ export default function TicketsPage() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [filterOrganizationId, setFilterOrganizationId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+
+  const COLUMNS = useMemo(() => {
+    const cols = [...BASE_COLUMNS];
+    if (orgs.length > 0) {
+      cols.splice(2, 0, { key: "organization", labelKey: "ticketDetail.organization", sortable: false });
+    }
+    return cols;
+  }, [orgs.length]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
   const [ticketDirty, setTicketDirty] = useState(false);
@@ -181,6 +189,7 @@ export default function TicketsPage() {
 
   const tickets = result?.items ?? [];
   const tagMap = new Map(tags.map((t) => [t.id, t]));
+  const orgMap = new Map(orgs.map((o) => [o.id, o]));
 
   const formatDate = useFormatDate();
 
@@ -343,7 +352,7 @@ export default function TicketsPage() {
                   )}
                   {reorder(COLUMNS).map((col) => (
                     <SortableTh key={col.key} id={col.key} sortable={col.sortable} onClick={() => col.sortable && toggleSort(col.key)}>
-                      {t(col.labelKey)}
+                      {t(col.labelKey as any)}
                       {filters.sortBy === col.key && (
                         <span className="text-primary">{filters.sortOrder === "ASC" ? "↑" : "↓"}</span>
                       )}
@@ -388,6 +397,9 @@ export default function TicketsPage() {
                             )}
                             <p className="text-sm font-body-semibold text-heading truncate">{ticket.name}</p>
                           </div>
+                        )}
+                        {col.key === "organization" && (
+                          <span className="text-xs text-muted">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
                         )}
                         {col.key === "category" && <StatusBadge label={tEnum("category", ticket.category)} color={CATEGORY_COLORS[ticket.category] || "gray"} size="xs" />}
                         {col.key === "priority" && <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} size="xs" />}

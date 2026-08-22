@@ -4,8 +4,10 @@ export interface Organization {
   id: string;
   name: string;
   description: string | null;
+  notes: string | null;
   domains: string[];
   logo: string | null;
+  memberCount?: number;
 }
 
 export async function listOrganizations(
@@ -41,7 +43,7 @@ export async function createOrganization(
 export async function updateOrganization(
   workspaceSlug: string,
   organizationId: string,
-  data: { name?: string; description?: string | null; domains?: string[] },
+  data: { name?: string; description?: string | null; notes?: string | null; domains?: string[] },
 ): Promise<Organization> {
   const res = await http.patch<Organization>(
     `/workspaces/${workspaceSlug}/organizations/${organizationId}`,
