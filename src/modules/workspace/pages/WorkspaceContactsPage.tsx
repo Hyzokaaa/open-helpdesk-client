@@ -9,12 +9,15 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import {
   WorkspaceMember,
   listMembers,
   removeMember,
   updateContactName,
+  updateMemberOrganization,
 } from "../services/workspace.service";
+import { Organization, listOrganizations } from "@modules/organization/services/organization.service";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -30,6 +33,8 @@ export default function WorkspaceContactsPage() {
   const [editingContact, setEditingContact] = useState<WorkspaceMember | null>(null);
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editOrgId, setEditOrgId] = useState<string | null>(null);
+  const [orgs, setOrgs] = useState<Organization[]>([]);
 
   const canManage = can(P.WORKSPACE_MEMBERS_MANAGE);
 
@@ -42,18 +47,25 @@ export default function WorkspaceContactsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchContacts(); }, [workspaceSlug]);
+  useEffect(() => {
+    fetchContacts();
+    if (workspaceSlug) listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
+  }, [workspaceSlug]);
 
   const handleEditContact = (m: WorkspaceMember) => {
     setEditingContact(m);
     setEditFirstName(m.firstName);
     setEditLastName(m.lastName);
+    setEditOrgId(m.organizationId);
   };
 
   const handleSaveContactName = async () => {
     if (!workspaceSlug || !editingContact) return;
     try {
       await updateContactName(workspaceSlug, editingContact.userId, editFirstName, editLastName);
+      if (editOrgId !== editingContact.organizationId) {
+        await updateMemberOrganization(workspaceSlug, editingContact.userId, editOrgId);
+      }
       setEditingContact(null);
       fetchContacts();
       toast.success(t("members.nameUpdated"));
@@ -91,6 +103,7 @@ export default function WorkspaceContactsPage() {
               <tr className="border-b border-border-card bg-surface-hover">
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[200px]">{t("admin.col.name")}</th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
+                {orgs.length > 0 && <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase hidden md:table-cell">{t("ticketDetail.organization")}</th>}
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[90px]">{t("contacts.origin")}</th>
                 <th className="px-2 py-3 w-10" />
               </tr>
@@ -104,6 +117,11 @@ export default function WorkspaceContactsPage() {
                   <td className="px-4 py-3">
                     <span className="text-sm text-muted block truncate" title={m.email}>{m.email}</span>
                   </td>
+                  {orgs.length > 0 && (
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="text-sm text-muted">{m.organizationId ? orgs.find((o) => o.id === m.organizationId)?.name ?? "—" : "—"}</span>
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <StatusBadge
                       label={m.autoCreated ? t("contacts.fromEmail") : t("contacts.invited")}
@@ -149,6 +167,16 @@ export default function WorkspaceContactsPage() {
               <Input value={editLastName} onChange={setEditLastName} />
             </FormInput>
           </div>
+          {orgs.length > 0 && (
+            <FormInput label={t("ticketDetail.organization")} className="mb-4">
+              <Select
+                options={[{ id: "", name: "—", description: null, notes: null, domains: [], logo: null } as Organization, ...orgs]}
+                label={(o) => o.name}
+                value={(o) => o.id === (editOrgId ?? "")}
+                onChange={(o) => setEditOrgId(o.id || null)}
+              />
+            </FormInput>
+          )}
           <div className="flex gap-2 justify-end">
             <Button size="sm" color="light" onClick={() => setEditingContact(null)}>{t("members.cancel")}</Button>
             <Button size="sm" onClick={handleSaveContactName}>{t("members.save")}</Button>

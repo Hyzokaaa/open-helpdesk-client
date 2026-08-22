@@ -38,12 +38,14 @@ export default function WorkspaceOrganizationsPage() {
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   // Sheet state: null = closed, { mode: "create" } or { mode: "edit", org }
   const [sheet, setSheet] = useState<{ mode: "create" } | { mode: "edit"; org: Organization } | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [domainsInput, setDomainsInput] = useState("");
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -79,6 +81,7 @@ export default function WorkspaceOrganizationsPage() {
     setName("");
     setDescription("");
     setDomainsInput("");
+    setNotes("");
     setSheet({ mode: "create" });
   };
 
@@ -86,6 +89,7 @@ export default function WorkspaceOrganizationsPage() {
     setName(org.name);
     setDescription(org.description ?? "");
     setDomainsInput(org.domains.join(", "));
+    setNotes(org.notes ?? "");
     setSheet({ mode: "edit", org });
     setOrgMembers([]);
     setAddMemberUserId(null);
@@ -120,6 +124,7 @@ export default function WorkspaceOrganizationsPage() {
         await updateOrganization(workspaceSlug, sheet.org.id, {
           name,
           description: description || null,
+          notes: notes || null,
           domains: parseDomains(domainsInput),
         });
         toast.success(t("organizations.updated"));
@@ -225,7 +230,7 @@ export default function WorkspaceOrganizationsPage() {
         </div>
       ) : (
         <>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-body-bold text-heading">
             {t("organizations.title")} ({organizations.length})
           </h2>
@@ -235,6 +240,11 @@ export default function WorkspaceOrganizationsPage() {
             </Button>
           )}
         </div>
+        {organizations.length > 5 && (
+          <div className="mb-4">
+            <Input placeholder={t("organizations.search")} value={search} onChange={setSearch} />
+          </div>
+        )}
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
@@ -242,11 +252,16 @@ export default function WorkspaceOrganizationsPage() {
                 <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase w-10" />
                 <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("organizations.name")}</th>
                 <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase hidden md:table-cell">{t("organizations.domains")}</th>
+                <th className="px-4 py-2 text-right text-xs font-body-semibold text-subtle uppercase hidden sm:table-cell">{t("organizations.members")}</th>
                 {canManage && <th className="px-2 py-2 w-10" />}
               </tr>
             </thead>
             <tbody>
-              {organizations.map((org) => (
+              {organizations.filter((o) => {
+                if (!search) return true;
+                const q = search.toLowerCase();
+                return o.name.toLowerCase().includes(q) || o.domains.some((d) => d.includes(q));
+              }).map((org) => (
                 <tr key={org.id} className="border-b border-border-row last:border-0 hover:bg-surface-hover transition-colors">
                   <td className="px-4 py-2.5">
                     {org.logo ? (
@@ -273,6 +288,9 @@ export default function WorkspaceOrganizationsPage() {
                     ) : (
                       <span className="text-xs text-muted">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right hidden sm:table-cell">
+                    <span className="text-xs text-muted">{org.memberCount ?? 0}</span>
                   </td>
                   {canManage && (
                     <td className="px-2 py-2.5 text-right">
@@ -306,6 +324,16 @@ export default function WorkspaceOrganizationsPage() {
             <FormInput label={t("organizations.domains")}>
               <Input placeholder="imsm.com, imsm.co.uk" value={domainsInput} onChange={setDomainsInput} />
               <p className="text-exs text-muted mt-1">{t("organizations.domainsHint")}</p>
+            </FormInput>
+
+            <FormInput label={t("organizations.notes")}>
+              <textarea
+                className="w-full rounded-lg border border-border-card bg-surface px-3 py-2 text-sm text-heading placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 resize-y min-h-[60px]"
+                placeholder={t("organizations.notesPlaceholder")}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
             </FormInput>
 
             {/* Logo (only in edit mode) */}

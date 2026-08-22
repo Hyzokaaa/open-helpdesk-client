@@ -45,6 +45,7 @@ export interface WorkspaceMember {
   lastName: string;
   role: string;
   autoCreated: boolean;
+  organizationId: string | null;
 }
 
 export interface UserListItem {
@@ -129,6 +130,14 @@ export async function updateContactName(
   lastName: string,
 ): Promise<void> {
   await http.patch(`/workspaces/${slug}/members/${userId}/name`, { firstName, lastName });
+}
+
+export async function updateMemberOrganization(
+  slug: string,
+  userId: string,
+  organizationId: string | null,
+): Promise<void> {
+  await http.patch(`/workspaces/${slug}/members/${userId}/organization`, { organizationId });
 }
 
 export async function removeMember(
