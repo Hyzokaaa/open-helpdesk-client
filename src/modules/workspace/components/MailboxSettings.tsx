@@ -25,7 +25,6 @@ import {
   resumeMailbox,
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
-import { getSystemMailbox } from "@modules/admin/services/system-mailbox.service";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
@@ -66,8 +65,6 @@ export default function MailboxSettings({ slug }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [editMailbox, setEditMailbox] = useState<MailboxDto | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [hasSystemMailbox, setHasSystemMailbox] = useState(false);
-  const [systemMailboxActive, setSystemMailboxActive] = useState(true);
   const [systemMailboxEnabled, setSystemMailboxEnabled] = useState(true);
 
   useEffect(() => {
@@ -79,12 +76,10 @@ export default function MailboxSettings({ slug }: Props) {
   }, [slug]);
 
   useEffect(() => {
-    getSystemMailbox().then((sm) => {
-      setHasSystemMailbox(!!sm);
-      setSystemMailboxActive(sm?.isActive ?? true);
-    }).catch(() => {});
     getWorkspace(slug).then((ws) => setSystemMailboxEnabled(ws.systemMailboxEnabled)).catch(() => {});
   }, [slug]);
+
+  const webhookMailbox = mailboxes.find((m) => m.type === "webhook");
 
   const handleToggleSystemMailbox = async () => {
     const newValue = !systemMailboxEnabled;
@@ -118,59 +113,28 @@ export default function MailboxSettings({ slug }: Props) {
 
   return (
     <div>
-      {hasSystemMailbox && (() => {
-        const webhookMailbox = mailboxes.find((m) => m.type === "webhook");
-        return (
-        <div className="flex items-center justify-between p-3 bg-surface-active rounded-lg mb-4">
-          <div>
-            <p className="text-sm text-body font-body-medium">{t("mailbox.systemMailbox")}</p>
-            {webhookMailbox && (
-              <p className="text-xs text-body mt-0.5">{webhookMailbox.address}</p>
-            )}
-            <p className="text-exs text-muted mt-0.5">
-              {!systemMailboxActive
-                ? t("mailbox.systemMailboxPaused")
-                : t("mailbox.systemMailboxDesc")}
-            </p>
-          </div>
-          {systemMailboxActive ? (
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={systemMailboxEnabled}
-                onChange={handleToggleSystemMailbox}
-                className="sr-only peer"
-              />
-              <div className="w-9 h-5 bg-gray-300 peer-checked:bg-primary rounded-full peer-focus:ring-2 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
-            </label>
-          ) : (
-            <span className="text-xs text-yellow-600 font-body-medium">{t("mailbox.paused")}</span>
-          )}
-        </div>
-        );
-      })()}
-
       <div className="flex justify-end mb-3">
         <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
           {t("mailbox.connectMailbox")}
         </Button>
       </div>
 
-      {(() => {
-        const imapMailboxes = mailboxes.filter((m) => m.type === "imap");
-        return imapMailboxes.length === 0 ? (
+      {mailboxes.length === 0 ? (
         <p className="text-xs text-muted">{t("mailbox.empty")}</p>
       ) : (
         <div className="space-y-2">
-          {imapMailboxes.map((m) => (
+          {mailboxes.map((m) => {
+            const isDefault = m.type === "webhook";
+            const active = isDefault ? systemMailboxEnabled : m.isActive;
+            return (
             <div key={m.id} className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${mailboxStatusColor(m)}`} />
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isDefault ? (active ? "bg-green-500" : "bg-gray-400") : mailboxStatusColor(m)}`} />
                 <div className="min-w-0">
                   <p className="text-xs font-body-medium text-body break-all">{m.address}</p>
                   <p className="text-exs text-muted">
-                    {m.type === "webhook"
-                      ? t("mailbox.typeWebhook")
+                    {isDefault
+                      ? (active ? t("mailbox.systemMailboxDesc") : t("mailbox.paused"))
                       : !m.isActive
                         ? `IMAP · ${t("mailbox.paused")}`
                         : m.lastError
@@ -181,7 +145,16 @@ export default function MailboxSettings({ slug }: Props) {
                   </p>
                 </div>
               </div>
-              {m.type === "imap" && (
+              {isDefault ? (
+                <ActionMenu
+                  items={[
+                    {
+                      label: active ? t("mailbox.pause") : t("mailbox.resume"),
+                      onClick: handleToggleSystemMailbox,
+                    },
+                  ]}
+                />
+              ) : (
                 <ActionMenu
                   items={[
                     { label: t("common.edit"), onClick: () => { setEditMailbox(m); setShowSheet(true); } },
@@ -234,10 +207,10 @@ export default function MailboxSettings({ slug }: Props) {
                 />
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
-      );
-      })()}
+      )}
 
       {showSheet && (
         <Sheet onClose={() => { setShowSheet(false); setEditMailbox(null); }}>
