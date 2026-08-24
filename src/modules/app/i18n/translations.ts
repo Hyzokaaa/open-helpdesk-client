@@ -838,7 +838,7 @@ const translations = {
   "onboarding.workspaceCreated": { en: "Workspace created!", es: "¡Workspace creado!" },
   "onboarding.workspaceReady": { en: "Your workspace is ready!", es: "¡Tu workspace está listo!" },
   "onboarding.supportEmailDesc": { en: "Your customers can now create tickets by sending emails to:", es: "Tus clientes ahora pueden crear tickets enviando emails a:" },
-  "onboarding.supportEmailHint": { en: "You can also find this in your workspace settings.", es: "También puedes encontrar esto en la configuración de tu workspace." },
+  "onboarding.supportEmailHint": { en: "You can configure a custom email address from your workspace settings.", es: "Puedes configurar una dirección de correo personalizada desde la configuración de tu workspace." },
   "onboarding.goToDashboard": { en: "Go to dashboard", es: "Ir al dashboard" },
   "onboarding.workspaceError": { en: "Failed to create workspace", es: "Error al crear workspace" },
   "onboarding.startTrial": { en: "Start 14-day free trial", es: "Iniciar prueba gratuita de 14 días" },
