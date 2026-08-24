@@ -1488,6 +1488,7 @@ const translations = {
   "organizations.noMembers": { en: "No members yet. Add contacts or they will be auto-enrolled by email domain.", es: "Sin miembros aún. Agrega contactos o se asignarán automáticamente por dominio de email." },
   "organizations.memberAdded": { en: "Member added", es: "Miembro agregado" },
   "organizations.memberRemoved": { en: "Member removed", es: "Miembro eliminado" },
+  "portal.signIn": { en: "Sign in to your account", es: "Inicia sesión en tu cuenta" },
   "organizations.search": { en: "Search organizations...", es: "Buscar organizaciones..." },
   "organizations.notes": { en: "Internal Notes", es: "Notas Internas" },
   "organizations.notesPlaceholder": { en: "Internal notes about this organization (not visible to contacts)", es: "Notas internas sobre esta organización (no visibles para contactos)" },
