@@ -182,6 +182,7 @@ const translations = {
   "verification.success": { en: "Your email has been verified!", es: "¡Tu correo ha sido verificado!" },
   "verification.error": { en: "Invalid or expired verification link.", es: "Enlace de verificación inválido o expirado." },
   "verification.goToDashboard": { en: "Go to dashboard", es: "Ir al panel" },
+  "verification.canClosePage": { en: "You can close this page and continue with the onboarding.", es: "Puedes cerrar esta página y continuar con el onboarding." },
   "verification.goToLogin": { en: "Go to login", es: "Ir al inicio de sesión" },
   "verification.checkInbox": { en: "Check your inbox", es: "Revisa tu bandeja de entrada" },
   "verification.sentTo": { en: "We sent a verification link to", es: "Enviamos un enlace de verificación a" },
