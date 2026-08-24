@@ -45,6 +45,7 @@ export default function WorkspaceCreatePage() {
 
   const [step, setStep] = useState<Step>("workspace");
   const [slug, setSlug] = useState("");
+  const [supportEmail, setSupportEmail] = useState<string | null>(null);
 
   // Step 1: Workspace
   const [name, setName] = useState("");
@@ -98,6 +99,7 @@ export default function WorkspaceCreatePage() {
     try {
       const ws = await createWorkspace({ name: name.trim(), description: description.trim() });
       setSlug(ws.slug);
+      if (ws.supportEmail) setSupportEmail(ws.supportEmail);
       toast.success(t("workspaces.created"));
       setStep("departments");
     } catch (err: any) {
@@ -443,7 +445,16 @@ export default function WorkspaceCreatePage() {
           <div className="text-center py-6">
             <div className="text-4xl mb-3">🎉</div>
             <h3 className="text-lg font-body-bold text-heading mb-2">{t("wizard.done")}</h3>
-            <p className="text-sm text-muted mb-6">{t("wizard.doneDesc")}</p>
+            <p className="text-sm text-muted mb-4">{t("wizard.doneDesc")}</p>
+            {supportEmail && (
+              <div className="mb-4">
+                <div className="bg-page rounded-lg px-4 py-3 mb-2">
+                  <p className="text-xs text-muted mb-1">{t("workspaceSettings.supportEmail")}</p>
+                  <p className="text-sm font-body-bold text-heading break-all">{supportEmail}</p>
+                </div>
+                <p className="text-xs text-muted">{t("onboarding.supportEmailHint")}</p>
+              </div>
+            )}
             <div className="flex justify-center">
               <Button onClick={goToWorkspace}>{t("wizard.goToWorkspace")}</Button>
             </div>
