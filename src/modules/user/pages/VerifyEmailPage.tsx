@@ -22,10 +22,6 @@ export default function VerifyEmailPage() {
       .catch(() => setStatus("error"));
   }, [token]);
 
-  const handleGoToDashboard = () => {
-    window.location.href = "/dashboard";
-  };
-
   return (
     <div className="min-h-dvh flex items-center justify-center bg-page">
       <div className="w-full max-w-sm px-4">
@@ -53,10 +49,8 @@ export default function VerifyEmailPage() {
                   </svg>
                 </div>
               </div>
-              <p className="text-sm text-body mb-4">{t("verification.success")}</p>
-              <Button onClick={handleGoToDashboard} full color="primary">
-                {t("verification.goToDashboard")}
-              </Button>
+              <p className="text-sm text-body mb-2">{t("verification.success")}</p>
+              <p className="text-sm text-muted">{t("verification.canClosePage")}</p>
             </>
           )}
 
