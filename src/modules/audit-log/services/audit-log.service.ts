@@ -19,6 +19,7 @@ export interface AuditLogItem {
 export interface AuditLogFilters {
   userId?: string;
   action?: string;
+  excludeActions?: string[];
   entityType?: string;
   entityId?: string;
   category?: string;
@@ -39,6 +40,7 @@ export async function listAuditLog(
   const params = new URLSearchParams();
   if (filters.userId) params.set("userId", filters.userId);
   if (filters.action) params.set("action", filters.action);
+  if (filters.excludeActions?.length) params.set("excludeActions", filters.excludeActions.join(","));
   if (filters.entityType) params.set("entityType", filters.entityType);
   if (filters.entityId) params.set("entityId", filters.entityId);
   if (filters.category) params.set("category", filters.category);
@@ -63,6 +65,7 @@ export async function listAllAuditLog(
   const params = new URLSearchParams();
   if (filters.userId) params.set("userId", filters.userId);
   if (filters.action) params.set("action", filters.action);
+  if (filters.excludeActions?.length) params.set("excludeActions", filters.excludeActions.join(","));
   if (filters.entityType) params.set("entityType", filters.entityType);
   if (filters.entityId) params.set("entityId", filters.entityId);
   if (filters.category) params.set("category", filters.category);
