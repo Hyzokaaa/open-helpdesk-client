@@ -1237,6 +1237,7 @@ const translations = {
   // System Log
   "auditLog.systemTitle": { en: "System Logs", es: "Logs del Sistema" },
   "auditLog.systemDescription": { en: "All events across the platform", es: "Todos los eventos de la plataforma" },
+  "auditLog.hideRoutine": { en: "Hide routine events", es: "Ocultar eventos rutinarios" },
 
   // Portal
   "portal.selectWorkspace": { en: "Select a helpdesk", es: "Selecciona un helpdesk" },

@@ -113,6 +113,11 @@ const LEVEL_COLORS: Record<string, string> = {
   error: "text-red-500 font-body-semibold",
 };
 
+const ROUTINE_ACTIONS = [
+  "imap-poll-started",
+  "imap-poll-completed",
+];
+
 export default function SystemLogsPage() {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
@@ -121,7 +126,8 @@ export default function SystemLogsPage() {
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [hideRoutine, setHideRoutine] = useState(true);
+  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
 
   const fetchLog = () => {
     setLoading(true);
@@ -195,6 +201,18 @@ export default function SystemLogsPage() {
           className={inputClass({ size: "sm", full: false, extra: "!w-36" })}
           placeholder="To"
         />
+        <label className="flex items-center gap-2 text-xs text-muted cursor-pointer select-none ml-auto">
+          <input
+            type="checkbox"
+            checked={hideRoutine}
+            onChange={(e) => {
+              setHideRoutine(e.target.checked);
+              setFilters({ ...filters, excludeActions: e.target.checked ? ROUTINE_ACTIONS : undefined, page: 1 });
+            }}
+            className="w-3.5 h-3.5 accent-primary"
+          />
+          {t("auditLog.hideRoutine")}
+        </label>
       </div>
 
       {loading ? (
