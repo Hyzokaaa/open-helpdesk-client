@@ -131,6 +131,7 @@ export default function PlatformMailboxSettings() {
           <Button size="xs" color="light" onClick={() => setShowForm(true)}>
             {t("common.edit")}
           </Button>
+          <div className="w-px h-4 bg-border-card" />
           <Button size="xs" color="danger" onClick={() => setShowDelete(true)}>
             {t("common.delete")}
           </Button>
@@ -199,7 +200,7 @@ function MailboxForm({
         }
       }
     } catch {
-      setTestResult({ success: false, error: "Connection failed" });
+      setTestResult({ success: false, error: t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -263,7 +264,7 @@ function MailboxForm({
           </FormInput>
         </div>
         <FormInput label={t("mailbox.imapPort")}>
-          <Input value={imapPort} onChange={setImapPort} />
+          <Input value={imapPort} onChange={setImapPort} placeholder="993" />
         </FormInput>
       </div>
 
@@ -296,19 +297,25 @@ function MailboxForm({
         )}
       </div>
 
+      <div className="border-t border-border-card my-4" />
+
+      <p className="text-xs font-body-semibold text-heading mb-3">{t("mailbox.pollingSettings")}</p>
+
       <div className="grid grid-cols-2 gap-3">
-        {folders.length > 0 && (
-          <FormInput label={t("mailbox.folder")}>
+        <FormInput label={t("mailbox.folder")}>
+          {folders.length > 0 ? (
             <Select
               options={folders}
               label={(f) => f}
               value={(f) => f === imapFolder}
               onChange={setImapFolder}
             />
-          </FormInput>
-        )}
-        <FormInput label={t("mailbox.pollInterval")}>
-          <Input value={pollInterval} onChange={setPollInterval} />
+          ) : (
+            <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" />
+          )}
+        </FormInput>
+        <FormInput label={`${t("mailbox.pollInterval")} (${t("mailbox.seconds")})`}>
+          <Input value={pollInterval} onChange={setPollInterval} placeholder="30" />
         </FormInput>
       </div>
 

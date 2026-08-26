@@ -136,12 +136,12 @@ export default function MailboxSettings({ slug }: Props) {
                     {isDefault
                       ? (active ? t("mailbox.systemMailboxDesc") : t("mailbox.paused"))
                       : !m.isActive
-                        ? `IMAP · ${t("mailbox.paused")}`
+                        ? t("mailbox.paused")
                         : m.lastError
                           ? m.lastError
                           : m.isActive && m.lastSyncAt
-                            ? <span>IMAP · <NextPollCountdown lastSyncAt={m.lastSyncAt} pollInterval={m.pollInterval ?? 30} lastSyncDuration={m.lastSyncDuration} t={t} /></span>
-                            : `IMAP · ${t("mailbox.waitingFirstPoll")}`}
+                            ? <NextPollCountdown lastSyncAt={m.lastSyncAt} pollInterval={m.pollInterval ?? 30} lastSyncDuration={m.lastSyncDuration} t={t} />
+                            : t("mailbox.waitingFirstPoll")}
                   </p>
                 </div>
               </div>
@@ -360,7 +360,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
         }
       }
     } catch {
-      setTestResult({ success: false, error: "Connection failed" });
+      setTestResult({ success: false, error: t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -433,7 +433,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
             </FormInput>
           </div>
           <FormInput label={t("mailbox.imapPort")}>
-            <Input value={imapPort} onChange={setImapPort} />
+            <Input value={imapPort} onChange={setImapPort} placeholder="993" />
           </FormInput>
         </div>
 
@@ -466,19 +466,25 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
           )}
         </div>
 
+        <div className="border-t border-border-card my-4" />
+
+        <p className="text-xs font-body-semibold text-heading mb-3">{t("mailbox.pollingSettings")}</p>
+
         <div className="grid grid-cols-2 gap-3">
-          {folders.length > 0 && (
-            <FormInput label={t("mailbox.folder")}>
+          <FormInput label={t("mailbox.folder")}>
+            {folders.length > 0 ? (
               <Select
                 options={folders}
                 label={(f) => f}
                 value={(f) => f === imapFolder}
                 onChange={setImapFolder}
               />
-            </FormInput>
-          )}
-          <FormInput label={t("mailbox.pollInterval")}>
-            <Input value={pollInterval} onChange={setPollInterval} />
+            ) : (
+              <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" />
+            )}
+          </FormInput>
+          <FormInput label={`${t("mailbox.pollInterval")} (${t("mailbox.seconds")})`}>
+            <Input value={pollInterval} onChange={setPollInterval} placeholder="30" />
           </FormInput>
         </div>
 
