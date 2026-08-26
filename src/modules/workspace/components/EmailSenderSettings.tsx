@@ -168,8 +168,8 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel }: {
       resolveMailServer(slug, domain)
         .then((res) => {
           if (res.smtp && !smtpHost) {
+            setSmtpHost(res.smtp.host);
             setSrvHost(res.smtp.host);
-            if (res.smtp.port && !smtpPort) setSmtpPort(String(res.smtp.port));
           }
         })
         .catch(() => {});
