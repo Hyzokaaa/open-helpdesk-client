@@ -8,6 +8,8 @@ export interface EmailSenderDto {
   hasPassword: boolean;
   smtpFrom: string;
   encryption?: string;
+  fromName?: string | null;
+  fromEmail?: string | null;
 }
 
 export async function getEmailSender(slug: string): Promise<EmailSenderDto | null> {
@@ -24,6 +26,8 @@ export async function saveEmailSender(slug: string, data: {
   smtpPass: string;
   smtpFrom: string;
   encryption?: string;
+  fromName?: string | null;
+  fromEmail?: string | null;
 }): Promise<{ id: string }> {
   const res = await http.post<{ id: string }>(`/workspaces/${slug}/email-sender`, data);
   return res.data;

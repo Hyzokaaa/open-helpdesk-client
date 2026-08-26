@@ -41,13 +41,14 @@ export default function EmailSenderSettings({ slug }: Props) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [email, setEmail] = useState("");
+  const [fromName, setFromName] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
+  const [smtpLogin, setSmtpLogin] = useState("");
   const [password, setPassword] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("587");
-  const [smtpUser, setSmtpUser] = useState("");
   const [encryption, setEncryption] = useState("tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -58,11 +59,12 @@ export default function EmailSenderSettings({ slug }: Props) {
       .then((s) => {
         setSender(s);
         if (s) {
-          setEmail(s.smtpFrom);
+          setSmtpLogin(s.smtpUser);
           setSmtpHost(s.smtpHost);
           setSmtpPort(String(s.smtpPort));
-          setSmtpUser(s.smtpUser);
           setEncryption(s.encryption ?? "tls");
+          setFromName(s.fromName || "");
+          setFromEmail(s.fromEmail || "");
         }
       })
       .catch((err) => {
@@ -71,9 +73,12 @@ export default function EmailSenderSettings({ slug }: Props) {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const resolvedHost = smtpHost || deriveSmtpHost(email);
-  const resolvedUser = smtpUser || email;
+  const resolvedHost = smtpHost || deriveSmtpHost(smtpLogin);
   const resolvedPort = Number(smtpPort) || 587;
+
+  useEffect(() => {
+    setTestResult(null);
+  }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
 
   const handleTest = async () => {
     setTesting(true);
@@ -82,7 +87,7 @@ export default function EmailSenderSettings({ slug }: Props) {
       const result = await testEmailSender(slug, {
         smtpHost: resolvedHost,
         smtpPort: resolvedPort,
-        smtpUser: resolvedUser,
+        smtpUser: smtpLogin,
         smtpPass: password || "__keep__",
         encryption,
       });
@@ -100,17 +105,18 @@ export default function EmailSenderSettings({ slug }: Props) {
       await saveEmailSender(slug, {
         smtpHost: resolvedHost,
         smtpPort: resolvedPort,
-        smtpUser: resolvedUser,
+        smtpUser: smtpLogin,
         smtpPass: password,
-        smtpFrom: email,
+        smtpFrom: smtpLogin,
         encryption,
+        fromName: fromName || null,
+        fromEmail: fromEmail || null,
       });
       toast.success(t("emailSender.saved"));
       const updated = await getEmailSender(slug);
       setSender(updated);
       setEditing(false);
       setPassword("");
-      setShowAdvanced(false);
     } catch {
       toast.error(t("emailSender.saveError"));
     } finally {
@@ -122,14 +128,15 @@ export default function EmailSenderSettings({ slug }: Props) {
     try {
       await deleteEmailSender(slug);
       setSender(null);
-      setEmail("");
+      setSmtpLogin("");
       setPassword("");
       setSmtpHost("");
       setSmtpPort("587");
-      setSmtpUser("");
+      setFromName("");
+      setFromEmail("");
       setEncryption("tls");
       setEditing(false);
-      setShowAdvanced(false);
+      setConfirmDelete(false);
       toast.success(t("emailSender.deleted"));
     } catch {
       toast.error(t("emailSender.deleteError"));
@@ -141,7 +148,7 @@ export default function EmailSenderSettings({ slug }: Props) {
 
   const isConfigured = !!sender;
   const showForm = editing || !isConfigured;
-  const canSave = email.trim() && resolvedHost && (password || isConfigured);
+  const canSave = smtpLogin.trim() && resolvedHost && (password || isConfigured) && (testResult?.success || isConfigured);
 
   return (
     <div className="space-y-3">
@@ -166,63 +173,74 @@ export default function EmailSenderSettings({ slug }: Props) {
       {isConfigured && !editing && (
         <div className="flex items-center justify-between p-3 bg-surface-active rounded-lg">
           <div>
-            <p className="text-sm text-body font-body-medium">{sender.smtpFrom}</p>
+            <p className="text-sm text-body font-body-medium">
+              {sender.fromName ? `${sender.fromName} <${sender.fromEmail || sender.smtpFrom}>` : sender.smtpFrom}
+            </p>
             <p className="text-exs text-muted">{sender.smtpHost}:{sender.smtpPort}</p>
           </div>
           <div className="flex gap-2">
             <Button size="xs" color="light" onClick={() => setEditing(true)}>{t("tickets.edit")}</Button>
-            <Button size="xs" color="danger" onClick={handleDelete}>{t("tickets.delete")}</Button>
+            {confirmDelete ? (
+              <>
+                <Button size="xs" color="danger" onClick={handleDelete}>{t("emailSender.confirmDelete")}</Button>
+                <Button size="xs" color="light" onClick={() => setConfirmDelete(false)}>{t("ticketDetail.cancel")}</Button>
+              </>
+            ) : (
+              <Button size="xs" color="danger" onClick={() => setConfirmDelete(true)}>{t("tickets.delete")}</Button>
+            )}
           </div>
         </div>
       )}
 
       {showForm && (
         <div className="space-y-3">
-          <FormInput label={t("emailSender.email")}>
-            <Input value={email} onChange={setEmail} size="sm" placeholder="support@company.com" />
-          </FormInput>
+          {/* Section 1: Sender Identity */}
+          <p className="text-xs font-body-semibold text-heading">{t("emailSender.senderIdentity")}</p>
+          <p className="text-exs text-muted -mt-2">{t("emailSender.senderIdentityDesc")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label={t("emailSender.fromName")}>
+              <Input value={fromName} onChange={setFromName} size="sm" placeholder="IT Support" />
+            </FormInput>
+            <FormInput label={t("emailSender.fromEmail")}>
+              <Input value={fromEmail} onChange={setFromEmail} size="sm" placeholder={smtpLogin || "support@company.com"} type="email" />
+            </FormInput>
+          </div>
 
-          <FormInput label={t("emailSender.password")}>
-            <Input value={password} onChange={setPassword} size="sm" placeholder={isConfigured ? "••••••••" : ""} type="password" />
-          </FormInput>
+          <div className="border-t border-border-card my-1" />
 
-          {email && resolvedHost && (
-            <p className="text-exs text-muted">
-              {t("emailSender.autoDetected")}: {resolvedHost}:{resolvedPort}
-            </p>
-          )}
+          {/* Section 2: Authentication */}
+          <p className="text-xs font-body-semibold text-heading">{t("emailSender.smtpAuth")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label={t("emailSender.smtpUser")}>
+              <Input value={smtpLogin} onChange={setSmtpLogin} size="sm" placeholder="user@company.com" />
+            </FormInput>
+            <FormInput label={t("emailSender.password")}>
+              <Input value={password} onChange={setPassword} size="sm" placeholder={isConfigured ? "••••••••" : ""} type="password" />
+            </FormInput>
+          </div>
 
-          <button
-            type="button"
-            className="text-xs text-primary hover:underline cursor-pointer"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-          >
-            {showAdvanced ? "▾" : "▸"} {t("emailSender.advanced")}
-          </button>
+          <div className="border-t border-border-card my-1" />
 
-          {showAdvanced && (
-            <div className="space-y-3 pl-3 border-l-2 border-border-input">
+          {/* Section 3: Server Settings */}
+          <p className="text-xs font-body-semibold text-heading">{t("emailSender.serverSettings")}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
               <FormInput label={t("emailSender.smtpHost")}>
-                <Input value={smtpHost} onChange={setSmtpHost} size="sm" placeholder={deriveSmtpHost(email) || "smtp.example.com"} />
-              </FormInput>
-              <div className="grid grid-cols-2 gap-3">
-                <FormInput label={t("emailSender.smtpPort")}>
-                  <Input value={smtpPort} onChange={setSmtpPort} size="sm" placeholder="587" />
-                </FormInput>
-                <FormInput label={t("emailSender.smtpUser")}>
-                  <Input value={smtpUser} onChange={setSmtpUser} size="sm" placeholder={email || "user@company.com"} />
-                </FormInput>
-              </div>
-              <FormInput label={t("mailbox.encryption")}>
-                <Select
-                  options={['tls', 'tls-insecure', 'none']}
-                  label={(e) => t(`mailbox.encryption.${e}` as any)}
-                  value={(e) => e === encryption}
-                  onChange={setEncryption}
-                />
+                <Input value={smtpHost} onChange={setSmtpHost} size="sm" placeholder={deriveSmtpHost(smtpLogin) || "smtp.example.com"} />
               </FormInput>
             </div>
-          )}
+            <FormInput label={t("emailSender.smtpPort")}>
+              <Input value={smtpPort} onChange={setSmtpPort} size="sm" placeholder="587" />
+            </FormInput>
+          </div>
+          <FormInput label={t("mailbox.encryption")}>
+            <Select
+              options={['tls', 'tls-insecure', 'none']}
+              label={(e) => t(`mailbox.encryption.${e}` as any)}
+              value={(e) => e === encryption}
+              onChange={setEncryption}
+            />
+          </FormInput>
 
           {testResult && (
             <p className={`text-xs ${testResult.success ? "text-green-600" : "text-red-500"}`}>
@@ -230,15 +248,19 @@ export default function EmailSenderSettings({ slug }: Props) {
             </p>
           )}
 
+          {!testResult && !isConfigured && (
+            <p className="text-exs text-muted">{t("emailSender.testRequired")}</p>
+          )}
+
           <div className="flex gap-2">
-            <Button size="xs" color="light" onClick={handleTest} loading={testing} disabled={!email || !resolvedHost || (!password && !isConfigured)}>
+            <Button size="xs" color="light" onClick={handleTest} loading={testing} disabled={!smtpLogin || !resolvedHost || (!password && !isConfigured)}>
               {t("emailSender.test")}
             </Button>
             <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!canSave}>
               {t("settings.save")}
             </Button>
             {editing && (
-              <Button size="xs" color="light" onClick={() => { setEditing(false); setPassword(""); setTestResult(null); setShowAdvanced(false); }}>
+              <Button size="xs" color="light" onClick={() => { setEditing(false); setPassword(""); setTestResult(null); }}>
                 {t("ticketDetail.cancel")}
               </Button>
             )}

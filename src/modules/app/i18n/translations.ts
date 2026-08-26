@@ -309,7 +309,9 @@ const translations = {
   "emailSender.activeDescription": { en: "Notifications for this workspace are sent from the address below instead of the system default.", es: "Las notificaciones de este workspace se envían desde la dirección de abajo en vez del sistema predeterminado." },
   "emailSender.noGlobalDescription": { en: "No system email is configured. Set up your own email to enable notifications for this workspace.", es: "No hay email del sistema configurado. Configura tu propio email para habilitar notificaciones en este workspace." },
   "emailSender.usingSystem": { en: "Using system email configuration", es: "Usando configuración de email del sistema" },
-  "emailSender.email": { en: "Email Address", es: "Dirección de Email" },
+  "emailSender.fromName": { en: "From Name", es: "Nombre del Remitente" },
+  "emailSender.fromEmail": { en: "From Email", es: "Email del Remitente" },
+  "emailSender.email": { en: "SMTP Login Email", es: "Email de Login SMTP" },
   "emailSender.password": { en: "Password", es: "Contraseña" },
   "emailSender.autoDetected": { en: "Auto-detected", es: "Auto-detectado" },
   "emailSender.advanced": { en: "Advanced SMTP Settings", es: "Configuración SMTP Avanzada" },
@@ -323,6 +325,12 @@ const translations = {
   "emailSender.saveError": { en: "Failed to save email sender", es: "Error al guardar remitente de email" },
   "emailSender.deleted": { en: "Email sender removed", es: "Remitente de email eliminado" },
   "emailSender.deleteError": { en: "Failed to remove email sender", es: "Error al eliminar remitente de email" },
+  "emailSender.senderIdentity": { en: "Sender Identity", es: "Identidad del Remitente" },
+  "emailSender.senderIdentityDesc": { en: "How your emails appear to recipients", es: "Cómo se muestran tus emails a los destinatarios" },
+  "emailSender.smtpAuth": { en: "Authentication", es: "Autenticación" },
+  "emailSender.serverSettings": { en: "Server Settings", es: "Configuración del Servidor" },
+  "emailSender.testRequired": { en: "Test connection before saving", es: "Prueba la conexión antes de guardar" },
+  "emailSender.confirmDelete": { en: "Confirm?", es: "¿Confirmar?" },
   "emailSender.enterpriseOnly": { en: "Custom email sender is available on the Enterprise plan", es: "El remitente de email personalizado está disponible en el plan Enterprise" },
 
   // Mailboxes
