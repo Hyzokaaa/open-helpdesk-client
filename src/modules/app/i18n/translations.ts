@@ -348,6 +348,7 @@ const translations = {
   "mailbox.imapUser": { en: "Username", es: "Usuario" },
   "mailbox.imapPass": { en: "Password", es: "Contraseña" },
   "mailbox.folder": { en: "Folder", es: "Carpeta" },
+  "mailbox.testForFolders": { en: "Test connection to see available folders", es: "Prueba la conexión para ver las carpetas disponibles" },
   "mailbox.pollInterval": { en: "Poll Interval", es: "Intervalo de Polling" },
   "mailbox.seconds": { en: "seconds", es: "segundos" },
   "mailbox.pollingSettings": { en: "Polling", es: "Polling" },

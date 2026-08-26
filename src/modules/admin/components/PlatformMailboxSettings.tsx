@@ -311,7 +311,10 @@ function MailboxForm({
               onChange={setImapFolder}
             />
           ) : (
-            <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" />
+            <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" disabled={!testResult?.success && !isEdit} />
+          )}
+          {!folders.length && !isEdit && (
+            <p className="text-exs text-muted mt-1">{t("mailbox.testForFolders")}</p>
           )}
         </FormInput>
         <FormInput label={`${t("mailbox.pollInterval")} (${t("mailbox.seconds")})`}>

@@ -14,6 +14,7 @@ import {
   saveEmailSender,
   deleteEmailSender,
   testEmailSender,
+  resolveMailServer,
 } from "../services/email-sender.service";
 
 interface Props {
@@ -151,12 +152,30 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel }: {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
 
-  const resolvedHost = smtpHost || deriveSmtpHost(smtpLogin);
+  const [srvHost, setSrvHost] = useState("");
+  const resolvedHost = smtpHost || srvHost || deriveSmtpHost(smtpLogin);
   const resolvedPort = Number(smtpPort) || 587;
 
   useEffect(() => {
     setTestResult(null);
   }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
+
+  useEffect(() => {
+    if (smtpHost || !smtpLogin.includes("@")) return;
+    const domain = smtpLogin.split("@")[1];
+    if (!domain) return;
+    const timeout = setTimeout(() => {
+      resolveMailServer(slug, domain)
+        .then((res) => {
+          if (res.smtp && !smtpHost) {
+            setSrvHost(res.smtp.host);
+            if (res.smtp.port && !smtpPort) setSmtpPort(String(res.smtp.port));
+          }
+        })
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [smtpLogin]);
 
   const canTest = smtpLogin.trim() && resolvedHost && (password || isEdit);
   const canSave = canTest && (testResult?.success || isEdit);

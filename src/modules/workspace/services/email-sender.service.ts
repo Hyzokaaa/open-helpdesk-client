@@ -47,3 +47,14 @@ export async function testEmailSender(slug: string, data: {
   const res = await http.post<{ success: boolean; error?: string }>(`/workspaces/${slug}/email-sender/test`, data);
   return res.data;
 }
+
+export async function resolveMailServer(slug: string, domain: string): Promise<{
+  smtp?: { host: string; port: number };
+  imap?: { host: string; port: number };
+}> {
+  const res = await http.post<{ smtp?: { host: string; port: number }; imap?: { host: string; port: number } }>(
+    `/workspaces/${slug}/resolve-mail-server`,
+    { domain },
+  );
+  return res.data;
+}

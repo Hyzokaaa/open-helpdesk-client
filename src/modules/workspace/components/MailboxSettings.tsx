@@ -25,6 +25,7 @@ import {
   resumeMailbox,
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
+import { resolveMailServer } from "../services/email-sender.service";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
@@ -337,6 +338,23 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (imapHost || !address.includes("@")) return;
+    const domain = address.split("@")[1];
+    if (!domain) return;
+    const timeout = setTimeout(() => {
+      resolveMailServer(slug, domain)
+        .then((res) => {
+          if (res.imap && !imapHost) {
+            setImapHost(res.imap.host);
+            if (res.imap.port) setImapPort(String(res.imap.port));
+          }
+        })
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [address]);
+
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
 
@@ -480,7 +498,10 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
                 onChange={setImapFolder}
               />
             ) : (
-              <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" />
+              <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" disabled={!testResult?.success && !isEdit} />
+            )}
+            {!folders.length && !isEdit && (
+              <p className="text-exs text-muted mt-1">{t("mailbox.testForFolders")}</p>
             )}
           </FormInput>
           <FormInput label={`${t("mailbox.pollInterval")} (${t("mailbox.seconds")})`}>
