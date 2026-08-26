@@ -264,7 +264,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel }: {
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <FormInput label={t("emailSender.smtpHost")}>
-              <Input value={smtpHost} onChange={setSmtpHost} placeholder={deriveSmtpHost(smtpLogin) || "smtp.example.com"} />
+              <Input value={smtpHost} onChange={setSmtpHost} placeholder={srvHost || deriveSmtpHost(smtpLogin) || "smtp.example.com"} />
             </FormInput>
           </div>
           <FormInput label={t("emailSender.smtpPort")}>
