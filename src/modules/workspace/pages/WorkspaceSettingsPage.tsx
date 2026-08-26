@@ -174,7 +174,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 </FormInput>
               </div>
               {hasChanges && (
-                <div className="mt-4">
+                <div className="mt-4 flex justify-end">
                   <Button size="xs" color="primary" onClick={handleSave} disabled={!nameValid} loading={saving}>
                     {t("settings.save")}
                   </Button>
@@ -372,7 +372,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
               title={t("workspaceSettings.dangerZone")}
               className="border-red-300 dark:border-red-900/50"
             >
-              <p className="text-exs text-muted mb-3">
+              <p className="text-xs text-muted mb-3">
                 {t("workspaceSettings.dangerDescription")}
               </p>
               <Button size="xs" color="danger" full onClick={() => setConfirmDelete(true)}>

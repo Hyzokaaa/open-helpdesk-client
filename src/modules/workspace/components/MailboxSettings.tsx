@@ -25,6 +25,7 @@ import {
   resumeMailbox,
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
+import { resolveMailServer } from "../services/email-sender.service";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
@@ -136,12 +137,12 @@ export default function MailboxSettings({ slug }: Props) {
                     {isDefault
                       ? (active ? t("mailbox.systemMailboxDesc") : t("mailbox.paused"))
                       : !m.isActive
-                        ? `IMAP · ${t("mailbox.paused")}`
+                        ? t("mailbox.paused")
                         : m.lastError
                           ? m.lastError
                           : m.isActive && m.lastSyncAt
-                            ? <span>IMAP · <NextPollCountdown lastSyncAt={m.lastSyncAt} pollInterval={m.pollInterval ?? 30} lastSyncDuration={m.lastSyncDuration} t={t} /></span>
-                            : `IMAP · ${t("mailbox.waitingFirstPoll")}`}
+                            ? <NextPollCountdown lastSyncAt={m.lastSyncAt} pollInterval={m.pollInterval ?? 30} lastSyncDuration={m.lastSyncDuration} t={t} />
+                            : t("mailbox.waitingFirstPoll")}
                   </p>
                 </div>
               </div>
@@ -337,6 +338,23 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (imapHost || !address.includes("@")) return;
+    const domain = address.split("@")[1];
+    if (!domain) return;
+    const timeout = setTimeout(() => {
+      resolveMailServer(slug, domain)
+        .then((res) => {
+          if (res.imap && !imapHost) {
+            setImapHost(res.imap.host);
+            if (res.imap.port) setImapPort(String(res.imap.port));
+          }
+        })
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [address]);
+
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
 
@@ -360,7 +378,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
         }
       }
     } catch {
-      setTestResult({ success: false, error: "Connection failed" });
+      setTestResult({ success: false, error: t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -433,7 +451,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
             </FormInput>
           </div>
           <FormInput label={t("mailbox.imapPort")}>
-            <Input value={imapPort} onChange={setImapPort} />
+            <Input value={imapPort} onChange={setImapPort} placeholder="993" />
           </FormInput>
         </div>
 
@@ -466,19 +484,28 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
           )}
         </div>
 
+        <div className="border-t border-border-card my-4" />
+
+        <p className="text-xs font-body-semibold text-heading mb-3">{t("mailbox.pollingSettings")}</p>
+
         <div className="grid grid-cols-2 gap-3">
-          {folders.length > 0 && (
-            <FormInput label={t("mailbox.folder")}>
+          <FormInput label={t("mailbox.folder")}>
+            {folders.length > 0 ? (
               <Select
                 options={folders}
                 label={(f) => f}
                 value={(f) => f === imapFolder}
                 onChange={setImapFolder}
               />
-            </FormInput>
-          )}
-          <FormInput label={t("mailbox.pollInterval")}>
-            <Input value={pollInterval} onChange={setPollInterval} />
+            ) : (
+              <Input value={imapFolder} onChange={setImapFolder} placeholder="INBOX" disabled={!testResult?.success && !isEdit} />
+            )}
+            {!folders.length && !isEdit && (
+              <p className="text-exs text-muted mt-1">{t("mailbox.testForFolders")}</p>
+            )}
+          </FormInput>
+          <FormInput label={`${t("mailbox.pollInterval")} (${t("mailbox.seconds")})`}>
+            <Input value={pollInterval} onChange={setPollInterval} placeholder="30" />
           </FormInput>
         </div>
 

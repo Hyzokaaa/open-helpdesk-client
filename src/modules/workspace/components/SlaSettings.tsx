@@ -128,7 +128,7 @@ export default function SlaSettings({ slug }: Props) {
 
   const content = (
     <div>
-      <p className="text-exs text-muted mb-4">
+      <p className="text-xs text-muted mb-4">
         {t("workspaceSettings.slaDescription")}
       </p>
 
@@ -194,15 +194,15 @@ export default function SlaSettings({ slug }: Props) {
       </div>
 
       {!locked && (
-        <div className="flex items-center gap-2">
-          <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!hasChanges}>
-            {t("settings.save")}
-          </Button>
+        <div className="flex justify-end gap-2">
           {policy && (
             <Button size="xs" color="light" onClick={handleRemove} loading={saving}>
               {t("workspaceSettings.slaRemove")}
             </Button>
           )}
+          <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!hasChanges}>
+            {t("settings.save")}
+          </Button>
         </div>
       )}
     </div>
