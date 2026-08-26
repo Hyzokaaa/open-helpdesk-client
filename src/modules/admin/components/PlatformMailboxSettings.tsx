@@ -5,6 +5,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
@@ -64,79 +65,78 @@ export default function PlatformMailboxSettings() {
 
   if (loading) return <Spinner />;
 
-  if (!mailbox && !showForm) {
-    return (
-      <div>
-        <p className="text-xs text-muted mb-3">{t("platformMailbox.description")}</p>
-        <p className="text-xs text-muted mb-3">{t("platformMailbox.notConfigured")}</p>
-        <Button size="xs" color="light" onClick={() => setShowForm(true)}>
-          {t("platformMailbox.configure")}
-        </Button>
-      </div>
-    );
-  }
-
-  if (showForm) {
-    return (
-      <div>
-        <p className="text-xs text-muted mb-4">{t("platformMailbox.description")}</p>
-        <MailboxForm
-          mailbox={mailbox}
-          onSaved={(updated) => {
-            setMailbox(updated);
-            setShowForm(false);
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      </div>
-    );
-  }
-
   return (
     <div>
       <p className="text-xs text-muted mb-3">{t("platformMailbox.description")}</p>
 
-      <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${statusColor(mailbox!)}`} />
-          <div className="min-w-0">
-            <p className="text-xs font-body-medium text-body break-all">{mailbox!.address}</p>
-            <p className="text-exs text-muted">
-              {mailbox!.imapHost}:{mailbox!.imapPort}
-              {!mailbox!.isActive && ` · ${t("mailbox.paused")}`}
-              {mailbox!.lastError && ` · ${mailbox!.lastError}`}
-              {mailbox!.isActive && mailbox!.lastSyncAt && !mailbox!.lastError && ` · ${t("mailbox.lastPoll")} ${fmt(mailbox!.lastSyncAt)}`}
-              {mailbox!.isActive && !mailbox!.lastSyncAt && !mailbox!.lastError && ` · ${t("mailbox.waitingFirstPoll")}`}
-            </p>
+      {mailbox ? (
+        <>
+          <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${statusColor(mailbox)}`} />
+              <div className="min-w-0">
+                <p className="text-xs font-body-medium text-body break-all">{mailbox.address}</p>
+                <p className="text-exs text-muted">
+                  {mailbox.imapHost}:{mailbox.imapPort}
+                  {!mailbox.isActive && ` · ${t("mailbox.paused")}`}
+                  {mailbox.lastError && ` · ${mailbox.lastError}`}
+                  {mailbox.isActive && mailbox.lastSyncAt && !mailbox.lastError && ` · ${t("mailbox.lastPoll")} ${fmt(mailbox.lastSyncAt)}`}
+                  {mailbox.isActive && !mailbox.lastSyncAt && !mailbox.lastError && ` · ${t("mailbox.waitingFirstPoll")}`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {mailbox.isActive ? (
+                <Button size="xs" color="light" onClick={async () => {
+                  await pauseSystemMailbox();
+                  const updated = await getSystemMailbox();
+                  setMailbox(updated);
+                }}>
+                  {t("mailbox.pause")}
+                </Button>
+              ) : (
+                <Button size="xs" color="light" onClick={async () => {
+                  await resumeSystemMailbox();
+                  const updated = await getSystemMailbox();
+                  setMailbox(updated);
+                }}>
+                  {t("mailbox.resume")}
+                </Button>
+              )}
+              <Button size="xs" color="light" onClick={() => setShowForm(true)}>
+                {t("common.edit")}
+              </Button>
+              <div className="w-px h-4 bg-border-card" />
+              <Button size="xs" color="danger" onClick={() => setShowDelete(true)}>
+                {t("common.delete")}
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {mailbox!.isActive ? (
-            <Button size="xs" color="light" onClick={async () => {
-              await pauseSystemMailbox();
-              const updated = await getSystemMailbox();
-              setMailbox(updated);
-            }}>
-              {t("mailbox.pause")}
-            </Button>
-          ) : (
-            <Button size="xs" color="light" onClick={async () => {
-              await resumeSystemMailbox();
-              const updated = await getSystemMailbox();
-              setMailbox(updated);
-            }}>
-              {t("mailbox.resume")}
-            </Button>
-          )}
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-muted mb-3">{t("platformMailbox.notConfigured")}</p>
           <Button size="xs" color="light" onClick={() => setShowForm(true)}>
-            {t("common.edit")}
+            {t("platformMailbox.configure")}
           </Button>
-          <div className="w-px h-4 bg-border-card" />
-          <Button size="xs" color="danger" onClick={() => setShowDelete(true)}>
-            {t("common.delete")}
-          </Button>
-        </div>
-      </div>
+        </>
+      )}
+
+      {showForm && (
+        <Sheet onClose={() => setShowForm(false)}>
+          <div className="p-6">
+            <h2 className="text-lg font-body-bold text-heading mb-1">
+              {mailbox ? t("common.edit") : t("platformMailbox.configure")}
+            </h2>
+            <p className="text-sm text-muted mb-6">{t("platformMailbox.description")}</p>
+            <MailboxForm
+              mailbox={mailbox}
+              onSaved={(updated) => { setMailbox(updated); setShowForm(false); }}
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
+        </Sheet>
+      )}
 
       {showDelete && (
         <ConfirmModal
@@ -319,12 +319,9 @@ function MailboxForm({
         </FormInput>
       </div>
 
-      <div className="flex gap-2 mt-4">
+      <div className="mt-4">
         <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
           {t("mailbox.save")}
-        </Button>
-        <Button size="sm" type="button" color="light" onClick={onCancel}>
-          {t("common.cancel")}
         </Button>
       </div>
     </form>
