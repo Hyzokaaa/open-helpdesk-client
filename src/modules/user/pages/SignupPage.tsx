@@ -143,7 +143,10 @@ export default function SignupPage() {
           </form>
 
           <div className="text-center mt-4">
-            <Link to="/login" className="text-xs text-primary hover:underline">
+            <Link
+              to={isInviteFlow ? `/login?redirect=${encodeURIComponent(redirect)}&email=${encodeURIComponent(inviteEmail)}` : "/login"}
+              className="text-xs text-primary hover:underline"
+            >
               {t("signup.hasAccount")}
             </Link>
           </div>
