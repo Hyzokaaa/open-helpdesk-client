@@ -331,6 +331,8 @@ const translations = {
   "emailSender.serverSettings": { en: "Server Settings", es: "Configuración del Servidor" },
   "emailSender.testRequired": { en: "Test connection before saving", es: "Prueba la conexión antes de guardar" },
   "emailSender.confirmDelete": { en: "Confirm?", es: "¿Confirmar?" },
+  "emailSender.configure": { en: "Configure Email Sender", es: "Configurar Remitente de Email" },
+  "emailSender.editTitle": { en: "Edit Email Sender", es: "Editar Remitente de Email" },
   "emailSender.enterpriseOnly": { en: "Custom email sender is available on the Enterprise plan", es: "El remitente de email personalizado está disponible en el plan Enterprise" },
 
   // Mailboxes
