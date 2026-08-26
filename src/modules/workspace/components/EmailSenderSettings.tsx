@@ -90,7 +90,7 @@ export default function EmailSenderSettings({ slug }: Props) {
       </p>
 
       {isConfigured ? (
-        <div className="flex items-center justify-between p-3 bg-surface-active rounded-lg">
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
           <div>
             <p className="text-sm text-body font-body-medium">
               {sender.fromName ? `${sender.fromName} <${sender.fromEmail || sender.smtpFrom}>` : sender.smtpFrom}
@@ -110,9 +110,11 @@ export default function EmailSenderSettings({ slug }: Props) {
           </div>
         </div>
       ) : (
-        <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
-          {t("emailSender.configure")}
-        </Button>
+        <div className="flex justify-end">
+          <Button size="xs" color="light" onClick={() => setShowSheet(true)}>
+            {t("emailSender.configure")}
+          </Button>
+        </div>
       )}
 
       {showSheet && (
