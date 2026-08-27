@@ -949,6 +949,7 @@ const translations = {
 
   // Enums - Categories
   "enum.category.bug": { en: "Bug", es: "Error" },
+  "enum.category.feature-request": { en: "Feature Request", es: "Solicitud de Funcionalidad" },
   "enum.category.issue": { en: "Issue", es: "Incidencia" },
   "enum.category.task": { en: "Task", es: "Tarea" },
 
