@@ -48,7 +48,7 @@ const ACTION_TYPES = [
 ] as const;
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
-const CATEGORIES = ["bug", "issue", "task"] as const;
+const CATEGORIES = ["bug", "feature-request", "issue", "task"] as const;
 
 function SortableRow({ rule, t, tEnum, onEdit, onToggle, onDelete }: {
   rule: EmailRule;

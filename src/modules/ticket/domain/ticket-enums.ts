@@ -1,6 +1,6 @@
 export const PRIORITIES = ["low", "medium", "high", "critical"] as const;
 export const STATUSES = ["open", "pending", "in-progress", "resolved", "discarded"] as const;
-export const CATEGORIES = ["bug", "issue", "task"] as const;
+export const CATEGORIES = ["bug", "feature-request", "issue", "task"] as const;
 
 export const PRIORITY_COLORS: Record<string, "gray" | "blue" | "yellow" | "red"> = {
   low: "gray",
@@ -17,8 +17,9 @@ export const STATUS_COLORS: Record<string, "gray" | "blue" | "green" | "primary"
   discarded: "red",
 };
 
-export const CATEGORY_COLORS: Record<string, "red" | "yellow" | "blue"> = {
+export const CATEGORY_COLORS: Record<string, "red" | "yellow" | "blue" | "green"> = {
   bug: "red",
+  "feature-request": "green",
   issue: "yellow",
   task: "blue",
 };
