@@ -6,7 +6,8 @@ export interface TicketListItem {
   name: string;
   priority: string;
   status: string;
-  category: string;
+  categoryId: string | null;
+  projectId: string | null;
   reporterId: string;
   assigneeId: string | null;
   ticketNumber: number;
@@ -25,7 +26,8 @@ export interface TicketDetail {
   description: string;
   priority: string;
   status: string;
-  category: string;
+  categoryId: string | null;
+  projectId: string | null;
   workspaceId: string;
   reporterId: string;
   source: string;
@@ -58,6 +60,8 @@ export interface TicketFilters {
   tagIds?: string[];
   departmentId?: string;
   organizationId?: string;
+  projectId?: string;
+  categoryId?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   page?: number;
@@ -79,6 +83,8 @@ export async function listTickets(
     params.set("tagIds", filters.tagIds.join(","));
   if (filters.departmentId) params.set("departmentId", filters.departmentId);
   if (filters.organizationId) params.set("organizationId", filters.organizationId);
+  if (filters.projectId) params.set("projectId", filters.projectId);
+  if (filters.categoryId) params.set("categoryId", filters.categoryId);
   if (filters.sortBy) params.set("sortBy", filters.sortBy);
   if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
   params.set("page", String(filters.page ?? 1));
@@ -132,9 +138,10 @@ export async function createTicket(
     name: string;
     description: string;
     priority: string;
-    category: string;
+    categoryId: string;
     tagIds: string[];
     departmentId?: string;
+    projectId?: string;
     customFields?: Record<string, unknown>;
     uploadTokens?: string[];
     onBehalfOf?: string;
@@ -151,9 +158,11 @@ export async function updateTicket(
     name: string;
     description: string;
     priority: string;
-    category: string;
+    categoryId: string | null;
     tagIds: string[];
     departmentId: string | null;
+    organizationId: string | null;
+    projectId: string | null;
     customFields: Record<string, unknown>;
   }>,
 ): Promise<void> {
