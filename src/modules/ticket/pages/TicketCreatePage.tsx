@@ -86,7 +86,8 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         setAllCategories(cats);
         if (initialProjectId) {
           listCategories(workspaceSlug, initialProjectId).then((projCats) => {
-            const filtered = projCats.length > 0 ? projCats : cats;
+            const inProject = projCats.filter((c) => c.inProject);
+            const filtered = inProject.length > 0 ? inProject : cats;
             setVisibleCategories(filtered);
             const def = filtered.find((c) => c.slug === "issue") ?? filtered[0];
             if (def) setCategoryId(def.id);
@@ -105,7 +106,8 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
     if (!workspaceSlug) return;
     if (newProjectId) {
       listCategories(workspaceSlug, newProjectId).then((projCats) => {
-        const filtered = projCats.length > 0 ? projCats : allCategories;
+        const inProject = projCats.filter((c) => c.inProject);
+        const filtered = inProject.length > 0 ? inProject : allCategories;
         setVisibleCategories(filtered);
         if (!filtered.some((c) => c.id === categoryId)) {
           const def = filtered.find((c) => c.slug === "issue") ?? filtered[0];
