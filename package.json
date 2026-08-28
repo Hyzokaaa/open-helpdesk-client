@@ -1,6 +1,6 @@
 {
   "name": "open-helpdesk-client",
-  "version": "1.20.0",
+  "version": "1.20.1",
   "compatibility": {
     "backend": ">=1.20.0 <2.0.0"
   },
