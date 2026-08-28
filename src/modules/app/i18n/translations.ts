@@ -969,6 +969,7 @@ const translations = {
   "projects.deleteTitle": { en: "Delete project", es: "Eliminar proyecto" },
   "projects.deleteMessage": { en: "Tickets in this project will keep their category but lose the project assignment.", es: "Los tickets de este proyecto mantendrán su categoría pero perderán la asignación al proyecto." },
   "projects.empty": { en: "No projects yet", es: "No hay proyectos aún" },
+  "projects.emptyTitle": { en: "No projects yet", es: "No hay proyectos aún" },
   "projects.emptyDescription": { en: "Create a project to organize tickets by area of work.", es: "Crea un proyecto para organizar tickets por área de trabajo." },
 
   // Categories
@@ -986,6 +987,8 @@ const translations = {
   "categories.deleteTitle": { en: "Delete category", es: "Eliminar categoría" },
   "categories.deleteMessage": { en: "Tickets with this category will lose their category assignment.", es: "Los tickets con esta categoría perderán su asignación de categoría." },
   "categories.empty": { en: "No categories configured", es: "No hay categorías configuradas" },
+  "categories.emptyTitle": { en: "No categories yet", es: "No hay categorías aún" },
+  "categories.emptyDescription": { en: "Categories help classify tickets by type (e.g. Bug, Feature Request).", es: "Las categorías ayudan a clasificar tickets por tipo (ej. Error, Solicitud de Funcionalidad)." },
 
   // Ticket - project
   "ticketCreate.project": { en: "Project", es: "Proyecto" },
