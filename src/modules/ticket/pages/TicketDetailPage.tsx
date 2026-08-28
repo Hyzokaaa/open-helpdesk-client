@@ -47,7 +47,7 @@ import {
   PRIORITY_COLORS,
   STATUS_COLORS,
 } from "../domain/ticket-enums";
-import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
+import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import {
   CommentItem,
   listComments,
@@ -269,6 +269,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
+  const [wsProjects, setWsProjects] = useState<Project[]>([]);
+  const [editCategories, setEditCategories] = useState<TicketCategoryDto[]>([]);
   const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
   const [slaLocked, setSlaLocked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -289,6 +291,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     description: string;
     priority: string;
     categoryId: string | null;
+    projectId: string | null;
     status: string;
     assigneeId: string | null;
     tagIds: string[];
@@ -301,11 +304,21 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   const enterEdit = () => {
     if (!ticket) return;
+    // Load categories filtered by project for edit mode
+    if (workspaceSlug && ticket.projectId) {
+      listCategories(workspaceSlug, ticket.projectId).then((cats) => {
+        const inProject = cats.filter((c) => c.inProject);
+        setEditCategories(inProject.length > 0 ? inProject : wsCategories);
+      });
+    } else {
+      setEditCategories(wsCategories);
+    }
     setDraft({
       name: ticket.name,
       description: ticket.description,
       priority: ticket.priority,
       categoryId: ticket.categoryId,
+      projectId: ticket.projectId,
       status: ticket.status,
       assigneeId: ticket.assigneeId,
       tagIds: [...ticket.tagIds],
@@ -326,6 +339,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (draft.description !== ticket.description) changes.push({ field: t("ticketDetail.description"), from: ticket.description.slice(0, 50) + (ticket.description.length > 50 ? "..." : ""), to: draft.description.slice(0, 50) + (draft.description.length > 50 ? "..." : "") });
     if (draft.status !== ticket.status) changes.push({ field: t("ticketDetail.status"), from: tEnum("status", ticket.status), to: tEnum("status", draft.status) });
     if (draft.priority !== ticket.priority) changes.push({ field: t("ticketDetail.priority"), from: tEnum("priority", ticket.priority), to: tEnum("priority", draft.priority) });
+    if (draft.projectId !== ticket.projectId) changes.push({ field: t("ticketDetail.project"), from: wsProjects.find((p) => p.id === ticket.projectId)?.name ?? "—", to: wsProjects.find((p) => p.id === draft.projectId)?.name ?? "—" });
     if (draft.categoryId !== ticket.categoryId) changes.push({ field: t("ticketDetail.category"), from: wsCategories.find((c) => c.id === ticket.categoryId)?.name ?? "—", to: wsCategories.find((c) => c.id === draft.categoryId)?.name ?? "—" });
     if (draft.assigneeId !== ticket.assigneeId) changes.push({ field: t("ticketDetail.assignee"), from: ticket.assigneeId ? getMemberName(ticket.assigneeId) : "—", to: draft.assigneeId ? getMemberName(draft.assigneeId) : "—" });
     if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) changes.push({ field: t("ticketDetail.tags"), from: ticket.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—", to: draft.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—" });
@@ -415,6 +429,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (workspaceSlug) listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});
     if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     if (workspaceSlug) listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
+    if (workspaceSlug) listProjects(workspaceSlug).then(setWsProjects).catch(() => {});
     if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
   }, [workspaceSlug, ticketId]);
 
@@ -487,11 +502,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId || !ticket || !draft) return;
     setSaving(true);
     try {
-      const updates: Partial<{ name: string; description: string; priority: string; categoryId: string | null; tagIds: string[]; departmentId: string | null; organizationId: string | null; customFields: Record<string, unknown> }> = {};
+      const updates: Partial<{ name: string; description: string; priority: string; categoryId: string | null; projectId: string | null; tagIds: string[]; departmentId: string | null; organizationId: string | null; customFields: Record<string, unknown> }> = {};
       if (draft.name !== ticket.name) updates.name = draft.name;
       if (draft.description !== ticket.description) updates.description = draft.description;
       if (draft.priority !== ticket.priority) updates.priority = draft.priority;
       if (draft.categoryId !== ticket.categoryId) updates.categoryId = draft.categoryId;
+      if (draft.projectId !== ticket.projectId) updates.projectId = draft.projectId;
       if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) updates.tagIds = draft.tagIds;
       if (draft.departmentId !== ticket.departmentId) updates.departmentId = draft.departmentId;
       if (draft.organizationId !== ticket.organizationId) updates.organizationId = draft.organizationId;
@@ -1068,11 +1084,50 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 )}
               </Card>
 
+              {wsProjects.length > 0 && (
+                <Card className="p-4">
+                  {canEditFields ? (
+                    <FormInput label={t("ticketDetail.project")} className={clsx("!mb-0")}>
+                      <Select
+                        options={[{ id: "", name: "—", description: null } as Project, ...wsProjects]}
+                        label={(p) => p.name}
+                        value={(p) => p.id === (draft.projectId ?? "")}
+                        onChange={(p) => {
+                          const newProjectId = p.id || null;
+                          setDraft((d) => d ? { ...d, projectId: newProjectId } : d);
+                          if (newProjectId && workspaceSlug) {
+                            listCategories(workspaceSlug, newProjectId).then((cats) => {
+                              const inProject = cats.filter((c) => c.inProject);
+                              setEditCategories(inProject.length > 0 ? inProject : wsCategories);
+                              if (draft && inProject.length > 0 && !inProject.some((c) => c.id === draft.categoryId)) {
+                                const def = inProject[0];
+                                if (def) setDraft((d) => d ? { ...d, categoryId: def.id } : d);
+                              }
+                            });
+                          } else {
+                            setEditCategories(wsCategories);
+                          }
+                        }}
+                      />
+                    </FormInput>
+                  ) : (
+                    <>
+                      <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.project")}</p>
+                      {draft.projectId ? (
+                        <StatusBadge label={wsProjects.find((p) => p.id === draft.projectId)?.name ?? "—"} color="primary" size="xs" />
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
+                    </>
+                  )}
+                </Card>
+              )}
+
               <Card className="p-4">
                 {canEditFields ? (
                   <FormInput label={t("ticketDetail.category")} className={clsx("!mb-0")}>
                     <Select
-                      options={wsCategories}
+                      options={editCategories.length > 0 ? editCategories : wsCategories}
                       label={(c) => c.name}
                       value={(c) => c.id === draft.categoryId}
                       onChange={(c) => setDraft((d) => d ? { ...d, categoryId: c.id } : d)}
@@ -1244,6 +1299,16 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.priority")}</p>
                 <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} />
               </Card>
+
+              {ticket.projectId && (() => {
+                const proj = wsProjects.find((p) => p.id === ticket.projectId);
+                return proj ? (
+                  <Card className="p-4">
+                    <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.project")}</p>
+                    <StatusBadge label={proj.name} color="primary" size="xs" />
+                  </Card>
+                ) : null;
+              })()}
 
               <Card className="p-4">
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.category")}</p>
