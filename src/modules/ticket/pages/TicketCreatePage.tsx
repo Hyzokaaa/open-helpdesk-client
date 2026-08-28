@@ -11,7 +11,7 @@ import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import { createTicket } from "../services/ticket.service";
 import { stageUpload, StagedUpload } from "@modules/attachment/services/attachment.service";
 import { PRIORITIES } from "../domain/ticket-enums";
-import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
+import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
@@ -25,12 +25,13 @@ import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm"
 
 interface Props {
   workspaceSlugProp?: string;
+  initialProjectId?: string;
   onCreated?: (ticketId: string) => void;
   onClose?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose, onDirtyChange }: Props = {}) {
+export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, onCreated, onClose, onDirtyChange }: Props = {}) {
   const params = useParams();
   const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const navigate = useNavigate();
@@ -41,8 +42,11 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
   const [name, setName] = useState("");
   const [priority, setPriority] = useState("medium");
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [categoryId, setCategoryId] = useState("");
-  const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
+  const [allCategories, setAllCategories] = useState<TicketCategoryDto[]>([]);
+  const [visibleCategories, setVisibleCategories] = useState<TicketCategoryDto[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -77,13 +81,41 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
       listMembers(workspaceSlug).then(setAllMembers).catch(() => {});
+      listProjects(workspaceSlug).then(setProjects).catch(() => {});
       listCategories(workspaceSlug).then((cats) => {
-        setWsCategories(cats);
-        const defaultCat = cats.find((c) => c.slug === "issue") ?? cats[0];
-        if (defaultCat) setCategoryId(defaultCat.id);
+        setAllCategories(cats);
+        if (initialProjectId) {
+          listCategories(workspaceSlug, initialProjectId).then((projCats) => {
+            const filtered = projCats.length > 0 ? projCats : cats;
+            setVisibleCategories(filtered);
+            const def = filtered.find((c) => c.slug === "issue") ?? filtered[0];
+            if (def) setCategoryId(def.id);
+          });
+        } else {
+          setVisibleCategories(cats);
+          const def = cats.find((c) => c.slug === "issue") ?? cats[0];
+          if (def) setCategoryId(def.id);
+        }
       }).catch(() => {});
     }
   }, [workspaceSlug]);
+
+  const handleProjectChange = (newProjectId: string | undefined) => {
+    setProjectId(newProjectId);
+    if (!workspaceSlug) return;
+    if (newProjectId) {
+      listCategories(workspaceSlug, newProjectId).then((projCats) => {
+        const filtered = projCats.length > 0 ? projCats : allCategories;
+        setVisibleCategories(filtered);
+        if (!filtered.some((c) => c.id === categoryId)) {
+          const def = filtered.find((c) => c.slug === "issue") ?? filtered[0];
+          if (def) setCategoryId(def.id);
+        }
+      });
+    } else {
+      setVisibleCategories(allCategories);
+    }
+  };
 
   const onBehalfOfTrimmed = onBehalfOf.trim().toLowerCase();
   const matchedMember = onBehalfOfTrimmed
@@ -153,6 +185,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         description: descriptionHtml,
         priority,
         categoryId,
+        projectId,
         tagIds,
         departmentId: departmentId || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
@@ -224,7 +257,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
             <FormInput label={t("ticketCreate.category")} required className="flex-1">
               <Select
-                options={wsCategories}
+                options={visibleCategories}
                 label={(c) => c.name}
                 value={(c) => c.id === categoryId}
                 onChange={(c) => setCategoryId(c.id)}
@@ -239,6 +272,17 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
                 label={(d) => d.name}
                 value={(d) => d.id === (departmentId ?? "")}
                 onChange={(d) => setDepartmentId(d.id || undefined)}
+              />
+            </FormInput>
+          )}
+
+          {projects.length > 0 && (
+            <FormInput label={t("ticketCreate.project")}>
+              <Select
+                options={[{ id: "", name: "—", description: null } as Project, ...projects]}
+                label={(p) => p.name}
+                value={(p) => p.id === (projectId ?? "")}
+                onChange={(p) => handleProjectChange(p.id || undefined)}
               />
             </FormInput>
           )}

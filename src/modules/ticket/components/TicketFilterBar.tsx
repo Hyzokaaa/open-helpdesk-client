@@ -103,9 +103,9 @@ export default function TicketFilterBar({
         />
       </div>
 
-      {/* Filters popover */}
+      {/* Filters popover — right-aligned */}
       {hasDimensions && (
-        <div ref={popoverRef} className="relative shrink-0">
+        <div ref={popoverRef} className="relative shrink-0 ml-auto">
           <button
             type="button"
             onClick={() => setPopoverOpen(!popoverOpen)}

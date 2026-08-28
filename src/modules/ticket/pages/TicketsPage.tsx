@@ -641,6 +641,7 @@ export default function TicketsPage() {
         <Sheet onClose={handleCreateClose}>
           <TicketCreatePage
             workspaceSlugProp={workspaceSlug}
+            initialProjectId={filterProjectId}
             onCreated={(id) => { setShowCreate(false); setCreateDirty(false); if (id) setSelectedTicketId(id); fetchTickets(); setBoardKey((k) => k + 1); }}
             onClose={handleCreateClose}
             onDirtyChange={setCreateDirty}
