@@ -23,6 +23,8 @@ import WorkspaceContactsPage from "@modules/workspace/pages/WorkspaceContactsPag
 import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
 import WorkspaceDepartmentsPage from "@modules/department/pages/WorkspaceDepartmentsPage";
 import WorkspaceOrganizationsPage from "@modules/organization/pages/WorkspaceOrganizationsPage";
+import WorkspaceProjectsPage from "@modules/project/pages/WorkspaceProjectsPage";
+import WorkspaceCategoriesPage from "@modules/project/pages/WorkspaceCategoriesPage";
 import TicketsPage from "@modules/ticket/pages/TicketsPage";
 import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
 import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
@@ -117,6 +119,8 @@ function AppRoutes() {
             <Route path="workspaces/:workspaceSlug/tags" element={<WorkspaceTagsPage />} />
             <Route path="workspaces/:workspaceSlug/departments" element={<WorkspaceDepartmentsPage />} />
             <Route path="workspaces/:workspaceSlug/organizations" element={<WorkspaceOrganizationsPage />} />
+            <Route path="workspaces/:workspaceSlug/projects" element={<WorkspaceProjectsPage />} />
+            <Route path="workspaces/:workspaceSlug/categories" element={<WorkspaceCategoriesPage />} />
             <Route path="workspaces/:workspaceSlug/canned-responses" element={<WorkspaceCannedResponsesPage />} />
             <Route path="workspaces/:workspaceSlug/email-rules" element={<WorkspaceEmailRulesPage />} />
             <Route path="workspaces/:workspaceSlug/custom-fields" element={<WorkspaceCustomFieldsPage />} />

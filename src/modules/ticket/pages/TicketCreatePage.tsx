@@ -10,7 +10,8 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import { createTicket } from "../services/ticket.service";
 import { stageUpload, StagedUpload } from "@modules/attachment/services/attachment.service";
-import { PRIORITIES, CATEGORIES } from "../domain/ticket-enums";
+import { PRIORITIES } from "../domain/ticket-enums";
+import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
@@ -40,7 +41,8 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
   const [name, setName] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [category, setCategory] = useState("issue");
+  const [categoryId, setCategoryId] = useState("");
+  const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -75,6 +77,11 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
       listMembers(workspaceSlug).then(setAllMembers).catch(() => {});
+      listCategories(workspaceSlug).then((cats) => {
+        setWsCategories(cats);
+        const defaultCat = cats.find((c) => c.slug === "issue") ?? cats[0];
+        if (defaultCat) setCategoryId(defaultCat.id);
+      }).catch(() => {});
     }
   }, [workspaceSlug]);
 
@@ -145,7 +152,7 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
         name,
         description: descriptionHtml,
         priority,
-        category,
+        categoryId,
         tagIds,
         departmentId: departmentId || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
@@ -217,10 +224,10 @@ export default function TicketCreatePage({ workspaceSlugProp, onCreated, onClose
 
             <FormInput label={t("ticketCreate.category")} required className="flex-1">
               <Select
-                options={[...CATEGORIES]}
-                label={(c) => tEnum("category", c)}
-                value={(c) => c === category}
-                onChange={setCategory}
+                options={wsCategories}
+                label={(c) => c.name}
+                value={(c) => c.id === categoryId}
+                onChange={(c) => setCategoryId(c.id)}
               />
             </FormInput>
           </div>

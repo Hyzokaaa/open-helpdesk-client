@@ -60,7 +60,7 @@ export interface PortalTicketDetail {
   description: string;
   status: string;
   priority: string;
-  category: string;
+  categoryName: string | null;
   customFields: Record<string, unknown>;
   createdAt: string;
   creatorName: string;

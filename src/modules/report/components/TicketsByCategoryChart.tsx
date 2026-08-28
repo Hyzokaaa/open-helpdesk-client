@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default function TicketsByCategoryChart({ data }: Props) {
-  const { t, tEnum } = useTranslation();
+  const { t } = useTranslation();
 
   if (data.length === 0) {
     return (
@@ -17,7 +17,7 @@ export default function TicketsByCategoryChart({ data }: Props) {
     );
   }
 
-  const chartData = data.map((d) => ({ name: tEnum("category", d.category), count: d.count }));
+  const chartData = data.map((d) => ({ name: d.category, count: d.count }));
 
   return (
     <div className="bg-surface border border-border-card rounded-xl p-4 shadow-sm">

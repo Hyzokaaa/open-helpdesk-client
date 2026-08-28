@@ -17,12 +17,13 @@ interface Props {
   ticket: TicketListItem;
   tags: Tag[];
   members: WorkspaceMember[];
+  categoryName?: string;
   onClick: () => void;
   tEnum: (ns: string, key: string) => string;
   disabled?: boolean;
 }
 
-export default function TicketCard({ ticket, tags, members, onClick, tEnum, disabled }: Props) {
+export default function TicketCard({ ticket, tags, members, categoryName, onClick, tEnum, disabled }: Props) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
   const {
@@ -93,7 +94,7 @@ export default function TicketCard({ ticket, tags, members, onClick, tEnum, disa
 
       <div className="flex items-center gap-1.5 flex-wrap">
         {ticketId && <span className="text-[10px] text-muted font-mono">{ticketId}</span>}
-        <span className="text-[10px] text-muted">{tEnum("category", ticket.category)}</span>
+        {categoryName && <span className="text-[10px] text-muted">{categoryName}</span>}
         {ticketTags.slice(0, 2).map((tag) => (
           <span
             key={tag.id}

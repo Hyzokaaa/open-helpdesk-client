@@ -5,6 +5,7 @@ import TicketCard from "./TicketCard";
 import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import type { TicketCategoryDto } from "@modules/project/services/project.service";
 
 interface Props {
   status: string;
@@ -12,6 +13,7 @@ interface Props {
   tickets: TicketListItem[];
   tags: Tag[];
   members: WorkspaceMember[];
+  categories: TicketCategoryDto[];
   onTicketClick: (ticketId: string) => void;
   tEnum: (ns: string, key: string) => string;
   blocked?: boolean;
@@ -25,7 +27,7 @@ const BORDER_COLORS: Record<string, string> = {
   resolved: "border-l-green-500",
 };
 
-export default function TicketColumn({ status, label, tickets, tags, members, onTicketClick, tEnum, blocked, isTicketDisabled }: Props) {
+export default function TicketColumn({ status, label, tickets, tags, members, categories, onTicketClick, tEnum, blocked, isTicketDisabled }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const { t } = useTranslation();
 
@@ -68,6 +70,7 @@ export default function TicketColumn({ status, label, tickets, tags, members, on
                 ticket={ticket}
                 tags={tags}
                 members={members}
+                categoryName={categories.find((c) => c.id === ticket.categoryId)?.name}
                 onClick={() => onTicketClick(ticket.id)}
                 tEnum={tEnum}
                 disabled={isTicketDisabled?.(ticket)}

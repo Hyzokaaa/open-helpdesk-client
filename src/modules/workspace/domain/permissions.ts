@@ -57,4 +57,7 @@ export const P = {
 
   ORGANIZATION_MANAGE: "organization.manage",
   ORGANIZATION_VIEW: "organization.view",
+
+  PROJECT_MANAGE: "project.manage",
+  PROJECT_VIEW: "project.view",
 } as const;
