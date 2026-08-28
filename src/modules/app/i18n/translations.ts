@@ -953,6 +953,49 @@ const translations = {
   "enum.category.issue": { en: "Issue", es: "Incidencia" },
   "enum.category.task": { en: "Task", es: "Tarea" },
 
+  // Projects
+  "projects.title": { en: "Projects", es: "Proyectos" },
+  "projects.new": { en: "New Project", es: "Nuevo Proyecto" },
+  "projects.editTitle": { en: "Edit Project", es: "Editar Proyecto" },
+  "projects.name": { en: "Name", es: "Nombre" },
+  "projects.namePlaceholder": { en: "e.g. Web Site, Staff Support", es: "ej. Sitio Web, Soporte Interno" },
+  "projects.description": { en: "Description", es: "Descripción" },
+  "projects.categories": { en: "Categories", es: "Categorías" },
+  "projects.categoriesHint": { en: "Select which categories are available for tickets in this project", es: "Selecciona qué categorías están disponibles para tickets en este proyecto" },
+  "projects.noCategoriesHint": { en: "No categories yet. Create categories first.", es: "No hay categorías aún. Crea categorías primero." },
+  "projects.created": { en: "Project created", es: "Proyecto creado" },
+  "projects.updated": { en: "Project updated", es: "Proyecto actualizado" },
+  "projects.deleted": { en: "Project deleted", es: "Proyecto eliminado" },
+  "projects.deleteTitle": { en: "Delete project", es: "Eliminar proyecto" },
+  "projects.deleteMessage": { en: "Tickets in this project will keep their category but lose the project assignment.", es: "Los tickets de este proyecto mantendrán su categoría pero perderán la asignación al proyecto." },
+  "projects.empty": { en: "No projects yet", es: "No hay proyectos aún" },
+  "projects.emptyDescription": { en: "Create a project to organize tickets by area of work.", es: "Crea un proyecto para organizar tickets por área de trabajo." },
+
+  // Categories
+  "categories.title": { en: "Categories", es: "Categorías" },
+  "categories.new": { en: "New Category", es: "Nueva Categoría" },
+  "categories.editTitle": { en: "Edit Category", es: "Editar Categoría" },
+  "categories.name": { en: "Name", es: "Nombre" },
+  "categories.namePlaceholder": { en: "e.g. Bug, Feature Request", es: "ej. Error, Solicitud de Funcionalidad" },
+  "categories.slug": { en: "Slug", es: "Slug" },
+  "categories.slugHint": { en: "Auto-generated from name", es: "Auto-generado a partir del nombre" },
+  "categories.color": { en: "Color", es: "Color" },
+  "categories.created": { en: "Category created", es: "Categoría creada" },
+  "categories.updated": { en: "Category updated", es: "Categoría actualizada" },
+  "categories.deleted": { en: "Category deleted", es: "Categoría eliminada" },
+  "categories.deleteTitle": { en: "Delete category", es: "Eliminar categoría" },
+  "categories.deleteMessage": { en: "Tickets with this category will lose their category assignment.", es: "Los tickets con esta categoría perderán su asignación de categoría." },
+  "categories.empty": { en: "No categories configured", es: "No hay categorías configuradas" },
+
+  // Ticket - project
+  "ticketCreate.project": { en: "Project", es: "Proyecto" },
+  "ticketDetail.project": { en: "Project", es: "Proyecto" },
+  "tickets.allProjects": { en: "All Projects", es: "Todos los Proyectos" },
+
+  // Sidebar
+  "sidebar.projects": { en: "Projects", es: "Proyectos" },
+  "sidebar.categories": { en: "Categories", es: "Categorías" },
+
   // Enums - Sources
   "enum.source.ui": { en: "Manual", es: "Manual" },
   "enum.source.email": { en: "Email", es: "Email" },
