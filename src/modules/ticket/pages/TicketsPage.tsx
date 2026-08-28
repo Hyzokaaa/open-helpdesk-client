@@ -29,7 +29,7 @@ import {
   STATUS_COLORS,
   STATUSES,
 } from "../domain/ticket-enums";
-import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
+import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
@@ -75,8 +75,12 @@ export default function TicketsPage() {
 
   const {
     filters, setFilters, filterTagIds, setFilterTagIds,
+    filterProjectId, setFilterProjectId,
+    filterDepartmentId, setFilterDepartmentId,
+    filterOrganizationId, setFilterOrganizationId,
+    filterCategoryId, setFilterCategoryId,
     tab, setTab, viewMode, setViewMode, isBoard,
-    tagDropdownOpen, setTagDropdownOpen, tagDropdownRef, toggleSort,
+    toggleSort, activeFilterCount, clearAllFilters,
   } = useTicketFilters();
 
   const {
@@ -88,10 +92,9 @@ export default function TicketsPage() {
   const [result, setResult] = useState<PaginatedResult<TicketListItem> | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [filterDepartmentId, setFilterDepartmentId] = useState<string | undefined>(undefined);
   const [orgs, setOrgs] = useState<Organization[]>([]);
-  const [filterOrganizationId, setFilterOrganizationId] = useState<string | undefined>(undefined);
   const [categories, setCategories] = useState<TicketCategoryDto[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   const COLUMNS = useMemo(() => {
@@ -135,6 +138,8 @@ export default function TicketsPage() {
     if (filterTagIds.length > 0) params.tagIds = filterTagIds;
     if (filterDepartmentId) params.departmentId = filterDepartmentId;
     if (filterOrganizationId) params.organizationId = filterOrganizationId;
+    if (filterProjectId) params.projectId = filterProjectId;
+    if (filterCategoryId) params.categoryId = filterCategoryId;
     if (isReporter && user) params.reporterId = user.id;
     listTickets(workspaceSlug, params)
       .then(setResult)
@@ -169,18 +174,19 @@ export default function TicketsPage() {
       listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
       listMembers(workspaceSlug).then(setMembers);
       listCategories(workspaceSlug).then(setCategories).catch(() => {});
+      listProjects(workspaceSlug).then(setProjects).catch(() => {});
     }
   }, [workspaceSlug]);
 
   useEffect(() => {
     if (!permLoading) fetchTickets();
     setSelectedIds(new Set());
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, filterProjectId, filterCategoryId, tab, permLoading, isReporter, viewMode]);
 
   const refetchAll = useCallback(() => {
     fetchTickets();
     setBoardKey((k) => k + 1);
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, filterProjectId, filterCategoryId, tab, permLoading, isReporter, viewMode]);
 
   useWebSocket(workspaceSlug, {
     "ticket.created": refetchAll,
@@ -197,82 +203,103 @@ export default function TicketsPage() {
 
   return (
     <div className="w-full flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-body-bold text-heading">{t("tickets.title")}</h2>
+      {/* Tier 1: Project tabs + Toggle + New Ticket */}
+      <div className="flex items-center border-b border-border-card mb-3">
+        <div className="flex items-center gap-0 overflow-x-auto flex-1 scrollbar-hide">
+          <button
+            onClick={() => setFilterProjectId(undefined)}
+            className={clsx(
+              "px-4 py-2.5 text-sm font-body-medium whitespace-nowrap border-b-2 transition-colors cursor-pointer",
+              !filterProjectId ? "border-primary-600 text-primary" : "border-transparent text-muted hover:text-heading hover:border-border-card",
+            )}
+          >
+            {t("tickets.allProjects")}
+          </button>
+          {projects.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setFilterProjectId(p.id)}
+              className={clsx(
+                "px-4 py-2.5 text-sm font-body-medium whitespace-nowrap border-b-2 transition-colors cursor-pointer",
+                filterProjectId === p.id ? "border-primary-600 text-primary" : "border-transparent text-muted hover:text-heading hover:border-border-card",
+              )}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 shrink-0 pl-4 pb-1">
           <div className="hidden md:block">
             <Toggle left={t("tickets.listView")} right={t("tickets.boardView")} active={viewMode} onChange={setViewMode} />
           </div>
+          <Button size="sm" onClick={() => setShowCreate(true)}>{t("tickets.new")}</Button>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>{t("tickets.new")}</Button>
       </div>
 
-      {departments.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          <button
-            onClick={() => setFilterDepartmentId(undefined)}
-            className={clsx(
-              "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-              !filterDepartmentId ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-            )}
-          >
-            {t("tickets.allDepartments")}
-          </button>
-          {departments.map((dept) => (
+      {/* Tier 2: Status tabs + Search + Filters popover */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-1 shrink-0">
+          {(["active", "resolved", "discarded"] as const).map((t_) => (
             <button
-              key={dept.id}
-              onClick={() => setFilterDepartmentId(dept.id)}
+              key={t_}
+              onClick={() => { setTab(t_); setFilters({ ...filters, status: undefined, page: 1 }); }}
               className={clsx(
-                "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-                filterDepartmentId === dept.id ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
+                "px-2.5 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
+                tab === t_ ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
               )}
             >
-              {dept.name}
+              {t(`tickets.${t_}`)}
             </button>
           ))}
         </div>
-      )}
-
-      {orgs.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          <button
-            onClick={() => setFilterOrganizationId(undefined)}
-            className={clsx(
-              "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-              !filterOrganizationId ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-            )}
-          >
-            {t("tickets.allOrganizations")}
-          </button>
-          {orgs.map((org) => (
-            <button
-              key={org.id}
-              onClick={() => setFilterOrganizationId(org.id)}
-              className={clsx(
-                "px-3 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-                filterOrganizationId === org.id ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-              )}
-            >
-              {org.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3 mb-4">
         <TicketFilterBar
           tab={tab}
           filters={filters}
           setFilters={setFilters}
           filterTagIds={filterTagIds}
           setFilterTagIds={setFilterTagIds}
+          filterDepartmentId={filterDepartmentId}
+          setFilterDepartmentId={setFilterDepartmentId}
+          filterOrganizationId={filterOrganizationId}
+          setFilterOrganizationId={setFilterOrganizationId}
+          filterCategoryId={filterCategoryId}
+          setFilterCategoryId={setFilterCategoryId}
           tags={tags}
-          tagDropdownOpen={tagDropdownOpen}
-          setTagDropdownOpen={setTagDropdownOpen}
-          tagDropdownRef={tagDropdownRef}
+          departments={departments}
+          organizations={orgs}
+          categories={categories}
+          activeFilterCount={activeFilterCount}
           isBoard={isBoard}
         />
       </div>
+
+      {/* Tier 3: Active filter chips */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {filters.priority && (
+            <FilterChip label={`${t("tickets.col.priority")}: ${tEnum("priority", filters.priority)}`} onRemove={() => setFilters((f) => ({ ...f, priority: undefined, page: 1 }))} />
+          )}
+          {filters.status && (
+            <FilterChip label={`${t("tickets.col.status")}: ${tEnum("status", filters.status)}`} onRemove={() => setFilters((f) => ({ ...f, status: undefined, page: 1 }))} />
+          )}
+          {filterDepartmentId && (
+            <FilterChip label={`${t("ticketDetail.department")}: ${departments.find((d) => d.id === filterDepartmentId)?.name ?? ""}`} onRemove={() => setFilterDepartmentId(undefined)} />
+          )}
+          {filterOrganizationId && (
+            <FilterChip label={`${t("ticketDetail.organization")}: ${orgs.find((o) => o.id === filterOrganizationId)?.name ?? ""}`} onRemove={() => setFilterOrganizationId(undefined)} />
+          )}
+          {filterCategoryId && (
+            <FilterChip label={`${t("ticketDetail.category")}: ${categories.find((c) => c.id === filterCategoryId)?.name ?? ""}`} onRemove={() => setFilterCategoryId(undefined)} />
+          )}
+          {filterTagIds.map((tagId) => {
+            const tag = tags.find((t) => t.id === tagId);
+            return tag ? <FilterChip key={tagId} label={tag.name} onRemove={() => { setFilterTagIds((ids) => ids.filter((id) => id !== tagId)); setFilters((f) => ({ ...f, page: 1 })); }} /> : null;
+          })}
+          <button onClick={clearAllFilters} className="text-exs text-subtle hover:text-body cursor-pointer ml-1">
+            {t("tickets.clearAll")}
+          </button>
+        </div>
+      )}
 
       {isBoard ? (
         <div className="flex-1 overflow-hidden">
@@ -285,6 +312,8 @@ export default function TicketsPage() {
               tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
               departmentId: filterDepartmentId,
               organizationId: filterOrganizationId,
+              projectId: filterProjectId,
+              categoryId: filterCategoryId,
               reporterId: isReporter ? user?.id : undefined,
             }}
             tags={tags}
@@ -299,22 +328,7 @@ export default function TicketsPage() {
         </div>
       ) : (
       <>
-      <div className="flex gap-1 mb-4">
-        {(["active", "resolved", "discarded"] as const).map((t_) => (
-          <button
-            key={t_}
-            onClick={() => { setTab(t_); setFilters({ ...filters, status: undefined, page: 1 }); }}
-            className={clsx(
-              "px-3 py-1.5 rounded text-sm font-body-medium transition-colors cursor-pointer",
-              tab === t_ ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-            )}
-          >
-            {t(`tickets.${t_}`)}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-3">
         <TicketBulkActions
           selectedCount={selectedIds.size}
           can={can}
@@ -646,5 +660,14 @@ export default function TicketsPage() {
         </Sheet>
       )}
     </div>
+  );
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-active text-xs text-primary border border-primary/20">
+      {label}
+      <button onClick={onRemove} className="hover:text-red-500 cursor-pointer transition-colors">✕</button>
+    </span>
   );
 }

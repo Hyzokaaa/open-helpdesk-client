@@ -529,6 +529,8 @@ const translations = {
   "tickets.allStatuses": { en: "All Statuses", es: "Todos los estados" },
   "tickets.allPriorities": { en: "All Priorities", es: "Todas las prioridades" },
   "tickets.filterByTags": { en: "Filter by tags", es: "Filtrar por etiquetas" },
+  "tickets.all": { en: "All", es: "Todos" },
+  "tickets.filters": { en: "Filters", es: "Filtros" },
   "tickets.clearAll": { en: "Clear all", es: "Limpiar todo" },
   "tickets.empty": { en: "No tickets found.", es: "No se encontraron tickets." },
   "tickets.listView": { en: "List", es: "Lista" },
