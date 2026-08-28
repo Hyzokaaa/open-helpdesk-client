@@ -27,9 +27,9 @@ import {
 import {
   PRIORITY_COLORS,
   STATUS_COLORS,
-  CATEGORY_COLORS,
   STATUSES,
 } from "../domain/ticket-enums";
+import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
 import { Department, listDepartments } from "@modules/department/services/department.service";
@@ -91,6 +91,7 @@ export default function TicketsPage() {
   const [filterDepartmentId, setFilterDepartmentId] = useState<string | undefined>(undefined);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [filterOrganizationId, setFilterOrganizationId] = useState<string | undefined>(undefined);
+  const [categories, setCategories] = useState<TicketCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   const COLUMNS = useMemo(() => {
@@ -167,6 +168,7 @@ export default function TicketsPage() {
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
       listMembers(workspaceSlug).then(setMembers);
+      listCategories(workspaceSlug).then(setCategories).catch(() => {});
     }
   }, [workspaceSlug]);
 
@@ -287,6 +289,7 @@ export default function TicketsPage() {
             }}
             tags={tags}
             members={members}
+            categories={categories}
             onTicketClick={(id) => { setSelectedTicketId(id); setTicketMode("view"); }}
             canChangeStatus={can(P.TICKET_CHANGE_STATUS)}
             canMoveToOpen={can(P.TICKET_ASSIGN)}
@@ -401,7 +404,10 @@ export default function TicketsPage() {
                         {col.key === "organization" && (
                           <span className="text-xs text-muted">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
                         )}
-                        {col.key === "category" && <StatusBadge label={tEnum("category", ticket.category)} color={CATEGORY_COLORS[ticket.category] || "gray"} size="xs" />}
+                        {col.key === "category" && (() => {
+                          const cat = categories.find((c) => c.id === ticket.categoryId);
+                          return <StatusBadge label={cat?.name ?? "—"} color={(cat?.color as any) || "gray"} size="xs" />;
+                        })()}
                         {col.key === "priority" && <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} size="xs" />}
                         {col.key === "status" && <StatusBadge label={tEnum("status", ticket.status)} color={STATUS_COLORS[ticket.status] || "gray"} size="xs" />}
                         {col.key === "tags" && (

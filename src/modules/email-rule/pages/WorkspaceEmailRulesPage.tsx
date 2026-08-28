@@ -23,6 +23,7 @@ import {
   deleteEmailRule,
   reorderEmailRules,
 } from "../services/email-rule.service";
+import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
 
 const CONDITION_FIELDS = [
   { value: "from", labelKey: "emailRules.fieldFrom" },
@@ -48,12 +49,12 @@ const ACTION_TYPES = [
 ] as const;
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
-const CATEGORIES = ["bug", "feature-request", "issue", "task"] as const;
 
-function SortableRow({ rule, t, tEnum, onEdit, onToggle, onDelete }: {
+function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }: {
   rule: EmailRule;
   t: (key: any) => string;
   tEnum: (ns: string, key: string) => string;
+  categories: TicketCategoryDto[];
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
@@ -69,7 +70,7 @@ function SortableRow({ rule, t, tEnum, onEdit, onToggle, onDelete }: {
     const label = t(`emailRules.action${a.type.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("")}`);
     if (a.type === "reject") return label;
     if (a.type === "set-priority") return `${label}: ${tEnum("priority", a.value ?? "")}`;
-    if (a.type === "set-category") return `${label}: ${tEnum("category", a.value ?? "")}`;
+    if (a.type === "set-category") return `${label}: ${categories.find((c) => c.id === a.value)?.name ?? a.value ?? ""}`;
     return a.value ? `${label}: ${a.value}` : label;
   }).join(", ");
 
@@ -109,6 +110,7 @@ export default function WorkspaceEmailRulesPage() {
   const { workspaceSlug } = useParams();
   const { t, tEnum } = useTranslation();
   const [rules, setRules] = useState<EmailRule[]>([]);
+  const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRule, setEditingRule] = useState<EmailRule | null>(null);
@@ -128,7 +130,10 @@ export default function WorkspaceEmailRulesPage() {
     listEmailRules(workspaceSlug).then(setRules).finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchRules(); }, [workspaceSlug]);
+  useEffect(() => {
+    fetchRules();
+    if (workspaceSlug) listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
+  }, [workspaceSlug]);
 
   const resetForm = () => {
     setName("");
@@ -244,6 +249,7 @@ export default function WorkspaceEmailRulesPage() {
                       rule={rule}
                       t={t}
                       tEnum={tEnum}
+                      categories={wsCategories}
                       onEdit={() => openEdit(rule)}
                       onToggle={() => handleToggle(rule)}
                       onDelete={() => setDeleteId(rule.id)}
@@ -331,7 +337,7 @@ export default function WorkspaceEmailRulesPage() {
                         className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
                       >
                         <option value="">—</option>
-                        {CATEGORIES.map((c) => <option key={c} value={c}>{tEnum("category", c)}</option>)}
+                        {wsCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     ) : (
                       <Input value={a.value ?? ""} onChange={(v) => updateAction(i, { value: v })} />

@@ -19,6 +19,7 @@ import TicketCard from "./TicketCard";
 import { MAX_BOARD_TICKETS, type TicketListItem, type TicketFilters } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import type { TicketCategoryDto } from "@modules/project/services/project.service";
 
 const BOARD_STATUSES = ["open", "pending", "in-progress", "resolved"] as const;
 type BoardStatus = (typeof BOARD_STATUSES)[number];
@@ -28,6 +29,7 @@ interface Props {
   filters: Omit<TicketFilters, "page" | "limit" | "excludeStatus">;
   tags: Tag[];
   members: WorkspaceMember[];
+  categories: TicketCategoryDto[];
   onTicketClick: (ticketId: string) => void;
   canChangeStatus: boolean;
   canMoveToOpen?: boolean;
@@ -36,7 +38,7 @@ interface Props {
   refreshTrigger?: number;
 }
 
-export default function TicketBoard({ workspaceSlug, filters, tags, members, onTicketClick, canChangeStatus, canMoveToOpen, canViewAll, userId, refreshTrigger }: Props) {
+export default function TicketBoard({ workspaceSlug, filters, tags, members, categories, onTicketClick, canChangeStatus, canMoveToOpen, canViewAll, userId, refreshTrigger }: Props) {
   const { t, tEnum } = useTranslation();
   const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging, refetch } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
@@ -210,6 +212,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
             tickets={columns[status]}
             tags={tags}
             members={members}
+            categories={categories}
             onTicketClick={onTicketClick}
             tEnum={tEnum}
             blocked={status === "open" && draggingFromStatus !== null && draggingFromStatus !== "open" && !canMoveToOpen}
@@ -225,6 +228,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, onT
               ticket={activeTicket}
               tags={tags}
               members={members}
+              categoryName={categories.find((c) => c.id === activeTicket.categoryId)?.name}
               onClick={() => {}}
               tEnum={tEnum}
             />
