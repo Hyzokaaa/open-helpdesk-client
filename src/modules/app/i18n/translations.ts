@@ -572,6 +572,12 @@ const translations = {
   "ticketCreate.success": { en: "Ticket created", es: "Ticket creado" },
   "ticketCreate.nameMinLength": { en: "Title must be at least 3 characters", es: "El título debe tener al menos 3 caracteres" },
   "ticketCreate.descriptionRequired": { en: "Description is required", es: "La descripción es obligatoria" },
+  "ticketDetail.edited": { en: "Edited", es: "Editado" },
+  "ticketDetail.editComment": { en: "Edit", es: "Editar" },
+  "ticketDetail.saveEdit": { en: "Save", es: "Guardar" },
+  "ticketDetail.cancelEdit": { en: "Cancel", es: "Cancelar" },
+  "editHistory.title": { en: "Edit History", es: "Historial de ediciones" },
+  "editHistory.noEdits": { en: "No edits have been made", es: "No se han realizado ediciones" },
   "ticketCreate.uploadFailed": { en: "Upload failed — click to retry", es: "Subida fallida — clic para reintentar" },
   "ticketCreate.fixUploads": { en: "Remove or retry failed uploads to continue", es: "Elimina o reintenta las subidas fallidas para continuar" },
 
