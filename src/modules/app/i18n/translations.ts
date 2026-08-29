@@ -1004,7 +1004,7 @@ const translations = {
   "sidebar.categories": { en: "Categories", es: "Categorías" },
 
   // Enums - Sources
-  "enum.source.ui": { en: "Manual", es: "Manual" },
+  "enum.source.ui": { en: "Web", es: "Web" },
   "enum.source.email": { en: "Email", es: "Email" },
   "enum.source.portal": { en: "Portal", es: "Portal" },
   "enum.source.api": { en: "API", es: "API" },
