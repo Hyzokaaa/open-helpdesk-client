@@ -174,14 +174,25 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workspaceSlug) return;
+
+    const descriptionHtml = editorRef.current?.getHTML() || "";
+    const descriptionEmpty = editorRef.current?.isEmpty() ?? true;
+
+    if (name.trim().length < 3) {
+      toast.error(t("ticketCreate.nameMinLength"));
+      return;
+    }
+    if (descriptionEmpty) {
+      toast.error(t("ticketCreate.descriptionRequired"));
+      return;
+    }
+
     setLoading(true);
 
     try {
       const uploadTokens = files
         .filter((f) => f.status === "done" && f.token)
         .map((f) => f.token!);
-
-      const descriptionHtml = editorRef.current?.getHTML() || "";
       const res = await createTicket(workspaceSlug, {
         name,
         description: descriptionHtml,
@@ -212,6 +223,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
 
   const isImage = (file: File) => file.type.startsWith("image/");
   const hasFilesPending = files.some((f) => f.status === "uploading" || f.status === "pending" || f.status === "error");
+  const canSubmit = name.trim().length >= 3 && !hasFilesPending;
   const hasFilesErrored = files.some((f) => f.status === "error");
 
   return (
@@ -416,7 +428,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
             >
               {t("ticketCreate.cancel")}
             </Button>
-            <Button type="submit" loading={loading} disabled={hasFilesPending}>
+            <Button type="submit" loading={loading} disabled={!canSubmit}>
               {t("ticketCreate.submit")}
             </Button>
           </div>

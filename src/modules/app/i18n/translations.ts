@@ -570,6 +570,8 @@ const translations = {
   "ticketCreate.submit": { en: "Create Ticket", es: "Crear Ticket" },
   "ticketCreate.cancel": { en: "Cancel", es: "Cancelar" },
   "ticketCreate.success": { en: "Ticket created", es: "Ticket creado" },
+  "ticketCreate.nameMinLength": { en: "Title must be at least 3 characters", es: "El título debe tener al menos 3 caracteres" },
+  "ticketCreate.descriptionRequired": { en: "Description is required", es: "La descripción es obligatoria" },
   "ticketCreate.uploadFailed": { en: "Upload failed — click to retry", es: "Subida fallida — clic para reintentar" },
   "ticketCreate.fixUploads": { en: "Remove or retry failed uploads to continue", es: "Elimina o reintenta las subidas fallidas para continuar" },
 
