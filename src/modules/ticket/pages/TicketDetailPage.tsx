@@ -8,7 +8,7 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
+import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
@@ -256,6 +256,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { aiEnabled } = useConfig();
   const formatDate = useFormatDate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const descriptionEditorRef = useRef<MiniEditorRef>(null);
+  const commentEditorRef = useRef<MiniEditorRef>(null);
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
@@ -384,6 +386,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   };
 
   const requestSave = () => {
+    if (descriptionEditorRef.current && draft) {
+      const html = descriptionEditorRef.current.getHTML();
+      setDraft((d) => d ? { ...d, description: html } : d);
+      draft.description = html;
+    }
     const changes = getChanges();
     if (changes.length === 0) {
       setDraft(null);
@@ -642,9 +649,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   const handleEditComment = async (commentId: string) => {
     if (!workspaceSlug || !ticketId) return;
+    const content = commentEditorRef.current?.getHTML() || editingCommentContent;
     setSavingComment(true);
     try {
-      const updated = await editComment(workspaceSlug, ticketId, commentId, editingCommentContent);
+      const updated = await editComment(workspaceSlug, ticketId, commentId, content);
       setComments((prev) => prev.map((c) => c.id === commentId ? { ...c, content: updated.content, editedAt: updated.editedAt } : c));
       setEditingCommentId(null);
       setEditingCommentContent("");
@@ -868,10 +876,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {t("ticketDetail.description")}
             </p>
             {isEditing && draft && canEditFields ? (
-              <Textarea
-                value={draft.description}
-                onChange={(v) => setDraft((d) => d ? { ...d, description: v } : d)}
-                height={120}
+              <MiniEditor
+                ref={descriptionEditorRef}
+                initialValue={draft.description}
+                placeholder={t("ticketCreate.descriptionPlaceholder")}
+                minHeight={120}
               />
             ) : (
               <>
@@ -989,10 +998,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   </div>
                   {editingCommentId === c.id ? (
                     <div>
-                      <textarea
-                        value={editingCommentContent}
-                        onChange={(e) => setEditingCommentContent(e.target.value)}
-                        className="w-full text-sm text-body bg-surface border border-border-input rounded-lg p-2 min-h-[80px] focus:outline-none focus:border-primary-400"
+                      <MiniEditor
+                        ref={commentEditorRef}
+                        initialValue={editingCommentContent}
+                        minHeight={80}
                       />
                       <div className="flex justify-end gap-2 mt-2">
                         <button onClick={() => { setEditingCommentId(null); setEditingCommentContent(""); }} className="text-xs text-muted hover:text-body cursor-pointer">
@@ -1000,7 +1009,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                         </button>
                         <button
                           onClick={() => handleEditComment(c.id)}
-                          disabled={savingComment || !editingCommentContent.trim()}
+                          disabled={savingComment}
                           className="text-xs text-primary hover:text-primary-700 font-body-medium cursor-pointer disabled:opacity-50"
                         >
                           {savingComment ? "..." : t("ticketDetail.saveEdit")}
