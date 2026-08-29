@@ -130,8 +130,8 @@ export function useBoardTickets(
     saveOrder(workspaceSlug, currentColumns);
 
     try {
-      if (originalStatus === 'open' && newStatus !== 'open') {
-        await pickupTicket(workspaceSlug, ticketId);
+      if (originalStatus === 'open' && newStatus !== 'open' && newStatus !== 'discarded') {
+        await pickupTicket(workspaceSlug, ticketId, newStatus);
       } else {
         await changeTicketStatus(workspaceSlug, ticketId, newStatus);
       }

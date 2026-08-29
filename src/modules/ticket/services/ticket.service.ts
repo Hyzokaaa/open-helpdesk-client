@@ -202,9 +202,11 @@ export async function assignTicket(
 export async function pickupTicket(
   workspaceSlug: string,
   ticketId: string,
+  status?: string,
 ): Promise<{ id: string; status: string; assigneeId: string }> {
   const res = await http.post<{ id: string; status: string; assigneeId: string }>(
     `/workspaces/${workspaceSlug}/tickets/${ticketId}/pickup`,
+    status ? { status } : {},
   );
   return res.data;
 }
