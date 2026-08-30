@@ -69,8 +69,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -82,6 +80,8 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => { fetchData(); }, [sortBy, sortOrder]);
+
+  if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
