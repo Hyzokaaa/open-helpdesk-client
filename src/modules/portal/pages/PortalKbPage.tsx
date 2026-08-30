@@ -4,9 +4,7 @@ import { getPortalKbCategories, searchPortalKb, PortalKbCategory, PortalKbArticl
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 
 function stripHtml(html: string): string {
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return div.textContent || "";
+  return html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 }
 
 export default function PortalKbPage() {
