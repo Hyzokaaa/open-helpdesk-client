@@ -39,7 +39,7 @@ export default function NotificationsPage() {
       );
     }
     if (n.ticketId) {
-      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets`);
+      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets?open=${n.ticketId}`);
     }
   };
 
