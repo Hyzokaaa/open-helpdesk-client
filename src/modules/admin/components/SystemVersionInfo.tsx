@@ -26,10 +26,12 @@ function getStatus(current: string, latest: string | null): Status {
 }
 
 function StatusIcon({ status }: { status: Status }) {
-  if (status === "behind") return <span className="text-amber-500" title="Update available">↑</span>;
-  if (status === "ahead") return <span className="text-primary" title="Ahead of release">✓</span>;
-  return <span className="text-green-600" title="Up to date">✓</span>;
+  if (status === "behind") return <span className="text-amber-500">↑</span>;
+  if (status === "ahead") return <span className="text-blue-500">»</span>;
+  return <span className="text-green-600">✓</span>;
 }
+
+type OverallStatus = "up-to-date" | "behind" | "pre-release";
 
 export default function SystemVersionInfo() {
   const { t } = useTranslation();
@@ -58,12 +60,17 @@ export default function SystemVersionInfo() {
   const backendVsLatest = getStatus(info.backend, info.latestComponents.backend);
   const clientVsLatest = getStatus(clientVersion, info.latestComponents.client);
 
-  const hasUpdate = backendVsRelease === "behind" || clientVsRelease === "behind"
+  const hasBehind = backendVsRelease === "behind" || clientVsRelease === "behind"
     || backendVsLatest === "behind" || clientVsLatest === "behind";
+  const hasAhead = backendVsRelease === "ahead" || clientVsRelease === "ahead";
+
+  let overall: OverallStatus = "up-to-date";
+  if (hasBehind) overall = "behind";
+  else if (hasAhead) overall = "pre-release";
 
   return (
     <div>
-      {hasUpdate && info.latestRelease && (
+      {overall === "behind" && info.latestRelease && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
           <p className="text-sm text-amber-800">
             Open Helpdesk <span className="font-body-bold">v{releaseVersion}</span> {t("admin.versionAvailable")}
@@ -76,6 +83,14 @@ export default function SystemVersionInfo() {
           >
             {t("admin.versionViewRelease")}
           </a>
+        </div>
+      )}
+
+      {overall === "pre-release" && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
+          <p className="text-sm text-blue-800">
+            {t("admin.versionPreRelease")} (v{releaseVersion})
+          </p>
         </div>
       )}
 
@@ -116,7 +131,7 @@ export default function SystemVersionInfo() {
         </table>
       </div>
 
-      {!hasUpdate && (
+      {overall === "up-to-date" && (
         <p className="text-xs text-green-600 mt-3">✓ {t("admin.versionUpToDate")}</p>
       )}
     </div>

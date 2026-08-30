@@ -1502,6 +1502,7 @@ const translations = {
   "admin.versionAvailable": { en: "is available", es: "está disponible" },
   "admin.versionViewRelease": { en: "View release", es: "Ver release" },
   "admin.versionUpToDate": { en: "Your instance is up to date", es: "Tu instancia está actualizada" },
+  "admin.versionPreRelease": { en: "Running pre-release, ahead of latest stable release", es: "Ejecutando pre-release, adelante del último release estable" },
   "admin.versionError": { en: "Failed to check version information", es: "Error al verificar información de versión" },
   "adminSettings.emailSending": { en: "Email Sending", es: "Envío de Email" },
   "adminSettings.emailReceiving": { en: "Email Receiving", es: "Recepción de Email" },
