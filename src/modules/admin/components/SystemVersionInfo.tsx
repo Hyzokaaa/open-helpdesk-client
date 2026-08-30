@@ -27,7 +27,7 @@ function getStatus(current: string, latest: string | null): Status {
 
 function StatusIcon({ status }: { status: Status }) {
   if (status === "behind") return <span className="text-amber-500">↑</span>;
-  if (status === "ahead") return <span className="text-blue-500">»</span>;
+  if (status === "ahead") return <span className="text-blue-500">✓</span>;
   return <span className="text-green-600">✓</span>;
 }
 

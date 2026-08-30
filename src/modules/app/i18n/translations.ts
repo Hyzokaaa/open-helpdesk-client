@@ -105,6 +105,7 @@ const translations = {
   "sidebar.adminUsers": { en: "Users", es: "Usuarios" },
   "sidebar.adminWorkspaces": { en: "Workspaces", es: "Espacios" },
   "sidebar.adminDiscounts": { en: "Discounts", es: "Descuentos" },
+  "sidebar.adminUpdates": { en: "Updates", es: "Actualizaciones" },
   "sidebar.adminLogs": { en: "System Logs", es: "Logs del Sistema" },
 
   // Discounts admin

@@ -52,6 +52,7 @@ import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
 import AdminSettingsPage from "@modules/admin/pages/AdminSettingsPage";
 import AdminBrandingPage from "@modules/admin/pages/AdminBrandingPage";
+import AdminUpdatesPage from "@modules/admin/pages/AdminUpdatesPage";
 import PortalPage from "@modules/portal/pages/PortalPage";
 import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
 import PortalKbPage from "@modules/portal/pages/PortalKbPage";
@@ -147,6 +148,7 @@ function AppRoutes() {
             <Route path="admin/logs" element={<SystemLogsPage />} />
             <Route path="admin/branding" element={<AdminBrandingPage />} />
             <Route path="admin/settings" element={<AdminSettingsPage />} />
+            <Route path="admin/updates" element={<AdminUpdatesPage />} />
           </Route>
         </Route>
       </Route>
