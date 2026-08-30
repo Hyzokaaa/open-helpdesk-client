@@ -46,6 +46,7 @@ export default function OAuthButtons({ providers, onSuccess }: Props & { onSucce
     );
 
     const handler = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
       if (e.data === "oauth:success") {
         window.removeEventListener("message", handler);
         onSuccess?.();

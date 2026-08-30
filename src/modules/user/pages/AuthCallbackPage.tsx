@@ -33,7 +33,7 @@ export default function AuthCallbackPage() {
     LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, token);
 
     if (window.opener) {
-      window.opener.postMessage("oauth:success", "*");
+      window.opener.postMessage("oauth:success", window.location.origin);
       window.close();
       return;
     }
