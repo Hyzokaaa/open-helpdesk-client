@@ -5,11 +5,13 @@ interface Props {
   children: React.ReactNode;
   size?: Size;
   required?: boolean;
+  htmlFor?: string;
 }
 
-export default function Label({ children, size = "sm", required }: Props) {
+export default function Label({ children, size = "sm", required, htmlFor }: Props) {
   return (
     <label
+      htmlFor={htmlFor}
       className={clsx("text-secondary-text font-body-medium", {
         "text-sm": size === "sm",
         "text-base": size === "base",

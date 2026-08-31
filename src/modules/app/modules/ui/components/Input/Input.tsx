@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Size } from "../../domain/size";
 import { inputClass } from "../../shared/domain/input-class";
+import { useFormInputId } from "../FormInput/form-input-context";
 
 interface Props {
   value?: string;
@@ -27,6 +28,7 @@ export default function Input({
   autoFocus,
   required,
 }: Props) {
+  const formId = useFormInputId();
   const CLASS = useMemo(
     () => inputClass({ size, full, disabled }),
     [size, full, disabled],
@@ -38,6 +40,7 @@ export default function Input({
   return (
     <div className={isPassword ? "relative" : undefined}>
       <input
+        id={formId}
         autoFocus={autoFocus}
         className={CLASS}
         type={isPassword && visible ? "text" : type}
