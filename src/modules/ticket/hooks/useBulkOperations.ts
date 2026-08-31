@@ -5,6 +5,7 @@ import {
   bulkChangeStatus,
   bulkDeleteTickets,
   changeTicketStatus,
+  pickupTicket,
 } from "../services/ticket.service";
 import type { TranslationKey } from "@modules/app/i18n/translations";
 
@@ -75,12 +76,19 @@ export default function useBulkOperations({
       return;
     }
     try {
-      await changeTicketStatus(
-        workspaceSlug,
-        changeStatusTicket.id,
-        selectedStatus,
-        selectedStatus === "discarded" ? discardReason : undefined,
-      );
+      const isFromOpen = changeStatusTicket.status === "open";
+      const shouldPickup = isFromOpen && selectedStatus !== "open" && selectedStatus !== "discarded";
+
+      if (shouldPickup) {
+        await pickupTicket(workspaceSlug, changeStatusTicket.id, selectedStatus);
+      } else {
+        await changeTicketStatus(
+          workspaceSlug,
+          changeStatusTicket.id,
+          selectedStatus,
+          selectedStatus === "discarded" ? discardReason : undefined,
+        );
+      }
       toast.success(t("ticketDetail.status") + " updated");
       setChangeStatusTicket(null);
       setSelectedStatus("");

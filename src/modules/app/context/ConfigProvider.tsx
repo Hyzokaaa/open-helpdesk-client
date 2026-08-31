@@ -22,6 +22,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [systemEmailFrom, setSystemEmailFrom] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
+  const [upgradeNotificationsEnabled, setUpgradeNotificationsEnabled] = useState(true);
   const [systemBranding, setSystemBranding] = useState<{ appName: string | null; appSubtitle: string | null; logo: string | null }>({ appName: null, appSubtitle: null, logo: null });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setAiEnabled(config.aiEnabled ?? false);
       setEmailConfigured(config.emailConfigured ?? false);
       setSystemEmailFrom(config.systemEmailFrom ?? null);
+      setUpgradeNotificationsEnabled(config.upgradeNotificationsEnabled ?? true);
       setSystemBranding({
         appName: config.brandingAppName ?? null,
         appSubtitle: config.brandingAppSubtitle ?? null,
@@ -82,7 +84,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandName, brandSubtitle]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo }}>
       {children}
     </ConfigContext.Provider>
   );

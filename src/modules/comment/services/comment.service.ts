@@ -7,6 +7,14 @@ export interface CommentItem {
   authorId: string;
   mentionedUserIds: string[];
   createdAt: string | null;
+  editedAt: string | null;
+}
+
+export interface CommentEditItem {
+  id: string;
+  content: string;
+  editedById: string;
+  createdAt: string;
 }
 
 export async function listComments(
@@ -17,6 +25,30 @@ export async function listComments(
 ): Promise<PaginatedResult<CommentItem>> {
   const res = await http.get<PaginatedResult<CommentItem>>(
     `/workspaces/${workspaceId}/tickets/${ticketId}/comments?page=${page}&limit=${limit}`,
+  );
+  return res.data;
+}
+
+export async function editComment(
+  workspaceId: string,
+  ticketId: string,
+  commentId: string,
+  content: string,
+): Promise<CommentItem> {
+  const res = await http.patch<CommentItem>(
+    `/workspaces/${workspaceId}/tickets/${ticketId}/comments/${commentId}`,
+    { content },
+  );
+  return res.data;
+}
+
+export async function getCommentHistory(
+  workspaceId: string,
+  ticketId: string,
+  commentId: string,
+): Promise<CommentEditItem[]> {
+  const res = await http.get<CommentEditItem[]>(
+    `/workspaces/${workspaceId}/tickets/${ticketId}/comments/${commentId}/history`,
   );
   return res.data;
 }

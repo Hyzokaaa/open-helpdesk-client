@@ -45,8 +45,16 @@ export interface TicketDetail {
   discardReason: string | null;
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
+  descriptionEditedAt: string | null;
   accessLevel?: 'full' | 'readonly';
   aiCache?: Record<string, { source: string; result: string }>;
+}
+
+export interface DescriptionEditItem {
+  id: string;
+  content: string;
+  editedById: string;
+  createdAt: string;
 }
 
 export interface TicketFilters {
@@ -194,9 +202,11 @@ export async function assignTicket(
 export async function pickupTicket(
   workspaceSlug: string,
   ticketId: string,
+  status?: string,
 ): Promise<{ id: string; status: string; assigneeId: string }> {
   const res = await http.post<{ id: string; status: string; assigneeId: string }>(
     `/workspaces/${workspaceSlug}/tickets/${ticketId}/pickup`,
+    status ? { status } : {},
   );
   return res.data;
 }
@@ -263,6 +273,16 @@ export async function deleteTicket(
   ticketId: string,
 ): Promise<void> {
   await http.delete(`/workspaces/${workspaceId}/tickets/${ticketId}`);
+}
+
+export async function getDescriptionHistory(
+  workspaceId: string,
+  ticketId: string,
+): Promise<DescriptionEditItem[]> {
+  const res = await http.get<DescriptionEditItem[]>(
+    `/workspaces/${workspaceId}/tickets/${ticketId}/description/history`,
+  );
+  return res.data;
 }
 
 export interface BulkResult {

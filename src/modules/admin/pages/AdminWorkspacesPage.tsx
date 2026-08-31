@@ -57,8 +57,6 @@ export default function AdminWorkspacesPage() {
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(columns.map((c) => c.key));
 
-  if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -70,6 +68,8 @@ export default function AdminWorkspacesPage() {
   };
 
   useEffect(() => { fetchData(); }, [sortBy, sortOrder]);
+
+  if (!user?.isSystemAdmin) return <Navigate to="/dashboard" replace />;
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();

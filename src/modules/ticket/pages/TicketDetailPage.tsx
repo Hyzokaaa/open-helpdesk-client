@@ -8,7 +8,7 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
+import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
@@ -52,7 +52,11 @@ import {
   CommentItem,
   listComments,
   createComment,
+  editComment,
+  getCommentHistory,
 } from "@modules/comment/services/comment.service";
+import { getDescriptionHistory } from "../services/ticket.service";
+import VersionHistoryModal from "@modules/shared/components/VersionHistoryModal";
 import {
   AttachmentDetail,
   uploadToTicket,
@@ -252,6 +256,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const { aiEnabled } = useConfig();
   const formatDate = useFormatDate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const descriptionEditorRef = useRef<MiniEditorRef>(null);
+  const commentEditorRef = useRef<MiniEditorRef>(null);
 
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
@@ -280,6 +286,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [savingComment, setSavingComment] = useState(false);
+  const [historyModal, setHistoryModal] = useState<{ type: "comment" | "description"; commentId?: string } | null>(null);
+  const [historyItems, setHistoryItems] = useState<Array<{ id: string; content: string; editorName: string; createdAt: string }> | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
     message: string;
@@ -375,6 +386,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   };
 
   const requestSave = () => {
+    if (descriptionEditorRef.current && draft) {
+      const html = descriptionEditorRef.current.getHTML();
+      setDraft((d) => d ? { ...d, description: html } : d);
+      draft.description = html;
+    }
     const changes = getChanges();
     if (changes.length === 0) {
       setDraft(null);
@@ -631,6 +647,42 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const isImage = (mimeType: string) => mimeType.startsWith("image/");
   const isVideo = (mimeType: string) => mimeType.startsWith("video/");
 
+  const handleEditComment = async (commentId: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    const content = commentEditorRef.current?.getHTML() || editingCommentContent;
+    setSavingComment(true);
+    try {
+      const updated = await editComment(workspaceSlug, ticketId, commentId, content);
+      setComments((prev) => prev.map((c) => c.id === commentId ? { ...c, content: updated.content, editedAt: updated.editedAt } : c));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      toast.success(t("common.save"));
+    } catch {
+      toast.error(t("common.saveError"));
+    } finally {
+      setSavingComment(false);
+    }
+  };
+
+  const openHistory = async (type: "comment" | "description", commentId?: string) => {
+    if (!workspaceSlug || !ticketId) return;
+    setHistoryModal({ type, commentId });
+    setHistoryItems(null);
+    try {
+      const edits = type === "comment" && commentId
+        ? await getCommentHistory(workspaceSlug, ticketId, commentId)
+        : await getDescriptionHistory(workspaceSlug, ticketId);
+      setHistoryItems(edits.map((e) => ({
+        id: e.id,
+        content: e.content,
+        editorName: getMemberName(e.editedById),
+        createdAt: e.createdAt,
+      })));
+    } catch {
+      setHistoryItems([]);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -824,10 +876,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {t("ticketDetail.description")}
             </p>
             {isEditing && draft && canEditFields ? (
-              <Textarea
-                value={draft.description}
-                onChange={(v) => setDraft((d) => d ? { ...d, description: v } : d)}
-                height={120}
+              <MiniEditor
+                ref={descriptionEditorRef}
+                initialValue={draft.description}
+                placeholder={t("ticketCreate.descriptionPlaceholder")}
+                minHeight={120}
               />
             ) : (
               <>
@@ -835,6 +888,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   className="text-sm text-body break-words overflow-hidden tiptap"
                   dangerouslySetInnerHTML={{ __html: ticket.description }}
                 />
+                {ticket.descriptionEditedAt && (
+                  <button
+                    onClick={() => openHistory("description")}
+                    className="text-exs text-muted hover:text-primary mt-1 cursor-pointer"
+                  >
+                    {t("ticketDetail.edited")} {formatDate(ticket.descriptionEditedAt)}
+                  </button>
+                )}
                 {aiEnabled && !isReadonly && (() => {
                   const targetLang = user?.language === "es" ? "Spanish" : "English";
                   const slug = workspaceSlug ?? "";
@@ -909,28 +970,67 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {comments.map((c) => (
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-exs text-subtle">
-                      {getMemberName(c.authorId)}
-                    </p>
-                    {c.createdAt && (
-                      <p className="text-exs text-subtle">
-                        {formatDate(c.createdAt)}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
+                      {c.editedAt && (
+                        <button
+                          onClick={() => openHistory("comment", c.id)}
+                          className="text-exs text-muted hover:text-primary cursor-pointer"
+                        >
+                          ({t("ticketDetail.edited")})
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {c.createdAt && <p className="text-exs text-subtle">{formatDate(c.createdAt)}</p>}
+                      {!isReadonly && (c.authorId === user?.id || can(P.TICKET_EDIT_DESCRIPTION)) && editingCommentId !== c.id && (
+                        <button
+                          onClick={() => { setEditingCommentId(c.id); setEditingCommentContent(c.content); }}
+                          className="text-exs text-muted hover:text-primary cursor-pointer"
+                          title={t("ticketDetail.editComment")}
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div
-                    className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
-                    dangerouslySetInnerHTML={{
-                      __html: c.content.replace(
-                        /@\[([^\]]+)\]\(([^)]+)\)/g,
-                        (_match, _name, userId) => {
-                          const current = members.find((m) => m.userId === userId);
-                          const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                          return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
-                        },
-                      ),
-                    }}
-                  />
+                  {editingCommentId === c.id ? (
+                    <div>
+                      <MiniEditor
+                        ref={commentEditorRef}
+                        initialValue={editingCommentContent}
+                        minHeight={80}
+                      />
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button onClick={() => { setEditingCommentId(null); setEditingCommentContent(""); }} className="text-xs text-muted hover:text-body cursor-pointer">
+                          {t("ticketDetail.cancelEdit")}
+                        </button>
+                        <button
+                          onClick={() => handleEditComment(c.id)}
+                          disabled={savingComment}
+                          className="text-xs text-primary hover:text-primary-700 font-body-medium cursor-pointer disabled:opacity-50"
+                        >
+                          {savingComment ? "..." : t("ticketDetail.saveEdit")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
+                      dangerouslySetInnerHTML={{
+                        __html: c.content.replace(
+                          /@\[([^\]]+)\]\(([^)]+)\)/g,
+                          (_match, _name, userId) => {
+                            const current = members.find((m) => m.userId === userId);
+                            const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
+                            return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
+                          },
+                        ),
+                      }}
+                    />
+                  )}
                 </Card>
               ))}
             </div>
@@ -1530,6 +1630,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           )}
         </div>
       </div>
+
+      {historyModal && (
+        <VersionHistoryModal
+          title={t("editHistory.title")}
+          items={historyItems}
+          onClose={() => { setHistoryModal(null); setHistoryItems(null); }}
+        />
+      )}
     </div>
   );
 }

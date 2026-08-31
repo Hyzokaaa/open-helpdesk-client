@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import clsx from "clsx";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -8,6 +8,8 @@ import {
 } from "@modules/notification/services/notification.service";
 import { NotificationPreferences } from "@modules/notification/domain/notification";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUser from "@modules/user/hooks/useUser";
+import { ConfigContext } from "@modules/app/context/config-context";
 
 const EVENT_KEYS = [
   { key: "TicketCreated", labelKey: "notifications.ticketCreated" },
@@ -48,6 +50,9 @@ function Toggle({
 
 export default function NotificationsSection() {
   const { t } = useTranslation();
+  const { user } = useUser();
+  const { upgradeNotificationsEnabled } = useContext(ConfigContext);
+  const showUpgrade = !!user?.isSystemAdmin && upgradeNotificationsEnabled;
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
 
   useEffect(() => {
@@ -181,6 +186,35 @@ export default function NotificationsSection() {
               </div>
             ))}
           </div>
+
+          {showUpgrade && (
+            <>
+              <p className="text-xs text-subtle font-body-medium mb-2 mt-4">
+                {t("notifications.system")}
+              </p>
+              <div className="rounded-lg border border-border-card divide-y divide-border-card">
+                <div className="flex items-center gap-2 px-3 py-2.5">
+                  <span className="flex-1 text-xs text-body">{t("notifications.upgradeAvailable")}</span>
+                  {prefs.emailEnabled && (
+                    <div className="w-14 flex justify-center">
+                      <Toggle
+                        checked={prefs.emailUpgradeAvailable}
+                        onChange={(v) => handleChange("emailUpgradeAvailable", v)}
+                      />
+                    </div>
+                  )}
+                  {prefs.inAppEnabled && (
+                    <div className="w-14 flex justify-center">
+                      <Toggle
+                        checked={prefs.inAppUpgradeAvailable}
+                        onChange={(v) => handleChange("inAppUpgradeAvailable", v)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {prefs.emailEnabled && EMAIL_ONLY_KEYS.length > 0 && (
             <>
