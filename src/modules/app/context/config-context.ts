@@ -19,6 +19,7 @@ export interface ConfigContextProps {
   aiEnabled: boolean;
   emailConfigured: boolean;
   systemEmailFrom: string | null;
+  upgradeNotificationsEnabled: boolean;
   loading: boolean;
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
@@ -36,6 +37,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   aiEnabled: false,
   emailConfigured: false,
   systemEmailFrom: null,
+  upgradeNotificationsEnabled: true,
   loading: true,
   domainWorkspaces: null,
   brandName: APP_NAME,

@@ -22,5 +22,7 @@ export interface NotificationPreferences {
   inAppStatusChanged: boolean;
   inAppCommentCreated: boolean;
   inAppTransferRequest: boolean;
+  emailUpgradeAvailable: boolean;
+  inAppUpgradeAvailable: boolean;
   bellUnreadOnly: boolean;
 }
