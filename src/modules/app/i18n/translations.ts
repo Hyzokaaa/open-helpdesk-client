@@ -1751,6 +1751,8 @@ const translations = {
   "portalKb.backToHelpCenter": { en: "Back to Help Center", es: "Volver al Centro de Ayuda" },
   "portalKb.noArticlesInCategory": { en: "No articles in this category.", es: "No hay artículos en esta categoría." },
   "portalKb.articleNotFound": { en: "Article not found.", es: "Artículo no encontrado." },
+  "portalKb.loadError": { en: "Failed to load content. Please try again.", es: "Error al cargar el contenido. Inténtalo de nuevo." },
+  "portalKb.retry": { en: "Try again", es: "Intentar de nuevo" },
   // Stats pagination
   "stats.paginationOf": { en: "of", es: "de" },
   // KB management
