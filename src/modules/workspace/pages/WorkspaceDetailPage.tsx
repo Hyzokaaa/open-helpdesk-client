@@ -5,10 +5,12 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import { WorkspaceDetail, getWorkspace } from "../services/workspace.service";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function WorkspaceDetailPage() {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +18,7 @@ export default function WorkspaceDetailPage() {
     if (!workspaceId) return;
     getWorkspace(workspaceId)
       .then(setWorkspace)
-      .catch(() => toast.error("Workspace not found"))
+      .catch(() => toast.error(t("workspaceDetail.notFound")))
       .finally(() => setLoading(false));
   }, [workspaceId]);
 
@@ -38,7 +40,7 @@ export default function WorkspaceDetailPage() {
 
       <Card className="p-5 mb-4">
         <p className="text-sm text-secondary-text">
-          {workspace.description || "No description"}
+          {workspace.description || t("workspaceDetail.noDescription")}
         </p>
       </Card>
 
@@ -49,7 +51,7 @@ export default function WorkspaceDetailPage() {
             navigate(`/dashboard/workspaces/${workspaceId}/tickets`)
           }
         >
-          Tickets
+          {t("sidebar.tickets")}
         </Button>
         <Button
           size="sm"
@@ -58,7 +60,7 @@ export default function WorkspaceDetailPage() {
             navigate(`/dashboard/workspaces/${workspaceId}/members`)
           }
         >
-          Members
+          {t("sidebar.members")}
         </Button>
         <Button
           size="sm"
@@ -67,7 +69,7 @@ export default function WorkspaceDetailPage() {
             navigate(`/dashboard/workspaces/${workspaceId}/tags`)
           }
         >
-          Tags
+          {t("sidebar.tags")}
         </Button>
       </div>
     </div>

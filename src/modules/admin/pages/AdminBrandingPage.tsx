@@ -135,7 +135,7 @@ export default function AdminBrandingPage() {
             <Button size="xs" color="light" loading={uploading} onClick={() => fileRef.current?.click()}>
               {logo ? t("branding.changeLogo") : t("branding.uploadLogo")}
             </Button>
-            <span className="text-exs text-muted">PNG, SVG, JPEG, WebP. Max 1MB</span>
+            <span className="text-exs text-muted">{t("adminBranding.logoHint")}</span>
           </div>
           <input ref={fileRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" className="hidden" onChange={handleUpload} />
         </div>

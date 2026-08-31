@@ -112,7 +112,7 @@ export default function WorkspaceKbPage() {
       setArticleStatus(article.status);
       setArticleCategoryId(article.categoryId);
       setShowArticleSheet(true);
-    } catch { toast.error("Failed to load article"); }
+    } catch { toast.error(t("kb.loadError")); }
   };
 
   const handleSaveArticle = async () => {

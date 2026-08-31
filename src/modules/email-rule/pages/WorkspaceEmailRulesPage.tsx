@@ -172,7 +172,7 @@ export default function WorkspaceEmailRulesPage() {
       setEditingRule(null);
       fetchRules();
     } catch {
-      toast.error("Failed to save rule");
+      toast.error(t("emailRules.saveError"));
     } finally {
       setSaving(false);
     }

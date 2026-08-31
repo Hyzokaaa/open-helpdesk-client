@@ -408,7 +408,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         if (refreshActivity) setActivityKey((k) => k + 1);
         getPendingTransfer(workspaceSlug, ticketId).then(setPendingTransfer).catch(() => setPendingTransfer(null));
       })
-      .catch(() => toast.error("Ticket not found"))
+      .catch(() => toast.error(t("ticketDetail.notFound")))
       .finally(() => setLoading(false));
   };
 
@@ -471,11 +471,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         try {
           await uploadToTicket(workspaceSlug, ticketId, file);
         } catch {
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`${t("ticketDetail.uploadError")} ${file.name}`);
         }
       }
       fetchAttachments();
-      toast.info(`${newFiles.length} file(s) uploaded`);
+      toast.info(`${newFiles.length} ${t("ticketDetail.filesUploaded")}`);
     },
     [workspaceSlug, ticketId],
   );
@@ -544,10 +544,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       fetchTicket(true);
       setMode("view");
       setDraft(null);
-      toast.success("Ticket updated");
+      toast.success(t("ticketDetail.updated"));
       onDirtyChange?.(true);
     } catch (err) {
-      handlePlanLimitError(err, "Failed to save ticket");
+      handlePlanLimitError(err, t("ticketDetail.saveError"));
     } finally {
       setSaving(false);
     }
@@ -569,11 +569,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         if (!workspaceSlug || !ticketId) return;
         try {
           await deleteTicket(workspaceSlug, ticketId);
-          toast.success("Ticket deleted");
+          toast.success(t("ticketDetail.ticketDeleted"));
           if (onClose) onClose();
           else navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`);
         } catch {
-          toast.error("Failed to delete ticket");
+          toast.error(t("ticketDetail.deleteTicketError"));
         } finally {
           setConfirmAction(null);
         }
@@ -590,7 +590,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       fetchParticipants();
       setActivityKey((k) => k + 1);
     } catch (err) {
-      handlePlanLimitError(err, "Failed to add comment");
+      handlePlanLimitError(err, t("ticketDetail.commentError"));
     } finally {
       setSendingComment(false);
     }
@@ -608,7 +608,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       setActivityKey((k) => k + 1);
       toast.success(t("ticketDetail.resolvedSuccess"));
     } catch (err) {
-      handlePlanLimitError(err, "Failed to send and resolve");
+      handlePlanLimitError(err, t("ticketDetail.resolveError"));
     } finally {
       setSendingComment(false);
     }
@@ -622,9 +622,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         try {
           await deleteAttachment(attachmentId);
           fetchAttachments();
-          toast.success("Attachment deleted");
+          toast.success(t("ticketDetail.attachmentDeleted"));
         } catch {
-          toast.error("Failed to delete attachment");
+          toast.error(t("ticketDetail.attachmentDeleteError"));
         } finally {
           setConfirmAction(null);
         }
@@ -636,10 +636,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (!workspaceSlug || !ticketId || !e.target.files?.[0]) return;
     try {
       await uploadToTicket(workspaceSlug, ticketId, e.target.files[0]);
-      toast.success("File uploaded");
+      toast.success(t("ticketDetail.fileUploaded"));
       fetchAttachments();
     } catch {
-      toast.error("Upload failed");
+      toast.error(t("ticketDetail.uploadFailed"));
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -746,7 +746,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   await transferTicket(workspaceSlug, ticketId, transferTarget!);
                   toast.success(t("tickets.transferred"));
                   fetchTicket(true);
-                } catch { toast.error("Failed"); }
+                } catch { toast.error(t("ticketDetail.actionError")); }
                 setShowTransferModal(false);
               }}>{t("tickets.transfer")}</Button>
             </div>
@@ -1329,14 +1329,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             await acceptTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                             toast.success(t("tickets.transferAccepted"));
                             fetchTicket(true);
-                          } catch { toast.error("Failed"); }
+                          } catch { toast.error(t("ticketDetail.actionError")); }
                         }}>{t("tickets.accept")}</Button>
                         <Button size="xs" color="light" onClick={async () => {
                           try {
                             await rejectTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                             toast.success(t("tickets.transferRejected"));
                             fetchTicket(true);
-                          } catch { toast.error("Failed"); }
+                          } catch { toast.error(t("ticketDetail.actionError")); }
                         }}>{t("tickets.reject")}</Button>
                       </>
                     ) : pendingTransfer.requesterId === user?.id ? (
@@ -1345,7 +1345,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                           await cancelTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                           toast.success(t("tickets.transferCancelled"));
                           fetchTicket(true);
-                        } catch { toast.error("Failed"); }
+                        } catch { toast.error(t("ticketDetail.actionError")); }
                       }}>{t("tickets.cancelTransfer")}</Button>
                     ) : null}
                   </div>
@@ -1465,14 +1465,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             await acceptTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                             toast.success(t("tickets.transferAccepted"));
                             fetchTicket(true);
-                          } catch { toast.error("Failed"); }
+                          } catch { toast.error(t("ticketDetail.actionError")); }
                         }}>{t("tickets.accept")}</Button>
                         <Button size="xs" color="light" onClick={async () => {
                           try {
                             await rejectTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                             toast.success(t("tickets.transferRejected"));
                             fetchTicket(true);
-                          } catch { toast.error("Failed"); }
+                          } catch { toast.error(t("ticketDetail.actionError")); }
                         }}>{t("tickets.reject")}</Button>
                       </>
                     ) : pendingTransfer.requesterId === user?.id ? (
@@ -1481,7 +1481,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                           await cancelTransfer(workspaceSlug, ticketId, pendingTransfer.id);
                           toast.success(t("tickets.transferCancelled"));
                           fetchTicket(true);
-                        } catch { toast.error("Failed"); }
+                        } catch { toast.error(t("ticketDetail.actionError")); }
                       }}>{t("tickets.cancelTransfer")}</Button>
                     ) : null}
                   </div>

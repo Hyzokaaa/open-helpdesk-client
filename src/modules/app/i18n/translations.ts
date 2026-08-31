@@ -102,6 +102,33 @@ const translations = {
   "tickets.selected": { en: "selected", es: "seleccionados" },
   "tickets.deleted": { en: "Ticket deleted", es: "Ticket eliminado" },
   "tickets.deleteError": { en: "Failed to delete ticket", es: "Error al eliminar ticket" },
+  "tickets.loadError": { en: "Failed to load tickets", es: "Error al cargar tickets" },
+  "tickets.pickupError": { en: "Failed to pick up", es: "Error al tomar ticket" },
+  "tickets.statusUpdated": { en: "Status updated", es: "Estado actualizado" },
+  "tickets.changeStatusError": { en: "Failed to change status", es: "Error al cambiar estado" },
+  "tickets.ticketCount": { en: "ticket(s)", es: "ticket(s)" },
+  "tickets.bulkDeleteConfirm": { en: "ticket(s) will be deleted.", es: "ticket(s) serán eliminados." },
+  "tickets.assignError": { en: "Failed", es: "Error" },
+  "tickets.bulkUpdated": { en: "ticket(s) updated", es: "ticket(s) actualizados" },
+  "tickets.bulkUpdateError": { en: "Failed to update tickets", es: "Error al actualizar tickets" },
+  "tickets.bulkDeleted": { en: "ticket(s) deleted", es: "ticket(s) eliminados" },
+  "tickets.bulkDeleteError": { en: "Failed to delete tickets", es: "Error al eliminar tickets" },
+  "ticketDetail.notFound": { en: "Ticket not found", es: "Ticket no encontrado" },
+  "ticketDetail.updated": { en: "Ticket updated", es: "Ticket actualizado" },
+  "ticketDetail.saveError": { en: "Failed to save ticket", es: "Error al guardar ticket" },
+  "ticketDetail.ticketDeleted": { en: "Ticket deleted", es: "Ticket eliminado" },
+  "ticketDetail.deleteTicketError": { en: "Failed to delete ticket", es: "Error al eliminar ticket" },
+  "ticketDetail.uploadError": { en: "Failed to upload", es: "Error al subir" },
+  "ticketDetail.filesUploaded": { en: "file(s) uploaded", es: "archivo(s) subidos" },
+  "ticketDetail.attachmentDeleted": { en: "Attachment deleted", es: "Adjunto eliminado" },
+  "ticketDetail.attachmentDeleteError": { en: "Failed to delete attachment", es: "Error al eliminar adjunto" },
+  "ticketDetail.fileUploaded": { en: "File uploaded", es: "Archivo subido" },
+  "ticketDetail.uploadFailed": { en: "Upload failed", es: "Error al subir archivo" },
+  "ticketDetail.actionError": { en: "Failed", es: "Error" },
+  "ticketDetail.commentError": { en: "Failed to add comment", es: "Error al agregar comentario" },
+  "ticketDetail.resolveError": { en: "Failed to send and resolve", es: "Error al enviar y resolver" },
+  "ticketCreate.uploadError": { en: "Failed to upload", es: "Error al subir" },
+  "ticketCreate.createError": { en: "Failed to create ticket", es: "Error al crear ticket" },
   "sidebar.adminUsers": { en: "Users", es: "Usuarios" },
   "sidebar.adminWorkspaces": { en: "Workspaces", es: "Espacios" },
   "sidebar.adminDiscounts": { en: "Discounts", es: "Descuentos" },
@@ -482,6 +509,10 @@ const translations = {
   "tags.created": { en: "Tag created", es: "Etiqueta creada" },
   "tags.deleted": { en: "Tag deleted", es: "Etiqueta eliminada" },
   "tags.empty": { en: "No tags yet.", es: "Sin etiquetas." },
+  "tags.loadError": { en: "Failed to load tags", es: "Error al cargar etiquetas" },
+  "tags.createError": { en: "Failed to create tag", es: "Error al crear etiqueta" },
+  "tags.deleteError": { en: "Failed to delete tag", es: "Error al eliminar etiqueta" },
+  "tags.namePlaceholder": { en: "Tag name", es: "Nombre de etiqueta" },
 
   // Canned Responses
   "sidebar.cannedResponses": { en: "Canned Responses", es: "Respuestas Predefinidas" },
@@ -502,6 +533,8 @@ const translations = {
   "cannedResponses.error": { en: "Failed to save response", es: "Error al guardar respuesta" },
   "cannedResponses.edit": { en: "Edit", es: "Editar" },
   "cannedResponses.confirmDelete": { en: "Delete this response?", es: "��Eliminar esta respuesta?" },
+  "cannedResponses.titlePlaceholder": { en: "e.g. Greeting", es: "ej. Saludo" },
+  "cannedResponses.contentPlaceholder": { en: "e.g. Hello! How can I help you today?", es: "ej. ¡Hola! ¿En qué puedo ayudarte hoy?" },
 
   // Custom Fields
   "sidebar.customFields": { en: "Custom Fields", es: "Campos Personalizados" },
@@ -519,6 +552,14 @@ const translations = {
   "customFields.updated": { en: "Field updated", es: "Campo actualizado" },
   "customFields.deleted": { en: "Field deleted", es: "Campo eliminado" },
   "customFields.empty": { en: "No custom fields yet.", es: "Sin campos personalizados." },
+  "customFields.typeText": { en: "Text", es: "Texto" },
+  "customFields.typeNumber": { en: "Number", es: "Número" },
+  "customFields.typeSelect": { en: "Select", es: "Selección" },
+  "customFields.typeMultiSelect": { en: "Multi-select", es: "Selección múltiple" },
+  "customFields.typeDate": { en: "Date", es: "Fecha" },
+  "customFields.typeCheckbox": { en: "Checkbox", es: "Casilla" },
+  "customFields.namePlaceholder": { en: "e.g. Department", es: "ej. Departamento" },
+  "customFields.optionsPlaceholder": { en: "Option 1, Option 2, Option 3", es: "Opción 1, Opción 2, Opción 3" },
 
   // Tickets list
   "tickets.search": { en: "Search tickets...", es: "Buscar tickets..." },
@@ -711,6 +752,13 @@ const translations = {
   "admin.confirmRemoveAdmin": { en: "Are you sure you want to remove {name} as System Admin? They will lose access to system administration.", es: "¿Estás seguro de quitar a {name} como Administrador del Sistema? Perderá acceso a la administración del sistema." },
   "admin.confirmDeactivate": { en: "Are you sure you want to deactivate {name}? They will no longer be able to log in.", es: "¿Estás seguro de desactivar a {name}? Ya no podrá iniciar sesión." },
   "admin.confirmActivate": { en: "Are you sure you want to reactivate {name}?", es: "¿Estás seguro de reactivar a {name}?" },
+  "admin.createUserError": { en: "Failed to create user", es: "Error al crear usuario" },
+  "admin.updateAdminError": { en: "Failed to update admin status", es: "Error al actualizar estado de admin" },
+  "admin.updateProfileError": { en: "Failed to update profile", es: "Error al actualizar perfil" },
+  "admin.updateStatusError": { en: "Failed to update user status", es: "Error al actualizar estado de usuario" },
+  "admin.firstNamePlaceholder": { en: "John", es: "Juan" },
+  "admin.lastNamePlaceholder": { en: "Doe", es: "Pérez" },
+  "admin.createWorkspaceError": { en: "Failed to create workspace", es: "Error al crear espacio" },
 
   // Network
   "network.connectionLost": { en: "Connection lost. Check your internet and try again.", es: "Conexión perdida. Revisa tu internet e intenta de nuevo." },
@@ -722,6 +770,8 @@ const translations = {
   "common.save": { en: "Save", es: "Guardar" },
   "common.add": { en: "Add", es: "Agregar" },
   "common.edit": { en: "Edit", es: "Editar" },
+  "common.yes": { en: "Yes", es: "Sí" },
+  "common.no": { en: "No", es: "No" },
   "common.delete": { en: "Delete", es: "Eliminar" },
   "common.loadError": { en: "Failed to load data", es: "Error al cargar datos" },
   "common.saveError": { en: "Failed to save", es: "Error al guardar" },
@@ -1311,6 +1361,23 @@ const translations = {
   "auditLog.systemTitle": { en: "System Logs", es: "Logs del Sistema" },
   "auditLog.systemDescription": { en: "All events across the platform", es: "Todos los eventos de la plataforma" },
   "auditLog.hideRoutine": { en: "Hide routine events", es: "Ocultar eventos rutinarios" },
+  "auditLog.view": { en: "View", es: "Ver" },
+  "auditLog.logEntry": { en: "Log Entry", es: "Entrada de Log" },
+  "auditLog.detail.date": { en: "Date", es: "Fecha" },
+  "auditLog.detail.action": { en: "Action", es: "Acción" },
+  "auditLog.detail.category": { en: "Category", es: "Categoría" },
+  "auditLog.detail.level": { en: "Level", es: "Nivel" },
+  "auditLog.detail.source": { en: "Source", es: "Fuente" },
+  "auditLog.detail.entityType": { en: "Entity Type", es: "Tipo de Entidad" },
+  "auditLog.detail.entityId": { en: "Entity ID", es: "ID de Entidad" },
+  "auditLog.detail.user": { en: "User", es: "Usuario" },
+  "auditLog.detail.userId": { en: "User ID", es: "ID de Usuario" },
+  "auditLog.detail.metadata": { en: "Metadata", es: "Metadatos" },
+  "auditLog.detail.logId": { en: "Log ID", es: "ID de Log" },
+  "auditLog.detail.workspaceId": { en: "Workspace ID", es: "ID de Espacio" },
+  "auditLog.system": { en: "System", es: "Sistema" },
+  "auditLog.filterFrom": { en: "From", es: "Desde" },
+  "auditLog.filterTo": { en: "To", es: "Hasta" },
 
   // Portal
   "portal.selectWorkspace": { en: "Select a helpdesk", es: "Selecciona un helpdesk" },
@@ -1496,6 +1563,7 @@ const translations = {
   "adminBranding.title": { en: "System Branding", es: "Marca del Sistema" },
   "adminBranding.description": { en: "Default branding for the entire platform. Workspaces can override individual fields.", es: "Marca por defecto para toda la plataforma. Los workspaces pueden sobreescribir campos individuales." },
   "adminBranding.note": { en: "This is the default branding shown across the platform. Individual workspaces can override these values with their own branding.", es: "Esta es la marca por defecto de la plataforma. Los workspaces individuales pueden sobreescribir estos valores con su propia marca." },
+  "adminBranding.logoHint": { en: "PNG, SVG, JPEG, WebP. Max 1MB", es: "PNG, SVG, JPEG, WebP. Máx 1MB" },
   "adminSettings.title": { en: "System Settings", es: "Configuración del Sistema" },
   "adminSettings.version": { en: "Version", es: "Versión" },
   "admin.versionComponent": { en: "Component", es: "Componente" },
@@ -1632,6 +1700,61 @@ const translations = {
   "emailRules.deleted": { en: "Rule deleted", es: "Regla eliminada" },
   "emailRules.deleteTitle": { en: "Delete Rule", es: "Eliminar Regla" },
   "emailRules.deleteMessage": { en: "Are you sure you want to delete this rule?", es: "¿Está seguro de que desea eliminar esta regla?" },
+  "emailRules.saveError": { en: "Failed to save rule", es: "Error al guardar regla" },
+
+  // Common confirm
+  "common.confirmDeleteMessage": { en: "This action cannot be undone.", es: "Esta acción no se puede deshacer." },
+
+  // Members errors
+  "members.loadError": { en: "Failed to load team", es: "Error al cargar el equipo" },
+  "members.removeError": { en: "Failed to remove member", es: "Error al eliminar miembro" },
+
+  // Contacts errors
+  "contacts.loadError": { en: "Failed to load contacts", es: "Error al cargar contactos" },
+  "contacts.updateError": { en: "Failed to update name", es: "Error al actualizar nombre" },
+
+  // Workspace settings extras
+  "workspaceSettings.exportError": { en: "Export failed", es: "Error en la exportación" },
+  "workspaceSettings.exportUrlError": { en: "Failed to generate URL", es: "Error al generar URL" },
+  "workspaceSettings.admins": { en: "Admins", es: "Admins" },
+  "workspaceSettings.agents": { en: "Agents", es: "Agentes" },
+  "workspaceSettings.reporters": { en: "Reporters", es: "Reporteros" },
+  "workspaceSettings.slug": { en: "Slug", es: "Slug" },
+  "workspaceSettings.importTickets": { en: "tickets", es: "tickets" },
+  "workspaceSettings.importUsersCreated": { en: "users created", es: "usuarios creados" },
+  "workspaceSettings.importComments": { en: "comments", es: "comentarios" },
+
+  // Departments errors
+  "departments.createError": { en: "Failed to create department", es: "Error al crear departamento" },
+  "departments.updateError": { en: "Failed to update department", es: "Error al actualizar departamento" },
+  "departments.deleteError": { en: "Failed to delete department", es: "Error al eliminar departamento" },
+
+  // Invitations errors
+  "invitations.cancelFailed": { en: "Failed to cancel invitation", es: "Error al cancelar invitación" },
+
+  // Workspace detail
+  "workspaceDetail.notFound": { en: "Workspace not found", es: "Espacio no encontrado" },
+  "workspaceDetail.noDescription": { en: "No description", es: "Sin descripción" },
+  // Portal Knowledge Base
+  "portalKb.loading": { en: "Loading...", es: "Cargando..." },
+  "portalKb.helpCenter": { en: "Help Center", es: "Centro de Ayuda" },
+  "portalKb.browseArticles": { en: "Browse articles or search for answers.", es: "Explora artículos o busca respuestas." },
+  "portalKb.searchPlaceholder": { en: "Search articles...", es: "Buscar artículos..." },
+  "portalKb.resultCount.one": { en: "1 result", es: "1 resultado" },
+  "portalKb.resultCount.other": { en: "{count} results", es: "{count} resultados" },
+  "portalKb.noArticlesFound": { en: "No articles found.", es: "No se encontraron artículos." },
+  "portalKb.articleCount.one": { en: "1 article", es: "1 artículo" },
+  "portalKb.articleCount.other": { en: "{count} articles", es: "{count} artículos" },
+  "portalKb.noArticlesAvailable": { en: "No articles available yet.", es: "Aún no hay artículos disponibles." },
+  "portalKb.didntFind": { en: "Didn't find what you need?", es: "¿No encontraste lo que necesitas?" },
+  "portalKb.createTicket": { en: "Create a ticket", es: "Crear un ticket" },
+  "portalKb.backToHelpCenter": { en: "Back to Help Center", es: "Volver al Centro de Ayuda" },
+  "portalKb.noArticlesInCategory": { en: "No articles in this category.", es: "No hay artículos en esta categoría." },
+  "portalKb.articleNotFound": { en: "Article not found.", es: "Artículo no encontrado." },
+  // Stats pagination
+  "stats.paginationOf": { en: "of", es: "de" },
+  // KB management
+  "kb.loadError": { en: "Failed to load article", es: "Error al cargar el artículo" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

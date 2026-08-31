@@ -143,7 +143,7 @@ export default function TicketsPage() {
     if (isReporter && user) params.reporterId = user.id;
     listTickets(workspaceSlug, params)
       .then(setResult)
-      .catch(() => toast.error("Failed to load tickets"))
+      .catch(() => toast.error(t("tickets.loadError")))
       .finally(() => setLoading(false));
   };
 
@@ -453,7 +453,7 @@ export default function TicketsPage() {
                           // Admin/Supervisor: Assign (any ticket, any state except closed)
                           ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
                           // Agent: Pickup (only open tickets)
-                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { pickupTicket(workspaceSlug!, ticket.id).then(() => { toast.success(t("tickets.pickedUp")); fetchTickets(); setBoardKey((k) => k + 1); }).catch(() => toast.error("Failed to pick up")); } }] : []),
+                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { pickupTicket(workspaceSlug!, ticket.id).then(() => { toast.success(t("tickets.pickedUp")); fetchTickets(); setBoardKey((k) => k + 1); }).catch(() => toast.error(t("tickets.pickupError"))); } }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
@@ -520,14 +520,14 @@ export default function TicketsPage() {
                   onClick={async () => {
                     try {
                       await changeTicketStatus(workspaceSlug!, bulk.changeStatusTicket!.id, "discarded", reason);
-                      toast.success(t("ticketDetail.status") + " updated");
+                      toast.success(t("tickets.statusUpdated"));
                       bulk.setChangeStatusTicket(null);
                       bulk.setSelectedStatus("");
                       bulk.setDiscardReason("");
                       bulk.setShowDiscardReason(false);
                       fetchTickets();
                     } catch {
-                      toast.error("Failed to change status");
+                      toast.error(t("tickets.changeStatusError"));
                     }
                   }}
                   className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
@@ -548,7 +548,7 @@ export default function TicketsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>
           <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-            <p className="text-sm text-muted mb-4">{selectedIds.size} ticket(s)</p>
+            <p className="text-sm text-muted mb-4">{selectedIds.size} {t("tickets.ticketCount")}</p>
             <div className="flex flex-col gap-1.5 mb-6">
               {STATUSES.map((s) => (
                 <button key={s} onClick={() => bulk.setBulkSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.bulkSelectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
@@ -583,7 +583,7 @@ export default function TicketsPage() {
       )}
 
       {bulk.confirmBulkDelete && (
-        <ConfirmModal title={t("tickets.delete")} message={`${selectedIds.size} ticket(s) will be deleted.`} confirmLabel={t("common.delete")} danger onConfirm={() => { bulk.setConfirmBulkDelete(false); bulk.handleBulkDelete(); }} onCancel={() => bulk.setConfirmBulkDelete(false)} />
+        <ConfirmModal title={t("tickets.delete")} message={`${selectedIds.size} ${t("tickets.bulkDeleteConfirm")}`} confirmLabel={t("common.delete")} danger onConfirm={() => { bulk.setConfirmBulkDelete(false); bulk.handleBulkDelete(); }} onCancel={() => bulk.setConfirmBulkDelete(false)} />
       )}
 
       {bulk.deleteTicketId && (
@@ -624,7 +624,7 @@ export default function TicketsPage() {
                 const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
                 action
                   .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
-                  .catch(() => toast.error("Failed"));
+                  .catch(() => toast.error(t("tickets.assignError")));
                 setAssignTicketId(null);
                 setAssignTarget(null);
               }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>

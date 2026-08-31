@@ -43,7 +43,7 @@ export default function WorkspaceContactsPage() {
     setLoading(true);
     listMembers(workspaceSlug)
       .then((all) => setContacts(all.filter((m) => m.role === "reporter")))
-      .catch(() => toast.error("Failed to load contacts"))
+      .catch(() => toast.error(t("contacts.loadError")))
       .finally(() => setLoading(false));
   };
 
@@ -70,7 +70,7 @@ export default function WorkspaceContactsPage() {
       fetchContacts();
       toast.success(t("members.nameUpdated"));
     } catch {
-      toast.error("Failed to update name");
+      toast.error(t("contacts.updateError"));
     }
   };
 
@@ -82,7 +82,7 @@ export default function WorkspaceContactsPage() {
       fetchContacts();
       toast.success(t("members.removed"));
     } catch {
-      toast.error("Failed to remove member");
+      toast.error(t("members.removeError"));
     }
   };
 
@@ -187,7 +187,7 @@ export default function WorkspaceContactsPage() {
       {removeMemberId && (
         <ConfirmModal
           title={t("members.remove")}
-          message={t("ticketDetail.deleteMessage")}
+          message={t("common.confirmDeleteMessage")}
           confirmLabel={t("members.remove")}
           danger
           onConfirm={handleRemove}

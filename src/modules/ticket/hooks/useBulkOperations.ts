@@ -89,14 +89,14 @@ export default function useBulkOperations({
           selectedStatus === "discarded" ? discardReason : undefined,
         );
       }
-      toast.success(t("ticketDetail.status") + " updated");
+      toast.success(t("tickets.statusUpdated"));
       setChangeStatusTicket(null);
       setSelectedStatus("");
       setDiscardReason("");
       setShowDiscardReason(false);
       onRefresh();
     } catch {
-      toast.error("Failed to change status");
+      toast.error(t("tickets.changeStatusError"));
     }
   };
 
@@ -108,14 +108,14 @@ export default function useBulkOperations({
     }
     try {
       await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
-      toast.success(`${selectedIds.size} ticket(s) updated`);
+      toast.success(`${selectedIds.size} ${t("tickets.bulkUpdated")}`);
       clearSelection();
       setBulkStatusModal(false);
       setBulkSelectedStatus("");
       setBulkDiscardReason(false);
       onRefresh();
     } catch {
-      toast.error("Failed to update tickets");
+      toast.error(t("tickets.bulkUpdateError"));
     }
   };
 
@@ -123,11 +123,11 @@ export default function useBulkOperations({
     if (!workspaceSlug) return;
     try {
       await bulkDeleteTickets(workspaceSlug, [...selectedIds]);
-      toast.success(`${selectedIds.size} ticket(s) deleted`);
+      toast.success(`${selectedIds.size} ${t("tickets.bulkDeleted")}`);
       clearSelection();
       onRefresh();
     } catch {
-      toast.error("Failed to delete tickets");
+      toast.error(t("tickets.bulkDeleteError"));
     }
   };
 

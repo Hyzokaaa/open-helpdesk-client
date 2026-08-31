@@ -376,7 +376,7 @@ export default function UserStatsPage() {
               {ticketTotal > 10 && (
                 <div className="flex items-center justify-between px-4 py-2 border-t border-border-card">
                   <span className="text-xs text-muted">
-                    {(ticketPage - 1) * 10 + 1}–{Math.min(ticketPage * 10, ticketTotal)} of {ticketTotal}
+                    {(ticketPage - 1) * 10 + 1}–{Math.min(ticketPage * 10, ticketTotal)} {t("stats.paginationOf")} {ticketTotal}
                   </span>
                   <div className="flex gap-1">
                     <button

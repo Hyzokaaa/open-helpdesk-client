@@ -28,7 +28,7 @@ export default function WorkspaceTagsPage() {
     setLoading(true);
     listTags(workspaceSlug)
       .then(setTags)
-      .catch(() => toast.error("Failed to load tags"))
+      .catch(() => toast.error(t("tags.loadError")))
       .finally(() => setLoading(false));
   };
 
@@ -51,7 +51,7 @@ export default function WorkspaceTagsPage() {
       fetchTags();
       toast.success(t("tags.created"));
     } catch {
-      toast.error("Failed to create tag");
+      toast.error(t("tags.createError"));
     } finally {
       setCreating(false);
     }
@@ -64,7 +64,7 @@ export default function WorkspaceTagsPage() {
       fetchTags();
       toast.success(t("tags.deleted"));
     } catch {
-      toast.error("Failed to delete tag");
+      toast.error(t("tags.deleteError"));
     }
   };
 
@@ -124,7 +124,7 @@ export default function WorkspaceTagsPage() {
           <form onSubmit={handleCreate}>
             <FormInput label={t("tags.name")} required>
               <Input
-                placeholder="Tag name"
+                placeholder={t("tags.namePlaceholder")}
                 value={name}
                 onChange={setName}
                 autoFocus
