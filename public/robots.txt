@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://openhelpdesk.dev/sitemap.xml
+Llms-Txt: https://openhelpdesk.dev/llms.txt

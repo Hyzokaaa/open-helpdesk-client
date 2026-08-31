@@ -1,0 +1,75 @@
+# Open Helpdesk
+
+> Open-source helpdesk with built-in multi-tenant support. Perfect for MSPs, agencies, and teams managing multiple clients. Self-host or use our cloud.
+
+## About
+
+Open Helpdesk is a ticket management platform that lets you manage support for multiple clients from a single dashboard. Each client gets an isolated workspace with their own tickets, agents, settings, and branding. Organize work with projects, departments, organizations, and custom categories. Licensed under AGPL-3.0.
+
+## Key Features
+
+- **Multi-Workspace**: Each client or team gets an isolated workspace with dedicated tickets, agents, and data
+- **Tickets**: Create, assign, and track support tickets with priorities, statuses, categories, and custom fields
+- **Projects**: Group tickets by project within a workspace
+- **Departments & Organizations**: Organize agents into departments and contacts into organizations with domain-based auto-enrollment
+- **Tags**: Classify and filter tickets with custom labels
+- **Email-to-Ticket**: Turn incoming emails into tickets automatically via IMAP mailboxes
+- **Email Rules**: Automatically route, categorize, or assign incoming emails based on conditions
+- **Customer Portal**: Public ticket submission form, no login required. Customers track via magic link
+- **Knowledge Base**: Public help articles organized by category, per workspace
+- **SLA Tracking**: Response and resolution targets per priority with real-time breach detection
+- **CSAT Surveys**: Automatic satisfaction surveys after ticket resolution
+- **Reports & Analytics**: Visual dashboard with resolution times, agent performance, and trends
+- **Kanban Board**: Drag-and-drop ticket management with list and board views
+- **Canned Responses**: Reusable reply templates inserted with "/" while writing
+- **Custom Fields**: Text, dropdowns, dates, checkboxes, and more
+- **Audit Log**: Full traceability of every action
+- **AI Tools**: Improve ticket descriptions and translate between languages
+- **Integrations**: REST API, webhooks, and API keys to connect with any external system
+- **Embeddable**: Token exchange API to embed the helpdesk into your own product in 20 minutes
+- **Self-Hosted**: Deploy on your own servers. Your data stays yours
+
+## Pricing
+
+- **Free**: 2 agents, 1 workspace, unlimited tickets, reports, custom fields, email-to-ticket
+- **Starter** ($15/mo): 5 agents, 3 workspaces, CSAT, SLA tracking, canned responses
+- **Business** ($39/mo): 20 agents, 10 workspaces, audit log, advanced reports, custom mailboxes
+- **Enterprise**: Custom limits, dedicated setup, volume pricing, unlimited AI
+- **Self-Hosted**: Free forever, no limits, AGPL-3.0
+
+Extra agent seats: $9/mo each. 14-day free trial on paid plans, no credit card required.
+
+Pricing is subject to change. For current plans and pricing visit https://openhelpdesk.dev/pricing
+
+## Links
+
+- [Homepage](https://openhelpdesk.dev)
+- [Pricing](https://openhelpdesk.dev/pricing)
+- [GitHub](https://github.com/Hyzokaaa/open-helpdesk)
+- [Support Portal](https://helpdesk.openhelpdesk.dev)
+- [Compare vs Zendesk](https://openhelpdesk.dev/compare/zendesk)
+- [Compare vs osTicket](https://openhelpdesk.dev/compare/osticket)
+- [Embed / Integration API](https://openhelpdesk.dev/embed)
+- [Privacy Policy](https://openhelpdesk.dev/privacy)
+- [Terms of Service](https://openhelpdesk.dev/terms)
+- [Refund Policy](https://openhelpdesk.dev/refund)
+
+## Contact
+
+- Email: hello@openhelpdesk.dev
+- Founder: luis@openhelpdesk.dev
+- Support: support@openhelpdesk.dev
+
+## FAQ
+
+### Is Open Helpdesk really free?
+Yes. The core product is free and open-source under AGPL-3.0. Self-host at no cost. Paid cloud plans are available for teams needing more agents, workspaces, and features.
+
+### Can I self-host it?
+Yes. Docker images and docker-compose file get you running in under 5 minutes. Deploy on any VPS, Kubernetes, or bare metal.
+
+### How is it different from other helpdesks?
+Multi-workspace is built in (most helpdesks are single-tenant). Plans include agent seats with $9/mo extras instead of $55+/agent. Plus it's open-source.
+
+### Can I embed it in my product?
+Yes. One API call authenticates your users via token exchange. No SDKs, no separate login. Full helpdesk that feels native to your product.
