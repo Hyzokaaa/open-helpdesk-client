@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { setBranding, uploadLogo, deleteLogo } from "../services/workspace.service";
 import { getSystemBranding, type SystemBranding } from "@modules/admin/services/system-branding.service";
@@ -103,29 +104,31 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
 
   return (
     <div className="space-y-4">
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-body-bold text-heading">{t("branding.appName")}</label>
-          {appName && <button type="button" className="text-exs text-primary hover:underline" onClick={() => handleResetField("appName")}>{t("branding.resetToSystem")}</button>}
-        </div>
+      <FormInput label={t("branding.appName")} className="!mb-0">
+        {appName && (
+          <div className="flex justify-end -mt-6 mb-1">
+            <button type="button" className="text-exs text-primary hover:underline" onClick={() => handleResetField("appName")}>{t("branding.resetToSystem")}</button>
+          </div>
+        )}
         <Input value={name} onChange={setName} placeholder={systemName || "Open Helpdesk"} />
         <p className="text-exs text-muted mt-1">
           {t("branding.appNameHint")}
           {!appName && systemName && ` ${t("branding.inheritedFromSystem")}`}
         </p>
-      </div>
+      </FormInput>
 
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-body-bold text-heading">{t("branding.subtitle")}</label>
-          {appSubtitle && <button type="button" className="text-exs text-primary hover:underline" onClick={() => handleResetField("appSubtitle")}>{t("branding.resetToSystem")}</button>}
-        </div>
+      <FormInput label={t("branding.subtitle")} className="!mb-0">
+        {appSubtitle && (
+          <div className="flex justify-end -mt-6 mb-1">
+            <button type="button" className="text-exs text-primary hover:underline" onClick={() => handleResetField("appSubtitle")}>{t("branding.resetToSystem")}</button>
+          </div>
+        )}
         <Input value={subtitle} onChange={setSubtitle} placeholder={systemSubtitle || ""} />
         <p className="text-exs text-muted mt-1">
           {t("branding.subtitleHint")}
           {!appSubtitle && systemSubtitle && ` ${t("branding.inheritedFromSystem")}`}
         </p>
-      </div>
+      </FormInput>
 
       <div className="flex justify-end">
         <Button size="xs" loading={saving} onClick={handleSave} disabled={!hasChanges}>{t("branding.save")}</Button>

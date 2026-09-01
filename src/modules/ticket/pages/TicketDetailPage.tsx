@@ -372,6 +372,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 ref={descriptionEditorRef}
                 initialValue={draft.description}
                 placeholder={t("ticketCreate.descriptionPlaceholder")}
+                ariaLabel={t("ticketDetail.description")}
                 minHeight={120}
               />
             ) : (
@@ -493,6 +494,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       <MiniEditor
                         ref={commentEditorRef}
                         initialValue={editingCommentContent}
+                        ariaLabel={t("ticketDetail.editComment")}
                         minHeight={80}
                       />
                       <div className="flex justify-end gap-2 mt-2">

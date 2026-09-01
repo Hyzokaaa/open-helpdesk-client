@@ -615,6 +615,7 @@ const translations = {
   "ticketCreate.nameMinLength": { en: "Title must be at least 3 characters", es: "El título debe tener al menos 3 caracteres" },
   "ticketCreate.descriptionRequired": { en: "Description is required", es: "La descripción es obligatoria" },
   "ticketDetail.edited": { en: "Edited", es: "Editado" },
+  "ticketDetail.addComment": { en: "Add a comment", es: "Agregar un comentario" },
   "ticketDetail.editComment": { en: "Edit", es: "Editar" },
   "ticketDetail.saveEdit": { en: "Save", es: "Guardar" },
   "ticketDetail.cancelEdit": { en: "Cancel", es: "Cancelar" },
@@ -1323,6 +1324,10 @@ const translations = {
   "auditLog.entity.csat": { en: "CSAT", es: "CSAT" },
   "auditLog.entity.attachment": { en: "Attachment", es: "Archivo" },
   "auditLog.entity.comment": { en: "Comment", es: "Comentario" },
+  "auditLog.entity.project": { en: "Project", es: "Proyecto" },
+  "auditLog.entity.ticket-category": { en: "Category", es: "Categoría" },
+  "auditLog.entity.department": { en: "Department", es: "Departamento" },
+  "auditLog.entity.organization": { en: "Organization", es: "Organización" },
 
   // Audit Log Activity Feed (ticket detail)
   "auditLog.activity": { en: "Activity", es: "Actividad" },
@@ -1604,6 +1609,13 @@ const translations = {
   "auditLog.action.system-mailbox-configured": { en: "Platform Mailbox Configured", es: "Buzón de Plataforma Configurado" },
   "auditLog.action.system-mailbox-deleted": { en: "Platform Mailbox Deleted", es: "Buzón de Plataforma Eliminado" },
   "auditLog.action.system-mailbox-test-connection": { en: "Platform Mailbox Test", es: "Prueba Buzón de Plataforma" },
+  "auditLog.action.comment-edited": { en: "Comment Edited", es: "Comentario Editado" },
+  "auditLog.action.project-created": { en: "Project Created", es: "Proyecto Creado" },
+  "auditLog.action.project-updated": { en: "Project Updated", es: "Proyecto Actualizado" },
+  "auditLog.action.project-deleted": { en: "Project Deleted", es: "Proyecto Eliminado" },
+  "auditLog.action.ticket-category-created": { en: "Category Created", es: "Categoría Creada" },
+  "auditLog.action.ticket-category-updated": { en: "Category Updated", es: "Categoría Actualizada" },
+  "auditLog.action.ticket-category-deleted": { en: "Category Deleted", es: "Categoría Eliminada" },
 
   // Departments
   "sidebar.departments": { en: "Departments", es: "Departamentos" },

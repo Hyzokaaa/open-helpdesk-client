@@ -256,6 +256,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
               ref={editorRef}
               initialValue=""
               placeholder={t("ticketCreate.descriptionPlaceholder")}
+              ariaLabel={t("ticketCreate.description")}
             />
           </FormInput>
 

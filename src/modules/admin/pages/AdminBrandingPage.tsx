@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import {
@@ -103,17 +104,15 @@ export default function AdminBrandingPage() {
       <p className="text-sm text-muted mb-6">{t("adminBranding.description")}</p>
 
       <div className="bg-surface rounded-card border-card p-6 space-y-4">
-        <div>
-          <label className="block text-xs font-body-bold text-heading mb-1">{t("branding.appName")}</label>
+        <FormInput label={t("branding.appName")} className="!mb-0">
           <Input value={name} onChange={setName} placeholder="Open Helpdesk" />
           <p className="text-exs text-muted mt-1">{t("branding.appNameHint")}</p>
-        </div>
+        </FormInput>
 
-        <div>
-          <label className="block text-xs font-body-bold text-heading mb-1">{t("branding.subtitle")}</label>
+        <FormInput label={t("branding.subtitle")} className="!mb-0">
           <Input value={subtitle} onChange={setSubtitle} placeholder="" />
           <p className="text-exs text-muted mt-1">{t("branding.subtitleHint")}</p>
-        </div>
+        </FormInput>
 
         <div className="flex justify-end">
           <Button size="xs" loading={saving} onClick={handleSave} disabled={!hasChanges}>{t("branding.save")}</Button>

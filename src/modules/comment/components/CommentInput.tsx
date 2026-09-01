@@ -168,6 +168,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
       attributes: {
         class: "comment-editor px-3 py-1.5 text-sm text-body outline-none overflow-auto",
         style: "min-height: 60px; max-height: 200px;",
+        "aria-label": t("ticketDetail.addComment"),
       },
       handleKeyDown: (view, event) => {
         if (event.key === "Enter" && !event.shiftKey && mentionQueryRef.current === null && !showCannedRef.current) {

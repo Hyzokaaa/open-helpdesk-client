@@ -156,6 +156,7 @@ export default function SlaSettings({ slug }: Props) {
                       inputMode="decimal"
                       placeholder="--"
                       disabled={locked}
+                      aria-label={`${t("workspaceSettings.slaFirstResponse")} — ${tEnum("priority", p)}`}
                       value={getRawOrValue("fr", p, firstResponse)}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -175,6 +176,7 @@ export default function SlaSettings({ slug }: Props) {
                       inputMode="decimal"
                       placeholder="--"
                       disabled={locked}
+                      aria-label={`${t("workspaceSettings.slaResolution")} — ${tEnum("priority", p)}`}
                       value={getRawOrValue("res", p, resolution)}
                       onChange={(e) => {
                         const v = e.target.value;

@@ -6,6 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
@@ -285,22 +286,22 @@ export default function WorkspaceEmailRulesPage() {
             {conditions.map((c, i) => (
               <div key={i} className="flex gap-2 mb-2 items-end">
                 <FormInput label={i === 0 ? t("emailRules.field") : undefined} className="flex-1">
-                  <select
-                    value={c.field}
-                    onChange={(e) => updateCondition(i, { field: e.target.value as RuleCondition["field"] })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{t(f.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...CONDITION_FIELDS]}
+                    label={(f) => t(f.labelKey)}
+                    value={(f) => f.value === c.field}
+                    onChange={(f) => updateCondition(i, { field: f.value as RuleCondition["field"] })}
+                    size="sm"
+                  />
                 </FormInput>
                 <FormInput label={i === 0 ? t("emailRules.operator") : undefined} className="flex-1">
-                  <select
-                    value={c.operator}
-                    onChange={(e) => updateCondition(i, { operator: e.target.value as RuleCondition["operator"] })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {OPERATORS.map((o) => <option key={o.value} value={o.value}>{t(o.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...OPERATORS]}
+                    label={(o) => t(o.labelKey)}
+                    value={(o) => o.value === c.operator}
+                    onChange={(o) => updateCondition(i, { operator: o.value as RuleCondition["operator"] })}
+                    size="sm"
+                  />
                 </FormInput>
                 <FormInput label={i === 0 ? t("emailRules.value") : undefined} className="flex-[2]">
                   <Input value={c.value} onChange={(v) => updateCondition(i, { value: v })} required />
@@ -319,34 +320,34 @@ export default function WorkspaceEmailRulesPage() {
             {actions.map((a, i) => (
               <div key={i} className="flex gap-2 mb-2 items-end">
                 <FormInput label={i === 0 ? t("emailRules.actionType") : undefined} className="flex-1">
-                  <select
-                    value={a.type}
-                    onChange={(e) => updateAction(i, { type: e.target.value as RuleAction["type"], value: undefined })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {ACTION_TYPES.map((at) => <option key={at.value} value={at.value}>{t(at.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...ACTION_TYPES]}
+                    label={(at) => t(at.labelKey)}
+                    value={(at) => at.value === a.type}
+                    onChange={(at) => updateAction(i, { type: at.value as RuleAction["type"], value: undefined })}
+                    size="sm"
+                  />
                 </FormInput>
                 {needsValue(a.type) && (
                   <FormInput label={i === 0 ? t("emailRules.value") : undefined} className="flex-[2]">
                     {a.type === "set-priority" ? (
-                      <select
-                        value={a.value ?? ""}
-                        onChange={(e) => updateAction(i, { value: e.target.value })}
-                        className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                      >
-                        <option value="">—</option>
-                        {PRIORITIES.map((p) => <option key={p} value={p}>{tEnum("priority", p)}</option>)}
-                      </select>
+                      <Select
+                        options={PRIORITIES.map((p) => ({ value: p, label: tEnum("priority", p) }))}
+                        label={(o) => o.label}
+                        value={(o) => o.value === (a.value ?? "")}
+                        onChange={(o) => updateAction(i, { value: o.value })}
+                        placeholder="—"
+                        size="sm"
+                      />
                     ) : a.type === "set-category" ? (
-                      <select
-                        value={a.value ?? ""}
-                        onChange={(e) => updateAction(i, { value: e.target.value })}
-                        className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                      >
-                        <option value="">—</option>
-                        {wsCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      <Select
+                        options={wsCategories}
+                        label={(c) => c.name}
+                        value={(c) => c.id === (a.value ?? "")}
+                        onChange={(c) => updateAction(i, { value: c.id })}
+                        placeholder="—"
+                        size="sm"
+                      />
                     ) : (
                       <Input value={a.value ?? ""} onChange={(v) => updateAction(i, { value: v })} />
                     )}

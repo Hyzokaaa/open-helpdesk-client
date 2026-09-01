@@ -26,6 +26,7 @@ export interface RichTextEditorRef {
 interface Props {
   initialValue: string;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 /* ── Toolbar state ──────────────────────────────────────────────── */
@@ -78,7 +79,7 @@ function Sep() {
 /* ── Editor ──────────────────────────────────────────────────────── */
 
 export default forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
-  { initialValue, placeholder },
+  { initialValue, placeholder, ariaLabel },
   ref,
 ) {
   const [active, setActive] = useState<ToolbarState>(EMPTY);
@@ -96,7 +97,7 @@ export default forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
     ],
     content: initialValue || "",
     editorProps: {
-      attributes: { class: "kb-content p-3 min-h-[200px] text-sm text-body outline-none" },
+      attributes: { class: "kb-content p-3 min-h-[200px] text-sm text-body outline-none", ...(ariaLabel ? { "aria-label": ariaLabel } : {}) },
     },
     onTransaction({ editor: e }) {
       setActive({
