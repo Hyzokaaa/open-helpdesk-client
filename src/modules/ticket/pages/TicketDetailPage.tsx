@@ -81,6 +81,9 @@ import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import MemberLink from "../components/MemberLink";
 import SlaStatusCard from "../components/SlaStatusCard";
+import TicketTransferModal from "../components/TicketTransferModal";
+import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
+import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import { formatResponseTime } from "../domain/format-response-time";
 import { getTicketChanges } from "../domain/get-ticket-changes";
 
@@ -564,90 +567,42 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       )}
 
       {showTransferModal && workspaceSlug && ticketId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowTransferModal(false)} />
-          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.transferTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("tickets.transferMessage")}</p>
-            <Select
-              options={assignableMembers.filter((m) => m.userId !== user?.id)}
-              label={(m) => `${m.firstName} ${m.lastName}`}
-              value={(m) => m.userId === transferTarget}
-              onChange={(m) => setTransferTarget(m.userId)}
-              placeholder={t("ticketDetail.selectAssignee")}
-            />
-            <div className="flex gap-2 mt-4 justify-end">
-              <Button size="sm" color="light" onClick={() => setShowTransferModal(false)}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!transferTarget} onClick={async () => {
-                try {
-                  await transferTicket(workspaceSlug, ticketId, transferTarget!);
-                  toast.success(t("tickets.transferred"));
-                  fetchTicket(true);
-                } catch { toast.error(t("ticketDetail.actionError")); }
-                setShowTransferModal(false);
-              }}>{t("tickets.transfer")}</Button>
-            </div>
-          </div>
-        </div>
+        <TicketTransferModal
+          assignableMembers={assignableMembers}
+          currentUserId={user?.id ?? ""}
+          t={t}
+          onClose={() => setShowTransferModal(false)}
+          onTransfer={async (targetUserId) => {
+            try {
+              await transferTicket(workspaceSlug, ticketId, targetUserId);
+              toast.success(t("tickets.transferred"));
+              fetchTicket(true);
+            } catch { toast.error(t("ticketDetail.actionError")); }
+            setShowTransferModal(false);
+          }}
+        />
       )}
 
       {showChangesModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setShowChangesModal(false)}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-4">{t("ticketDetail.reviewChangesTitle")}</h3>
-            <table className="w-full text-sm mb-4" style={{ borderSpacing: "0 4px" }}>
-              <thead>
-                <tr className="text-left text-xs text-subtle border-b border-border-row">
-                  <th className="pb-2 pr-6 font-body-medium">{t("ticketDetail.field")}</th>
-                  <th className="pb-2 pr-6 font-body-medium">{t("ticketDetail.from")}</th>
-                  <th className="pb-2 font-body-medium">{t("ticketDetail.to")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getChanges().map((c) => (
-                  <tr key={c.field} className="border-b border-border-row last:border-0">
-                    <td className="py-2.5 pr-6 text-muted font-body-medium whitespace-nowrap">{c.field}</td>
-                    <td className="py-2.5 pr-6 text-body line-through opacity-50">{c.from || "—"}</td>
-                    <td className="py-2.5 text-body font-body-semibold">{c.to || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex justify-end gap-2">
-              <Button size="xs" color="light" onClick={() => setShowChangesModal(false)}>{t("ticketDetail.cancel")}</Button>
-              <Button size="xs" color="primary" loading={saving} onClick={() => { setShowChangesModal(false); handleSave(); }}>{t("ticketDetail.confirmSave")}</Button>
-            </div>
-          </div>
-        </div>
+        <TicketReviewChangesModal
+          changes={getChanges()}
+          saving={saving}
+          t={t}
+          onCancel={() => setShowChangesModal(false)}
+          onConfirm={() => { setShowChangesModal(false); handleSave(); }}
+        />
       )}
 
       {showCloseReasonModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setShowCloseReasonModal(false)}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
-            <div className="flex flex-col gap-2">
-              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
-                <button
-                  key={reason}
-                  onClick={() => {
-                    setShowCloseReasonModal(false);
-                    setDraft((d) => d ? { ...d, status: "discarded", discardReason: reason } : d);
-                  }}
-                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
-                >
-                  {tEnum("discardReason", reason)}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowCloseReasonModal(false)}
-              className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer"
-            >
-              {t("cannedResponses.cancel")}
-            </button>
-          </div>
-        </div>
+        <TicketDiscardReasonModal
+          t={t}
+          tEnum={tEnum}
+          onCancel={() => setShowCloseReasonModal(false)}
+          onSelectReason={(reason) => {
+            setShowCloseReasonModal(false);
+            setDraft((d) => d ? { ...d, status: "discarded", discardReason: reason } : d);
+          }}
+        />
       )}
 
       {/* Header */}
