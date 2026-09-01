@@ -86,6 +86,7 @@ import { formatResponseTime } from "../domain/format-response-time";
 import { getTicketChanges } from "../domain/get-ticket-changes";
 import useVersionHistory from "../hooks/useVersionHistory";
 import useTicketDetail from "../hooks/useTicketDetail";
+import useTicketEdit from "../hooks/useTicketEdit";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -137,15 +138,28 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     assignableMembers,
   } = useTicketDetail({ workspaceSlug, ticketId, isPlanLimitError, t });
 
-  const [mode, setMode] = useState<"view" | "edit">(initialMode);
+  const {
+    mode, draft, setDraft,
+    editCategories, setEditCategories,
+    saving, isEditing,
+    showChangesModal, setShowChangesModal,
+    showDiscardModal, closeDiscardModal,
+    showCloseReasonModal, setShowCloseReasonModal,
+    enterEdit, cancelEdit, confirmDiscard, requestSave,
+    handleSave, handleDraftStatusChange, getChanges,
+  } = useTicketEdit({
+    workspaceSlug, ticketId, ticket,
+    wsCategories, wsProjects, workspaceTags, departments, organizations, customFieldDefs,
+    getMemberName, fetchTicket,
+    getDescriptionHtml: () => descriptionEditorRef.current?.getHTML() ?? null,
+    onDirtyChange, onClose, navigate, handlePlanLimitError, t, tEnum, initialMode,
+  });
+
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
-  const [editCategories, setEditCategories] = useState<TicketCategoryDto[]>([]);
   const [sendingComment, setSendingComment] = useState(false);
-  const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
-  const [saving, setSaving] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [savingComment, setSavingComment] = useState(false);
@@ -155,102 +169,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     onConfirm: () => void;
   } | null>(null);
 
-  interface Draft {
-    name: string;
-    description: string;
-    priority: string;
-    categoryId: string | null;
-    projectId: string | null;
-    status: string;
-    assigneeId: string | null;
-    tagIds: string[];
-    departmentId: string | null;
-    organizationId: string | null;
-    customFields: Record<string, unknown>;
-    discardReason?: string;
-  }
-  const [draft, setDraft] = useState<Draft | null>(null);
-
-  const enterEdit = () => {
-    if (!ticket) return;
-    // Load categories filtered by project for edit mode
-    if (workspaceSlug && ticket.projectId) {
-      listCategories(workspaceSlug, ticket.projectId).then((cats) => {
-        const inProject = cats.filter((c) => c.inProject);
-        setEditCategories(inProject.length > 0 ? inProject : wsCategories);
-      });
-    } else {
-      setEditCategories(wsCategories);
-    }
-    setDraft({
-      name: ticket.name,
-      description: ticket.description,
-      priority: ticket.priority,
-      categoryId: ticket.categoryId,
-      projectId: ticket.projectId,
-      status: ticket.status,
-      assigneeId: ticket.assigneeId,
-      tagIds: [...ticket.tagIds],
-      departmentId: ticket.departmentId,
-      organizationId: ticket.organizationId,
-      customFields: { ...(ticket.customFields ?? {}) },
-    });
-    setMode("edit");
-  };
-
-  const [showChangesModal, setShowChangesModal] = useState(false);
-  const [showDiscardModal, setShowDiscardModal] = useState(false);
-
-  const getChanges = () => {
-    if (!ticket || !draft) return [];
-    return getTicketChanges(ticket, draft, {
-      projects: wsProjects,
-      categories: wsCategories,
-      tags: workspaceTags,
-      departments,
-      organizations,
-      customFieldDefs,
-      getMemberName,
-      t: t as (key: string) => string,
-      tEnum,
-    });
-  };
-
-  const isDirty = () => getChanges().length > 0;
-
-  const cancelEdit = () => {
-    if (isDirty()) {
-      setShowDiscardModal(true);
-      return;
-    }
-    setDraft(null);
-    setMode("view");
-  };
-
-  const confirmDiscard = () => {
-    setShowDiscardModal(false);
-    setDraft(null);
-    setMode("view");
-  };
-
-  const requestSave = () => {
-    if (descriptionEditorRef.current && draft) {
-      const html = descriptionEditorRef.current.getHTML();
-      setDraft((d) => d ? { ...d, description: html } : d);
-      draft.description = html;
-    }
-    const changes = getChanges();
-    if (changes.length === 0) {
-      setDraft(null);
-      setMode("view");
-      return;
-    }
-    setShowChangesModal(true);
-  };
-
   const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
-  const isEditing = mode === "edit";
   const isReadonly = ticket?.accessLevel === "readonly";
 
   const canChangeStatus = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
@@ -266,53 +186,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   );
 
   const { historyModal, historyItems, openHistory, closeHistory } = useVersionHistory(workspaceSlug, ticketId, getMemberName);
-
-  const handleSave = async () => {
-    if (!workspaceSlug || !ticketId || !ticket || !draft) return;
-    setSaving(true);
-    try {
-      const updates: Partial<{ name: string; description: string; priority: string; categoryId: string | null; projectId: string | null; tagIds: string[]; departmentId: string | null; organizationId: string | null; customFields: Record<string, unknown> }> = {};
-      if (draft.name !== ticket.name) updates.name = draft.name;
-      if (draft.description !== ticket.description) updates.description = draft.description;
-      if (draft.priority !== ticket.priority) updates.priority = draft.priority;
-      if (draft.categoryId !== ticket.categoryId) updates.categoryId = draft.categoryId;
-      if (draft.projectId !== ticket.projectId) updates.projectId = draft.projectId;
-      if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) updates.tagIds = draft.tagIds;
-      if (draft.departmentId !== ticket.departmentId) updates.departmentId = draft.departmentId;
-      if (draft.organizationId !== ticket.organizationId) updates.organizationId = draft.organizationId;
-      if (JSON.stringify(draft.customFields) !== JSON.stringify(ticket.customFields ?? {})) updates.customFields = draft.customFields;
-
-      if (Object.keys(updates).length > 0) {
-        await updateTicket(workspaceSlug, ticketId, updates);
-      }
-
-      if (draft.status !== ticket.status) {
-        await changeTicketStatus(workspaceSlug, ticketId, draft.status, draft.discardReason);
-      }
-
-      if (draft.assigneeId !== ticket.assigneeId) {
-        await assignTicket(workspaceSlug, ticketId, draft.assigneeId);
-      }
-
-      fetchTicket(true);
-      setMode("view");
-      setDraft(null);
-      toast.success(t("ticketDetail.updated"));
-      onDirtyChange?.(true);
-    } catch (err) {
-      handlePlanLimitError(err, t("ticketDetail.saveError"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDraftStatusChange = (status: string) => {
-    if (status === "discarded") {
-      setShowCloseReasonModal(true);
-      return;
-    }
-    setDraft((d) => d ? { ...d, status, discardReason: undefined } : d);
-  };
 
   const handleDelete = () => {
     setConfirmAction({
@@ -457,7 +330,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           confirmLabel={t("ticketDetail.discardChangesConfirm")}
           danger
           onConfirm={confirmDiscard}
-          onCancel={() => setShowDiscardModal(false)}
+          onCancel={closeDiscardModal}
         />
       )}
 
