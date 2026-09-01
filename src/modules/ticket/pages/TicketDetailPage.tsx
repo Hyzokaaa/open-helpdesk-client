@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -80,162 +79,10 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
-
-function MemberLink({ userId, members, getMemberName, navigate, workspaceSlug }: {
-  userId: string;
-  members: { userId: string; firstName: string; lastName: string; email: string; role: string }[];
-  getMemberName: (id: string) => string;
-  navigate: (path: string) => void;
-  workspaceSlug?: string;
-}) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [show, setShow] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-  const m = members.find((m) => m.userId === userId);
-
-  const handleEnter = () => {
-    if (!ref.current || !m) return;
-    const rect = ref.current.getBoundingClientRect();
-    setPos({
-      top: rect.bottom + 4,
-      left: rect.right,
-    });
-    setShow(true);
-  };
-
-  return (
-    <span className="text-right min-w-0">
-      <button
-        ref={ref}
-        onClick={() => workspaceSlug && navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${userId}`)}
-        onMouseEnter={handleEnter}
-        onMouseLeave={() => setShow(false)}
-        className="text-body font-body-medium truncate block cursor-pointer hover:text-primary transition-colors text-right"
-      >
-        {getMemberName(userId)}
-      </button>
-      {show && m && createPortal(
-        <div
-          className="fixed z-[9999] bg-surface border border-border-card rounded-lg shadow-lg p-3 min-w-[200px] text-left pointer-events-none"
-          style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
-        >
-          <p className="text-sm font-body-semibold text-heading">{m.firstName} {m.lastName}</p>
-          <p className="text-xs text-muted mt-0.5">{m.email}</p>
-          {m.role && <p className="text-xs text-subtle mt-1 capitalize">{m.role}</p>}
-        </div>,
-        document.body,
-      )}
-    </span>
-  );
-}
-
-function formatResponseTime(createdAt: string, firstResponseAt: string): string {
-  const ms = new Date(firstResponseAt).getTime() - new Date(createdAt).getTime();
-  if (ms < 0) return "—";
-  const totalMinutes = Math.floor(ms / 60000);
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-}
-
-function SlaStatusCard({
-  ticket,
-  slaPolicy,
-  t,
-  isTerminal,
-}: {
-  ticket: TicketDetail;
-  slaPolicy: SlaPolicy;
-  t: (key: any) => string;
-  isTerminal: boolean;
-}) {
-  const priority = ticket.priority as "critical" | "high" | "medium" | "low";
-  const frTarget = slaPolicy.firstResponse[priority];
-  const resTarget = slaPolicy.resolution[priority];
-
-  if (frTarget === null && resTarget === null) return null;
-
-  const formatRemaining = (ms: number) => {
-    if (ms <= 0) return null;
-    const totalMinutes = Math.floor(ms / 60000);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    if (hours > 0) return `${hours}h ${minutes}m ${t("ticketDetail.slaRemaining")}`;
-    return `${minutes}m ${t("ticketDetail.slaRemaining")}`;
-  };
-
-  const getSlaStatus = (
-    targetHours: number | null,
-    breached: boolean,
-    completedAt: string | null,
-  ): { label: string; color: string } | null => {
-    if (targetHours === null) return null;
-
-    if (breached) {
-      return { label: t("ticketDetail.slaBreached"), color: "text-red-500" };
-    }
-
-    if (completedAt) {
-      return { label: t("ticketDetail.slaMet"), color: "text-green-500" };
-    }
-
-    if (isTerminal) {
-      return { label: "—", color: "text-muted" };
-    }
-
-    // Pending: calculate remaining time
-    if (ticket.createdAt) {
-      const deadline = new Date(ticket.createdAt).getTime() + targetHours * 3600000;
-      const remaining = deadline - Date.now();
-      const formatted = formatRemaining(remaining);
-      if (formatted) {
-        return { label: formatted, color: remaining < targetHours * 3600000 * 0.25 ? "text-amber-500" : "text-muted" };
-      }
-    }
-
-    return null;
-  };
-
-  const frStatus = getSlaStatus(frTarget, ticket.firstResponseBreached, ticket.firstResponseAt);
-  const resStatus = getSlaStatus(resTarget, ticket.resolutionBreached, ticket.resolvedAt);
-
-  if (!frStatus && !resStatus) return null;
-
-  return (
-    <Card className="p-4">
-      <p className="text-xs text-subtle font-body-medium mb-2">
-        {t("ticketDetail.slaTarget")}
-      </p>
-      <div className="space-y-2 text-xs">
-        {frStatus && frTarget !== null && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted">{t("ticketDetail.slaFirstResponse")} ({frTarget}h)</span>
-            <span className={`font-body-medium flex items-center gap-1.5 ${frStatus.color}`}>
-              {ticket.firstResponseBreached && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              )}
-              {frStatus.label}
-            </span>
-          </div>
-        )}
-        {resStatus && resTarget !== null && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted">{t("ticketDetail.slaResolution")} ({resTarget}h)</span>
-            <span className={`font-body-medium flex items-center gap-1.5 ${resStatus.color}`}>
-              {ticket.resolutionBreached && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              )}
-              {resStatus.label}
-            </span>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
+import MemberLink from "../components/MemberLink";
+import SlaStatusCard from "../components/SlaStatusCard";
+import { formatResponseTime } from "../domain/format-response-time";
+import { getTicketChanges } from "../domain/get-ticket-changes";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -343,29 +190,19 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [showChangesModal, setShowChangesModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
-  const getChanges = (): { field: string; from: string; to: string }[] => {
+  const getChanges = () => {
     if (!ticket || !draft) return [];
-    const changes: { field: string; from: string; to: string }[] = [];
-    if (draft.name !== ticket.name) changes.push({ field: t("ticketDetail.name"), from: ticket.name, to: draft.name });
-    if (draft.description !== ticket.description) changes.push({ field: t("ticketDetail.description"), from: ticket.description.slice(0, 50) + (ticket.description.length > 50 ? "..." : ""), to: draft.description.slice(0, 50) + (draft.description.length > 50 ? "..." : "") });
-    if (draft.status !== ticket.status) changes.push({ field: t("ticketDetail.status"), from: tEnum("status", ticket.status), to: tEnum("status", draft.status) });
-    if (draft.priority !== ticket.priority) changes.push({ field: t("ticketDetail.priority"), from: tEnum("priority", ticket.priority), to: tEnum("priority", draft.priority) });
-    if (draft.projectId !== ticket.projectId) changes.push({ field: t("ticketDetail.project"), from: wsProjects.find((p) => p.id === ticket.projectId)?.name ?? "—", to: wsProjects.find((p) => p.id === draft.projectId)?.name ?? "—" });
-    if (draft.categoryId !== ticket.categoryId) changes.push({ field: t("ticketDetail.category"), from: wsCategories.find((c) => c.id === ticket.categoryId)?.name ?? "—", to: wsCategories.find((c) => c.id === draft.categoryId)?.name ?? "—" });
-    if (draft.assigneeId !== ticket.assigneeId) changes.push({ field: t("ticketDetail.assignee"), from: ticket.assigneeId ? getMemberName(ticket.assigneeId) : "—", to: draft.assigneeId ? getMemberName(draft.assigneeId) : "—" });
-    if (JSON.stringify(draft.tagIds) !== JSON.stringify(ticket.tagIds)) changes.push({ field: t("ticketDetail.tags"), from: ticket.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—", to: draft.tagIds.map((id) => workspaceTags.find((t) => t.id === id)?.name ?? id).join(", ") || "—" });
-    if (draft.departmentId !== ticket.departmentId) changes.push({ field: t("ticketDetail.department"), from: departments.find((d) => d.id === ticket.departmentId)?.name ?? "—", to: departments.find((d) => d.id === draft.departmentId)?.name ?? "—" });
-    if (draft.organizationId !== ticket.organizationId) changes.push({ field: t("ticketDetail.organization"), from: organizations.find((o) => o.id === ticket.organizationId)?.name ?? "—", to: organizations.find((o) => o.id === draft.organizationId)?.name ?? "—" });
-    const origCf = ticket.customFields ?? {};
-    for (const def of customFieldDefs) {
-      const origVal = origCf[def.id];
-      const draftVal = draft.customFields[def.id];
-      if (JSON.stringify(origVal) !== JSON.stringify(draftVal)) {
-        const fmt = (v: unknown) => v === undefined || v === null || v === "" ? "—" : Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v);
-        changes.push({ field: def.name, from: fmt(origVal), to: fmt(draftVal) });
-      }
-    }
-    return changes;
+    return getTicketChanges(ticket, draft, {
+      projects: wsProjects,
+      categories: wsCategories,
+      tags: workspaceTags,
+      departments,
+      organizations,
+      customFieldDefs,
+      getMemberName,
+      t: t as (key: string) => string,
+      tEnum,
+    });
   };
 
   const isDirty = () => getChanges().length > 0;
