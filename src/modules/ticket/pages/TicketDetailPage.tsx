@@ -52,9 +52,7 @@ import {
   listComments,
   createComment,
   editComment,
-  getCommentHistory,
 } from "@modules/comment/services/comment.service";
-import { getDescriptionHistory } from "../services/ticket.service";
 import VersionHistoryModal from "@modules/shared/components/VersionHistoryModal";
 import {
   AttachmentDetail,
@@ -86,6 +84,7 @@ import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import { formatResponseTime } from "../domain/format-response-time";
 import { getTicketChanges } from "../domain/get-ticket-changes";
+import useVersionHistory from "../hooks/useVersionHistory";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -139,8 +138,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [savingComment, setSavingComment] = useState(false);
-  const [historyModal, setHistoryModal] = useState<{ type: "comment" | "description"; commentId?: string } | null>(null);
-  const [historyItems, setHistoryItems] = useState<Array<{ id: string; content: string; editorName: string; createdAt: string }> | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
     message: string;
@@ -354,6 +351,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     return m ? `${m.firstName} ${m.lastName}` : userId;
   };
 
+  const { historyModal, historyItems, openHistory, closeHistory } = useVersionHistory(workspaceSlug, ticketId, getMemberName);
+
   const handleSave = async () => {
     if (!workspaceSlug || !ticketId || !ticket || !draft) return;
     setSaving(true);
@@ -504,24 +503,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     }
   };
 
-  const openHistory = async (type: "comment" | "description", commentId?: string) => {
-    if (!workspaceSlug || !ticketId) return;
-    setHistoryModal({ type, commentId });
-    setHistoryItems(null);
-    try {
-      const edits = type === "comment" && commentId
-        ? await getCommentHistory(workspaceSlug, ticketId, commentId)
-        : await getDescriptionHistory(workspaceSlug, ticketId);
-      setHistoryItems(edits.map((e) => ({
-        id: e.id,
-        content: e.content,
-        editorName: getMemberName(e.editedById),
-        createdAt: e.createdAt,
-      })));
-    } catch {
-      setHistoryItems([]);
-    }
-  };
 
   if (loading) {
     return (
@@ -1427,7 +1408,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         <VersionHistoryModal
           title={t("editHistory.title")}
           items={historyItems}
-          onClose={() => { setHistoryModal(null); setHistoryItems(null); }}
+          onClose={closeHistory}
         />
       )}
     </div>
