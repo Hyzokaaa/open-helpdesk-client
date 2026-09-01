@@ -85,6 +85,7 @@ import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import { formatResponseTime } from "../domain/format-response-time";
 import { getTicketChanges } from "../domain/get-ticket-changes";
 import useVersionHistory from "../hooks/useVersionHistory";
+import useTicketDetail from "../hooks/useTicketDetail";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -108,30 +109,40 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const descriptionEditorRef = useRef<MiniEditorRef>(null);
   const commentEditorRef = useRef<MiniEditorRef>(null);
 
+  const {
+    ticket, setTicket,
+    pendingTransfer,
+    comments, setComments,
+    attachments,
+    participants,
+    members,
+    workspaceTags,
+    departments,
+    organizations,
+    cannedResponses,
+    customFieldDefs,
+    wsCategories,
+    wsProjects,
+    slaPolicy,
+    slaLocked,
+    loading,
+    activityKey, setActivityKey,
+    can,
+    fetchTicket,
+    fetchComments,
+    fetchAttachments,
+    fetchParticipants,
+    handleDroppedFiles,
+    getMemberName,
+    assignableMembers,
+  } = useTicketDetail({ workspaceSlug, ticketId, isPlanLimitError, t });
+
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
-  const [ticket, setTicket] = useState<TicketDetail | null>(null);
-  const [pendingTransfer, setPendingTransfer] = useState<PendingTransfer | null>(null);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
-  const [comments, setComments] = useState<CommentItem[]>([]);
-  const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
-  const [participants, setParticipants] = useState<TicketParticipant[]>([]);
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
-  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
-  const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
-  const [wsProjects, setWsProjects] = useState<Project[]>([]);
   const [editCategories, setEditCategories] = useState<TicketCategoryDto[]>([]);
-  const [slaPolicy, setSlaPolicy] = useState<SlaPolicy | null>(null);
-  const [slaLocked, setSlaLocked] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [sendingComment, setSendingComment] = useState(false);
   const [showCloseReasonModal, setShowCloseReasonModal] = useState(false);
-  const [activityKey, setActivityKey] = useState(0);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -237,94 +248,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     setShowChangesModal(true);
   };
 
-  const fetchTicket = (refreshActivity = false) => {
-    if (!workspaceSlug || !ticketId) return;
-    getTicket(workspaceSlug, ticketId)
-      .then((t) => {
-        setTicket(t);
-        if (refreshActivity) setActivityKey((k) => k + 1);
-        getPendingTransfer(workspaceSlug, ticketId).then(setPendingTransfer).catch(() => setPendingTransfer(null));
-      })
-      .catch(() => toast.error(t("ticketDetail.notFound")))
-      .finally(() => setLoading(false));
-  };
-
-  const fetchComments = () => {
-    if (!workspaceSlug || !ticketId) return;
-    listComments(workspaceSlug, ticketId).then((res) =>
-      setComments(res.items),
-    );
-  };
-
-  const fetchAttachments = () => {
-    if (!workspaceSlug || !ticketId) return;
-    listTicketAttachments(workspaceSlug, ticketId).then(setAttachments);
-  };
-
-  const fetchMembers = () => {
-    if (!workspaceSlug) return;
-    listMembers(workspaceSlug).then(setMembers);
-  };
-
-  const fetchParticipants = () => {
-    if (!workspaceSlug || !ticketId) return;
-    listParticipants(workspaceSlug, ticketId).then(setParticipants).catch(() => {});
-  };
-
-  useEffect(() => {
-    fetchTicket();
-    fetchComments();
-    fetchAttachments();
-    fetchMembers();
-    fetchParticipants();
-    if (workspaceSlug) listTags(workspaceSlug).then(setWorkspaceTags);
-    if (workspaceSlug) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
-    if (workspaceSlug) listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});
-    if (workspaceSlug) listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
-    if (workspaceSlug) listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
-    if (workspaceSlug) listProjects(workspaceSlug).then(setWsProjects).catch(() => {});
-    if (workspaceSlug) getSlaPolicy(workspaceSlug, { silent: true }).then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); }).catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
-  }, [workspaceSlug, ticketId]);
-
-  useWebSocket(workspaceSlug, {
-    "ticket.statusChanged": (data) => {
-      if (data.ticketId === ticketId) fetchTicket(true);
-    },
-    "ticket.assigned": (data) => {
-      if (data.ticketId === ticketId) fetchTicket(true);
-    },
-    "comment.created": (data) => {
-      if (data.ticketId === ticketId) {
-        fetchComments();
-        fetchTicket(true);
-      }
-    },
-  });
-
-  const handleDroppedFiles = useCallback(
-    async (newFiles: File[]) => {
-      if (!workspaceSlug || !ticketId) return;
-      for (const file of newFiles) {
-        try {
-          await uploadToTicket(workspaceSlug, ticketId, file);
-        } catch {
-          toast.error(`${t("ticketDetail.uploadError")} ${file.name}`);
-        }
-      }
-      fetchAttachments();
-      toast.info(`${newFiles.length} ${t("ticketDetail.filesUploaded")}`);
-    },
-    [workspaceSlug, ticketId],
-  );
-
-  const { can } = usePermissions(workspaceSlug);
-
-  useEffect(() => {
-    if (workspaceSlug && can(P.CANNED_RESPONSE_VIEW)) {
-      listCannedResponses(workspaceSlug, { silent: true }).then(setCannedResponses).catch(() => {});
-    }
-  }, [workspaceSlug, can(P.CANNED_RESPONSE_VIEW)]);
-
   const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isEditing = mode === "edit";
@@ -341,15 +264,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canSwitchToEdit = !isReadonly && mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
-
-  const assignableMembers = members.filter(
-    (m) => m.role === "admin" || m.role === "agent",
-  );
-
-  const getMemberName = (userId: string) => {
-    const m = members.find((m) => m.userId === userId);
-    return m ? `${m.firstName} ${m.lastName}` : userId;
-  };
 
   const { historyModal, historyItems, openHistory, closeHistory } = useVersionHistory(workspaceSlug, ticketId, getMemberName);
 
@@ -1079,7 +993,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
                   <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
                   {canTransfer && !pendingTransfer && (
-                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setTransferTarget(null); setShowTransferModal(true); }}>
+                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
                       {t("tickets.transfer")}
                     </Button>
                   )}
@@ -1215,7 +1129,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
                   <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
                   {canTransfer && !pendingTransfer && (
-                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setTransferTarget(null); setShowTransferModal(true); }}>
+                    <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
                       {t("tickets.transfer")}
                     </Button>
                   )}
