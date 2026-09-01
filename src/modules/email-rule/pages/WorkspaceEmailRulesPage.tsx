@@ -13,6 +13,8 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import {
   EmailRule,
   RuleCondition,
@@ -50,11 +52,12 @@ const ACTION_TYPES = [
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
 
-function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }: {
+function SortableRow({ rule, t, tEnum, categories, canManage, onEdit, onToggle, onDelete }: {
   rule: EmailRule;
   t: (key: any) => string;
   tEnum: (ns: string, key: string) => string;
   categories: TicketCategoryDto[];
+  canManage: boolean;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
@@ -95,13 +98,15 @@ function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }:
           size="xs"
         />
       </td>
-      <td className="px-2 py-3">
-        <ActionMenu items={[
-          { label: t("ticketDetail.edit"), onClick: onEdit },
-          { label: rule.isActive ? t("emailRules.disable") : t("emailRules.enable"), onClick: onToggle },
-          { label: t("members.remove"), onClick: onDelete, danger: true },
-        ]} />
-      </td>
+      {canManage && (
+        <td className="px-2 py-3">
+          <ActionMenu items={[
+            { label: t("ticketDetail.edit"), onClick: onEdit },
+            { label: rule.isActive ? t("emailRules.disable") : t("emailRules.enable"), onClick: onToggle },
+            { label: t("members.remove"), onClick: onDelete, danger: true },
+          ]} />
+        </td>
+      )}
     </tr>
   );
 }
@@ -109,6 +114,8 @@ function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }:
 export default function WorkspaceEmailRulesPage() {
   const { workspaceSlug } = useParams();
   const { t, tEnum } = useTranslation();
+  const { can } = usePermissions(workspaceSlug);
+  const canManage = can(P.WORKSPACE_SETTINGS_MANAGE);
   const [rules, setRules] = useState<EmailRule[]>([]);
   const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,7 +227,7 @@ export default function WorkspaceEmailRulesPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("emailRules.title")}</h2>
-        <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>
+        {canManage && <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>}
       </div>
 
       {loading ? (
@@ -250,6 +257,7 @@ export default function WorkspaceEmailRulesPage() {
                       t={t}
                       tEnum={tEnum}
                       categories={wsCategories}
+                      canManage={canManage}
                       onEdit={() => openEdit(rule)}
                       onToggle={() => handleToggle(rule)}
                       onDelete={() => setDeleteId(rule.id)}

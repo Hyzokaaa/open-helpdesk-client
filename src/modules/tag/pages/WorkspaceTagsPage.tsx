@@ -6,6 +6,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import { Tag, listTags, createTag, deleteTag } from "../services/tag.service";
 import ColorPicker from "@modules/app/modules/ui/components/ColorPicker/ColorPicker";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -57,10 +58,13 @@ export default function WorkspaceTagsPage() {
     }
   };
 
-  const handleDelete = async (tagId: string) => {
-    if (!workspaceSlug) return;
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!workspaceSlug || !deleteId) return;
     try {
-      await deleteTag(workspaceSlug, tagId);
+      await deleteTag(workspaceSlug, deleteId);
+      setDeleteId(null);
       fetchTags();
       toast.success(t("tags.deleted"));
     } catch {
@@ -106,7 +110,7 @@ export default function WorkspaceTagsPage() {
               {can(P.TAG_DELETE) && (
                 <button
                   className="text-subtle hover:text-red-500 text-xs ml-1 cursor-pointer"
-                  onClick={() => handleDelete(tag.id)}
+                  onClick={() => setDeleteId(tag.id)}
                 >
                   ✕
                 </button>
@@ -143,6 +147,17 @@ export default function WorkspaceTagsPage() {
             </div>
           </form>
         </Sheet>
+      )}
+
+      {deleteId && (
+        <ConfirmModal
+          title={t("common.delete")}
+          message={t("common.confirmDeleteMessage")}
+          confirmLabel={t("common.delete")}
+          danger
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteId(null)}
+        />
       )}
     </div>
   );
