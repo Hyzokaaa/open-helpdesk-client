@@ -9,10 +9,15 @@ interface Props {
 }
 
 export default function Label({ children, size = "sm", required, htmlFor }: Props) {
+  const handleClick = () => {
+    if (htmlFor) document.getElementById(htmlFor)?.focus();
+  };
+
   return (
     <label
       htmlFor={htmlFor}
-      className={clsx("text-secondary-text font-body-medium", {
+      onClick={handleClick}
+      className={clsx("text-secondary-text font-body-medium cursor-pointer", {
         "text-sm": size === "sm",
         "text-base": size === "base",
         "text-xs": size === "xs",
