@@ -325,8 +325,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           </div>
         )}
 
-        {/* System admin — hidden in custom domain mode for SaaS only */}
-        {user?.isSystemAdmin && configReady && !(isCustomDomain && saasMode) && (
+        {/* System admin — hidden when on custom domain */}
+        {user?.isSystemAdmin && configReady && !isCustomDomain && (
           <>
             <div className="border-t border-border-card my-2" />
             <button
