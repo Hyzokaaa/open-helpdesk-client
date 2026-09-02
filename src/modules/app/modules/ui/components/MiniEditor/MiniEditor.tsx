@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import clsx from "clsx";
+import { useFormInputId } from "../FormInput/form-input-context";
 
 export interface MiniEditorRef {
   getHTML: () => string;
@@ -20,6 +21,7 @@ export default forwardRef<MiniEditorRef, Props>(function MiniEditor(
   { initialValue = "", placeholder = "", minHeight = 120, ariaLabel },
   ref,
 ) {
+  const formId = useFormInputId();
   const [active, setActive] = useState({ bold: false, italic: false, strike: false, code: false, codeBlock: false, bulletList: false, orderedList: false });
 
   const editor = useEditor({
@@ -39,6 +41,7 @@ export default forwardRef<MiniEditorRef, Props>(function MiniEditor(
       attributes: {
         class: "comment-editor px-3 py-2 text-sm text-body outline-none overflow-auto",
         style: `min-height: ${minHeight}px; max-height: 300px;`,
+        ...(formId ? { id: formId } : {}),
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
       },
     },
