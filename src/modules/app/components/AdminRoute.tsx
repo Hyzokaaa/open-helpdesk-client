@@ -4,14 +4,14 @@ import useConfig from "@modules/app/hooks/useConfig";
 
 export default function AdminRoute() {
   const { user } = useUser();
-  const { domainWorkspaces, saasMode } = useConfig();
+  const { domainWorkspaces } = useConfig();
 
   if (!user?.isSystemAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // In SaaS mode, admin routes are not accessible from custom domains
-  if (saasMode && domainWorkspaces) {
+  // Admin routes are not accessible from custom domains
+  if (domainWorkspaces) {
     return <Navigate to="/dashboard" replace />;
   }
 

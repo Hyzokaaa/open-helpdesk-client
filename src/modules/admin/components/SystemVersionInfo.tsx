@@ -60,8 +60,7 @@ export default function SystemVersionInfo() {
   const backendVsLatest = getStatus(info.backend, info.latestComponents.backend);
   const clientVsLatest = getStatus(clientVersion, info.latestComponents.client);
 
-  const hasBehind = backendVsRelease === "behind" || clientVsRelease === "behind"
-    || backendVsLatest === "behind" || clientVsLatest === "behind";
+  const hasBehind = backendVsRelease === "behind" || clientVsRelease === "behind";
   const hasAhead = backendVsRelease === "ahead" || clientVsRelease === "ahead";
 
   let overall: OverallStatus = "up-to-date";

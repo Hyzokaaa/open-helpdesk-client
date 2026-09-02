@@ -4,6 +4,7 @@ export interface SystemBranding {
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
+  icon: string | null;
 }
 
 export async function getSystemBranding(): Promise<SystemBranding> {
@@ -25,4 +26,15 @@ export async function uploadSystemLogo(file: File): Promise<{ logo: string }> {
 
 export async function deleteSystemLogo(): Promise<void> {
   await http.delete("/admin/branding/logo");
+}
+
+export async function uploadSystemIcon(file: File): Promise<{ icon: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<{ icon: string }>("/admin/branding/icon", formData);
+  return res.data;
+}
+
+export async function deleteSystemIcon(): Promise<void> {
+  await http.delete("/admin/branding/icon");
 }

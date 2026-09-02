@@ -36,7 +36,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 
 type Step = "workspace" | "departments" | "email" | "invite" | "done";
 const STEPS: Step[] = ["workspace", "departments", "email", "invite", "done"];
-const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent"] as const;
 
 export default function WorkspaceCreatePage() {
   const navigate = useNavigate();

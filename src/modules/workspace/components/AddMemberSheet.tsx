@@ -7,7 +7,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { UserListItem, listUsers, addMember } from "../services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent"] as const;
 
 interface Row {
   userId: string | null;
@@ -24,7 +24,7 @@ interface Props {
 export default function AddMemberSheet({ workspaceSlug, existingMemberIds, onClose, onAdded }: Props) {
   const { t } = useTranslation();
   const [users, setUsers] = useState<UserListItem[]>([]);
-  const [rows, setRows] = useState<Row[]>([{ userId: null, role: "reporter" }]);
+  const [rows, setRows] = useState<Row[]>([{ userId: null, role: "agent" }]);
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function AddMemberSheet({ workspaceSlug, existingMemberIds, onClo
   };
 
   const addRow = () => {
-    setRows((prev) => [...prev, { userId: null, role: "reporter" }]);
+    setRows((prev) => [...prev, { userId: null, role: "agent" }]);
   };
 
   const validRows = rows.filter((r) => r.userId);

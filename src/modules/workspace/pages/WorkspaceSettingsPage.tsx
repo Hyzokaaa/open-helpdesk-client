@@ -136,7 +136,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
 
   const adminCount = members.filter((m) => m.role === "admin").length;
   const agentCount = members.filter((m) => m.role === "agent").length;
-  const reporterCount = members.filter((m) => m.role === "reporter").length;
+  const userCount = members.filter((m) => m.role === "user").length;
 
   return (
     <div className="w-full max-w-3xl">
@@ -224,7 +224,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 appName={workspace.appName}
                 appSubtitle={workspace.appSubtitle}
                 logo={workspace.logo}
-                onUpdate={(appName, appSubtitle, logo) => setWorkspace({ ...workspace, appName, appSubtitle, logo })}
+                icon={workspace.icon}
+                onUpdate={(appName, appSubtitle, logo, icon) => setWorkspace({ ...workspace, appName, appSubtitle, logo, icon })}
               />
             </CollapsibleSection>
           )}
@@ -340,8 +341,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 <span className="text-body font-body-medium">{agentCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">{t("workspaceSettings.reporters")}</span>
-                <span className="text-body font-body-medium">{reporterCount}</span>
+                <span className="text-muted">{t("workspaceSettings.users")}</span>
+                <span className="text-body font-body-medium">{userCount}</span>
               </div>
             </div>
           </Card>

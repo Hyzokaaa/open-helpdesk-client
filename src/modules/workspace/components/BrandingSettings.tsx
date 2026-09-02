@@ -4,7 +4,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import { setBranding, uploadLogo, deleteLogo } from "../services/workspace.service";
+import { setBranding, uploadLogo, deleteLogo, uploadIcon, deleteIcon } from "../services/workspace.service";
 import { getSystemBranding, type SystemBranding } from "@modules/admin/services/system-branding.service";
 import BrandLogo from "@modules/app/components/BrandLogo";
 
@@ -13,10 +13,11 @@ interface Props {
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
-  onUpdate: (appName: string | null, appSubtitle: string | null, logo: string | null) => void;
+  icon: string | null;
+  onUpdate: (appName: string | null, appSubtitle: string | null, logo: string | null, icon: string | null) => void;
 }
 
-export default function BrandingSettings({ slug, appName, appSubtitle, logo, onUpdate }: Props) {
+export default function BrandingSettings({ slug, appName, appSubtitle, logo, icon, onUpdate }: Props) {
   const { t } = useTranslation();
   const [name, setName] = useState(appName ?? "");
   const [subtitle, setSubtitle] = useState(appSubtitle ?? "");
@@ -25,6 +26,9 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
   const [deleting, setDeleting] = useState(false);
   const [system, setSystem] = useState<SystemBranding | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [deletingIcon, setDeletingIcon] = useState(false);
 
   useEffect(() => {
     getSystemBranding().then(setSystem).catch(() => {});
@@ -45,7 +49,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
         appName: name.trim() || null,
         appSubtitle: subtitle.trim() || null,
       });
-      onUpdate(result.appName, result.appSubtitle, logo);
+      onUpdate(result.appName, result.appSubtitle, logo, icon);
       toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
@@ -60,7 +64,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
       const result = await setBranding(slug, { [field]: null });
       if (field === "appName") setName("");
       if (field === "appSubtitle") setSubtitle("");
-      onUpdate(result.appName, result.appSubtitle, logo);
+      onUpdate(result.appName, result.appSubtitle, logo, icon);
       toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
@@ -79,7 +83,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
     setUploading(true);
     try {
       const result = await uploadLogo(slug, file);
-      onUpdate(appName, appSubtitle, result.logo);
+      onUpdate(appName, appSubtitle, result.logo, icon);
       toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
@@ -93,12 +97,45 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
     setDeleting(true);
     try {
       await deleteLogo(slug);
-      onUpdate(appName, appSubtitle, null);
+      onUpdate(appName, appSubtitle, null, icon);
       toast.success(t("branding.savedReload"));
     } catch {
       toast.error(t("branding.saveError"));
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleUploadIcon = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 512 * 1024) {
+      toast.error(t("branding.iconTooLarge"));
+      return;
+    }
+    setUploadingIcon(true);
+    try {
+      const result = await uploadIcon(slug, file);
+      onUpdate(appName, appSubtitle, logo, result.icon);
+      toast.success(t("branding.savedReload"));
+    } catch {
+      toast.error(t("branding.saveError"));
+    } finally {
+      setUploadingIcon(false);
+      if (iconFileRef.current) iconFileRef.current.value = "";
+    }
+  };
+
+  const handleDeleteIcon = async () => {
+    setDeletingIcon(true);
+    try {
+      await deleteIcon(slug);
+      onUpdate(appName, appSubtitle, logo, null);
+      toast.success(t("branding.savedReload"));
+    } catch {
+      toast.error(t("branding.saveError"));
+    } finally {
+      setDeletingIcon(false);
     }
   };
 
@@ -160,6 +197,32 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, onU
           <span className="text-exs text-muted">PNG, SVG, JPEG, WebP. Max 1MB</span>
         </div>
         <input ref={fileRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" className="hidden" onChange={handleUpload} />
+      </div>
+
+      <div className="border-t border-border-card pt-4 mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-body-bold text-heading">{t("branding.icon")}</p>
+          {icon && <button type="button" className="text-exs text-primary hover:underline" onClick={handleDeleteIcon}>{t("branding.remove")}</button>}
+        </div>
+
+        <p className="text-exs text-muted mb-3">{t("branding.iconHint")}</p>
+
+        {icon && (
+          <div className="flex items-center gap-3 mb-3">
+            <img src={icon} alt="" className="w-12 h-12 object-contain rounded border border-border-card p-1" />
+            <Button size="xs" color="danger" loading={deletingIcon} onClick={handleDeleteIcon}>
+              {t("branding.remove")}
+            </Button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Button size="xs" color="light" loading={uploadingIcon} onClick={() => iconFileRef.current?.click()}>
+            {icon ? t("branding.changeIcon") : t("branding.uploadIcon")}
+          </Button>
+          <span className="text-exs text-muted">PNG, SVG, JPEG, WebP. Max 512KB</span>
+        </div>
+        <input ref={iconFileRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" className="hidden" onChange={handleUploadIcon} />
       </div>
 
       <div className="bg-surface-hover rounded-lg p-3 mt-4">

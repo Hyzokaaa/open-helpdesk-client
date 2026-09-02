@@ -12,6 +12,7 @@ export interface PublicConfig {
   brandingAppName: string | null;
   brandingAppSubtitle: string | null;
   brandingLogo: string | null;
+  brandingIcon: string | null;
   upgradeNotificationsEnabled: boolean;
 }
 
@@ -20,7 +21,7 @@ export async function getPublicConfig(): Promise<PublicConfig> {
     const res = await http.get<PublicConfig>("/config/public");
     return res.data;
   } catch {
-    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null, brandingAppName: null, brandingAppSubtitle: null, brandingLogo: null, upgradeNotificationsEnabled: true };
+    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null, brandingAppName: null, brandingAppSubtitle: null, brandingLogo: null, brandingIcon: null, upgradeNotificationsEnabled: true };
   }
 }
 
@@ -31,6 +32,7 @@ export interface ResolvedWorkspace {
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
+  icon: string | null;
 }
 
 export async function resolveDomain(host: string): Promise<ResolvedWorkspace[] | null> {

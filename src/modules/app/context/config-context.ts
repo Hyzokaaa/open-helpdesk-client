@@ -8,6 +8,7 @@ export interface DomainWorkspace {
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
+  icon: string | null;
 }
 
 export interface ConfigContextProps {
@@ -26,6 +27,7 @@ export interface ConfigContextProps {
   brandName: string;
   brandSubtitle: string;
   brandLogo: string | null;
+  brandIcon: string | null;
 }
 
 export const ConfigContext = createContext<ConfigContextProps>({
@@ -43,4 +45,5 @@ export const ConfigContext = createContext<ConfigContextProps>({
   brandName: APP_NAME,
   brandSubtitle: APP_SUBTITLE,
   brandLogo: null,
+  brandIcon: null,
 });
