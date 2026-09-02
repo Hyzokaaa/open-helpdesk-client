@@ -23,7 +23,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
   const [upgradeNotificationsEnabled, setUpgradeNotificationsEnabled] = useState(true);
-  const [systemBranding, setSystemBranding] = useState<{ appName: string | null; appSubtitle: string | null; logo: string | null }>({ appName: null, appSubtitle: null, logo: null });
+  const [systemBranding, setSystemBranding] = useState<{ appName: string | null; appSubtitle: string | null; logo: string | null; icon: string | null }>({ appName: null, appSubtitle: null, logo: null, icon: null });
 
   useEffect(() => {
     const init = async () => {
@@ -41,6 +41,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         appName: config.brandingAppName ?? null,
         appSubtitle: config.brandingAppSubtitle ?? null,
         logo: config.brandingLogo ?? null,
+        icon: config.brandingIcon ?? null,
       });
 
       const resolved = await resolveDomain(window.location.hostname);
@@ -56,6 +57,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const systemName = sysSplit?.name ?? APP_NAME;
     const systemSubtitle = systemBranding.appSubtitle ?? sysSplit?.subtitle ?? APP_SUBTITLE;
     const systemLogo = systemBranding.logo ?? null;
+    const systemIcon = systemBranding.icon ?? null;
 
     // Determine if workspace branding should apply
     // SaaS: only via custom domain. Selfhosted: always.
@@ -65,7 +67,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       : null;
 
     if (!wsSource) {
-      return { brandName: systemName, brandSubtitle: systemSubtitle, brandLogo: systemLogo, brandIcon: null };
+      return { brandName: systemName, brandSubtitle: systemSubtitle, brandLogo: systemLogo, brandIcon: systemIcon };
     }
 
     // Workspace branding with field-by-field inheritance from system
@@ -75,7 +77,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const name = wsSplit?.name ?? systemName;
     const subtitle = wsSource.appSubtitle ?? wsSplit?.subtitle ?? systemSubtitle;
     const logo = wsSource.logo ?? systemLogo;
-    const icon = wsSource.icon ?? null;
+    const icon = wsSource.icon ?? systemIcon;
 
     return { brandName: name, brandSubtitle: subtitle, brandLogo: logo, brandIcon: icon };
   }, [domainWorkspaces, systemBranding, saasMode]);
