@@ -26,7 +26,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const { t } = useTranslation();
   const { extraSettingsNav, extraAdminNav } = useExtensions();
   const { clearWorkspacePalette } = useContext(PaletteContext);
-  const { domainWorkspaces, loading: configLoading, saasMode, brandName, brandSubtitle, brandLogo } = useConfig();
+  const { domainWorkspaces, loading: configLoading, saasMode, brandName, brandSubtitle, brandLogo, brandIcon } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
   const lockedWorkspace = domainWorkspaces?.length === 1 ? domainWorkspaces[0] : null;
 
@@ -168,10 +168,10 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         onClick={() => { setLastSlug(null); clearWorkspacePalette(); }}
         className="flex items-center gap-2.5 px-4 py-4 border-b border-border-card hover:bg-surface-hover transition-colors"
       >
-        {brandLogo && <BrandLogo src={brandLogo} size="md" />}
-        <div>
-          <h1 className="text-base font-body-bold text-primary">{brandName}</h1>
-          {brandSubtitle && <p className="text-exs text-subtle font-body-medium">{brandSubtitle}</p>}
+        {(brandIcon || brandLogo) && <img src={brandIcon || brandLogo!} alt="" className="w-8 h-8 object-contain shrink-0 rounded" />}
+        <div className="min-w-0">
+          <h1 className="text-base font-body-bold text-primary truncate">{brandName}</h1>
+          {brandSubtitle && <p className="text-exs text-subtle font-body-medium truncate">{brandSubtitle}</p>}
         </div>
       </Link>
 

@@ -224,7 +224,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 appName={workspace.appName}
                 appSubtitle={workspace.appSubtitle}
                 logo={workspace.logo}
-                onUpdate={(appName, appSubtitle, logo) => setWorkspace({ ...workspace, appName, appSubtitle, logo })}
+                icon={workspace.icon}
+                onUpdate={(appName, appSubtitle, logo, icon) => setWorkspace({ ...workspace, appName, appSubtitle, logo, icon })}
               />
             </CollapsibleSection>
           )}

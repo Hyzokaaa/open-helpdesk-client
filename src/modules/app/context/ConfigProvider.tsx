@@ -49,7 +49,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     init().finally(() => setLoading(false));
   }, []);
 
-  const { brandName, brandSubtitle, brandLogo } = useMemo(() => {
+  const { brandName, brandSubtitle, brandLogo, brandIcon } = useMemo(() => {
     // System branding (from DB) with env var fallback
     const sysName = systemBranding.appName ?? null;
     const sysSplit = sysName ? applyNameSplit(sysName) : null;
@@ -61,11 +61,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     // SaaS: only via custom domain. Selfhosted: always.
     const shouldApplyWorkspace = !saasMode || !!domainWorkspaces;
     const wsSource = shouldApplyWorkspace
-      ? domainWorkspaces?.find((ws) => ws.appName || ws.appSubtitle || ws.logo) ?? null
+      ? domainWorkspaces?.find((ws) => ws.appName || ws.appSubtitle || ws.logo || ws.icon) ?? null
       : null;
 
     if (!wsSource) {
-      return { brandName: systemName, brandSubtitle: systemSubtitle, brandLogo: systemLogo };
+      return { brandName: systemName, brandSubtitle: systemSubtitle, brandLogo: systemLogo, brandIcon: null };
     }
 
     // Workspace branding with field-by-field inheritance from system
@@ -75,8 +75,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const name = wsSplit?.name ?? systemName;
     const subtitle = wsSource.appSubtitle ?? wsSplit?.subtitle ?? systemSubtitle;
     const logo = wsSource.logo ?? systemLogo;
+    const icon = wsSource.icon ?? null;
 
-    return { brandName: name, brandSubtitle: subtitle, brandLogo: logo };
+    return { brandName: name, brandSubtitle: subtitle, brandLogo: logo, brandIcon: icon };
   }, [domainWorkspaces, systemBranding, saasMode]);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandName, brandSubtitle]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon }}>
       {children}
     </ConfigContext.Provider>
   );

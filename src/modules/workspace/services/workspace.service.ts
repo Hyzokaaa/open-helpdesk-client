@@ -27,6 +27,7 @@ export interface WorkspaceDetail {
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
+  icon: string | null;
 }
 
 export interface DomainVerificationResult {
@@ -319,4 +320,15 @@ export async function uploadLogo(slug: string, file: File): Promise<{ logo: stri
 
 export async function deleteLogo(slug: string): Promise<void> {
   await http.delete(`/workspaces/${slug}/branding/logo`);
+}
+
+export async function uploadIcon(slug: string, file: File): Promise<{ icon: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<{ icon: string }>(`/workspaces/${slug}/branding/icon`, formData);
+  return res.data;
+}
+
+export async function deleteIcon(slug: string): Promise<void> {
+  await http.delete(`/workspaces/${slug}/branding/icon`);
 }
