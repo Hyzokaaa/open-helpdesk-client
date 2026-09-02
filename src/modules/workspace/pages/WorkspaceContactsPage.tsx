@@ -18,6 +18,7 @@ import {
   updateMemberOrganization,
 } from "../services/workspace.service";
 import { Organization, listOrganizations } from "@modules/organization/services/organization.service";
+import InviteSheet from "../components/InviteSheet";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -35,6 +36,7 @@ export default function WorkspaceContactsPage() {
   const [editLastName, setEditLastName] = useState("");
   const [editOrgId, setEditOrgId] = useState<string | null>(null);
   const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [showInvite, setShowInvite] = useState(false);
 
   const canManage = can(P.WORKSPACE_MEMBERS_MANAGE);
 
@@ -90,6 +92,11 @@ export default function WorkspaceContactsPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("sidebar.contacts")}</h2>
+        {canManage && (
+          <Button size="sm" onClick={() => setShowInvite(true)}>
+            {t("contacts.invite")}
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -182,6 +189,15 @@ export default function WorkspaceContactsPage() {
             <Button size="sm" onClick={handleSaveContactName}>{t("members.save")}</Button>
           </div>
         </Sheet>
+      )}
+
+      {showInvite && workspaceSlug && (
+        <InviteSheet
+          workspaceSlug={workspaceSlug}
+          fixedRole="user"
+          onClose={() => setShowInvite(false)}
+          onSent={fetchContacts}
+        />
       )}
 
       {removeMemberId && (

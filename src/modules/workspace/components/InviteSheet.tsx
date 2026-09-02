@@ -13,20 +13,22 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 
-const ROLES = ["admin", "supervisor", "agent", "user"] as const;
+const ROLES = ["admin", "supervisor", "agent"] as const;
 
 interface Props {
   workspaceSlug: string;
   onClose: () => void;
   onSent?: () => void;
+  fixedRole?: string;
 }
 
-export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
+export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { emailConfigured } = useConfig();
   const { getAgentLimit } = useExtensions();
-  const [rows, setRows] = useState([{ email: "", role: "user" }]);
+  const defaultRole = fixedRole ?? "agent";
+  const [rows, setRows] = useState([{ email: "", role: defaultRole }]);
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<InvitationItem[]>([]);
@@ -80,7 +82,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   };
 
   const addRow = () => {
-    setRows((prev) => [...prev, { email: "", role: "user" }]);
+    setRows((prev) => [...prev, { email: "", role: defaultRole }]);
   };
 
   const validRows = rows.filter((r) => r.email.trim());
@@ -166,14 +168,16 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
                         onChange={(v) => updateRow(i, "email", v)}
                       />
                     </FormInput>
-                    <FormInput label={i === 0 ? t("members.role") : undefined} required className="flex-1 !mb-0">
-                      <Select
-                        options={[...ROLES]}
-                        label={(r) => r}
-                        value={(r) => r === row.role}
-                        onChange={(r) => updateRow(i, "role", r)}
-                      />
-                    </FormInput>
+                    {!fixedRole && (
+                      <FormInput label={i === 0 ? t("members.role") : undefined} required className="flex-1 !mb-0">
+                        <Select
+                          options={[...ROLES]}
+                          label={(r) => r}
+                          value={(r) => r === row.role}
+                          onChange={(r) => updateRow(i, "role", r)}
+                        />
+                      </FormInput>
+                    )}
                     {rows.length > 1 && (
                       <button
                         type="button"

@@ -91,7 +91,7 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-body-bold text-heading">{t("sidebar.team")}</h2>
+        <h2 className="text-lg font-body-bold text-heading">{t("sidebar.members")}</h2>
         <div className="flex gap-2">
           {canManageMembers && (
             <Button size="sm" color="light" onClick={() => setShowImport(true)}>
