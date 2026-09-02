@@ -609,7 +609,7 @@ export default function TicketsPage() {
             <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
             <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
             <Select
-              options={members.filter((m) => m.role !== "reporter")}
+              options={members.filter((m) => m.role !== "user")}
               value={(m) => m.userId === assignTarget}
               onChange={(m) => setAssignTarget(m.userId)}
               label={(m) => `${m.firstName} ${m.lastName}`}

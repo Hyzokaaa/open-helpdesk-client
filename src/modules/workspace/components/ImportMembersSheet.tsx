@@ -24,7 +24,7 @@ type Step = "upload" | "preview" | "success";
 type EditingCell = { section: "valid" | "error"; rowIndex: number; field: string } | null;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const VALID_ROLES = ["admin", "agent", "reporter"];
+const VALID_ROLES = ["admin", "agent", "user"];
 
 function validateRow(row: { email: string; firstName: string; role: string }): string | null {
   if (!row.email) return "Email is required";

@@ -20,7 +20,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
-const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent", "user"] as const;
 
 export default function WorkspaceMembersPage() {
   const { workspaceSlug } = useParams();
@@ -39,7 +39,7 @@ export default function WorkspaceMembersPage() {
     if (!workspaceSlug) return;
     setLoading(true);
     listMembers(workspaceSlug)
-      .then((all) => setMembers(all.filter((m) => m.role !== "reporter")))
+      .then((all) => setMembers(all.filter((m) => m.role !== "user")))
       .catch(() => toast.error(t("members.loadError")))
       .finally(() => setLoading(false));
   };

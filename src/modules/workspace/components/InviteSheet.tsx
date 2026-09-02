@@ -13,7 +13,7 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 
-const ROLES = ["admin", "supervisor", "agent", "reporter"] as const;
+const ROLES = ["admin", "supervisor", "agent", "user"] as const;
 
 interface Props {
   workspaceSlug: string;
@@ -26,7 +26,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   const navigate = useNavigate();
   const { emailConfigured } = useConfig();
   const { getAgentLimit } = useExtensions();
-  const [rows, setRows] = useState([{ email: "", role: "reporter" }]);
+  const [rows, setRows] = useState([{ email: "", role: "user" }]);
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<InvitationItem[]>([]);
@@ -80,7 +80,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent }: Props) {
   };
 
   const addRow = () => {
-    setRows((prev) => [...prev, { email: "", role: "reporter" }]);
+    setRows((prev) => [...prev, { email: "", role: "user" }]);
   };
 
   const validRows = rows.filter((r) => r.email.trim());

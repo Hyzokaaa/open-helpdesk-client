@@ -42,7 +42,7 @@ export default function WorkspaceContactsPage() {
     if (!workspaceSlug) return;
     setLoading(true);
     listMembers(workspaceSlug)
-      .then((all) => setContacts(all.filter((m) => m.role === "reporter")))
+      .then((all) => setContacts(all.filter((m) => m.role === "user")))
       .catch(() => toast.error(t("contacts.loadError")))
       .finally(() => setLoading(false));
   };
