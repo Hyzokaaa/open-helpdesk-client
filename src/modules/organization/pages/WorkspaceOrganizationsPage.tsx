@@ -51,6 +51,13 @@ export default function WorkspaceOrganizationsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const [originalDescription, setOriginalDescription] = useState("");
+  const [originalDomainsInput, setOriginalDomainsInput] = useState("");
+  const [originalNotes, setOriginalNotes] = useState("");
+
+  const isDirty = name !== originalName || description !== originalDescription || domainsInput !== originalDomainsInput || notes !== originalNotes;
 
   // Members state (for edit sheet)
   const [orgMembers, setOrgMembers] = useState<OrganizationMember[]>([]);
@@ -82,6 +89,10 @@ export default function WorkspaceOrganizationsPage() {
     setDescription("");
     setDomainsInput("");
     setNotes("");
+    setOriginalName("");
+    setOriginalDescription("");
+    setOriginalDomainsInput("");
+    setOriginalNotes("");
     setSheet({ mode: "create" });
   };
 
@@ -90,6 +101,10 @@ export default function WorkspaceOrganizationsPage() {
     setDescription(org.description ?? "");
     setDomainsInput(org.domains.join(", "));
     setNotes(org.notes ?? "");
+    setOriginalName(org.name);
+    setOriginalDescription(org.description ?? "");
+    setOriginalDomainsInput(org.domains.join(", "));
+    setOriginalNotes(org.notes ?? "");
     setSheet({ mode: "edit", org });
     setOrgMembers([]);
     setAddMemberUserId(null);
@@ -103,6 +118,14 @@ export default function WorkspaceOrganizationsPage() {
   };
 
   const closeSheet = () => setSheet(null);
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      closeSheet();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,7 +333,7 @@ export default function WorkspaceOrganizationsPage() {
 
       {/* Create / Edit Sheet */}
       {sheet && (
-        <Sheet onClose={closeSheet}>
+        <Sheet onClose={handleClose}>
           <h2 className="text-lg font-body-bold text-heading mb-6">
             {sheet.mode === "create" ? t("organizations.new") : t("organizations.editTitle")}
           </h2>
@@ -432,7 +455,7 @@ export default function WorkspaceOrganizationsPage() {
             )}
 
             <div className="flex justify-end gap-3">
-              <Button type="button" size="sm" color="light" onClick={closeSheet}>
+              <Button type="button" size="sm" color="light" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
               <Button type="submit" size="sm" loading={submitting}>
@@ -451,6 +474,17 @@ export default function WorkspaceOrganizationsPage() {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); closeSheet(); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>

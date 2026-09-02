@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -26,6 +26,17 @@ export default function WebhookSettings({ slug }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [editWebhook, setEditWebhook] = useState<WebhookDto | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const isDirtyRef = useRef(false);
+
+  const handleSheetClose = () => {
+    if (isDirtyRef.current) {
+      setShowDiscard(true);
+    } else {
+      setShowSheet(false);
+      setEditWebhook(null);
+    }
+  };
 
   useEffect(() => {
     listWebhooks(slug).then(setWebhooks).catch(() => {});
@@ -109,8 +120,8 @@ export default function WebhookSettings({ slug }: Props) {
       )}
 
       {showSheet && (
-        <Sheet size="sm" onClose={() => { setShowSheet(false); setEditWebhook(null); }}>
-          <WebhookForm slug={slug} webhook={editWebhook} onSaved={handleSaved} />
+        <Sheet size="sm" onClose={handleSheetClose}>
+          <WebhookForm slug={slug} webhook={editWebhook} onSaved={handleSaved} onDirtyChange={(d) => { isDirtyRef.current = d; }} />
         </Sheet>
       )}
 
@@ -124,16 +135,35 @@ export default function WebhookSettings({ slug }: Props) {
           onCancel={() => setDeleteId(null)}
         />
       )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowSheet(false); setEditWebhook(null); }}
+          onCancel={() => setShowDiscard(false)}
+        />
+      )}
     </div>
   );
 }
 
-function WebhookForm({ slug, webhook, onSaved }: { slug: string; webhook: WebhookDto | null; onSaved: () => void }) {
+function WebhookForm({ slug, webhook, onSaved, onDirtyChange }: { slug: string; webhook: WebhookDto | null; onSaved: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const isEdit = !!webhook;
   const { t } = useTranslation();
   const [url, setUrl] = useState(webhook?.url ?? "");
   const [events, setEvents] = useState<string[]>(webhook?.events ?? [...WEBHOOK_EVENTS]);
   const [saving, setSaving] = useState(false);
+
+  const originalUrl = webhook?.url ?? "";
+  const originalEvents = webhook?.events ?? [...WEBHOOK_EVENTS];
+  const isDirty = url !== originalUrl || JSON.stringify([...events].sort()) !== JSON.stringify([...originalEvents].sort());
+
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty]);
 
   const toggleEvent = (event: string) => {
     setEvents((prev) =>

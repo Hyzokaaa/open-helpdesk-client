@@ -129,6 +129,14 @@ export default function WorkspaceEmailRulesPage() {
   const [conditions, setConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
   const [actions, setActions] = useState<RuleAction[]>([{ type: "reject" }]);
   const [saving, setSaving] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const [originalConditions, setOriginalConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
+  const [originalActions, setOriginalActions] = useState<RuleAction[]>([{ type: "reject" }]);
+
+  const isDirty = name !== originalName
+    || JSON.stringify(conditions) !== JSON.stringify(originalConditions)
+    || JSON.stringify(actions) !== JSON.stringify(originalActions);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -151,6 +159,9 @@ export default function WorkspaceEmailRulesPage() {
 
   const openCreate = () => {
     resetForm();
+    setOriginalName("");
+    setOriginalConditions([{ field: "from", operator: "contains", value: "" }]);
+    setOriginalActions([{ type: "reject" }]);
     setEditingRule(null);
     setShowCreate(true);
   };
@@ -159,8 +170,20 @@ export default function WorkspaceEmailRulesPage() {
     setName(rule.name);
     setConditions([...rule.conditions]);
     setActions([...rule.actions]);
+    setOriginalName(rule.name);
+    setOriginalConditions([...rule.conditions]);
+    setOriginalActions([...rule.actions]);
     setEditingRule(rule);
     setShowCreate(true);
+  };
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      setShowCreate(false);
+      setEditingRule(null);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -272,7 +295,7 @@ export default function WorkspaceEmailRulesPage() {
       )}
 
       {showCreate && (
-        <Sheet onClose={() => { setShowCreate(false); setEditingRule(null); }}>
+        <Sheet onClose={handleClose}>
           <h3 className="text-lg font-body-bold text-heading mb-4">
             {editingRule ? t("emailRules.edit") : t("emailRules.new")}
           </h3>
@@ -363,7 +386,7 @@ export default function WorkspaceEmailRulesPage() {
             </button>
 
             <div className="flex gap-2 justify-end mt-4">
-              <Button type="button" size="sm" color="light" onClick={() => { setShowCreate(false); setEditingRule(null); }}>{t("admin.cancel")}</Button>
+              <Button type="button" size="sm" color="light" onClick={handleClose}>{t("admin.cancel")}</Button>
               <Button type="submit" size="sm" loading={saving}>{t("members.save")}</Button>
             </div>
           </form>
@@ -378,6 +401,17 @@ export default function WorkspaceEmailRulesPage() {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowCreate(false); setEditingRule(null); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>

@@ -49,6 +49,11 @@ export default function WorkspaceProjectsPage() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const [originalDescription, setOriginalDescription] = useState("");
+
+  const isDirty = name !== originalName || description !== originalDescription;
 
   const [allCategories, setAllCategories] = useState<TicketCategoryDto[]>([]);
   const [projectCategoryIds, setProjectCategoryIds] = useState<Set<string>>(new Set());
@@ -69,6 +74,8 @@ export default function WorkspaceProjectsPage() {
   const openCreate = () => {
     setName("");
     setDescription("");
+    setOriginalName("");
+    setOriginalDescription("");
     setProjectCategoryIds(new Set());
     setSheet({ mode: "create" });
   };
@@ -77,6 +84,8 @@ export default function WorkspaceProjectsPage() {
     if (!workspaceSlug) return;
     setName(project.name);
     setDescription(project.description || "");
+    setOriginalName(project.name);
+    setOriginalDescription(project.description || "");
     setSheet({ mode: "edit", project, categoriesLoading: true });
 
     Promise.all([
@@ -93,6 +102,14 @@ export default function WorkspaceProjectsPage() {
   };
 
   const closeSheet = () => setSheet(null);
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      closeSheet();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +224,7 @@ export default function WorkspaceProjectsPage() {
       )}
 
       {sheet && (
-        <Sheet onClose={closeSheet}>
+        <Sheet onClose={handleClose}>
           <h2 className="text-lg font-body-bold text-heading mb-6">
             {sheet.mode === "create" ? t("projects.new") : t("projects.editTitle")}
           </h2>
@@ -219,7 +236,7 @@ export default function WorkspaceProjectsPage() {
               <Input value={description} onChange={setDescription} />
             </FormInput>
             <div className="flex justify-end gap-3">
-              <Button type="button" size="sm" color="light" onClick={closeSheet}>
+              <Button type="button" size="sm" color="light" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
               <Button type="submit" size="sm" loading={submitting} disabled={!name.trim()}>
@@ -279,6 +296,17 @@ export default function WorkspaceProjectsPage() {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); closeSheet(); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>

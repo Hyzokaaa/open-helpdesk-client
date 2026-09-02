@@ -49,6 +49,11 @@ export default function WorkspaceDepartmentsPage() {
 
   const [addMemberUserId, setAddMemberUserId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const [originalDescription, setOriginalDescription] = useState("");
+
+  const isDirty = name !== originalName || description !== originalDescription;
 
   const canManage = can(P.DEPARTMENT_MANAGE);
 
@@ -69,12 +74,16 @@ export default function WorkspaceDepartmentsPage() {
   const openCreate = () => {
     setName("");
     setDescription("");
+    setOriginalName("");
+    setOriginalDescription("");
     setSheet({ mode: "create" });
   };
 
   const openEdit = (dept: Department) => {
     setName(dept.name);
     setDescription(dept.description ?? "");
+    setOriginalName(dept.name);
+    setOriginalDescription(dept.description ?? "");
     setSheet({ mode: "edit", dept, detail: null, detailLoading: true });
     if (workspaceSlug) {
       getDepartment(workspaceSlug, dept.id)
@@ -89,6 +98,14 @@ export default function WorkspaceDepartmentsPage() {
   const closeSheet = () => {
     setSheet(null);
     setAddMemberUserId(null);
+  };
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      closeSheet();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,7 +246,7 @@ export default function WorkspaceDepartmentsPage() {
 
       {/* Create / Edit Sheet */}
       {sheet && (
-        <Sheet onClose={closeSheet}>
+        <Sheet onClose={handleClose}>
           <h2 className="text-lg font-body-bold text-heading mb-6">
             {sheet.mode === "create" ? t("departments.new") : t("departments.editTitle")}
           </h2>
@@ -241,7 +258,7 @@ export default function WorkspaceDepartmentsPage() {
               <Input placeholder={t("departments.descriptionPlaceholder")} value={description} onChange={setDescription} />
             </FormInput>
             <div className="flex justify-end gap-3">
-              <Button type="button" size="sm" color="light" onClick={closeSheet}>
+              <Button type="button" size="sm" color="light" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
               <Button type="submit" size="sm" loading={submitting}>
@@ -335,6 +352,17 @@ export default function WorkspaceDepartmentsPage() {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); closeSheet(); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>
