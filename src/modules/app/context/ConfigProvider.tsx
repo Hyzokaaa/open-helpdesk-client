@@ -86,6 +86,17 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     document.title = brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName;
   }, [brandName, brandSubtitle]);
 
+  useEffect(() => {
+    if (!brandIcon) return;
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = brandIcon;
+  }, [brandIcon]);
+
   return (
     <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon }}>
       {children}
