@@ -6,6 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
+import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
@@ -13,6 +14,8 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import {
   EmailRule,
   RuleCondition,
@@ -50,11 +53,12 @@ const ACTION_TYPES = [
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
 
-function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }: {
+function SortableRow({ rule, t, tEnum, categories, canManage, onEdit, onToggle, onDelete }: {
   rule: EmailRule;
   t: (key: any) => string;
   tEnum: (ns: string, key: string) => string;
   categories: TicketCategoryDto[];
+  canManage: boolean;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
@@ -95,13 +99,15 @@ function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }:
           size="xs"
         />
       </td>
-      <td className="px-2 py-3">
-        <ActionMenu items={[
-          { label: t("ticketDetail.edit"), onClick: onEdit },
-          { label: rule.isActive ? t("emailRules.disable") : t("emailRules.enable"), onClick: onToggle },
-          { label: t("members.remove"), onClick: onDelete, danger: true },
-        ]} />
-      </td>
+      {canManage && (
+        <td className="px-2 py-3">
+          <ActionMenu items={[
+            { label: t("ticketDetail.edit"), onClick: onEdit },
+            { label: rule.isActive ? t("emailRules.disable") : t("emailRules.enable"), onClick: onToggle },
+            { label: t("members.remove"), onClick: onDelete, danger: true },
+          ]} />
+        </td>
+      )}
     </tr>
   );
 }
@@ -109,6 +115,8 @@ function SortableRow({ rule, t, tEnum, categories, onEdit, onToggle, onDelete }:
 export default function WorkspaceEmailRulesPage() {
   const { workspaceSlug } = useParams();
   const { t, tEnum } = useTranslation();
+  const { can } = usePermissions(workspaceSlug);
+  const canManage = can(P.WORKSPACE_SETTINGS_MANAGE);
   const [rules, setRules] = useState<EmailRule[]>([]);
   const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +129,14 @@ export default function WorkspaceEmailRulesPage() {
   const [conditions, setConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
   const [actions, setActions] = useState<RuleAction[]>([{ type: "reject" }]);
   const [saving, setSaving] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const [originalConditions, setOriginalConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
+  const [originalActions, setOriginalActions] = useState<RuleAction[]>([{ type: "reject" }]);
+
+  const isDirty = name !== originalName
+    || JSON.stringify(conditions) !== JSON.stringify(originalConditions)
+    || JSON.stringify(actions) !== JSON.stringify(originalActions);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -143,6 +159,9 @@ export default function WorkspaceEmailRulesPage() {
 
   const openCreate = () => {
     resetForm();
+    setOriginalName("");
+    setOriginalConditions([{ field: "from", operator: "contains", value: "" }]);
+    setOriginalActions([{ type: "reject" }]);
     setEditingRule(null);
     setShowCreate(true);
   };
@@ -151,8 +170,20 @@ export default function WorkspaceEmailRulesPage() {
     setName(rule.name);
     setConditions([...rule.conditions]);
     setActions([...rule.actions]);
+    setOriginalName(rule.name);
+    setOriginalConditions([...rule.conditions]);
+    setOriginalActions([...rule.actions]);
     setEditingRule(rule);
     setShowCreate(true);
+  };
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    } else {
+      setShowCreate(false);
+      setEditingRule(null);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -172,7 +203,7 @@ export default function WorkspaceEmailRulesPage() {
       setEditingRule(null);
       fetchRules();
     } catch {
-      toast.error("Failed to save rule");
+      toast.error(t("emailRules.saveError"));
     } finally {
       setSaving(false);
     }
@@ -220,7 +251,7 @@ export default function WorkspaceEmailRulesPage() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("emailRules.title")}</h2>
-        <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>
+        {canManage && <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>}
       </div>
 
       {loading ? (
@@ -250,6 +281,7 @@ export default function WorkspaceEmailRulesPage() {
                       t={t}
                       tEnum={tEnum}
                       categories={wsCategories}
+                      canManage={canManage}
                       onEdit={() => openEdit(rule)}
                       onToggle={() => handleToggle(rule)}
                       onDelete={() => setDeleteId(rule.id)}
@@ -263,7 +295,7 @@ export default function WorkspaceEmailRulesPage() {
       )}
 
       {showCreate && (
-        <Sheet onClose={() => { setShowCreate(false); setEditingRule(null); }}>
+        <Sheet onClose={handleClose}>
           <h3 className="text-lg font-body-bold text-heading mb-4">
             {editingRule ? t("emailRules.edit") : t("emailRules.new")}
           </h3>
@@ -277,22 +309,22 @@ export default function WorkspaceEmailRulesPage() {
             {conditions.map((c, i) => (
               <div key={i} className="flex gap-2 mb-2 items-end">
                 <FormInput label={i === 0 ? t("emailRules.field") : undefined} className="flex-1">
-                  <select
-                    value={c.field}
-                    onChange={(e) => updateCondition(i, { field: e.target.value as RuleCondition["field"] })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{t(f.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...CONDITION_FIELDS]}
+                    label={(f) => t(f.labelKey)}
+                    value={(f) => f.value === c.field}
+                    onChange={(f) => updateCondition(i, { field: f.value as RuleCondition["field"] })}
+                    size="sm"
+                  />
                 </FormInput>
                 <FormInput label={i === 0 ? t("emailRules.operator") : undefined} className="flex-1">
-                  <select
-                    value={c.operator}
-                    onChange={(e) => updateCondition(i, { operator: e.target.value as RuleCondition["operator"] })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {OPERATORS.map((o) => <option key={o.value} value={o.value}>{t(o.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...OPERATORS]}
+                    label={(o) => t(o.labelKey)}
+                    value={(o) => o.value === c.operator}
+                    onChange={(o) => updateCondition(i, { operator: o.value as RuleCondition["operator"] })}
+                    size="sm"
+                  />
                 </FormInput>
                 <FormInput label={i === 0 ? t("emailRules.value") : undefined} className="flex-[2]">
                   <Input value={c.value} onChange={(v) => updateCondition(i, { value: v })} required />
@@ -311,34 +343,34 @@ export default function WorkspaceEmailRulesPage() {
             {actions.map((a, i) => (
               <div key={i} className="flex gap-2 mb-2 items-end">
                 <FormInput label={i === 0 ? t("emailRules.actionType") : undefined} className="flex-1">
-                  <select
-                    value={a.type}
-                    onChange={(e) => updateAction(i, { type: e.target.value as RuleAction["type"], value: undefined })}
-                    className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                  >
-                    {ACTION_TYPES.map((at) => <option key={at.value} value={at.value}>{t(at.labelKey)}</option>)}
-                  </select>
+                  <Select
+                    options={[...ACTION_TYPES]}
+                    label={(at) => t(at.labelKey)}
+                    value={(at) => at.value === a.type}
+                    onChange={(at) => updateAction(i, { type: at.value as RuleAction["type"], value: undefined })}
+                    size="sm"
+                  />
                 </FormInput>
                 {needsValue(a.type) && (
                   <FormInput label={i === 0 ? t("emailRules.value") : undefined} className="flex-[2]">
                     {a.type === "set-priority" ? (
-                      <select
-                        value={a.value ?? ""}
-                        onChange={(e) => updateAction(i, { value: e.target.value })}
-                        className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                      >
-                        <option value="">—</option>
-                        {PRIORITIES.map((p) => <option key={p} value={p}>{tEnum("priority", p)}</option>)}
-                      </select>
+                      <Select
+                        options={PRIORITIES.map((p) => ({ value: p, label: tEnum("priority", p) }))}
+                        label={(o) => o.label}
+                        value={(o) => o.value === (a.value ?? "")}
+                        onChange={(o) => updateAction(i, { value: o.value })}
+                        placeholder="—"
+                        size="sm"
+                      />
                     ) : a.type === "set-category" ? (
-                      <select
-                        value={a.value ?? ""}
-                        onChange={(e) => updateAction(i, { value: e.target.value })}
-                        className="w-full text-sm bg-surface border border-border-card rounded px-2 py-1.5 text-body"
-                      >
-                        <option value="">—</option>
-                        {wsCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      <Select
+                        options={wsCategories}
+                        label={(c) => c.name}
+                        value={(c) => c.id === (a.value ?? "")}
+                        onChange={(c) => updateAction(i, { value: c.id })}
+                        placeholder="—"
+                        size="sm"
+                      />
                     ) : (
                       <Input value={a.value ?? ""} onChange={(v) => updateAction(i, { value: v })} />
                     )}
@@ -354,7 +386,7 @@ export default function WorkspaceEmailRulesPage() {
             </button>
 
             <div className="flex gap-2 justify-end mt-4">
-              <Button type="button" size="sm" color="light" onClick={() => { setShowCreate(false); setEditingRule(null); }}>{t("admin.cancel")}</Button>
+              <Button type="button" size="sm" color="light" onClick={handleClose}>{t("admin.cancel")}</Button>
               <Button type="submit" size="sm" loading={saving}>{t("members.save")}</Button>
             </div>
           </form>
@@ -369,6 +401,17 @@ export default function WorkspaceEmailRulesPage() {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowCreate(false); setEditingRule(null); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>

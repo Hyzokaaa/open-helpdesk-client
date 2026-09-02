@@ -276,7 +276,7 @@ export default function WorkspaceAuditLogPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-body">
-                        {item.userId ? getMemberName(item.userId) : "System"}
+                        {item.userId ? getMemberName(item.userId) : t("auditLog.system")}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -292,7 +292,7 @@ export default function WorkspaceAuditLogPage() {
                         onClick={() => setSelected(item)}
                         className="text-xs text-primary hover:underline cursor-pointer"
                       >
-                        View
+                        {t("auditLog.view")}
                       </button>
                     </td>
                   </tr>
@@ -342,21 +342,21 @@ export default function WorkspaceAuditLogPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-card">
-              <h3 className="text-sm font-body-bold text-heading">Log Entry</h3>
+              <h3 className="text-sm font-body-bold text-heading">{t("auditLog.logEntry")}</h3>
               <button onClick={() => setSelected(null)} className="text-muted hover:text-body cursor-pointer text-lg">✕</button>
             </div>
             <div className="px-5 py-4 space-y-4">
-              <DetailRow label="Date" value={formatDate(selected.createdAt)} />
-              <DetailRow label="Action" value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
-              <DetailRow label="Category" value={selected.category} />
-              <DetailRow label="Level" value={selected.level} />
-              <DetailRow label="Source" value={selected.source ?? "—"} />
-              <DetailRow label="Entity Type" value={selected.entityType} />
-              <DetailRow label="Entity ID" value={selected.entityId} />
-              <DetailRow label="User" value={selected.userId ? getMemberName(selected.userId) : "System"} />
-              {selected.userId && <DetailRow label="User ID" value={selected.userId} />}
+              <DetailRow label={t("auditLog.detail.date")} value={formatDate(selected.createdAt)} />
+              <DetailRow label={t("auditLog.detail.action")} value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
+              <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
+              <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
+              <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
+              <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
+              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} />
+              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? getMemberName(selected.userId) : t("auditLog.system")} />
+              {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
-                <p className="text-xs font-body-semibold text-subtle uppercase mb-1">Metadata</p>
+                <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
                 {selected.metadata ? (
                   <pre className="text-xs text-body bg-surface-hover rounded p-3 overflow-x-auto whitespace-pre-wrap break-all">
                     {JSON.stringify(selected.metadata, null, 2)}
@@ -365,7 +365,7 @@ export default function WorkspaceAuditLogPage() {
                   <span className="text-xs text-muted">—</span>
                 )}
               </div>
-              <DetailRow label="Log ID" value={selected.id} />
+              <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
           </div>
         </div>

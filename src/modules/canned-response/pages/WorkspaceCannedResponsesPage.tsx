@@ -222,7 +222,7 @@ export default function WorkspaceCannedResponsesPage() {
           <form onSubmit={handleSubmit}>
             <FormInput label={t("cannedResponses.titleLabel")} required>
               <Input
-                placeholder="e.g. Greeting"
+                placeholder={t("cannedResponses.titlePlaceholder")}
                 value={title}
                 onChange={setTitle}
                 autoFocus
@@ -232,7 +232,7 @@ export default function WorkspaceCannedResponsesPage() {
               <MiniEditor
                 ref={editorRef}
                 initialValue={content}
-                placeholder="e.g. Hello! How can I help you today?"
+                placeholder={t("cannedResponses.contentPlaceholder")}
               />
             </FormInput>
             <div className="flex justify-end gap-3">

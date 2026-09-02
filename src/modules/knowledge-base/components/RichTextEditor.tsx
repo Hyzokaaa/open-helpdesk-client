@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { useFormInputId } from "@modules/app/modules/ui/components/FormInput/form-input-context";
 
 const Underline = Mark.create({
   name: "underline",
@@ -26,6 +27,7 @@ export interface RichTextEditorRef {
 interface Props {
   initialValue: string;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 /* ── Toolbar state ──────────────────────────────────────────────── */
@@ -78,9 +80,10 @@ function Sep() {
 /* ── Editor ──────────────────────────────────────────────────────── */
 
 export default forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
-  { initialValue, placeholder },
+  { initialValue, placeholder, ariaLabel },
   ref,
 ) {
+  const formId = useFormInputId();
   const [active, setActive] = useState<ToolbarState>(EMPTY);
 
   const editor = useEditor({
@@ -96,7 +99,7 @@ export default forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
     ],
     content: initialValue || "",
     editorProps: {
-      attributes: { class: "kb-content p-3 min-h-[200px] text-sm text-body outline-none" },
+      attributes: { class: "kb-content p-3 min-h-[200px] text-sm text-body outline-none", ...(formId ? { id: formId } : {}), ...(ariaLabel ? { "aria-label": ariaLabel } : {}) },
     },
     onTransaction({ editor: e }) {
       setActive({

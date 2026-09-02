@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
       fetchData();
       toast.success(t("admin.userCreated"));
     } catch (err: unknown) {
-      toast.error((err as { message?: string }).message || "Failed to create user");
+      toast.error((err as { message?: string }).message || t("admin.createUserError"));
     } finally { setCreatingUser(false); }
   };
 
@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
       await toggleSystemAdmin(target.id, !target.isSystemAdmin);
       setConfirmToggleAdmin(null);
       fetchData();
-    } catch { toast.error("Failed to update admin status"); }
+    } catch { toast.error(t("admin.updateAdminError")); }
   };
 
   const handleEditUser = (u: UserItem) => {
@@ -124,7 +124,7 @@ export default function AdminUsersPage() {
       fetchData();
       toast.success(t("admin.profileUpdated"));
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Failed to update profile";
+      const msg = err?.response?.data?.message || err?.message || t("admin.updateProfileError");
       toast.error(msg);
     }
   };
@@ -134,7 +134,7 @@ export default function AdminUsersPage() {
       await toggleUserActive(target.id, !target.isActive);
       setConfirmToggleActive(null);
       fetchData();
-    } catch { toast.error("Failed to update user status"); }
+    } catch { toast.error(t("admin.updateStatusError")); }
   };
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
@@ -176,10 +176,10 @@ export default function AdminUsersPage() {
           <form onSubmit={handleCreateUser}>
             <div className="flex gap-4">
               <FormInput label={t("admin.firstName")} required className="flex-1">
-                <Input placeholder="John" value={firstName} onChange={setFirstName} required />
+                <Input placeholder={t("admin.firstNamePlaceholder")} value={firstName} onChange={setFirstName} required />
               </FormInput>
               <FormInput label={t("admin.lastName")} required className="flex-1">
-                <Input placeholder="Doe" value={lastName} onChange={setLastName} required />
+                <Input placeholder={t("admin.lastNamePlaceholder")} value={lastName} onChange={setLastName} required />
               </FormInput>
             </div>
             <div className="flex gap-4">

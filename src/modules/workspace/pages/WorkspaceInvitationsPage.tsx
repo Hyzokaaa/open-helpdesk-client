@@ -151,7 +151,7 @@ export default function WorkspaceInvitationsPage() {
       {cancelId && (
         <ConfirmModal
           title={t("invitations.cancel")}
-          message={t("ticketDetail.deleteMessage")}
+          message={t("common.confirmDeleteMessage")}
           confirmLabel={t("invitations.cancel")}
           danger
           onConfirm={handleCancel}

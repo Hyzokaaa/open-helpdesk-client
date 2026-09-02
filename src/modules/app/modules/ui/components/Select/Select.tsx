@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { inputClass } from "../../shared/domain/input-class";
 import { Size } from "../../domain/size";
+import { useFormInputId } from "../FormInput/form-input-context";
 
 interface Props<T> {
   options: T[];
@@ -25,6 +26,7 @@ export default function Select<T>({
   disabled = false,
   searchable,
 }: Props<T>) {
+  const formId = useFormInputId();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -86,6 +88,7 @@ export default function Select<T>({
   return (
     <div className="relative w-full">
       <button
+        id={formId}
         ref={btnRef}
         type="button"
         disabled={disabled}

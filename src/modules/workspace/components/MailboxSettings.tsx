@@ -67,6 +67,17 @@ export default function MailboxSettings({ slug }: Props) {
   const [editMailbox, setEditMailbox] = useState<MailboxDto | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [systemMailboxEnabled, setSystemMailboxEnabled] = useState(true);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const isDirtyRef = useRef(false);
+
+  const handleSheetClose = () => {
+    if (isDirtyRef.current) {
+      setShowDiscard(true);
+    } else {
+      setShowSheet(false);
+      setEditMailbox(null);
+    }
+  };
 
   useEffect(() => {
     listMailboxes(slug).then(setMailboxes).catch(() => {});
@@ -214,8 +225,8 @@ export default function MailboxSettings({ slug }: Props) {
       )}
 
       {showSheet && (
-        <Sheet onClose={() => { setShowSheet(false); setEditMailbox(null); }}>
-          <MailboxForm slug={slug} mailbox={editMailbox} onSaved={handleSaved} onPlanLimit={handlePlanLimitError} />
+        <Sheet onClose={handleSheetClose}>
+          <MailboxForm slug={slug} mailbox={editMailbox} onSaved={handleSaved} onPlanLimit={handlePlanLimitError} onDirtyChange={(d) => { isDirtyRef.current = d; }} />
         </Sheet>
       )}
 
@@ -227,6 +238,17 @@ export default function MailboxSettings({ slug }: Props) {
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowSheet(false); setEditMailbox(null); }}
+          onCancel={() => setShowDiscard(false)}
         />
       )}
     </div>
@@ -312,7 +334,7 @@ function AddressModePicker({ value, onChange, t }: {
   );
 }
 
-export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean }) {
+export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
@@ -337,6 +359,14 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit }: { slug: str
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const isDirty = isEdit
+    ? address !== (mailbox?.address ?? "") || imapHost !== (mailbox?.imapHost ?? "") || imapPort !== String(mailbox?.imapPort ?? "993") || imapUser !== (mailbox?.imapUser ?? "") || imapPass !== "" || imapFolder !== (mailbox?.imapFolder ?? "INBOX") || encryption !== (mailbox?.encryption ?? "tls") || pollInterval !== String(mailbox?.pollInterval ?? "30") || addressMode !== ((mailbox?.addressMode as 'address' | 'aliases' | 'all') ?? 'address') || autoReply !== (mailbox?.autoReply ?? true)
+    : address.trim() !== "" || imapHost.trim() !== "" || imapUser.trim() !== "" || imapPass.trim() !== "";
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty]);
 
   useEffect(() => {
     if (imapHost || !address.includes("@")) return;

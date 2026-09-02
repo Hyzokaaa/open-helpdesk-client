@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import {
@@ -85,15 +86,14 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
       </p>
 
       <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <label className="text-xs text-subtle font-body-medium mb-1 block">{t("customDomain.label")}</label>
+        <FormInput label={t("customDomain.label")} className="flex-1 !mb-0">
           <Input
             value={domain}
             onChange={setDomain}
             size="sm"
             placeholder="helpdesk.yourcompany.com"
           />
-        </div>
+        </FormInput>
         <Button size="xs" color="primary" onClick={handleSave} loading={saving} disabled={!hasChanges && hasDomain}>
           {hasDomain && !hasChanges ? t("customDomain.saved") : t("settings.save")}
         </Button>

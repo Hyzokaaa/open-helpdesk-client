@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -26,6 +26,16 @@ export default function ApiKeySettings({ slug }: Props) {
   const [keys, setKeys] = useState<ApiKeyDto[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const isDirtyRef = useRef(false);
+
+  const handleSheetClose = () => {
+    if (isDirtyRef.current) {
+      setShowDiscard(true);
+    } else {
+      setShowCreate(false);
+    }
+  };
 
   useEffect(() => {
     listApiKeys(slug).then(setKeys).catch(() => {});
@@ -91,8 +101,8 @@ export default function ApiKeySettings({ slug }: Props) {
       )}
 
       {showCreate && (
-        <Sheet size="md" onClose={() => setShowCreate(false)}>
-          <CreateApiKeyForm slug={slug} onCreated={handleCreated} onClose={() => setShowCreate(false)} />
+        <Sheet size="md" onClose={handleSheetClose}>
+          <CreateApiKeyForm slug={slug} onCreated={handleCreated} onClose={() => setShowCreate(false)} onDirtyChange={(d) => { isDirtyRef.current = d; }} />
         </Sheet>
       )}
 
@@ -106,6 +116,17 @@ export default function ApiKeySettings({ slug }: Props) {
           onCancel={() => setDeleteId(null)}
         />
       )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowCreate(false); }}
+          onCancel={() => setShowDiscard(false)}
+        />
+      )}
     </div>
   );
 }
@@ -116,7 +137,7 @@ interface ExpirationOption {
   recommended?: boolean;
 }
 
-function CreateApiKeyForm({ slug, onCreated, onClose }: { slug: string; onCreated: () => void; onClose: () => void }) {
+function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: string; onCreated: () => void; onClose: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [scopes, setScopes] = useState<string[]>([...API_KEY_SCOPES]);
@@ -124,6 +145,12 @@ function CreateApiKeyForm({ slug, onCreated, onClose }: { slug: string; onCreate
   const [saving, setSaving] = useState(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const isDirty = !createdKey && name.trim() !== "";
+
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty]);
 
   const expirationOptions: ExpirationOption[] = [
     { label: t("apiKeys.expiration30"), days: 30 },

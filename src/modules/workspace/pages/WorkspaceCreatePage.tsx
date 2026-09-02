@@ -117,7 +117,7 @@ export default function WorkspaceCreatePage() {
       await createDepartment(slug, { name: deptName.trim(), description: deptDesc.trim() || undefined });
       setDeptName(""); setDeptDesc("");
       fetchDepartments();
-    } catch { toast.error("Failed to create department"); }
+    } catch { toast.error(t("departments.createError")); }
     finally { setAddingDept(false); }
   };
 
@@ -127,7 +127,7 @@ export default function WorkspaceCreatePage() {
       await updateDepartment(slug, editDeptId, { name: editDeptName, description: editDeptDesc || undefined });
       setEditDeptId(null);
       fetchDepartments();
-    } catch { toast.error("Failed to update department"); }
+    } catch { toast.error(t("departments.updateError")); }
   };
 
   const handleDeleteDept = async () => {
@@ -136,7 +136,7 @@ export default function WorkspaceCreatePage() {
       await deleteDepartment(slug, deleteDeptId);
       setDeleteDeptId(null);
       fetchDepartments();
-    } catch { toast.error("Failed to delete department"); }
+    } catch { toast.error(t("departments.deleteError")); }
   };
 
   // Step 3
@@ -153,7 +153,7 @@ export default function WorkspaceCreatePage() {
       await deleteMailbox(slug, deleteMailboxId);
       setDeleteMailboxId(null);
       fetchMailboxes();
-    } catch { toast.error("Failed to delete mailbox"); }
+    } catch { toast.error(t("mailbox.deleteError")); }
   };
 
   // Step 4
@@ -178,7 +178,7 @@ export default function WorkspaceCreatePage() {
       await cancelInvitation(slug, cancelInvId);
       setCancelInvId(null);
       fetchInvitations();
-    } catch { toast.error("Failed to cancel invitation"); }
+    } catch { toast.error(t("invitations.cancelFailed")); }
   };
 
   const handleCopyLink = async (id: string) => {

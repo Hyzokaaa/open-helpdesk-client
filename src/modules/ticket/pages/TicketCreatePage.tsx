@@ -137,7 +137,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         setFiles((prev) => prev.map((f) => f.file === file ? { ...f, status: "done" as const, token: result.token } : f));
       } catch {
         setFiles((prev) => prev.map((f) => f.file === file ? { ...f, status: "error" as const } : f));
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(`${t("ticketCreate.uploadError")} ${file.name}`);
       }
     }
   }, []);
@@ -152,7 +152,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
       setFiles((prev) => prev.map((f, i) => i === index ? { ...f, status: "done" as const, token: result.token } : f));
     } catch {
       setFiles((prev) => prev.map((f, i) => i === index ? { ...f, status: "error" as const } : f));
-      toast.error(`Failed to upload ${file.name}`);
+      toast.error(`${t("ticketCreate.uploadError")} ${file.name}`);
     }
   }, [files]);
 
@@ -215,7 +215,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         );
       }
     } catch (err: any) {
-      handlePlanLimitError(err, "Failed to create ticket");
+      handlePlanLimitError(err, t("ticketCreate.createError"));
     } finally {
       setLoading(false);
     }
@@ -256,6 +256,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
               ref={editorRef}
               initialValue=""
               placeholder={t("ticketCreate.descriptionPlaceholder")}
+              ariaLabel={t("ticketCreate.description")}
             />
           </FormInput>
 

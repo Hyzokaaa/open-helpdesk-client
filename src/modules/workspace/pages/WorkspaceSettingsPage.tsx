@@ -263,7 +263,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       a.remove();
                       URL.revokeObjectURL(url);
                       toast.success(t("workspaceSettings.exportSuccess"));
-                    } catch { toast.error("Export failed"); }
+                    } catch { toast.error(t("workspaceSettings.exportError")); }
                     finally { setExporting(false); }
                   }}>
                     {exporting ? t("workspaceSettings.exporting") : t("workspaceSettings.export")}
@@ -274,7 +274,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       const { url } = await createExportToken(workspaceSlug);
                       await navigator.clipboard.writeText(url);
                       toast.success(t("workspaceSettings.exportUrlCopied"));
-                    } catch { toast.error("Failed to generate URL"); }
+                    } catch { toast.error(t("workspaceSettings.exportUrlError")); }
                   }}>
                     {t("workspaceSettings.exportUrl")}
                   </Button>
@@ -293,7 +293,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       const text = await file.text();
                       const data = JSON.parse(text);
                       const result = await importWorkspace(workspaceSlug, data);
-                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} tickets, ${result.usersCreated} users created, ${result.commentsImported} comments`);
+                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}, ${result.commentsImported} ${t("workspaceSettings.importComments")}`);
                     } catch { toast.error(t("workspaceSettings.importError")); }
                     finally { setImporting(false); if (importFileRef.current) importFileRef.current.value = ''; }
                   }} />
@@ -310,7 +310,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       setImporting(true);
                       try {
                         const result = await importWorkspaceFromUrl(workspaceSlug, importUrl.trim());
-                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} tickets, ${result.usersCreated} users created`);
+                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}`);
                         setImportUrl("");
                       } catch { toast.error(t("workspaceSettings.importError")); }
                       finally { setImporting(false); }
@@ -332,15 +332,15 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted">Admins</span>
+                <span className="text-muted">{t("workspaceSettings.admins")}</span>
                 <span className="text-body font-body-medium">{adminCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Agents</span>
+                <span className="text-muted">{t("workspaceSettings.agents")}</span>
                 <span className="text-body font-body-medium">{agentCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Reporters</span>
+                <span className="text-muted">{t("workspaceSettings.reporters")}</span>
                 <span className="text-body font-body-medium">{reporterCount}</span>
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted">Slug</span>
+                <span className="text-muted">{t("workspaceSettings.slug")}</span>
                 <span className="text-body font-body-medium">{workspace.slug}</span>
               </div>
             </div>

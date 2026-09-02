@@ -40,7 +40,7 @@ export default function WorkspaceMembersPage() {
     setLoading(true);
     listMembers(workspaceSlug)
       .then((all) => setMembers(all.filter((m) => m.role !== "reporter")))
-      .catch(() => toast.error("Failed to load team"))
+      .catch(() => toast.error(t("members.loadError")))
       .finally(() => setLoading(false));
   };
 
@@ -56,7 +56,7 @@ export default function WorkspaceMembersPage() {
       fetchMembers();
       toast.success(t("members.removed"));
     } catch {
-      toast.error("Failed to remove member");
+      toast.error(t("members.removeError"));
     }
   };
 
@@ -178,7 +178,7 @@ export default function WorkspaceMembersPage() {
       {removeMemberId && (
         <ConfirmModal
           title={t("members.remove")}
-          message={t("ticketDetail.deleteMessage")}
+          message={t("common.confirmDeleteMessage")}
           confirmLabel={t("members.remove")}
           danger
           onConfirm={handleRemove}

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -44,6 +45,16 @@ export default function EmailSenderSettings({ slug }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [locked, setLocked] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
+  const isDirtyRef = useRef(false);
+
+  const handleSheetClose = () => {
+    if (isDirtyRef.current) {
+      setShowDiscard(true);
+    } else {
+      setShowSheet(false);
+    }
+  };
 
   useEffect(() => {
     getEmailSender(slug)
@@ -119,24 +130,37 @@ export default function EmailSenderSettings({ slug }: Props) {
       )}
 
       {showSheet && (
-        <Sheet onClose={() => setShowSheet(false)}>
+        <Sheet onClose={handleSheetClose}>
           <EmailSenderForm
             slug={slug}
             sender={sender}
             onSaved={(updated) => { setSender(updated); setShowSheet(false); }}
-            onCancel={() => setShowSheet(false)}
+            onCancel={handleSheetClose}
+            onDirtyChange={(d) => { isDirtyRef.current = d; }}
           />
         </Sheet>
+      )}
+
+      {showDiscard && (
+        <ConfirmModal
+          title={t("discard.title")}
+          message={t("discard.message")}
+          confirmLabel={t("discard.confirm")}
+          danger
+          onConfirm={() => { setShowDiscard(false); setShowSheet(false); }}
+          onCancel={() => setShowDiscard(false)}
+        />
       )}
     </div>
   );
 }
 
-function EmailSenderForm({ slug, sender, onSaved, onCancel }: {
+function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   slug: string;
   sender: EmailSenderDto | null;
   onSaved: (s: EmailSenderDto | null) => void;
   onCancel: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const isEdit = !!sender;
   const { t } = useTranslation();
@@ -151,6 +175,14 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel }: {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+
+  const isDirty = isEdit
+    ? fromName !== (sender?.fromName || "") || fromEmail !== (sender?.fromEmail || "") || smtpLogin !== (sender?.smtpUser || "") || password !== "" || smtpHost !== (sender?.smtpHost || "") || smtpPort !== String(sender?.smtpPort ?? "587") || encryption !== (sender?.encryption ?? "tls")
+    : smtpLogin.trim() !== "" || password.trim() !== "";
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty]);
 
   const [srvHost, setSrvHost] = useState("");
   const resolvedHost = smtpHost || srvHost || deriveSmtpHost(smtpLogin);

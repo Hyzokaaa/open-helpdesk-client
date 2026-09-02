@@ -112,7 +112,7 @@ export default function WorkspaceKbPage() {
       setArticleStatus(article.status);
       setArticleCategoryId(article.categoryId);
       setShowArticleSheet(true);
-    } catch { toast.error("Failed to load article"); }
+    } catch { toast.error(t("kb.loadError")); }
   };
 
   const handleSaveArticle = async () => {
@@ -221,38 +221,37 @@ export default function WorkspaceKbPage() {
         </div>
       )}
 
-      {/* Category form modal */}
+      {/* Category form */}
       {showCategoryForm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowCategoryForm(false)} />
-          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-base font-body-bold text-heading mb-4">
-              {editCategory ? t("kb.editCategory") : t("kb.addCategory")}
-            </h3>
+        <Sheet onClose={() => setShowCategoryForm(false)} size="sm">
+          <h3 className="text-base font-body-bold text-heading mb-4">
+            {editCategory ? t("kb.editCategory") : t("kb.addCategory")}
+          </h3>
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveCategory(); }}>
             <FormInput label={t("kb.categoryName")}>
-              <Input value={categoryName} onChange={setCategoryName} size="sm" placeholder={t("kb.categoryNamePlaceholder")} />
+              <Input value={categoryName} onChange={setCategoryName} size="sm" placeholder={t("kb.categoryNamePlaceholder")} autoFocus />
             </FormInput>
             <div className="flex gap-2 mt-4 justify-end">
-              <Button size="sm" color="light" onClick={() => setShowCategoryForm(false)}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" onClick={handleSaveCategory} loading={savingCategory} disabled={!categoryName.trim()}>
-                {t("settings.save")}
+              <Button type="button" size="sm" color="light" onClick={() => setShowCategoryForm(false)}>{t("common.cancel")}</Button>
+              <Button type="submit" size="sm" color="primary" loading={savingCategory} disabled={!categoryName.trim()}>
+                {t("common.save")}
               </Button>
             </div>
-          </div>
-        </div>
+          </form>
+        </Sheet>
       )}
 
       {/* Article editor sheet */}
       {showArticleSheet && (
         <Sheet onClose={() => setShowArticleSheet(false)}>
-          <div className="p-6 max-w-3xl">
+          <div className="max-w-3xl">
             <h2 className="text-lg font-body-bold text-heading mb-6">
               {editArticleId ? t("kb.editArticle") : t("kb.addArticle")}
             </h2>
 
             <div className="space-y-4">
               <FormInput label={t("kb.articleTitle")}>
-                <Input value={articleTitle} onChange={setArticleTitle} size="sm" placeholder={t("kb.articleTitlePlaceholder")} />
+                <Input value={articleTitle} onChange={setArticleTitle} size="sm" placeholder={t("kb.articleTitlePlaceholder")} autoFocus />
               </FormInput>
 
               <div className="grid grid-cols-2 gap-4">
@@ -276,13 +275,13 @@ export default function WorkspaceKbPage() {
               </div>
 
               <FormInput label={t("kb.content")}>
-                <RichTextEditor ref={editorRef} initialValue={articleContent} placeholder={t("kb.contentPlaceholder")} />
+                <RichTextEditor ref={editorRef} initialValue={articleContent} placeholder={t("kb.contentPlaceholder")} ariaLabel={t("kb.content")} />
               </FormInput>
 
               <div className="flex gap-2 justify-end">
-                <Button size="sm" color="light" onClick={() => setShowArticleSheet(false)}>{t("ticketDetail.cancel")}</Button>
+                <Button size="sm" color="light" onClick={() => setShowArticleSheet(false)}>{t("common.cancel")}</Button>
                 <Button size="sm" color="primary" onClick={handleSaveArticle} loading={savingArticle} disabled={!articleTitle.trim() || !articleCategoryId}>
-                  {t("settings.save")}
+                  {t("common.save")}
                 </Button>
               </div>
             </div>

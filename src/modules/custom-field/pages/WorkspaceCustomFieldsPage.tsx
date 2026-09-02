@@ -13,6 +13,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import type { TranslationKey } from "@modules/app/i18n/translations";
 import { CustomFieldDefinition } from "../domain/custom-field-types";
 import {
   listCustomFields,
@@ -23,13 +24,13 @@ import {
 
 const FIELD_TYPES = ["text", "number", "select", "multi-select", "date", "checkbox"] as const;
 
-const TYPE_LABELS: Record<string, Record<string, string>> = {
-  text: { en: "Text", es: "Texto" },
-  number: { en: "Number", es: "Número" },
-  select: { en: "Select", es: "Selección" },
-  "multi-select": { en: "Multi-select", es: "Selección múltiple" },
-  date: { en: "Date", es: "Fecha" },
-  checkbox: { en: "Checkbox", es: "Casilla" },
+const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+  text: "customFields.typeText",
+  number: "customFields.typeNumber",
+  select: "customFields.typeSelect",
+  "multi-select": "customFields.typeMultiSelect",
+  date: "customFields.typeDate",
+  checkbox: "customFields.typeCheckbox",
 };
 
 const TYPE_COLORS: Record<string, "blue" | "green" | "yellow" | "red" | "gray" | "primary"> = {
@@ -44,7 +45,7 @@ const TYPE_COLORS: Record<string, "blue" | "green" | "yellow" | "red" | "gray" |
 export default function WorkspaceCustomFieldsPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [fields, setFields] = useState<CustomFieldDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSheet, setShowSheet] = useState(false);
@@ -195,7 +196,7 @@ export default function WorkspaceCustomFieldsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge
-                      label={TYPE_LABELS[f.type]?.[lang] ?? f.type}
+                      label={TYPE_LABEL_KEYS[f.type] ? t(TYPE_LABEL_KEYS[f.type]) : f.type}
                       color={TYPE_COLORS[f.type] ?? "gray"}
                       size="xs"
                     />
@@ -207,7 +208,7 @@ export default function WorkspaceCustomFieldsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-subtle">
-                      {f.required ? "Yes" : "No"}
+                      {f.required ? t("common.yes") : t("common.no")}
                     </span>
                   </td>
                   <td className="px-2 py-3">
@@ -256,16 +257,16 @@ export default function WorkspaceCustomFieldsPage() {
           </h2>
           <form onSubmit={handleSubmit}>
             <FormInput label={t("customFields.nameLabel")} required>
-              <Input value={name} onChange={setName} placeholder="e.g. Department" autoFocus />
+              <Input value={name} onChange={setName} placeholder={t("customFields.namePlaceholder")} autoFocus />
             </FormInput>
             {!editingId && (
               <FormInput label={t("customFields.typeLabel")} required>
                 <Select
                   options={[...FIELD_TYPES]}
-                  label={(t) => TYPE_LABELS[t]?.[lang] ?? t}
-                  value={(t) => t === type}
+                  label={(v) => TYPE_LABEL_KEYS[v] ? t(TYPE_LABEL_KEYS[v]) : v}
+                  value={(v) => v === type}
                   onChange={setType}
-                  placeholder="Type"
+                  placeholder={t("customFields.typeLabel")}
                 />
               </FormInput>
             )}
@@ -274,7 +275,7 @@ export default function WorkspaceCustomFieldsPage() {
                 <Input
                   value={optionsText}
                   onChange={setOptionsText}
-                  placeholder="Option 1, Option 2, Option 3"
+                  placeholder={t("customFields.optionsPlaceholder")}
                 />
               </FormInput>
             )}

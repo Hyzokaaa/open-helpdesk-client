@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { Size } from "../../domain/size";
+import { useFormInputId } from "../FormInput/form-input-context";
 
 interface Props {
   value?: string;
@@ -18,8 +19,10 @@ export default function Textarea({
   height = 90,
   disabled = false,
 }: Props) {
+  const formId = useFormInputId();
   return (
     <textarea
+      id={formId}
       placeholder={placeholder}
       className={clsx(
         "bg-surface rounded-input border-input transition-all duration-200",
