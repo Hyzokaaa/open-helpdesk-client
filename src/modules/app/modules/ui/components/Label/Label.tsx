@@ -17,7 +17,7 @@ export default function Label({ children, size = "sm", required, htmlFor }: Prop
     <label
       htmlFor={htmlFor}
       onClick={handleClick}
-      className={clsx("text-secondary-text font-body-medium cursor-pointer", {
+      className={clsx("text-secondary-text font-body-medium", {
         "text-sm": size === "sm",
         "text-base": size === "base",
         "text-xs": size === "xs",
