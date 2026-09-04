@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import type { TranslationKey } from "@modules/app/i18n/translations";
 
-const sections = ["collect", "use", "storage", "rights", "cookies", "contact"] as const;
+const sections = ["collect", "use", "storage", "access", "thirdParty", "rights", "cookies", "contact"] as const;
 
 export default function PrivacyPage() {
   const { t } = useTranslation();
