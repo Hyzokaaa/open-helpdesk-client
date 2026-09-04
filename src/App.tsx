@@ -65,6 +65,7 @@ import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
 import PrivacyPage from "@modules/legal/pages/PrivacyPage";
 import TermsPage from "@modules/legal/pages/TermsPage";
+import CookieConsentBanner from "@modules/legal/components/CookieConsentBanner";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -176,6 +177,7 @@ export default function App({ extensions }: AppProps) {
       <UserProvider>
         <ProseStyles />
         <ThemedToast />
+        <CookieConsentBanner />
         <AppRoutes />
       </UserProvider>
     </BrowserRouter>

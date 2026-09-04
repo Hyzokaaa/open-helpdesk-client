@@ -995,6 +995,9 @@ const translations = {
   "legal.privacy": { en: "Privacy", es: "Privacidad" },
   "legal.refund": { en: "Refund", es: "Reembolsos" },
   "legal.backToLogin": { en: "Back to login", es: "Volver al login" },
+  "cookie.message": { en: "This application uses browser storage for authentication and preferences. No tracking or third-party cookies are used.", es: "Esta aplicación usa almacenamiento del navegador para autenticación y preferencias. No se usan cookies de seguimiento ni de terceros." },
+  "cookie.learnMore": { en: "Learn more", es: "Más información" },
+  "cookie.accept": { en: "Got it", es: "Entendido" },
 
   "legal.privacy.title": { en: "Privacy Policy", es: "Política de Privacidad" },
   "legal.privacy.intro": { en: "This policy describes how this Open Helpdesk instance handles your personal data.", es: "Esta política describe cómo esta instancia de Open Helpdesk maneja sus datos personales." },
