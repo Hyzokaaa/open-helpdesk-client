@@ -63,6 +63,8 @@ import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
 import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
+import PrivacyPage from "@modules/legal/pages/PrivacyPage";
+import TermsPage from "@modules/legal/pages/TermsPage";
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -87,6 +89,8 @@ function AppRoutes() {
     <DomainGate>
     <Routes>
       {extraPublicRoutes}
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />

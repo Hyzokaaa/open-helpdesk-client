@@ -124,13 +124,17 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {saasMode && !isCustomDomain && (
+          {!isCustomDomain && (
             <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">
               <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
               <span>·</span>
               <a href="/privacy" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
-              <span>·</span>
-              <a href="/refund" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+              {saasMode && (
+                <>
+                  <span>·</span>
+                  <a href="/refund" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
+                </>
+              )}
             </div>
           )}
         </div>
