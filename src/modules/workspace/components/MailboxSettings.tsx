@@ -353,6 +353,8 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     mailbox?.acceptedAddresses ?? []
   );
   const [autoReply, setAutoReply] = useState(mailbox?.autoReply ?? true);
+  const [postProcessAction, setPostProcessAction] = useState(mailbox?.postProcessAction ?? 'none');
+  const [postProcessFolder, setPostProcessFolder] = useState(mailbox?.postProcessFolder ?? 'Open Helpdesk/Processed');
   const [newAddress, setNewAddress] = useState('');
 
   const [testing, setTesting] = useState(false);
@@ -433,6 +435,8 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           addressMode,
           acceptedAddresses,
           autoReply,
+          postProcessAction,
+          postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       } else {
         await createMailbox(slug, {
@@ -447,6 +451,8 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           addressMode,
           acceptedAddresses,
           autoReply,
+          postProcessAction,
+          postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       }
       toast.success(isEdit ? t("mailbox.updated") : t("mailbox.created"));
@@ -612,6 +618,24 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           {t("mailbox.autoReply")}
         </label>
         <p className="text-exs text-muted mt-1 mb-4">{t("mailbox.autoReplyDesc")}</p>
+
+        <div className="border-t border-border-card my-4" />
+        <FormInput label={t("mailbox.postProcess")} className="!mb-1">
+          <Select
+            options={["none", "mark-read", "move"]}
+            label={(v) => t(`mailbox.postProcess.${v}` as any)}
+            value={(v) => v === postProcessAction}
+            onChange={setPostProcessAction}
+          />
+        </FormInput>
+        <p className="text-exs text-muted mb-3">{t("mailbox.postProcessDesc")}</p>
+
+        {postProcessAction === "move" && (
+          <FormInput label={t("mailbox.postProcessFolder")} className="!mb-1">
+            <Input value={postProcessFolder} onChange={setPostProcessFolder} placeholder="Open Helpdesk/Processed" />
+            <p className="text-exs text-muted mt-1">{t("mailbox.postProcessFolderDesc")}</p>
+          </FormInput>
+        )}
 
         <div className="mt-4">
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
