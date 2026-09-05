@@ -330,8 +330,9 @@ export default function WorkspaceCreatePage() {
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
-              <Button size="sm" color="light" onClick={() => setStep("email")}>{t("wizard.skip")}</Button>
-              <Button size="sm" onClick={() => setStep("email")}>{t("wizard.next")}</Button>
+              <Button size="sm" color={departments.length > 0 ? undefined : "light"} onClick={() => setStep("email")}>
+                {departments.length > 0 ? t("wizard.next") : t("wizard.skip")}
+              </Button>
             </div>
 
             {deleteDeptId && (
@@ -390,8 +391,9 @@ export default function WorkspaceCreatePage() {
 
             {!showMailboxForm && (
               <div className="flex justify-end gap-2 mt-4">
-                <Button size="sm" color="light" onClick={() => setStep("invite")}>{t("wizard.skip")}</Button>
-                <Button size="sm" onClick={() => setStep("invite")}>{t("wizard.next")}</Button>
+                <Button size="sm" color={mailboxes.length > 0 ? undefined : "light"} onClick={() => setStep("invite")}>
+                  {mailboxes.length > 0 ? t("wizard.next") : t("wizard.skip")}
+                </Button>
               </div>
             )}
 
@@ -471,10 +473,9 @@ export default function WorkspaceCreatePage() {
               <Button size="sm" loading={inviting} onClick={handleInvite} disabled={!newInvites.some((i) => i.email.trim())}>
                 {canSendEmail ? t("invitations.send") : t("invitations.createInvitation")}
               </Button>
-              <div className="flex gap-2">
-                <Button size="sm" color="light" onClick={() => setStep("done")}>{t("wizard.skip")}</Button>
-                <Button size="sm" onClick={() => setStep("done")} disabled={invitations.length === 0}>{t("wizard.next")}</Button>
-              </div>
+              <Button size="sm" color={invitations.length > 0 ? undefined : "light"} onClick={() => setStep("done")}>
+                {invitations.length > 0 ? t("wizard.next") : t("wizard.skip")}
+              </Button>
             </div>
 
             {cancelInvId && (

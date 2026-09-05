@@ -256,23 +256,22 @@ export default function AdminUsersPage() {
                   </td>
                 ))}
                 <td className="px-2 py-3 sticky right-0 bg-surface">
-                  {u.id !== user.id && (
-                    <ActionMenu items={[
-                      {
-                        label: t("admin.editProfile"),
-                        onClick: () => handleEditUser(u),
-                      },
-                      ...((u.isSystemAdmin && u.isActive && activeAdminCount <= 1) ? [] : [{
+                  {(() => {
+                    const isLastAdmin = u.isSystemAdmin && u.isActive && activeAdminCount <= 1;
+                    const items = [
+                      { label: t("admin.editProfile"), onClick: () => handleEditUser(u) },
+                      ...(!isLastAdmin ? [{
                         label: u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin"),
                         onClick: () => setConfirmToggleAdmin(u),
-                      }]),
-                      ...((u.isSystemAdmin && u.isActive && activeAdminCount <= 1) ? [] : [{
+                      }] : []),
+                      ...((!isLastAdmin && u.id !== user?.id) ? [{
                         label: u.isActive ? t("admin.deactivate") : t("admin.activate"),
                         onClick: () => setConfirmToggleActive(u),
                         danger: u.isActive,
-                      }]),
-                    ]} />
-                  )}
+                      }] : []),
+                    ];
+                    return items.length > 0 ? <ActionMenu items={items} /> : null;
+                  })()}
                 </td>
               </tr>
             ))}
