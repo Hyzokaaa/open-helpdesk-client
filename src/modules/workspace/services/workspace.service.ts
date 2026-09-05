@@ -74,6 +74,11 @@ export async function getWorkspace(slug: string): Promise<WorkspaceDetail> {
   return res.data;
 }
 
+export async function checkSlug(name: string): Promise<{ slug: string; available: boolean; suggestions: string[] }> {
+  const res = await http.get<{ slug: string; available: boolean; suggestions: string[] }>(`/workspaces/check-slug?name=${encodeURIComponent(name)}`);
+  return res.data;
+}
+
 export async function createWorkspace(data: {
   name: string;
   description: string;

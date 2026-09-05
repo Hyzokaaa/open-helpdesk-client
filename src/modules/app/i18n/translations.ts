@@ -241,6 +241,8 @@ const translations = {
   "workspaces.name": { en: "Name", es: "Nombre" },
   "workspaces.description": { en: "Description", es: "Descripción" },
   "workspaces.namePlaceholder": { en: "Workspace name", es: "Nombre del espacio" },
+  "workspaces.url": { en: "URL", es: "URL" },
+  "workspaces.suggestions": { en: "Try", es: "Prueba" },
   "workspaces.descriptionPlaceholder": { en: "Optional description", es: "Descripción opcional" },
   "workspaces.create": { en: "Create", es: "Crear" },
   "workspaces.empty": { en: "No workspaces yet. Create one to get started.", es: "No hay espacios de trabajo. Crea uno para comenzar." },

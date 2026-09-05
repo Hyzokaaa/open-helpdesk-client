@@ -9,7 +9,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
-import { createWorkspace } from "../services/workspace.service";
+import { createWorkspace, checkSlug } from "../services/workspace.service";
 import {
   Department,
   listDepartments,
@@ -51,6 +51,10 @@ export default function WorkspaceCreatePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
+  const [slugPreview, setSlugPreview] = useState("");
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugSuggestions, setSlugSuggestions] = useState<string[]>([]);
+  const [checkingSlug, setCheckingSlug] = useState(false);
 
   // Step 2: Departments
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -90,6 +94,28 @@ export default function WorkspaceCreatePage() {
     if (step === "email") { fetchMailboxes(); checkSender(); }
     if (step === "invite") { fetchInvitations(); checkSender(); }
   }, [step, slug]);
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setSlugPreview("");
+      setSlugAvailable(null);
+      setSlugSuggestions([]);
+      return;
+    }
+    setCheckingSlug(true);
+    const timer = setTimeout(() => {
+      checkSlug(trimmed)
+        .then((res) => {
+          setSlugPreview(res.slug);
+          setSlugAvailable(res.available);
+          setSlugSuggestions(res.suggestions);
+        })
+        .catch(() => {})
+        .finally(() => setCheckingSlug(false));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [name]);
 
   // Step 1
   const handleCreateWorkspace = async (e: React.FormEvent) => {
@@ -219,13 +245,37 @@ export default function WorkspaceCreatePage() {
             <form onSubmit={handleCreateWorkspace}>
               <FormInput label={t("workspaces.name")} required>
                 <Input placeholder={t("workspaces.namePlaceholder")} value={name} onChange={setName} />
+                {slugPreview && (
+                  <div className="mt-1.5">
+                    <span className="text-exs text-muted">{t("workspaces.url")}: </span>
+                    <span className={`text-exs font-body-medium ${slugAvailable ? "text-green-600" : "text-danger"}`}>
+                      /{slugPreview}
+                      {checkingSlug ? " …" : slugAvailable ? " ✓" : " ✗"}
+                    </span>
+                    {!slugAvailable && !checkingSlug && slugSuggestions.length > 0 && (
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-exs text-muted">{t("workspaces.suggestions")}:</span>
+                        {slugSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            className="text-exs text-primary hover:underline cursor-pointer"
+                            onClick={() => setName(s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </FormInput>
               <FormInput label={t("workspaces.description")}>
                 <Input placeholder={t("workspaces.descriptionPlaceholder")} value={description} onChange={setDescription} />
               </FormInput>
               <div className="flex justify-end gap-2 mt-2">
                 <Button size="sm" color="light" onClick={handleClose}>{t("workspaces.cancel")}</Button>
-                <Button type="submit" size="sm" loading={creating} disabled={!name.trim()}>{t("wizard.next")}</Button>
+                <Button type="submit" size="sm" loading={creating} disabled={!name.trim() || slugAvailable !== true}>{t("wizard.next")}</Button>
               </div>
             </form>
           </>
