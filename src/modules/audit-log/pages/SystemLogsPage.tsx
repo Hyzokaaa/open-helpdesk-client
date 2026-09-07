@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
-import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
+import FilterPopover, { FilterChip, buildInitialState, getActiveFilterCount, getFilterChips, type FilterSection, type FilterState } from "@modules/app/modules/ui/components/FilterPopover/FilterPopover";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { inputClass } from "@modules/app/modules/ui/shared/domain/input-class";
@@ -126,8 +126,36 @@ export default function SystemLogsPage() {
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hideRoutine, setHideRoutine] = useState(true);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
+
+  const filterSections: FilterSection[] = useMemo(() => [
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTIONS.map(a => ({ value: a, label: t(`auditLog.action.${a}` as any) || a })), defaultExcluded: ROUTINE_ACTIONS },
+    { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: c })) },
+    { key: "level", label: t("auditLog.col.level"), type: "single", options: LEVELS.map(l => ({ value: l, label: l })) },
+    { key: "source", label: t("auditLog.col.source"), type: "single", options: SOURCES.map(s => ({ value: s, label: s })) },
+  ], [t]);
+
+  const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
+
+  const handleFilterChange = (newState: FilterState) => {
+    setFilterState(newState);
+    const actionsState = newState.actions;
+    const categoryState = newState.category;
+    const levelState = newState.level;
+    const sourceState = newState.source;
+    setFilters({
+      ...filters,
+      excludeActions: actionsState?.type === "multi" ? actionsState.excluded : undefined,
+      action: undefined,
+      category: categoryState?.type === "single" ? categoryState.value : undefined,
+      level: levelState?.type === "single" ? levelState.value : undefined,
+      source: sourceState?.type === "single" ? sourceState.value : undefined,
+      page: 1,
+    });
+  };
+
+  const activeFilterCount = getActiveFilterCount(filterState);
+  const filterChips = getFilterChips(filterSections, filterState);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") setSelected(null);
@@ -161,43 +189,7 @@ export default function SystemLogsPage() {
       <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.systemTitle")}</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="w-44">
-          <Select
-            options={["all", ...CATEGORIES]}
-            label={(c) => c === "all" ? t("auditLog.allCategories") : c}
-            value={(c) => c === (filters.category ?? "all")}
-            onChange={(c) => setFilters({ ...filters, category: c === "all" ? undefined : c, page: 1 })}
-            placeholder={t("auditLog.allCategories")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...LEVELS]}
-            label={(l) => l === "all" ? t("auditLog.allLevels") : l}
-            value={(l) => l === (filters.level ?? "all")}
-            onChange={(l) => setFilters({ ...filters, level: l === "all" ? undefined : l, page: 1 })}
-            placeholder={t("auditLog.allLevels")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...ACTIONS]}
-            label={(a) => a === "all" ? t("auditLog.allActions") : t(`auditLog.action.${a}` as any) ?? a}
-            value={(a) => a === (filters.action ?? "all")}
-            onChange={(a) => setFilters({ ...filters, action: a === "all" ? undefined : a, page: 1 })}
-            placeholder={t("auditLog.allActions")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...SOURCES]}
-            label={(s) => s === "all" ? t("auditLog.allSources") : s}
-            value={(s) => s === (filters.source ?? "all")}
-            onChange={(s) => setFilters({ ...filters, source: s === "all" ? undefined : s, page: 1 })}
-            placeholder={t("auditLog.allSources")}
-          />
-        </div>
+      <div className="flex items-center gap-3 mb-3">
         <input
           type="date"
           value={filters.dateFrom ?? ""}
@@ -212,19 +204,39 @@ export default function SystemLogsPage() {
           className={inputClass({ size: "sm", full: false, extra: "!w-36" })}
           placeholder={t("auditLog.filterTo")}
         />
-        <label className="flex items-center gap-2 text-xs text-muted cursor-pointer select-none ml-auto">
-          <input
-            type="checkbox"
-            checked={hideRoutine}
-            onChange={(e) => {
-              setHideRoutine(e.target.checked);
-              setFilters({ ...filters, excludeActions: e.target.checked ? ROUTINE_ACTIONS : undefined, page: 1 });
-            }}
-            className="w-3.5 h-3.5 accent-primary"
-          />
-          {t("auditLog.hideRoutine")}
-        </label>
+        <div className="ml-auto">
+          <FilterPopover sections={filterSections} state={filterState} onChange={handleFilterChange} />
+        </div>
       </div>
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {filterChips.map((chip) => {
+            const sectionKey = filterSections.find(s => s.label === chip.section)?.key;
+            const isExclude = sectionKey && filterState[sectionKey]?.type === "multi";
+            return (
+              <FilterChip
+                key={chip.key}
+                label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
+                onRemove={() => {
+                  if (!sectionKey) return;
+                  const val = filterState[sectionKey];
+                  if (val?.type === "multi") {
+                    handleFilterChange({ ...filterState, [sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
+                  } else {
+                    handleFilterChange({ ...filterState, [sectionKey]: { type: "single", value: undefined } });
+                  }
+                }}
+              />
+            );
+          })}
+          <button
+            onClick={() => { setFilterState(buildInitialState(filterSections.map(s => ({ ...s, defaultExcluded: [] })))); setFilters({ ...filters, excludeActions: undefined, action: undefined, category: undefined, level: undefined, source: undefined, page: 1 }); }}
+            className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
+          >
+            {t("filters.clearAll")}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>

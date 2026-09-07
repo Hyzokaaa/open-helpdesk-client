@@ -582,6 +582,10 @@ const translations = {
   "tickets.filterByTags": { en: "Filter by tags", es: "Filtrar por etiquetas" },
   "tickets.all": { en: "All", es: "Todos" },
   "tickets.filters": { en: "Filters", es: "Filtros" },
+  "filters.label": { en: "Filters", es: "Filtros" },
+  "filters.all": { en: "All", es: "Todos" },
+  "filters.clearAll": { en: "Clear all", es: "Limpiar todo" },
+  "filters.hiding": { en: "Hiding", es: "Oculto" },
   "tickets.clearAll": { en: "Clear all", es: "Limpiar todo" },
   "tickets.empty": { en: "No tickets found.", es: "No se encontraron tickets." },
   "tickets.listView": { en: "List", es: "Lista" },
@@ -1247,6 +1251,7 @@ const translations = {
   "auditLog.col.date": { en: "Date", es: "Fecha" },
   "auditLog.col.level": { en: "Level", es: "Nivel" },
   "auditLog.col.category": { en: "Category", es: "Categoría" },
+  "auditLog.col.source": { en: "Source", es: "Fuente" },
 
   // Audit Log Actions
   "auditLog.action.ticket-created": { en: "Ticket Created", es: "Ticket Creado" },

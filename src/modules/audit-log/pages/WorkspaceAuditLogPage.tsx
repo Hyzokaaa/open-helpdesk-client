@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
-import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
+import FilterPopover, { FilterChip, buildInitialState, getActiveFilterCount, getFilterChips, type FilterSection, type FilterState } from "@modules/app/modules/ui/components/FilterPopover/FilterPopover";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import { listMembers, WorkspaceMember } from "@modules/workspace/services/workspace.service";
@@ -153,9 +153,37 @@ export default function WorkspaceAuditLogPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [hideRoutine, setHideRoutine] = useState(true);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
+
+  const filterSections: FilterSection[] = useMemo(() => [
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTIONS.map(a => ({ value: a, label: t(`auditLog.action.${a}` as any) || a })), defaultExcluded: ROUTINE_ACTIONS },
+    { key: "entity", label: t("auditLog.col.entity"), type: "single", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
+    { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
+    { key: "user", label: t("auditLog.col.user"), type: "single", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
+  ], [t, members]);
+
+  const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
+
+  const handleFilterChange = (newState: FilterState) => {
+    setFilterState(newState);
+    const actionsState = newState.actions;
+    const entityState = newState.entity;
+    const categoryState = newState.category;
+    const userState = newState.user;
+    setFilters({
+      ...filters,
+      excludeActions: actionsState?.type === "multi" ? actionsState.excluded : undefined,
+      action: undefined,
+      entityType: entityState?.type === "single" ? entityState.value : undefined,
+      category: categoryState?.type === "single" ? categoryState.value : undefined,
+      userId: userState?.type === "single" ? userState.value : undefined,
+      page: 1,
+    });
+  };
+
+  const activeFilterCount = getActiveFilterCount(filterState);
+  const filterChips = getFilterChips(filterSections, filterState);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") setSelected(null);
@@ -221,56 +249,38 @@ export default function WorkspaceAuditLogPage() {
       <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.title")}</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="w-44">
-          <Select
-            options={["all", ...ACTIONS]}
-            label={(a) => a === "all" ? t("auditLog.allActions") : t(`auditLog.action.${a}` as any)}
-            value={(a) => a === (filters.action ?? "all")}
-            onChange={(a) => setFilters({ ...filters, action: a === "all" ? undefined : a, page: 1 })}
-            placeholder={t("auditLog.allActions")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...ENTITY_TYPES]}
-            label={(e) => e === "all" ? t("auditLog.allEntities") : t(`auditLog.entity.${e}` as any)}
-            value={(e) => e === (filters.entityType ?? "all")}
-            onChange={(e) => setFilters({ ...filters, entityType: e === "all" ? undefined : e, page: 1 })}
-            placeholder={t("auditLog.allEntities")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...CATEGORIES]}
-            label={(c) => c === "all" ? t("auditLog.allCategories") : t(`auditLog.category.${c}` as any)}
-            value={(c) => c === (filters.category ?? "all")}
-            onChange={(c) => setFilters({ ...filters, category: c === "all" ? undefined : c, page: 1 })}
-            placeholder={t("auditLog.allCategories")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...members.map((m) => m.userId)]}
-            label={(id) => id === "all" ? t("auditLog.allUsers") : getMemberName(id)}
-            value={(id) => id === (filters.userId ?? "all")}
-            onChange={(id) => setFilters({ ...filters, userId: id === "all" ? undefined : id, page: 1 })}
-            placeholder={t("auditLog.allUsers")}
-          />
-        </div>
-        <label className="flex items-center gap-1.5 text-xs text-muted cursor-pointer select-none">
-          <input
-            type="checkbox"
-            className="w-3.5 h-3.5 accent-primary"
-            checked={hideRoutine}
-            onChange={(e) => {
-              setHideRoutine(e.target.checked);
-              setFilters({ ...filters, excludeActions: e.target.checked ? ROUTINE_ACTIONS : undefined, page: 1 });
-            }}
-          />
-          {t("auditLog.hideRoutine")}
-        </label>
+      <div className="flex justify-end mb-3">
+        <FilterPopover sections={filterSections} state={filterState} onChange={handleFilterChange} />
       </div>
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {filterChips.map((chip) => {
+            const isExclude = filterState[chip.section === t("auditLog.col.action") ? "actions" : ""]?.type === "multi";
+            return (
+              <FilterChip
+                key={chip.key}
+                label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
+                onRemove={() => {
+                  const sectionKey = filterSections.find(s => s.label === chip.section)?.key;
+                  if (!sectionKey) return;
+                  const val = filterState[sectionKey];
+                  if (val?.type === "multi") {
+                    handleFilterChange({ ...filterState, [sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
+                  } else {
+                    handleFilterChange({ ...filterState, [sectionKey]: { type: "single", value: undefined } });
+                  }
+                }}
+              />
+            );
+          })}
+          <button
+            onClick={() => { setFilterState(buildInitialState(filterSections.map(s => ({ ...s, defaultExcluded: [] })))); setFilters({ page: 1, limit: 20 }); }}
+            className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
+          >
+            {t("filters.clearAll")}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
