@@ -170,7 +170,7 @@ export default function MailboxSettings({ slug }: Props) {
                 <ActionMenu
                   items={[
                     { label: t("common.edit"), onClick: () => { setEditMailbox(m); setShowSheet(true); } },
-                    {
+                    ...(m.isActive ? [{
                       label: t("mailbox.pollNow"),
                       onClick: async () => {
                         const toastId = toast.info(t("mailbox.pollingNow"), { autoClose: false });
@@ -183,7 +183,7 @@ export default function MailboxSettings({ slug }: Props) {
                           toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
-                    },
+                    }] : []),
                     {
                       label: m.isActive ? t("mailbox.pause") : t("mailbox.resume"),
                       onClick: async () => {
@@ -202,7 +202,7 @@ export default function MailboxSettings({ slug }: Props) {
                         }
                       },
                     },
-                    {
+                    ...(m.isActive ? [{
                       label: t("mailbox.import"),
                       onClick: async () => {
                         const toastId = toast.info(t("mailbox.importStarted"), { autoClose: false });
@@ -213,7 +213,7 @@ export default function MailboxSettings({ slug }: Props) {
                           toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                         }
                       },
-                    },
+                    }] : []),
                     { label: t("common.delete"), onClick: () => setDeleteId(m.id), danger: true },
                   ]}
                 />
