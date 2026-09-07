@@ -16,41 +16,43 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 
-const ACTIONS = [
-  // Ticket
-  "ticket-created", "ticket-updated", "ticket-status-changed", "ticket-assigned",
-  "ticket-picked-up", "ticket-transferred", "ticket-deleted",
-  // Transfer
-  "transfer-request-created", "transfer-request-accepted", "transfer-request-rejected",
-  "transfer-request-cancelled", "transfer-request-expired",
-  // Comment
-  "comment-created",
-  // Workspace
-  "workspace-created", "workspace-updated", "workspace-deleted",
-  "workspace-palette-updated", "workspace-sla-updated", "workspace-import-started",
-  // Members
-  "member-added", "member-removed", "member-role-changed",
-  // Invitations
-  "invitation-created", "invitation-batch-created", "invitation-cancelled",
-  // Mailbox
-  "mailbox-created", "mailbox-updated", "mailbox-deleted",
-  "mailbox-paused", "mailbox-resumed", "mailbox-poll-triggered", "mailbox-import-started",
-  // Email
-  "imap-poll-completed", "imap-poll-failed", "email-received",
-  "email-sender-configured", "email-sender-deleted",
-  // Config
-  "custom-field-created", "custom-field-updated", "custom-field-deleted", "custom-field-reordered",
-  "tag-created", "tag-deleted",
-  "canned-response-created", "canned-response-updated", "canned-response-deleted",
-  "webhook-created", "webhook-updated", "webhook-deleted",
-  "api-key-created", "api-key-deleted",
-  // KB
-  "kb-category-created", "kb-category-updated", "kb-category-deleted",
-  "kb-article-created", "kb-article-updated", "kb-article-deleted",
-  // SLA
-  "sla-first-response-breached", "sla-resolution-breached",
-  // Portal
-  "portal-ticket-created",
+const ACTION_GROUPS: { value: string; group: string }[] = [
+  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
+  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
+  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
+  { value: "ticket-deleted", group: "Ticket" },
+  { value: "transfer-request-created", group: "Transfer" }, { value: "transfer-request-accepted", group: "Transfer" },
+  { value: "transfer-request-rejected", group: "Transfer" }, { value: "transfer-request-cancelled", group: "Transfer" },
+  { value: "transfer-request-expired", group: "Transfer" },
+  { value: "comment-created", group: "Ticket" },
+  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
+  { value: "workspace-deleted", group: "Workspace" }, { value: "workspace-palette-updated", group: "Workspace" },
+  { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
+  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
+  { value: "member-role-changed", group: "Members" },
+  { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
+  { value: "invitation-cancelled", group: "Members" },
+  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
+  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
+  { value: "mailbox-resumed", group: "Email" }, { value: "mailbox-poll-triggered", group: "Email" },
+  { value: "mailbox-import-started", group: "Email" },
+  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
+  { value: "imap-poll-failed", group: "Email" }, { value: "email-received", group: "Email" },
+  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
+  { value: "custom-field-created", group: "Config" }, { value: "custom-field-updated", group: "Config" },
+  { value: "custom-field-deleted", group: "Config" }, { value: "custom-field-reordered", group: "Config" },
+  { value: "tag-created", group: "Config" }, { value: "tag-deleted", group: "Config" },
+  { value: "canned-response-created", group: "Config" }, { value: "canned-response-updated", group: "Config" },
+  { value: "canned-response-deleted", group: "Config" },
+  { value: "webhook-created", group: "Config" }, { value: "webhook-updated", group: "Config" },
+  { value: "webhook-deleted", group: "Config" },
+  { value: "api-key-created", group: "Config" }, { value: "api-key-deleted", group: "Config" },
+  { value: "kb-category-created", group: "Knowledge Base" }, { value: "kb-category-updated", group: "Knowledge Base" },
+  { value: "kb-category-deleted", group: "Knowledge Base" },
+  { value: "kb-article-created", group: "Knowledge Base" }, { value: "kb-article-updated", group: "Knowledge Base" },
+  { value: "kb-article-deleted", group: "Knowledge Base" },
+  { value: "sla-first-response-breached", group: "SLA" }, { value: "sla-resolution-breached", group: "SLA" },
+  { value: "portal-ticket-created", group: "Ticket" },
 ];
 
 const ENTITY_TYPES = [
@@ -157,7 +159,7 @@ export default function WorkspaceAuditLogPage() {
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTIONS.map(a => ({ value: a, label: t(`auditLog.action.${a}` as any) || a })), defaultExcluded: ROUTINE_ACTIONS },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })), defaultExcluded: ROUTINE_ACTIONS },
     { key: "entity", label: t("auditLog.col.entity"), type: "single", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
     { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
     { key: "user", label: t("auditLog.col.user"), type: "single", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
@@ -255,19 +257,17 @@ export default function WorkspaceAuditLogPage() {
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
           {filterChips.map((chip) => {
-            const isExclude = filterState[chip.section === t("auditLog.col.action") ? "actions" : ""]?.type === "multi";
+            const isExclude = filterState[chip.sectionKey]?.type === "multi";
             return (
               <FilterChip
                 key={chip.key}
                 label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
                 onRemove={() => {
-                  const sectionKey = filterSections.find(s => s.label === chip.section)?.key;
-                  if (!sectionKey) return;
-                  const val = filterState[sectionKey];
+                  const val = filterState[chip.sectionKey];
                   if (val?.type === "multi") {
-                    handleFilterChange({ ...filterState, [sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
                   } else {
-                    handleFilterChange({ ...filterState, [sectionKey]: { type: "single", value: undefined } });
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
                   }
                 }}
               />

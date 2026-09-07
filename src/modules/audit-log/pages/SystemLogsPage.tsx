@@ -13,41 +13,27 @@ import {
 } from "../services/audit-log.service";
 import { MetadataSummary } from "./WorkspaceAuditLogPage";
 
-const ACTIONS = [
-  "ticket-created",
-  "ticket-updated",
-  "ticket-status-changed",
-  "ticket-assigned",
-  "ticket-picked-up",
-  "ticket-transferred",
-  "ticket-deleted",
-  "comment-created",
-  "workspace-created",
-  "workspace-updated",
-  "workspace-deleted",
-  "member-added",
-  "member-removed",
-  "member-role-changed",
-  "user-created",
-  "user-activated",
-  "user-deactivated",
-  "user-admin-toggled",
-  "user-signed-up",
-  "user-logged-in",
-  "user-forgot-password",
-  "user-reset-password",
-  "user-email-verified",
-  "user-oauth-login",
-  "mailbox-created",
-  "mailbox-updated",
-  "mailbox-deleted",
-  "mailbox-paused",
-  "mailbox-resumed",
-  "email-received",
-  "email-sent",
-  "email-send-failed",
-  "email-sender-configured",
-  "email-sender-deleted",
+const ACTION_GROUPS: { value: string; group: string }[] = [
+  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
+  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
+  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
+  { value: "ticket-deleted", group: "Ticket" }, { value: "comment-created", group: "Ticket" },
+  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
+  { value: "workspace-deleted", group: "Workspace" },
+  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
+  { value: "member-role-changed", group: "Members" },
+  { value: "user-created", group: "User" }, { value: "user-activated", group: "User" },
+  { value: "user-deactivated", group: "User" }, { value: "user-admin-toggled", group: "User" },
+  { value: "user-signed-up", group: "User" }, { value: "user-logged-in", group: "User" },
+  { value: "user-forgot-password", group: "User" }, { value: "user-reset-password", group: "User" },
+  { value: "user-email-verified", group: "User" }, { value: "user-oauth-login", group: "User" },
+  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
+  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
+  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
+  { value: "mailbox-resumed", group: "Email" },
+  { value: "email-received", group: "Email" }, { value: "email-sent", group: "Email" },
+  { value: "email-send-failed", group: "Email" },
+  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
 ];
 
 const CATEGORIES = [
@@ -129,7 +115,7 @@ export default function SystemLogsPage() {
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTIONS.map(a => ({ value: a, label: t(`auditLog.action.${a}` as any) || a })), defaultExcluded: ROUTINE_ACTIONS },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })), defaultExcluded: ROUTINE_ACTIONS },
     { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: c })) },
     { key: "level", label: t("auditLog.col.level"), type: "single", options: LEVELS.map(l => ({ value: l, label: l })) },
     { key: "source", label: t("auditLog.col.source"), type: "single", options: SOURCES.map(s => ({ value: s, label: s })) },
@@ -211,19 +197,17 @@ export default function SystemLogsPage() {
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
           {filterChips.map((chip) => {
-            const sectionKey = filterSections.find(s => s.label === chip.section)?.key;
-            const isExclude = sectionKey && filterState[sectionKey]?.type === "multi";
+            const isExclude = filterState[chip.sectionKey]?.type === "multi";
             return (
               <FilterChip
                 key={chip.key}
                 label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
                 onRemove={() => {
-                  if (!sectionKey) return;
-                  const val = filterState[sectionKey];
+                  const val = filterState[chip.sectionKey];
                   if (val?.type === "multi") {
-                    handleFilterChange({ ...filterState, [sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
                   } else {
-                    handleFilterChange({ ...filterState, [sectionKey]: { type: "single", value: undefined } });
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
                   }
                 }}
               />

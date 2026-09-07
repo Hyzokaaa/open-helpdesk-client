@@ -1,13 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import useTranslation from "@modules/app/i18n/useTranslation";
+
+export interface FilterOption {
+  value: string;
+  label: string;
+  group?: string;
+}
 
 export interface FilterSection {
   key: string;
   label: string;
   type: "multi" | "single";
-  options: { value: string; label: string }[];
-  /** For multi: values deselected by default */
+  options: FilterOption[];
   defaultExcluded?: string[];
 }
 
@@ -48,28 +53,146 @@ export function getActiveFilterCount(state: FilterState): number {
   return count;
 }
 
-export function getFilterChips(sections: FilterSection[], state: FilterState): { key: string; section: string; label: string; value: string }[] {
-  const chips: { key: string; section: string; label: string; value: string }[] = [];
+export function getFilterChips(sections: FilterSection[], state: FilterState): { key: string; section: string; sectionKey: string; label: string; value: string }[] {
+  const chips: { key: string; section: string; sectionKey: string; label: string; value: string }[] = [];
   for (const s of sections) {
     const val = state[s.key];
     if (!val) continue;
     if (val.type === "multi") {
       for (const ex of val.excluded) {
         const opt = s.options.find(o => o.value === ex);
-        chips.push({ key: `${s.key}:${ex}`, section: s.label, label: opt?.label ?? ex, value: ex });
+        chips.push({ key: `${s.key}:${ex}`, section: s.label, sectionKey: s.key, label: opt?.label ?? ex, value: ex });
       }
     } else if (val.type === "single" && val.value) {
       const opt = s.options.find(o => o.value === val.value);
-      chips.push({ key: s.key, section: s.label, label: opt?.label ?? val.value, value: val.value });
+      chips.push({ key: s.key, section: s.label, sectionKey: s.key, label: opt?.label ?? val.value, value: val.value });
     }
   }
   return chips;
+}
+
+function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
+  section: FilterSection;
+  excluded: string[];
+  onToggle: (value: string) => void;
+  onBulkExclude: (values: string[]) => void;
+}) {
+  const { t } = useTranslation();
+  const [search, setSearch] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const groups = useMemo(() => {
+    const map = new Map<string, FilterOption[]>();
+    for (const opt of section.options) {
+      const group = opt.group ?? t("filters.other");
+      if (!map.has(group)) map.set(group, []);
+      map.get(group)!.push(opt);
+    }
+    return map;
+  }, [section.options]);
+
+  const hasGroups = section.options.some(o => o.group);
+  const filtered = search
+    ? section.options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
+    : null;
+
+  const allValues = section.options.map(o => o.value);
+
+  const toggleCollapse = (group: string) => {
+    const next = new Set(collapsed);
+    collapsed.has(group) ? next.delete(group) : next.add(group);
+    setCollapsed(next);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("filters.search")}
+          className="flex-1 px-2 py-1 text-xs border border-border-input rounded bg-surface text-body placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary-300"
+        />
+      </div>
+      <div className="flex gap-2 mb-2 text-exs text-subtle">
+        <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude([])}>
+          {t("filters.selectAll")}
+        </button>
+        <span>|</span>
+        <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude(allValues)}>
+          {t("filters.deselectAll")}
+        </button>
+      </div>
+
+      <div className="max-h-64 overflow-y-auto space-y-1.5">
+        {filtered ? (
+          filtered.map(opt => (
+            <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+          ))
+        ) : hasGroups ? (
+          Array.from(groups.entries()).map(([groupName, groupOpts]) => {
+            const isCollapsed = collapsed.has(groupName);
+            const excludedInGroup = groupOpts.filter(o => excluded.includes(o.value)).length;
+            const groupValues = groupOpts.map(o => o.value);
+
+            return (
+              <div key={groupName}>
+                <div className="flex items-center justify-between py-0.5">
+                  <button
+                    className="flex items-center gap-1 text-exs font-body-semibold text-subtle uppercase cursor-pointer hover:text-body"
+                    onClick={() => toggleCollapse(groupName)}
+                  >
+                    <span className={clsx("transition-transform text-[10px]", !isCollapsed && "rotate-90")}>&#9654;</span>
+                    {groupName}
+                    {excludedInGroup > 0 && (
+                      <span className="text-muted font-normal normal-case">({excludedInGroup} {t("filters.hidden")})</span>
+                    )}
+                  </button>
+                  <div className="flex gap-1.5 text-exs text-subtle">
+                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude(excluded.filter(v => !groupValues.includes(v)))}>
+                      {t("filters.all")}
+                    </button>
+                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude([...excluded.filter(v => !groupValues.includes(v)), ...groupValues])}>
+                      {t("filters.none")}
+                    </button>
+                  </div>
+                </div>
+                {!isCollapsed && (
+                  <div className="ml-3 space-y-0.5">
+                    {groupOpts.map(opt => (
+                      <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          section.options.map(opt => (
+            <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CheckboxRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
+  return (
+    <label className="flex items-center gap-2 py-0.5 cursor-pointer group">
+      <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 accent-primary rounded" />
+      <span className={clsx("text-xs", checked ? "text-body group-hover:text-heading" : "text-muted line-through")}>{label}</span>
+    </label>
+  );
 }
 
 export default function FilterPopover({ sections, state, onChange }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const hasMulti = sections.some(s => s.type === "multi" && s.options.length > 10);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -88,6 +211,10 @@ export default function FilterPopover({ sections, state, onChange }: Props) {
       ? section.excluded.filter(v => v !== value)
       : [...section.excluded, value];
     onChange({ ...state, [sectionKey]: { type: "multi", excluded } });
+  };
+
+  const bulkExclude = (sectionKey: string, values: string[]) => {
+    onChange({ ...state, [sectionKey]: { type: "multi", excluded: values } });
   };
 
   const setSingle = (sectionKey: string, value: string | undefined) => {
@@ -118,7 +245,10 @@ export default function FilterPopover({ sections, state, onChange }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg w-72 max-h-[480px] overflow-y-auto">
+        <div className={clsx(
+          "absolute right-0 z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg max-h-[520px] overflow-y-auto",
+          hasMulti ? "w-96" : "w-72",
+        )}>
           <div className="p-3 space-y-4">
             {sections.map((section) => {
               const val = state[section.key];
@@ -126,24 +256,12 @@ export default function FilterPopover({ sections, state, onChange }: Props) {
                 <div key={section.key}>
                   <p className="text-exs font-body-semibold text-subtle uppercase mb-1.5">{section.label}</p>
                   {section.type === "multi" && val?.type === "multi" ? (
-                    <div className="flex flex-wrap gap-1">
-                      {section.options.map((opt) => {
-                        const active = !val.excluded.includes(opt.value);
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => toggleMulti(section.key, opt.value)}
-                            className={clsx(
-                              "px-2 py-1 rounded text-exs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-                              active ? "bg-primary-600 text-on-primary" : "bg-surface-hover text-muted line-through",
-                            )}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <MultiFilterSection
+                      section={section}
+                      excluded={val.excluded}
+                      onToggle={(value) => toggleMulti(section.key, value)}
+                      onBulkExclude={(values) => bulkExclude(section.key, values)}
+                    />
                   ) : section.type === "single" && val?.type === "single" ? (
                     <div className="flex flex-wrap gap-1">
                       <button
