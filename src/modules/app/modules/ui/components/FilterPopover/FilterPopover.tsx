@@ -53,15 +53,30 @@ export function getActiveFilterCount(state: FilterState): number {
   return count;
 }
 
-export function getFilterChips(sections: FilterSection[], state: FilterState): { key: string; section: string; sectionKey: string; label: string; value: string }[] {
-  const chips: { key: string; section: string; sectionKey: string; label: string; value: string }[] = [];
+export interface FilterChipData {
+  key: string;
+  section: string;
+  sectionKey: string;
+  label: string;
+  value: string;
+  summary?: boolean;
+}
+
+const MAX_INDIVIDUAL_CHIPS = 3;
+
+export function getFilterChips(sections: FilterSection[], state: FilterState): FilterChipData[] {
+  const chips: FilterChipData[] = [];
   for (const s of sections) {
     const val = state[s.key];
     if (!val) continue;
     if (val.type === "multi" && val.selected.length > 0) {
-      for (const sel of val.selected) {
-        const opt = s.options.find(o => o.value === sel);
-        chips.push({ key: `${s.key}:${sel}`, section: s.label, sectionKey: s.key, label: opt?.label ?? sel, value: sel });
+      if (val.selected.length <= MAX_INDIVIDUAL_CHIPS) {
+        for (const sel of val.selected) {
+          const opt = s.options.find(o => o.value === sel);
+          chips.push({ key: `${s.key}:${sel}`, section: s.label, sectionKey: s.key, label: opt?.label ?? sel, value: sel });
+        }
+      } else {
+        chips.push({ key: s.key, section: s.label, sectionKey: s.key, label: `${s.label}: ${val.selected.length}`, value: "", summary: true });
       }
     } else if (val.type === "single" && val.value) {
       const opt = s.options.find(o => o.value === val.value);
@@ -117,13 +132,15 @@ function MultiFilterSection({ section, selected, onToggle, onBulkSelect }: {
           className="flex-1 px-2 py-1 text-xs border border-border-input rounded bg-surface text-body placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary-300"
         />
       </div>
-      {selected.length > 0 && (
-        <div className="flex gap-2 mb-2 text-exs text-subtle">
-          <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect([])}>
-            {t("filters.clearAll")}
-          </button>
-        </div>
-      )}
+      <div className="flex gap-2 mb-2 text-exs text-subtle">
+        <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect(section.options.map(o => o.value))}>
+          {t("filters.selectAll")}
+        </button>
+        <span>|</span>
+        <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect([])}>
+          {t("filters.deselectAll")}
+        </button>
+      </div>
 
       <div className="max-h-64 overflow-y-auto space-y-1.5">
         {filtered ? (

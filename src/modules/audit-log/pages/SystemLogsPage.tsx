@@ -195,11 +195,15 @@ export default function SystemLogsPage() {
               key={chip.key}
               label={chip.label}
               onRemove={() => {
-                const val = filterState[chip.sectionKey];
-                if (val?.type === "multi") {
-                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: val.selected.filter(v => v !== chip.value) } });
+                if (chip.summary) {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: [] } });
                 } else {
-                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
+                  const val = filterState[chip.sectionKey];
+                  if (val?.type === "multi") {
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: val.selected.filter(v => v !== chip.value) } });
+                  } else {
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
+                  }
                 }
               }}
             />
