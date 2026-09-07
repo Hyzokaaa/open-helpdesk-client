@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -128,6 +128,17 @@ export default function SystemLogsPage() {
   const [loading, setLoading] = useState(true);
   const [hideRoutine, setHideRoutine] = useState(true);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setSelected(null);
+  }, []);
+
+  useEffect(() => {
+    if (selected) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [selected, handleEscape]);
 
   const fetchLog = () => {
     setLoading(true);

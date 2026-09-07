@@ -167,56 +167,65 @@ export default function MailboxSettings({ slug }: Props) {
                   ]}
                 />
               ) : (
-                <ActionMenu
-                  items={[
-                    { label: t("common.edit"), onClick: () => { setEditMailbox(m); setShowSheet(true); } },
-                    ...(m.isActive ? [{
-                      label: t("mailbox.pollNow"),
-                      onClick: async () => {
-                        const toastId = toast.info(t("mailbox.pollingNow"), { autoClose: false });
-                        try {
-                          const result = await pollMailboxNow(slug, m.id);
-                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
-                          const updated = await listMailboxes(slug);
-                          setMailboxes(updated);
-                        } catch {
-                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={async () => {
+                      try {
+                        if (m.isActive) {
+                          await pauseMailbox(slug, m.id);
+                          setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: false } : mb));
+                        } else {
+                          await resumeMailbox(slug, m.id);
+                          setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: true, lastSyncAt: null } : mb));
                         }
-                      },
-                    }] : []),
-                    {
-                      label: m.isActive ? t("mailbox.pause") : t("mailbox.resume"),
-                      onClick: async () => {
-                        try {
-                          if (m.isActive) {
-                            await pauseMailbox(slug, m.id);
-                            setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: false } : mb));
-                          } else {
-                            await resumeMailbox(slug, m.id);
-                            setMailboxes((prev) => prev.map((mb) => mb.id === m.id ? { ...mb, isActive: true, lastSyncAt: null } : mb));
+                        const updated = await listMailboxes(slug);
+                        setMailboxes(updated);
+                      } catch {
+                        toast.error(t("mailbox.createError"));
+                      }
+                    }}
+                    title={m.isActive ? t("mailbox.pause") : t("mailbox.resume")}
+                    className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-surface-hover text-muted hover:text-body transition-colors cursor-pointer"
+                  >
+                    {m.isActive ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    )}
+                  </button>
+                  <ActionMenu
+                    items={[
+                      { label: t("common.edit"), onClick: () => { setEditMailbox(m); setShowSheet(true); } },
+                      ...(m.isActive ? [{
+                        label: t("mailbox.pollNow"),
+                        onClick: async () => {
+                          const toastId = toast.info(t("mailbox.pollingNow"), { autoClose: false });
+                          try {
+                            const result = await pollMailboxNow(slug, m.id);
+                            toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
+                            const updated = await listMailboxes(slug);
+                            setMailboxes(updated);
+                          } catch {
+                            toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
                           }
-                          const updated = await listMailboxes(slug);
-                          setMailboxes(updated);
-                        } catch {
-                          toast.error(t("mailbox.createError"));
-                        }
-                      },
-                    },
-                    ...(m.isActive ? [{
-                      label: t("mailbox.import"),
-                      onClick: async () => {
-                        const toastId = toast.info(t("mailbox.importStarted"), { autoClose: false });
-                        try {
-                          const result = await importMailboxEmails(slug, m.id);
-                          toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
-                        } catch {
-                          toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
-                        }
-                      },
-                    }] : []),
-                    { label: t("common.delete"), onClick: () => setDeleteId(m.id), danger: true },
-                  ]}
-                />
+                        },
+                      }] : []),
+                      ...(m.isActive ? [{
+                        label: t("mailbox.import"),
+                        onClick: async () => {
+                          const toastId = toast.info(t("mailbox.importStarted"), { autoClose: false });
+                          try {
+                            const result = await importMailboxEmails(slug, m.id);
+                            toast.update(toastId, { render: t("mailbox.importDone").replace("{processed}", String(result.processed)).replace("{rejected}", String(result.rejected)).replace("{total}", String(result.total)), type: "success", autoClose: 5000 });
+                          } catch {
+                            toast.update(toastId, { render: t("mailbox.importError"), type: "error", autoClose: 5000 });
+                          }
+                        },
+                      }] : []),
+                      { label: t("common.delete"), onClick: () => setDeleteId(m.id), danger: true },
+                    ]}
+                  />
+                </div>
               )}
             </div>
             );

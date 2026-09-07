@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Select from "@modules/app/modules/ui/components/Select/Select";
@@ -136,6 +136,11 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "portal-ticket-created": "primary",
 };
 
+const ROUTINE_ACTIONS = [
+  "imap-poll-started",
+  "imap-poll-completed",
+];
+
 export default function WorkspaceAuditLogPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
@@ -148,8 +153,20 @@ export default function WorkspaceAuditLogPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [hideRoutine, setHideRoutine] = useState(true);
+  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setSelected(null);
+  }, []);
+
+  useEffect(() => {
+    if (selected) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [selected, handleEscape]);
 
   const fetchLog = () => {
     if (!workspaceSlug) return;
@@ -241,6 +258,18 @@ export default function WorkspaceAuditLogPage() {
             placeholder={t("auditLog.allUsers")}
           />
         </div>
+        <label className="flex items-center gap-1.5 text-xs text-muted cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="w-3.5 h-3.5 accent-primary"
+            checked={hideRoutine}
+            onChange={(e) => {
+              setHideRoutine(e.target.checked);
+              setFilters({ ...filters, excludeActions: e.target.checked ? ROUTINE_ACTIONS : undefined, page: 1 });
+            }}
+          />
+          {t("auditLog.hideRoutine")}
+        </label>
       </div>
 
       {loading ? (
