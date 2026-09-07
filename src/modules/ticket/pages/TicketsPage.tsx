@@ -236,24 +236,11 @@ export default function TicketsPage() {
         </div>
       </div>
 
-      {/* Tier 2: Status tabs + Search + Filters popover */}
+      {/* Tier 2: Search + Filters popover */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-1 shrink-0">
-          {(["active", "resolved", "discarded"] as const).map((t_) => (
-            <button
-              key={t_}
-              onClick={() => { setTab(t_); setFilters({ ...filters, status: undefined, page: 1 }); }}
-              className={clsx(
-                "px-2.5 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-                tab === t_ ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-              )}
-            >
-              {t(`tickets.${t_}`)}
-            </button>
-          ))}
-        </div>
         <TicketFilterBar
           tab={tab}
+          setTab={setTab}
           filters={filters}
           setFilters={setFilters}
           filterTagIds={filterTagIds}
