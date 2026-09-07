@@ -13,13 +13,13 @@ export interface FilterSection {
   label: string;
   type: "multi" | "single";
   options: FilterOption[];
-  defaultExcluded?: string[];
 }
 
+/** multi: selected = show only these (empty = no filter = all visible). single: unchanged */
 export interface FilterState {
   [sectionKey: string]: {
     type: "multi";
-    excluded: string[];
+    selected: string[];
   } | {
     type: "single";
     value: string | undefined;
@@ -36,7 +36,7 @@ export function buildInitialState(sections: FilterSection[]): FilterState {
   const state: FilterState = {};
   for (const s of sections) {
     if (s.type === "multi") {
-      state[s.key] = { type: "multi", excluded: s.defaultExcluded ?? [] };
+      state[s.key] = { type: "multi", selected: [] };
     } else {
       state[s.key] = { type: "single", value: undefined };
     }
@@ -47,7 +47,7 @@ export function buildInitialState(sections: FilterSection[]): FilterState {
 export function getActiveFilterCount(state: FilterState): number {
   let count = 0;
   for (const val of Object.values(state)) {
-    if (val.type === "multi" && val.excluded.length > 0) count += val.excluded.length;
+    if (val.type === "multi" && val.selected.length > 0) count++;
     if (val.type === "single" && val.value) count++;
   }
   return count;
@@ -58,10 +58,10 @@ export function getFilterChips(sections: FilterSection[], state: FilterState): {
   for (const s of sections) {
     const val = state[s.key];
     if (!val) continue;
-    if (val.type === "multi") {
-      for (const ex of val.excluded) {
-        const opt = s.options.find(o => o.value === ex);
-        chips.push({ key: `${s.key}:${ex}`, section: s.label, sectionKey: s.key, label: opt?.label ?? ex, value: ex });
+    if (val.type === "multi" && val.selected.length > 0) {
+      for (const sel of val.selected) {
+        const opt = s.options.find(o => o.value === sel);
+        chips.push({ key: `${s.key}:${sel}`, section: s.label, sectionKey: s.key, label: opt?.label ?? sel, value: sel });
       }
     } else if (val.type === "single" && val.value) {
       const opt = s.options.find(o => o.value === val.value);
@@ -71,15 +71,19 @@ export function getFilterChips(sections: FilterSection[], state: FilterState): {
   return chips;
 }
 
-function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
+function MultiFilterSection({ section, selected, onToggle, onBulkSelect }: {
   section: FilterSection;
-  excluded: string[];
+  selected: string[];
   onToggle: (value: string) => void;
-  onBulkExclude: (values: string[]) => void;
+  onBulkSelect: (values: string[]) => void;
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    const groups = new Set<string>();
+    for (const opt of section.options) if (opt.group) groups.add(opt.group);
+    return groups;
+  });
 
   const groups = useMemo(() => {
     const map = new Map<string, FilterOption[]>();
@@ -95,8 +99,6 @@ function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
   const filtered = search
     ? section.options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
     : null;
-
-  const allValues = section.options.map(o => o.value);
 
   const toggleCollapse = (group: string) => {
     const next = new Set(collapsed);
@@ -115,25 +117,23 @@ function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
           className="flex-1 px-2 py-1 text-xs border border-border-input rounded bg-surface text-body placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary-300"
         />
       </div>
-      <div className="flex gap-2 mb-2 text-exs text-subtle">
-        <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude([])}>
-          {t("filters.selectAll")}
-        </button>
-        <span>|</span>
-        <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude(allValues)}>
-          {t("filters.deselectAll")}
-        </button>
-      </div>
+      {selected.length > 0 && (
+        <div className="flex gap-2 mb-2 text-exs text-subtle">
+          <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect([])}>
+            {t("filters.clearAll")}
+          </button>
+        </div>
+      )}
 
       <div className="max-h-64 overflow-y-auto space-y-1.5">
         {filtered ? (
           filtered.map(opt => (
-            <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+            <CheckboxRow key={opt.value} label={opt.label} checked={selected.includes(opt.value)} onChange={() => onToggle(opt.value)} />
           ))
         ) : hasGroups ? (
           Array.from(groups.entries()).map(([groupName, groupOpts]) => {
             const isCollapsed = collapsed.has(groupName);
-            const excludedInGroup = groupOpts.filter(o => excluded.includes(o.value)).length;
+            const selectedInGroup = groupOpts.filter(o => selected.includes(o.value)).length;
             const groupValues = groupOpts.map(o => o.value);
 
             return (
@@ -145,15 +145,15 @@ function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
                   >
                     <span className={clsx("transition-transform text-[10px]", !isCollapsed && "rotate-90")}>&#9654;</span>
                     {groupName}
-                    {excludedInGroup > 0 && (
-                      <span className="text-muted font-normal normal-case">({excludedInGroup} {t("filters.hidden")})</span>
+                    {selectedInGroup > 0 && (
+                      <span className="text-primary font-normal normal-case">({selectedInGroup})</span>
                     )}
                   </button>
                   <div className="flex gap-1.5 text-exs text-subtle">
-                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude(excluded.filter(v => !groupValues.includes(v)))}>
+                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect([...selected.filter(v => !groupValues.includes(v)), ...groupValues])}>
                       {t("filters.all")}
                     </button>
-                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkExclude([...excluded.filter(v => !groupValues.includes(v)), ...groupValues])}>
+                    <button className="hover:text-body cursor-pointer" onClick={() => onBulkSelect(selected.filter(v => !groupValues.includes(v)))}>
                       {t("filters.none")}
                     </button>
                   </div>
@@ -161,7 +161,7 @@ function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
                 {!isCollapsed && (
                   <div className="ml-3 space-y-0.5">
                     {groupOpts.map(opt => (
-                      <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+                      <CheckboxRow key={opt.value} label={opt.label} checked={selected.includes(opt.value)} onChange={() => onToggle(opt.value)} />
                     ))}
                   </div>
                 )}
@@ -170,7 +170,7 @@ function MultiFilterSection({ section, excluded, onToggle, onBulkExclude }: {
           })
         ) : (
           section.options.map(opt => (
-            <CheckboxRow key={opt.value} label={opt.label} checked={!excluded.includes(opt.value)} onChange={() => onToggle(opt.value)} />
+            <CheckboxRow key={opt.value} label={opt.label} checked={selected.includes(opt.value)} onChange={() => onToggle(opt.value)} />
           ))
         )}
       </div>
@@ -182,7 +182,7 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
   return (
     <label className="flex items-center gap-2 py-0.5 cursor-pointer group">
       <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 accent-primary rounded" />
-      <span className={clsx("text-xs", checked ? "text-body group-hover:text-heading" : "text-muted line-through")}>{label}</span>
+      <span className={clsx("text-xs", checked ? "text-primary font-body-medium" : "text-body group-hover:text-heading")}>{label}</span>
     </label>
   );
 }
@@ -207,14 +207,14 @@ export default function FilterPopover({ sections, state, onChange }: Props) {
   const toggleMulti = (sectionKey: string, value: string) => {
     const section = state[sectionKey];
     if (!section || section.type !== "multi") return;
-    const excluded = section.excluded.includes(value)
-      ? section.excluded.filter(v => v !== value)
-      : [...section.excluded, value];
-    onChange({ ...state, [sectionKey]: { type: "multi", excluded } });
+    const selected = section.selected.includes(value)
+      ? section.selected.filter(v => v !== value)
+      : [...section.selected, value];
+    onChange({ ...state, [sectionKey]: { type: "multi", selected } });
   };
 
-  const bulkExclude = (sectionKey: string, values: string[]) => {
-    onChange({ ...state, [sectionKey]: { type: "multi", excluded: values } });
+  const bulkSelect = (sectionKey: string, values: string[]) => {
+    onChange({ ...state, [sectionKey]: { type: "multi", selected: values } });
   };
 
   const setSingle = (sectionKey: string, value: string | undefined) => {
@@ -258,9 +258,9 @@ export default function FilterPopover({ sections, state, onChange }: Props) {
                   {section.type === "multi" && val?.type === "multi" ? (
                     <MultiFilterSection
                       section={section}
-                      excluded={val.excluded}
+                      selected={val.selected}
                       onToggle={(value) => toggleMulti(section.key, value)}
-                      onBulkExclude={(values) => bulkExclude(section.key, values)}
+                      onBulkSelect={(values) => bulkSelect(section.key, values)}
                     />
                   ) : section.type === "single" && val?.type === "single" ? (
                     <div className="flex flex-wrap gap-1">

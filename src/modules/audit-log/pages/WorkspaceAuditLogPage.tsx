@@ -138,11 +138,6 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "portal-ticket-created": "primary",
 };
 
-const ROUTINE_ACTIONS = [
-  "imap-poll-started",
-  "imap-poll-completed",
-];
-
 export default function WorkspaceAuditLogPage() {
   const { workspaceSlug } = useParams();
   const { can } = usePermissions(workspaceSlug);
@@ -155,31 +150,30 @@ export default function WorkspaceAuditLogPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
+  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })), defaultExcluded: ROUTINE_ACTIONS },
-    { key: "entity", label: t("auditLog.col.entity"), type: "single", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
-    { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
-    { key: "user", label: t("auditLog.col.user"), type: "single", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
+    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
+    { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
+    { key: "userIds", label: t("auditLog.col.user"), type: "multi", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
   ], [t, members]);
 
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
 
   const handleFilterChange = (newState: FilterState) => {
     setFilterState(newState);
-    const actionsState = newState.actions;
-    const entityState = newState.entity;
-    const categoryState = newState.category;
-    const userState = newState.user;
+    const getSelected = (key: string) => {
+      const val = newState[key];
+      return val?.type === "multi" && val.selected.length > 0 ? val.selected : undefined;
+    };
     setFilters({
       ...filters,
-      excludeActions: actionsState?.type === "multi" ? actionsState.excluded : undefined,
-      action: undefined,
-      entityType: entityState?.type === "single" ? entityState.value : undefined,
-      category: categoryState?.type === "single" ? categoryState.value : undefined,
-      userId: userState?.type === "single" ? userState.value : undefined,
+      actions: getSelected("actions"),
+      entityTypes: getSelected("entityTypes"),
+      categories: getSelected("categories"),
+      userIds: getSelected("userIds"),
       page: 1,
     });
   };
@@ -256,25 +250,22 @@ export default function WorkspaceAuditLogPage() {
       </div>
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          {filterChips.map((chip) => {
-            const isExclude = filterState[chip.sectionKey]?.type === "multi";
-            return (
-              <FilterChip
-                key={chip.key}
-                label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
-                onRemove={() => {
-                  const val = filterState[chip.sectionKey];
-                  if (val?.type === "multi") {
-                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
-                  } else {
-                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
-                  }
-                }}
-              />
-            );
-          })}
+          {filterChips.map((chip) => (
+            <FilterChip
+              key={chip.key}
+              label={chip.label}
+              onRemove={() => {
+                const val = filterState[chip.sectionKey];
+                if (val?.type === "multi") {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: val.selected.filter(v => v !== chip.value) } });
+                } else {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
+                }
+              }}
+            />
+          ))}
           <button
-            onClick={() => { setFilterState(buildInitialState(filterSections.map(s => ({ ...s, defaultExcluded: [] })))); setFilters({ page: 1, limit: 20 }); }}
+            onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters({ page: 1, limit: 20 }); }}
             className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
           >
             {t("filters.clearAll")}

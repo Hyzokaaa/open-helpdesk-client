@@ -99,11 +99,6 @@ const LEVEL_COLORS: Record<string, string> = {
   error: "text-red-500 font-body-semibold",
 };
 
-const ROUTINE_ACTIONS = [
-  "imap-poll-started",
-  "imap-poll-completed",
-];
-
 export default function SystemLogsPage() {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
@@ -112,30 +107,29 @@ export default function SystemLogsPage() {
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20, excludeActions: ROUTINE_ACTIONS });
+  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })), defaultExcluded: ROUTINE_ACTIONS },
-    { key: "category", label: t("auditLog.col.category"), type: "single", options: CATEGORIES.map(c => ({ value: c, label: c })) },
-    { key: "level", label: t("auditLog.col.level"), type: "single", options: LEVELS.map(l => ({ value: l, label: l })) },
-    { key: "source", label: t("auditLog.col.source"), type: "single", options: SOURCES.map(s => ({ value: s, label: s })) },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
+    { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: c })) },
+    { key: "levels", label: t("auditLog.col.level"), type: "multi", options: LEVELS.map(l => ({ value: l, label: l })) },
+    { key: "sources", label: t("auditLog.col.source"), type: "multi", options: SOURCES.map(s => ({ value: s, label: s })) },
   ], [t]);
 
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
 
   const handleFilterChange = (newState: FilterState) => {
     setFilterState(newState);
-    const actionsState = newState.actions;
-    const categoryState = newState.category;
-    const levelState = newState.level;
-    const sourceState = newState.source;
+    const getSelected = (key: string) => {
+      const val = newState[key];
+      return val?.type === "multi" && val.selected.length > 0 ? val.selected : undefined;
+    };
     setFilters({
       ...filters,
-      excludeActions: actionsState?.type === "multi" ? actionsState.excluded : undefined,
-      action: undefined,
-      category: categoryState?.type === "single" ? categoryState.value : undefined,
-      level: levelState?.type === "single" ? levelState.value : undefined,
-      source: sourceState?.type === "single" ? sourceState.value : undefined,
+      actions: getSelected("actions"),
+      categories: getSelected("categories"),
+      levels: getSelected("levels"),
+      sources: getSelected("sources"),
       page: 1,
     });
   };
@@ -196,25 +190,22 @@ export default function SystemLogsPage() {
       </div>
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          {filterChips.map((chip) => {
-            const isExclude = filterState[chip.sectionKey]?.type === "multi";
-            return (
-              <FilterChip
-                key={chip.key}
-                label={`${isExclude ? `${t("filters.hiding")}: ` : ""}${chip.label}`}
-                onRemove={() => {
-                  const val = filterState[chip.sectionKey];
-                  if (val?.type === "multi") {
-                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", excluded: val.excluded.filter(v => v !== chip.value) } });
-                  } else {
-                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
-                  }
-                }}
-              />
-            );
-          })}
+          {filterChips.map((chip) => (
+            <FilterChip
+              key={chip.key}
+              label={chip.label}
+              onRemove={() => {
+                const val = filterState[chip.sectionKey];
+                if (val?.type === "multi") {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: val.selected.filter(v => v !== chip.value) } });
+                } else {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
+                }
+              }}
+            />
+          ))}
           <button
-            onClick={() => { setFilterState(buildInitialState(filterSections.map(s => ({ ...s, defaultExcluded: [] })))); setFilters({ ...filters, excludeActions: undefined, action: undefined, category: undefined, level: undefined, source: undefined, page: 1 }); }}
+            onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters({ page: 1, limit: 20 }); }}
             className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
           >
             {t("filters.clearAll")}

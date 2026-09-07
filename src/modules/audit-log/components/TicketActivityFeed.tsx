@@ -26,7 +26,7 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
 
   useEffect(() => {
     listAuditLog(workspaceSlug, {
-      entityType: "ticket",
+      entityTypes: ["ticket"],
       entityId: ticketId,
       sortOrder: "ASC",
       limit: 100,
