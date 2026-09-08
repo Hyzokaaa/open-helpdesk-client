@@ -1780,6 +1780,8 @@ const translations = {
   "emailRules.deleteTitle": { en: "Delete Rule", es: "Eliminar Regla" },
   "emailRules.deleteMessage": { en: "Are you sure you want to delete this rule?", es: "¿Está seguro de que desea eliminar esta regla?" },
   "emailRules.saveError": { en: "Failed to save rule", es: "Error al guardar regla" },
+  "emailRules.addSuggested": { en: "Add common filters", es: "Agregar filtros comunes" },
+  "emailRules.suggestedAdded": { en: "Common filter rules added", es: "Reglas de filtros comunes agregadas" },
 
   // Common confirm
   "common.confirmDeleteMessage": { en: "This action cannot be undone.", es: "Esta acción no se puede deshacer." },

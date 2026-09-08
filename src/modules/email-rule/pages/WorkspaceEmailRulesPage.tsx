@@ -247,11 +247,49 @@ export default function WorkspaceEmailRulesPage() {
 
   const needsValue = (type: string) => type !== "reject";
 
+  const SUGGESTED_RULES: { name: string; pattern: string }[] = [
+    { name: "Block noreply@", pattern: "noreply@" },
+    { name: "Block no-reply@", pattern: "no-reply@" },
+    { name: "Block no_reply@", pattern: "no_reply@" },
+    { name: "Block mailer-daemon@", pattern: "mailer-daemon@" },
+    { name: "Block postmaster@", pattern: "postmaster@" },
+    { name: "Block bounce@", pattern: "bounce@" },
+  ];
+
+  const hasAllSuggested = SUGGESTED_RULES.every((s) =>
+    rules.some((r) => r.actions.some((a) => a.type === "reject") && r.conditions.some((c) => c.field === "from" && c.value === s.pattern)),
+  );
+
+  const handleAddSuggested = async () => {
+    if (!workspaceSlug) return;
+    const existing = rules.flatMap((r) =>
+      r.actions.some((a) => a.type === "reject") ? r.conditions.filter((c) => c.field === "from").map((c) => c.value) : [],
+    );
+    const toCreate = SUGGESTED_RULES.filter((s) => !existing.includes(s.pattern));
+    if (toCreate.length === 0) return;
+    for (const s of toCreate) {
+      await createEmailRule(workspaceSlug, {
+        name: s.name,
+        conditions: [{ field: "from", operator: "starts-with", value: s.pattern }],
+        actions: [{ type: "reject" }],
+      });
+    }
+    toast.success(t("emailRules.suggestedAdded"));
+    fetchRules();
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-body-bold text-heading">{t("emailRules.title")}</h2>
-        {canManage && <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>}
+        {canManage && (
+          <div className="flex items-center gap-2">
+            {!hasAllSuggested && (
+              <Button size="sm" color="light" onClick={handleAddSuggested}>{t("emailRules.addSuggested")}</Button>
+            )}
+            <Button size="sm" onClick={openCreate}>{t("emailRules.new")}</Button>
+          </div>
+        )}
       </div>
 
       {loading ? (
