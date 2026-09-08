@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -334,7 +334,7 @@ export default function WorkspaceAuditLogPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} />
+                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} />
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">
@@ -406,18 +406,12 @@ export default function WorkspaceAuditLogPage() {
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
               <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
-              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} />
+              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
               <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? getMemberName(selected.userId) : t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                {selected.metadata ? (
-                  <pre className="text-xs text-body bg-surface-hover rounded p-3 overflow-x-auto whitespace-pre-wrap break-all">
-                    {JSON.stringify(selected.metadata, null, 2)}
-                  </pre>
-                ) : (
-                  <span className="text-xs text-muted">—</span>
-                )}
+                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
@@ -428,16 +422,27 @@ export default function WorkspaceAuditLogPage() {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value, search }: { label: string; value: string; search?: string }) {
   return (
     <div>
       <p className="text-xs font-body-semibold text-subtle uppercase mb-0.5">{label}</p>
-      <p className="text-sm text-body break-all">{value}</p>
+      <p className="text-sm text-body break-all">{search ? <HighlightText text={value} search={search} /> : value}</p>
     </div>
   );
 }
 
-export function MetadataSummary({ metadata, action, t }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string }) {
+export function HighlightText({ text, search }: { text: string; search?: string }): ReactNode {
+  if (!search || !text) return text;
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    regex.test(part) ? <mark key={i} className="bg-yellow-200/70 text-inherit rounded-sm px-0.5">{part}</mark> : part,
+  );
+}
+
+export function MetadataSummary({ metadata, action, t, search }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const parts: string[] = [];
@@ -484,5 +489,39 @@ export function MetadataSummary({ metadata, action, t }: { metadata: Record<stri
   if (metadata.provider) parts.push(String(metadata.provider));
 
   if (parts.length === 0) return <span className="text-xs text-muted">—</span>;
-  return <span className="text-xs text-muted">{parts.join(" — ")}</span>;
+  const joined = parts.join(" — ");
+  return <span className="text-xs text-muted">{search ? <HighlightText text={joined} search={search} /> : joined}</span>;
+}
+
+export function MetadataKeyValue({ metadata, search }: { metadata: Record<string, unknown> | null; search?: string }) {
+  if (!metadata) return <span className="text-xs text-muted">—</span>;
+
+  const before = metadata.before as Record<string, unknown> | undefined;
+  const after = metadata.after as Record<string, unknown> | undefined;
+
+  const entries = Object.entries(metadata).filter(([key]) => key !== "before" && key !== "after");
+
+  // Merge before/after into diff rows
+  if (before && after) {
+    for (const key of Object.keys(after)) {
+      if (String(before[key]) !== String(after[key])) {
+        entries.push([key, `${before[key] ?? "—"} → ${after[key] ?? "—"}`]);
+      }
+    }
+  }
+
+  if (entries.length === 0) return <span className="text-xs text-muted">—</span>;
+
+  return (
+    <div className="bg-surface-hover rounded p-3 space-y-2">
+      {entries.map(([key, val]) => (
+        <div key={key} className="flex gap-2 items-baseline">
+          <span className="text-xs font-body-semibold text-subtle min-w-[80px] shrink-0">{key}</span>
+          <span className="text-xs text-body break-all">
+            {search ? <HighlightText text={String(val)} search={search} /> : String(val)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }

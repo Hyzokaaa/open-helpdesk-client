@@ -11,7 +11,7 @@ import {
   AuditLogFilters,
   listAllAuditLog,
 } from "../services/audit-log.service";
-import { MetadataSummary } from "./WorkspaceAuditLogPage";
+import { MetadataSummary, MetadataKeyValue, HighlightText } from "./WorkspaceAuditLogPage";
 
 const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
@@ -291,7 +291,7 @@ export default function SystemLogsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} />
+                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} />
                     </td>
                     <td className="px-4 py-3">
                       <button
@@ -358,19 +358,13 @@ export default function SystemLogsPage() {
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
               <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
-              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} />
+              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
               <DetailRow label={t("auditLog.detail.user")} value={selected.userName ?? selected.userId ?? t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <DetailRow label={t("auditLog.detail.workspaceId")} value={selected.workspaceId ?? "—"} />
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                {selected.metadata ? (
-                  <pre className="text-xs text-body bg-surface-hover rounded p-3 overflow-x-auto whitespace-pre-wrap break-all">
-                    {JSON.stringify(selected.metadata, null, 2)}
-                  </pre>
-                ) : (
-                  <span className="text-xs text-muted">—</span>
-                )}
+                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
@@ -381,11 +375,11 @@ export default function SystemLogsPage() {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value, search }: { label: string; value: string; search?: string }) {
   return (
     <div>
       <p className="text-xs font-body-semibold text-subtle uppercase mb-0.5">{label}</p>
-      <p className="text-sm text-body break-all">{value}</p>
+      <p className="text-sm text-body break-all">{search ? <HighlightText text={value} search={search} /> : value}</p>
     </div>
   );
 }
