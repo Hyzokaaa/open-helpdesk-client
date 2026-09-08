@@ -108,6 +108,7 @@ export default function SystemLogsPage() {
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [searchInput, setSearchInput] = useState("");
 
   const filterSections: FilterSection[] = useMemo(() => [
     { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
@@ -168,8 +169,25 @@ export default function SystemLogsPage() {
     <div className="w-full">
       <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.systemTitle")}</h2>
 
-      {/* Filters */}
+      {/* Search + Filters */}
       <div className="flex items-center gap-3 mb-3">
+        <div className="relative flex-1 max-w-sm">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              const val = e.target.value.trim();
+              clearTimeout((window as any).__sysAuditSearchTimer);
+              (window as any).__sysAuditSearchTimer = setTimeout(() => {
+                setFilters(f => ({ ...f, search: val || undefined, page: 1 }));
+              }, 500);
+            }}
+            placeholder={t("auditLog.search")}
+            className="w-full pl-8 pr-3 py-1.5 rounded-input border-input bg-surface text-sm text-body placeholder:text-muted focus:outline-none focus:border-primary-400 transition-colors"
+          />
+        </div>
         <input
           type="date"
           value={filters.dateFrom ?? ""}

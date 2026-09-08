@@ -151,6 +151,7 @@ export default function WorkspaceAuditLogPage() {
   const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [searchInput, setSearchInput] = useState("");
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
 
   const filterSections: FilterSection[] = useMemo(() => [
@@ -244,9 +245,28 @@ export default function WorkspaceAuditLogPage() {
     <div className="w-full">
       <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.title")}</h2>
 
-      {/* Filters */}
-      <div className="flex justify-end mb-3">
-        <FilterPopover sections={filterSections} state={filterState} onChange={handleFilterChange} />
+      {/* Search + Filters */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="relative flex-1 max-w-sm">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              const val = e.target.value.trim();
+              clearTimeout((window as any).__auditSearchTimer);
+              (window as any).__auditSearchTimer = setTimeout(() => {
+                setFilters(f => ({ ...f, search: val || undefined, page: 1 }));
+              }, 500);
+            }}
+            placeholder={t("auditLog.search")}
+            className="w-full pl-8 pr-3 py-1.5 rounded-input border-input bg-surface text-sm text-body placeholder:text-muted focus:outline-none focus:border-primary-400 transition-colors"
+          />
+        </div>
+        <div className="ml-auto">
+          <FilterPopover sections={filterSections} state={filterState} onChange={handleFilterChange} />
+        </div>
       </div>
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">

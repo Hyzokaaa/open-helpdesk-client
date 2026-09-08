@@ -1245,6 +1245,7 @@ const translations = {
   "auditLog.noPermission": { en: "You don't have permission to view the audit log", es: "No tienes permiso para ver el registro de auditoría" },
   "auditLog.upgradeRequired": { en: "Audit log is available on Business plan and above. Upgrade your plan to access this feature.", es: "El registro de auditoría está disponible desde el plan Business. Actualiza tu plan para acceder a esta función." },
   "auditLog.goToBilling": { en: "View plans & upgrade", es: "Ver planes y mejorar" },
+  "auditLog.search": { en: "Search logs...", es: "Buscar logs..." },
   "auditLog.empty": { en: "No audit entries found", es: "No se encontraron registros de auditoría" },
   "auditLog.allActions": { en: "All actions", es: "Todas las acciones" },
   "auditLog.allEntities": { en: "All entities", es: "Todas las entidades" },

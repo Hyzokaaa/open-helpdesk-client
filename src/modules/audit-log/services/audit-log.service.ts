@@ -24,6 +24,7 @@ export interface AuditLogFilters {
   levels?: string[];
   sources?: string[];
   userIds?: string[];
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
   sortOrder?: "ASC" | "DESC";
@@ -39,6 +40,7 @@ function applyFilters(params: URLSearchParams, filters: AuditLogFilters): void {
   if (filters.levels?.length) params.set("levels", filters.levels.join(","));
   if (filters.sources?.length) params.set("sources", filters.sources.join(","));
   if (filters.userIds?.length) params.set("userIds", filters.userIds.join(","));
+  if (filters.search) params.set("search", filters.search);
   if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
   if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
