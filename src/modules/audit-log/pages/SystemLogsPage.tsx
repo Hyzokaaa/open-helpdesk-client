@@ -294,12 +294,17 @@ export default function SystemLogsPage() {
                       <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} />
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelected(item)}
-                        className="text-xs text-primary hover:underline cursor-pointer"
-                      >
-                        {t("auditLog.view")}
-                      </button>
+                      {(() => {
+                        const hasMetadataMatch = filters.search && item.metadata && JSON.stringify(item.metadata).toLowerCase().includes(filters.search.toLowerCase());
+                        return (
+                          <button
+                            onClick={() => setSelected(item)}
+                            className={`text-xs cursor-pointer ${hasMetadataMatch ? "bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-body-semibold" : "text-primary hover:underline"}`}
+                          >
+                            {t("auditLog.view")}{hasMetadataMatch ? " ●" : ""}
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
