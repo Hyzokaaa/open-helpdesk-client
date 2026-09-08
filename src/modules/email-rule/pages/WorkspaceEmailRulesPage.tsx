@@ -27,6 +27,7 @@ import {
   reorderEmailRules,
 } from "../services/email-rule.service";
 import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
+import { listMailboxes, type MailboxDto } from "@modules/workspace/services/mailbox.service";
 
 const CONDITION_FIELDS = [
   { value: "from", labelKey: "emailRules.fieldFrom" },
@@ -53,11 +54,12 @@ const ACTION_TYPES = [
 
 const PRIORITIES = ["low", "medium", "high", "critical"] as const;
 
-function SortableRow({ rule, t, tEnum, categories, canManage, onEdit, onToggle, onDelete }: {
+function SortableRow({ rule, t, tEnum, categories, mailboxes, canManage, onEdit, onToggle, onDelete }: {
   rule: EmailRule;
   t: (key: any) => string;
   tEnum: (ns: string, key: string) => string;
   categories: TicketCategoryDto[];
+  mailboxes: MailboxDto[];
   canManage: boolean;
   onEdit: () => void;
   onToggle: () => void;
@@ -85,6 +87,13 @@ function SortableRow({ rule, t, tEnum, categories, canManage, onEdit, onToggle, 
       </td>
       <td className="px-4 py-3">
         <span className="text-sm font-body-semibold text-heading">{rule.name}</span>
+        {mailboxes.length > 1 && (
+          <p className="text-exs text-muted mt-0.5">
+            {rule.mailboxIds.length === 0
+              ? t("emailRules.allMailboxes")
+              : rule.mailboxIds.map((id) => mailboxes.find((m) => m.id === id)?.address ?? id).join(", ")}
+          </p>
+        )}
       </td>
       <td className="px-4 py-3">
         <span className="text-xs text-muted">{conditionSummary}</span>
@@ -119,6 +128,7 @@ export default function WorkspaceEmailRulesPage() {
   const canManage = can(P.WORKSPACE_SETTINGS_MANAGE);
   const [rules, setRules] = useState<EmailRule[]>([]);
   const [wsCategories, setWsCategories] = useState<TicketCategoryDto[]>([]);
+  const [mailboxes, setMailboxes] = useState<MailboxDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRule, setEditingRule] = useState<EmailRule | null>(null);
@@ -128,15 +138,18 @@ export default function WorkspaceEmailRulesPage() {
   const [name, setName] = useState("");
   const [conditions, setConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
   const [actions, setActions] = useState<RuleAction[]>([{ type: "reject" }]);
+  const [selectedMailboxIds, setSelectedMailboxIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [originalName, setOriginalName] = useState("");
   const [originalConditions, setOriginalConditions] = useState<RuleCondition[]>([{ field: "from", operator: "contains", value: "" }]);
   const [originalActions, setOriginalActions] = useState<RuleAction[]>([{ type: "reject" }]);
+  const [originalMailboxIds, setOriginalMailboxIds] = useState<string[]>([]);
 
   const isDirty = name !== originalName
     || JSON.stringify(conditions) !== JSON.stringify(originalConditions)
-    || JSON.stringify(actions) !== JSON.stringify(originalActions);
+    || JSON.stringify(actions) !== JSON.stringify(originalActions)
+    || JSON.stringify(selectedMailboxIds) !== JSON.stringify(originalMailboxIds);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -148,13 +161,17 @@ export default function WorkspaceEmailRulesPage() {
 
   useEffect(() => {
     fetchRules();
-    if (workspaceSlug) listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
+    if (workspaceSlug) {
+      listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
+      listMailboxes(workspaceSlug).then(setMailboxes).catch(() => {});
+    }
   }, [workspaceSlug]);
 
   const resetForm = () => {
     setName("");
     setConditions([{ field: "from", operator: "contains", value: "" }]);
     setActions([{ type: "reject" }]);
+    setSelectedMailboxIds([]);
   };
 
   const openCreate = () => {
@@ -162,6 +179,7 @@ export default function WorkspaceEmailRulesPage() {
     setOriginalName("");
     setOriginalConditions([{ field: "from", operator: "contains", value: "" }]);
     setOriginalActions([{ type: "reject" }]);
+    setOriginalMailboxIds([]);
     setEditingRule(null);
     setShowCreate(true);
   };
@@ -170,9 +188,11 @@ export default function WorkspaceEmailRulesPage() {
     setName(rule.name);
     setConditions([...rule.conditions]);
     setActions([...rule.actions]);
+    setSelectedMailboxIds([...rule.mailboxIds]);
     setOriginalName(rule.name);
     setOriginalConditions([...rule.conditions]);
     setOriginalActions([...rule.actions]);
+    setOriginalMailboxIds([...rule.mailboxIds]);
     setEditingRule(rule);
     setShowCreate(true);
   };
@@ -192,10 +212,10 @@ export default function WorkspaceEmailRulesPage() {
     setSaving(true);
     try {
       if (editingRule) {
-        await updateEmailRule(workspaceSlug, editingRule.id, { name, conditions, actions });
+        await updateEmailRule(workspaceSlug, editingRule.id, { name, mailboxIds: selectedMailboxIds, conditions, actions });
         toast.success(t("emailRules.updated"));
       } else {
-        await createEmailRule(workspaceSlug, { name, conditions, actions });
+        await createEmailRule(workspaceSlug, { name, mailboxIds: selectedMailboxIds, conditions, actions });
         toast.success(t("emailRules.created"));
       }
       setShowCreate(false);
@@ -319,6 +339,7 @@ export default function WorkspaceEmailRulesPage() {
                       t={t}
                       tEnum={tEnum}
                       categories={wsCategories}
+                      mailboxes={mailboxes}
                       canManage={canManage}
                       onEdit={() => openEdit(rule)}
                       onToggle={() => handleToggle(rule)}
@@ -341,6 +362,35 @@ export default function WorkspaceEmailRulesPage() {
             <FormInput label={t("emailRules.name")} className="mb-4">
               <Input value={name} onChange={setName} required />
             </FormInput>
+
+            {/* Mailbox scope */}
+            {mailboxes.length > 1 && (
+              <div className="mb-4">
+                <p className="text-xs font-body-semibold text-subtle uppercase mb-2">{t("emailRules.mailboxes")}</p>
+                <p className="text-xs text-muted mb-2">{t("emailRules.mailboxesHint")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {mailboxes.map((mb) => {
+                    const selected = selectedMailboxIds.includes(mb.id);
+                    return (
+                      <button
+                        key={mb.id}
+                        type="button"
+                        onClick={() => setSelectedMailboxIds((prev) =>
+                          selected ? prev.filter((id) => id !== mb.id) : [...prev, mb.id],
+                        )}
+                        className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                          selected
+                            ? "bg-primary-50 border-primary-300 text-primary-700"
+                            : "bg-surface border-border-card text-muted hover:border-primary-200"
+                        }`}
+                      >
+                        {mb.address}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Conditions */}
             <p className="text-xs font-body-semibold text-subtle uppercase mb-2">{t("emailRules.conditions")}</p>

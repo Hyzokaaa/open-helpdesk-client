@@ -1782,6 +1782,9 @@ const translations = {
   "emailRules.saveError": { en: "Failed to save rule", es: "Error al guardar regla" },
   "emailRules.addSuggested": { en: "Add common filters", es: "Agregar filtros comunes" },
   "emailRules.suggestedAdded": { en: "Common filter rules added", es: "Reglas de filtros comunes agregadas" },
+  "emailRules.mailboxes": { en: "Mailboxes", es: "Buzones" },
+  "emailRules.mailboxesHint": { en: "Select which mailboxes this rule applies to. Leave empty for all.", es: "Selecciona a qué buzones aplica esta regla. Deja vacío para todos." },
+  "emailRules.allMailboxes": { en: "All mailboxes", es: "Todos los buzones" },
 
   // Common confirm
   "common.confirmDeleteMessage": { en: "This action cannot be undone.", es: "Esta acción no se puede deshacer." },
