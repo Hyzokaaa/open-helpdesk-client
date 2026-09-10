@@ -1,4 +1,5 @@
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import MemberLink from "./MemberLink";
 import { formatResponseTime } from "../domain/format-response-time";
 import type { TicketDetail } from "../services/ticket.service";
@@ -31,9 +32,12 @@ export default function TicketDetailsCard({
         {t("ticketDetail.details")}
       </p>
       <div className="space-y-1.5 text-xs">
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between items-center gap-2">
           <span className="text-muted shrink-0">{t("ticketDetail.reportedBy")}</span>
-          <MemberLink userId={ticket.reporterId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
+          <div className="flex items-center gap-1.5">
+            <UserAvatar avatarUrl={members.find((m) => m.userId === ticket.reporterId)?.avatarUrl} firstName={getMemberName(ticket.reporterId).split(" ")[0]} lastName={getMemberName(ticket.reporterId).split(" ")[1]} size="sm" />
+            <MemberLink userId={ticket.reporterId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
+          </div>
         </div>
         {ticket.registeredById && (
           <div className="flex justify-between gap-2">
@@ -41,14 +45,18 @@ export default function TicketDetailsCard({
             <MemberLink userId={ticket.registeredById} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
           </div>
         )}
-        {ticket.assigneeId && (
-          <div className="flex justify-between">
-            <span className="text-muted">{t("ticketDetail.assignee")}</span>
-            <span className="text-body font-body-medium">
-              {getMemberName(ticket.assigneeId)}
-            </span>
-          </div>
-        )}
+        {ticket.assigneeId && (() => {
+          const am = members.find((m) => m.userId === ticket.assigneeId);
+          return (
+            <div className="flex justify-between items-center">
+              <span className="text-muted">{t("ticketDetail.assignee")}</span>
+              <div className="flex items-center gap-1.5">
+                <UserAvatar avatarUrl={am?.avatarUrl} firstName={am?.firstName} lastName={am?.lastName} size="sm" />
+                <span className="text-body font-body-medium">{getMemberName(ticket.assigneeId)}</span>
+              </div>
+            </div>
+          );
+        })()}
         <div className="flex justify-between items-baseline gap-2">
           <span className="text-muted shrink-0">{t("ticketDetail.firstResponse")}</span>
           <span className="text-body font-body-medium text-right">

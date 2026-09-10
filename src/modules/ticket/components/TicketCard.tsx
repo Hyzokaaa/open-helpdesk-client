@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 
@@ -41,9 +42,6 @@ export default function TicketCard({ ticket, tags, members, categoryName, onClic
   };
 
   const assignee = members.find((m) => m.userId === ticket.assigneeId);
-  const initials = assignee
-    ? `${(assignee.firstName ?? "")[0] ?? ""}${(assignee.lastName ?? "")[0] ?? ""}`.toUpperCase()
-    : null;
 
   const ticketTags = ticket.tagIds
     .map((id) => tags.find((t) => t.id === id))
@@ -85,10 +83,8 @@ export default function TicketCard({ ticket, tags, members, categoryName, onClic
             {ticket.name}
           </p>
         </div>
-        {initials && (
-          <span className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary text-[9px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
-            {initials}
-          </span>
+        {assignee && (
+          <UserAvatar avatarUrl={assignee.avatarUrl} firstName={assignee.firstName} lastName={assignee.lastName} size="sm" className="mt-0.5" />
         )}
       </div>
 

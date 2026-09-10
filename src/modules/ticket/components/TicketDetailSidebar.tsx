@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
@@ -241,17 +242,23 @@ export default function TicketDetailSidebar({
                 />
               </FormInput>
             </Card>
-          ) : ticket.assigneeId ? (
-            <Card className="p-4">
-              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-              <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
-              {canTransfer && !pendingTransfer && (
-                <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
-                  {t("tickets.transfer")}
-                </Button>
-              )}
-            </Card>
-          ) : null}
+          ) : ticket.assigneeId ? (() => {
+            const assigneeMember = members.find((m) => m.userId === ticket.assigneeId);
+            return (
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
+                <div className="flex items-center gap-2">
+                  <UserAvatar avatarUrl={assigneeMember?.avatarUrl} firstName={assigneeMember?.firstName} lastName={assigneeMember?.lastName} size="sm" />
+                  <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                </div>
+                {canTransfer && !pendingTransfer && (
+                  <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
+                    {t("tickets.transfer")}
+                  </Button>
+                )}
+              </Card>
+            );
+          })() : null}
 
           {pendingTransfer && workspaceSlug && ticketId && (
             <PendingTransferCard
@@ -338,17 +345,23 @@ export default function TicketDetailSidebar({
             ) : null;
           })()}
 
-          {ticket.assigneeId && (
-            <Card className="p-4">
-              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-              <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
-              {canTransfer && !pendingTransfer && (
-                <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
-                  {t("tickets.transfer")}
-                </Button>
-              )}
-            </Card>
-          )}
+          {ticket.assigneeId && (() => {
+            const assigneeMember = members.find((m) => m.userId === ticket.assigneeId);
+            return (
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
+                <div className="flex items-center gap-2">
+                  <UserAvatar avatarUrl={assigneeMember?.avatarUrl} firstName={assigneeMember?.firstName} lastName={assigneeMember?.lastName} size="sm" />
+                  <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                </div>
+                {canTransfer && !pendingTransfer && (
+                  <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
+                    {t("tickets.transfer")}
+                  </Button>
+                )}
+              </Card>
+            );
+          })()}
 
           {pendingTransfer && workspaceSlug && ticketId && (
             <PendingTransferCard

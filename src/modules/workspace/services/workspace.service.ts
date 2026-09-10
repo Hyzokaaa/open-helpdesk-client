@@ -47,6 +47,7 @@ export interface WorkspaceMember {
   role: string;
   autoCreated: boolean;
   organizationId: string | null;
+  avatarUrl: string | null;
 }
 
 export interface UserListItem {

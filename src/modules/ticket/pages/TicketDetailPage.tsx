@@ -10,6 +10,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import { P } from "@modules/workspace/domain/permissions";
 import {
   changeTicketStatus,
@@ -464,6 +465,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
+                      {(() => { const cm = members.find((m) => m.userId === c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
                       <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
                       {c.editedAt && (
                         <button
