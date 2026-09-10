@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
+import UserAvatar from "./UserAvatar";
 import useUser from "../hooks/useUser";
-import { updateName } from "../services/auth.service";
+import { updateName, uploadAvatar, deleteAvatar } from "../services/auth.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function AccountSection() {
@@ -14,6 +15,8 @@ export default function AccountSection() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -40,12 +43,69 @@ export default function AccountSection() {
     }
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const { avatarUrl } = await uploadAvatar(file);
+      setUser({ ...user, avatarUrl });
+    } catch {
+      toast.error("Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    setUploadingAvatar(true);
+    try {
+      await deleteAvatar();
+      setUser({ ...user, avatarUrl: null });
+    } catch {
+      toast.error("Failed to delete avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-lg">
     <Card className="p-5">
       <p className="text-sm font-body-semibold text-heading mb-4">
         {t("settings.account")}
       </p>
+
+      <div className="flex items-center gap-4 mb-4">
+        <UserAvatar avatarUrl={user.avatarUrl} firstName={user.firstName} lastName={user.lastName} size="lg" />
+        <div className="flex flex-col gap-1.5">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
+          <Button
+            size="xs"
+            color="light"
+            onClick={() => fileInputRef.current?.click()}
+            loading={uploadingAvatar}
+          >
+            {user.avatarUrl ? t("settings.changeAvatar") : t("settings.uploadAvatar")}
+          </Button>
+          {user.avatarUrl && (
+            <button
+              onClick={handleAvatarDelete}
+              className="text-xs text-danger hover:underline cursor-pointer"
+              disabled={uploadingAvatar}
+            >
+              {t("settings.removeAvatar")}
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <FormInput label={t("settings.firstName")}>

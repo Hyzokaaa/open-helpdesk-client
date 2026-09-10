@@ -42,6 +42,7 @@ interface ProfileResponse {
   theme: string;
   dateFormat: string;
   timezone: string;
+  avatarUrl: string | null;
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<void> {
@@ -97,6 +98,17 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
 export async function getProfile(): Promise<AuthUser> {
   const res = await http.get<ProfileResponse>("/users/me");
   return res.data;
+}
+
+export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<{ avatarUrl: string }>("/users/me/avatar", formData);
+  return res.data;
+}
+
+export async function deleteAvatar(): Promise<void> {
+  await http.delete("/users/me/avatar");
 }
 
 export interface AuthProviders {
