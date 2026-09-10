@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   TicketDetail,
@@ -94,6 +94,10 @@ export default function useTicketEdit(options: UseTicketEditOptions) {
     });
     setMode("edit");
   };
+
+  useEffect(() => {
+    if (initialMode === "edit" && ticket && !draft) enterEdit();
+  }, [ticket]);
 
   const getChanges = (): FieldChange[] => {
     if (!ticket || !draft) return [];
