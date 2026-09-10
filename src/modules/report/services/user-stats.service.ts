@@ -20,6 +20,7 @@ export interface UserStatsUser {
   lastName: string;
   email: string;
   role: string;
+  avatarUrl: string | null;
 }
 
 export interface UserStatsData {

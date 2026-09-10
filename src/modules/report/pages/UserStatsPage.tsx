@@ -23,6 +23,7 @@ import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBa
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import DateRangeSelector from "../components/DateRangeSelector";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import { UserStatsData, getUserStats } from "../services/user-stats.service";
 import { listTickets, type TicketListItem } from "@modules/ticket/services/ticket.service";
 
@@ -131,10 +132,6 @@ export default function UserStatsPage() {
     return "gray" as const;
   };
 
-  const initials = (first: string, last: string) => {
-    return ((first[0] ?? "") + (last[0] ?? "")).toUpperCase() || "?";
-  };
-
   const isReporter = data?.isReporter ?? false;
   const title = userId
     ? t("stats.userPerformance")
@@ -148,11 +145,13 @@ export default function UserStatsPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           {targetUser && (
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <span className="text-sm font-body-bold text-primary">
-                {initials(targetUser.firstName, targetUser.lastName)}
-              </span>
-            </div>
+            <UserAvatar
+              avatarUrl={targetUser.avatarUrl}
+              firstName={targetUser.firstName}
+              lastName={targetUser.lastName}
+              size="lg"
+              className="!w-10 !h-10 !text-sm"
+            />
           )}
           <div>
             <div className="flex items-center gap-2">
