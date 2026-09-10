@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { DragEndEvent } from "@dnd-kit/core";
 
 export default function useColumnDrag(initialKeys: string[]) {
   const [order, setOrder] = useState(initialKeys);
+
+  useEffect(() => {
+    setOrder((prev) => {
+      const sameKeys =
+        prev.length === initialKeys.length && prev.every((k) => initialKeys.includes(k));
+      return sameKeys ? prev : initialKeys;
+    });
+  }, [initialKeys.join(",")]);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) {

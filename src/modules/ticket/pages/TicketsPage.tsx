@@ -99,11 +99,14 @@ export default function TicketsPage() {
 
   const COLUMNS = useMemo(() => {
     const cols = [...BASE_COLUMNS];
+    if (departments.length > 0) {
+      cols.splice(2, 0, { key: "department", labelKey: "ticketDetail.department", sortable: true });
+    }
     if (orgs.length > 0) {
-      cols.splice(2, 0, { key: "organization", labelKey: "ticketDetail.organization", sortable: false });
+      cols.splice(2, 0, { key: "organization", labelKey: "ticketDetail.organization", sortable: true });
     }
     return cols;
-  }, [orgs.length]);
+  }, [orgs.length, departments.length]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
   const [ticketDirty, setTicketDirty] = useState(false);
@@ -198,6 +201,7 @@ export default function TicketsPage() {
   const tickets = result?.items ?? [];
   const tagMap = new Map(tags.map((t) => [t.id, t]));
   const orgMap = new Map(orgs.map((o) => [o.id, o]));
+  const deptMap = new Map(departments.map((d) => [d.id, d]));
 
   const formatDate = useFormatDate();
 
@@ -404,6 +408,9 @@ export default function TicketsPage() {
                         )}
                         {col.key === "organization" && (
                           <span className="text-xs text-muted">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
+                        )}
+                        {col.key === "department" && (
+                          <span className="text-xs text-muted">{ticket.departmentId ? deptMap.get(ticket.departmentId)?.name ?? "—" : "—"}</span>
                         )}
                         {col.key === "category" && (() => {
                           const cat = categories.find((c) => c.id === ticket.categoryId);
