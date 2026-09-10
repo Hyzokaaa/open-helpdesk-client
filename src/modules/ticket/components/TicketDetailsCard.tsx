@@ -32,31 +32,21 @@ export default function TicketDetailsCard({
         {t("ticketDetail.details")}
       </p>
       <div className="space-y-1.5 text-xs">
-        <div className="flex justify-between items-center gap-2">
-          <span className="text-muted shrink-0">{t("ticketDetail.reportedBy")}</span>
-          <div className="flex items-center gap-1.5">
-            <UserAvatar avatarUrl={members.find((m) => m.userId === ticket.reporterId)?.avatarUrl} firstName={getMemberName(ticket.reporterId).split(" ")[0]} lastName={getMemberName(ticket.reporterId).split(" ")[1]} size="sm" />
-            <MemberLink userId={ticket.reporterId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
-          </div>
-        </div>
-        {ticket.registeredById && (
-          <div className="flex justify-between gap-2">
-            <span className="text-muted shrink-0">{t("ticketDetail.registeredBy")}</span>
-            <MemberLink userId={ticket.registeredById} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
-          </div>
-        )}
-        {ticket.assigneeId && (() => {
-          const am = members.find((m) => m.userId === ticket.assigneeId);
+        {([
+          [t("ticketDetail.reportedBy"), ticket.reporterId],
+          ...(ticket.registeredById ? [[t("ticketDetail.registeredBy"), ticket.registeredById] as const] : []),
+        ] as const).map(([label, personId]) => {
+          const person = members.find((m) => m.userId === personId);
           return (
-            <div className="flex justify-between items-center">
-              <span className="text-muted">{t("ticketDetail.assignee")}</span>
-              <div className="flex items-center gap-1.5">
-                <UserAvatar avatarUrl={am?.avatarUrl} firstName={am?.firstName} lastName={am?.lastName} size="sm" />
-                <span className="text-body font-body-medium">{getMemberName(ticket.assigneeId)}</span>
+            <div key={label} className="flex justify-between items-center gap-2">
+              <span className="text-muted shrink-0">{label}</span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <UserAvatar avatarUrl={person?.avatarUrl} firstName={person?.firstName} lastName={person?.lastName} size="sm" />
+                <MemberLink userId={personId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} />
               </div>
             </div>
           );
-        })()}
+        })}
         <div className="flex justify-between items-baseline gap-2">
           <span className="text-muted shrink-0">{t("ticketDetail.firstResponse")}</span>
           <span className="text-body font-body-medium text-right">

@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import MemberLink from "./MemberLink";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
@@ -247,9 +248,9 @@ export default function TicketDetailSidebar({
             return (
               <Card className="p-4">
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <UserAvatar avatarUrl={assigneeMember?.avatarUrl} firstName={assigneeMember?.firstName} lastName={assigneeMember?.lastName} size="sm" />
-                  <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                  <MemberLink userId={ticket.assigneeId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} align="left" />
                 </div>
                 {canTransfer && !pendingTransfer && (
                   <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
@@ -345,14 +346,24 @@ export default function TicketDetailSidebar({
             ) : null;
           })()}
 
+          {ticket.organizationId && (() => {
+            const org = organizations.find((o) => o.id === ticket.organizationId);
+            return org ? (
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.organization")}</p>
+                <StatusBadge label={org.name} color="primary" size="xs" />
+              </Card>
+            ) : null;
+          })()}
+
           {ticket.assigneeId && (() => {
             const assigneeMember = members.find((m) => m.userId === ticket.assigneeId);
             return (
               <Card className="p-4">
                 <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <UserAvatar avatarUrl={assigneeMember?.avatarUrl} firstName={assigneeMember?.firstName} lastName={assigneeMember?.lastName} size="sm" />
-                  <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
+                  <MemberLink userId={ticket.assigneeId} members={members} getMemberName={getMemberName} navigate={navigate} workspaceSlug={workspaceSlug} align="left" />
                 </div>
                 {canTransfer && !pendingTransfer && (
                   <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
