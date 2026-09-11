@@ -331,6 +331,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         draft={draft}
         setDraft={setDraft}
         isEditing={isEditing}
+        embedded={!!ticketIdProp}
         canSwitchToEdit={canSwitchToEdit}
         canEditName={canEditName}
         canEditFields={canEditFields}
