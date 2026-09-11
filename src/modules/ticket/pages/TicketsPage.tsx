@@ -482,98 +482,90 @@ export default function TicketsPage() {
 
       {/* Single ticket status change modal */}
       {bulk.changeStatusTicket && !bulk.showDiscardReason && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-            <p className="text-sm text-muted mb-4">{bulk.changeStatusTicket.name}</p>
-            <div className="flex flex-col gap-1.5 mb-6">
-              {STATUSES.map((s) => (
-                <button key={s} onClick={() => bulk.setSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.selectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
-                  {tEnum("status", s)}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button size="sm" color="light" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!bulk.selectedStatus || bulk.selectedStatus === bulk.changeStatusTicket.status} onClick={bulk.handleChangeStatus}>{t("ticketDetail.confirmSave")}</Button>
-            </div>
+        <Sheet size="sm" onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
+          <p className="text-sm text-muted mb-4">{bulk.changeStatusTicket.name}</p>
+          <div className="flex flex-col gap-1.5 mb-6">
+            {STATUSES.map((s) => (
+              <button key={s} onClick={() => bulk.setSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.selectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
+                {tEnum("status", s)}
+              </button>
+            ))}
           </div>
-        </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" color="light" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
+            <Button size="sm" color="primary" disabled={!bulk.selectedStatus || bulk.selectedStatus === bulk.changeStatusTicket.status} onClick={bulk.handleChangeStatus}>{t("ticketDetail.confirmSave")}</Button>
+          </div>
+        </Sheet>
       )}
 
       {/* Single ticket discard reason modal */}
       {bulk.showDiscardReason && bulk.changeStatusTicket && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
-            <div className="flex flex-col gap-2">
-              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
-                <button
-                  key={reason}
-                  onClick={async () => {
-                    try {
-                      await changeTicketStatus(workspaceSlug!, bulk.changeStatusTicket!.id, "discarded", reason);
-                      toast.success(t("tickets.statusUpdated"));
-                      bulk.setChangeStatusTicket(null);
-                      bulk.setSelectedStatus("");
-                      bulk.setDiscardReason("");
-                      bulk.setShowDiscardReason(false);
-                      fetchTickets();
-                    } catch {
-                      toast.error(t("tickets.changeStatusError"));
-                    }
-                  }}
-                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
-                >
-                  {tEnum("discardReason", reason)}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">
-              {t("ticketDetail.cancel")}
-            </button>
+        <Sheet size="sm" onClose={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+          <div className="flex flex-col gap-2">
+            {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+              <button
+                key={reason}
+                onClick={async () => {
+                  try {
+                    await changeTicketStatus(workspaceSlug!, bulk.changeStatusTicket!.id, "discarded", reason);
+                    toast.success(t("tickets.statusUpdated"));
+                    bulk.setChangeStatusTicket(null);
+                    bulk.setSelectedStatus("");
+                    bulk.setDiscardReason("");
+                    bulk.setShowDiscardReason(false);
+                    fetchTickets();
+                  } catch {
+                    toast.error(t("tickets.changeStatusError"));
+                  }
+                }}
+                className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
+              >
+                {tEnum("discardReason", reason)}
+              </button>
+            ))}
           </div>
-        </div>
+          <button onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">
+            {t("ticketDetail.cancel")}
+          </button>
+        </Sheet>
       )}
 
       {/* Bulk status change modal */}
       {bulk.bulkStatusModal && !bulk.bulkDiscardReason && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-            <p className="text-sm text-muted mb-4">{selectedIds.size} {t("tickets.ticketCount")}</p>
-            <div className="flex flex-col gap-1.5 mb-6">
-              {STATUSES.map((s) => (
-                <button key={s} onClick={() => bulk.setBulkSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.bulkSelectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
-                  {tEnum("status", s)}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button size="sm" color="light" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!bulk.bulkSelectedStatus} onClick={() => bulk.handleBulkStatusChange()}>{t("ticketDetail.confirmSave")}</Button>
-            </div>
+        <Sheet size="sm" onClose={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
+          <p className="text-sm text-muted mb-4">{selectedIds.size} {t("tickets.ticketCount")}</p>
+          <div className="flex flex-col gap-1.5 mb-6">
+            {STATUSES.map((s) => (
+              <button key={s} onClick={() => bulk.setBulkSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.bulkSelectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
+                {tEnum("status", s)}
+              </button>
+            ))}
           </div>
-        </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" color="light" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
+            <Button size="sm" color="primary" disabled={!bulk.bulkSelectedStatus} onClick={() => bulk.handleBulkStatusChange()}>{t("ticketDetail.confirmSave")}</Button>
+          </div>
+        </Sheet>
       )}
 
       {/* Bulk discard reason modal */}
       {bulk.bulkDiscardReason && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => bulk.setBulkDiscardReason(false)}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
-            <div className="flex flex-col gap-2">
-              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
-                <button key={reason} onClick={() => bulk.handleBulkStatusChange(reason)} className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body">
-                  {tEnum("discardReason", reason)}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => bulk.setBulkDiscardReason(false)} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">{t("ticketDetail.cancel")}</button>
+        <Sheet size="sm" onClose={() => bulk.setBulkDiscardReason(false)}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+          <div className="flex flex-col gap-2">
+            {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+              <button key={reason} onClick={() => bulk.handleBulkStatusChange(reason)} className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body">
+                {tEnum("discardReason", reason)}
+              </button>
+            ))}
           </div>
-        </div>
+          <button onClick={() => bulk.setBulkDiscardReason(false)} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">{t("ticketDetail.cancel")}</button>
+        </Sheet>
       )}
 
       {bulk.confirmBulkDelete && (
@@ -597,34 +589,31 @@ export default function TicketsPage() {
       )}
 
       {assignTicketId && workspaceSlug && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }} />
-          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
-            <Select
-              options={members.filter((m) => m.role !== "user")}
-              value={(m) => m.userId === assignTarget}
-              onChange={(m) => setAssignTarget(m.userId)}
-              label={(m) => `${m.firstName} ${m.lastName}`}
-              placeholder={t("ticketDetail.selectAssignee")}
-            />
-            <div className="flex gap-2 mt-4 justify-end">
-              <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
-                const action = assignMode === "transfer"
-                  ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
-                  : assignTicket(workspaceSlug, assignTicketId, assignTarget);
-                const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
-                action
-                  .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
-                  .catch(() => toast.error(t("tickets.assignError")));
-                setAssignTicketId(null);
-                setAssignTarget(null);
-              }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
-            </div>
+        <Sheet size="sm" onClose={() => { setAssignTicketId(null); setAssignTarget(null); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
+          <Select
+            options={members.filter((m) => m.role !== "user")}
+            value={(m) => m.userId === assignTarget}
+            onChange={(m) => setAssignTarget(m.userId)}
+            label={(m) => `${m.firstName} ${m.lastName}`}
+            placeholder={t("ticketDetail.selectAssignee")}
+          />
+          <div className="flex gap-2 mt-4 justify-end">
+            <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
+            <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
+              const action = assignMode === "transfer"
+                ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
+                : assignTicket(workspaceSlug, assignTicketId, assignTarget);
+              const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
+              action
+                .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
+                .catch(() => toast.error(t("tickets.assignError")));
+              setAssignTicketId(null);
+              setAssignTarget(null);
+            }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
           </div>
-        </div>
+        </Sheet>
       )}
 
       {showDiscard && (
