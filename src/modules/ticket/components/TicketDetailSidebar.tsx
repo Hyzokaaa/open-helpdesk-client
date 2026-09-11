@@ -209,21 +209,23 @@ export default function TicketDetailSidebar({
                 placeholder={t("ticketDetail.selectAssignee")}
               />
             ) : v.assigneeId ? (
-              <div className="flex items-center gap-2 min-w-0">
-                <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="sm" />
-                <MemberLink
-                  userId={v.assigneeId}
-                  members={members}
-                  getMemberName={getMemberName}
-                  navigate={navigate}
-                  workspaceSlug={workspaceSlug}
-                  align="left"
-                />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="sm" />
+                  <MemberLink
+                    userId={v.assigneeId}
+                    members={members}
+                    getMemberName={getMemberName}
+                    navigate={navigate}
+                    workspaceSlug={workspaceSlug}
+                    align="left"
+                  />
+                </div>
                 {canTransfer && !pendingTransfer && (
                   <button
                     type="button"
                     onClick={() => setShowTransferModal(true)}
-                    className="shrink-0 ml-auto text-xs text-primary font-body-medium hover:underline cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                    className="mt-1 text-xs text-primary font-body-medium hover:underline cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                   >
                     {t("tickets.transfer")}
                   </button>

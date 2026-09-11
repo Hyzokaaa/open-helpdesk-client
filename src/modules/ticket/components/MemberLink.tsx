@@ -38,7 +38,7 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
         onMouseLeave={() => setShow(false)}
         onFocus={handleEnter}
         onBlur={() => setShow(false)}
-        className={`text-body font-body-medium truncate block cursor-pointer hover:text-primary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${alignClass}`}
+        className={`text-body font-body-medium block break-words leading-snug cursor-pointer hover:text-primary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${alignClass}`}
       >
         {getMemberName(userId)}
       </button>

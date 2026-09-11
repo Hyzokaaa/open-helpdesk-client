@@ -19,7 +19,7 @@ export default function PropertyRow({ label, control, children }: Props) {
       ) : (
         <span className="text-xs text-subtle font-body-medium">{label}</span>
       )}
-      <div className="min-w-0">
+      <div className="min-w-0 text-xs">
         {control ? (
           <FormInputContext.Provider value={id}>{children}</FormInputContext.Provider>
         ) : (
