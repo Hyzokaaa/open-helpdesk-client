@@ -230,7 +230,7 @@ function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: s
   };
 
   return (
-    <div className="p-6">
+    <div>
       <h2 className="text-lg font-body-bold text-heading mb-1">{t("apiKeys.createTitle")}</h2>
       <p className="text-sm text-muted mb-6">{t("apiKeys.createDescription")}</p>
 

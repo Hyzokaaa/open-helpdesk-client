@@ -476,7 +476,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   };
 
   return (
-    <div className="p-6">
+    <div>
       <h2 className="text-lg font-body-bold text-heading mb-1">{isEdit ? t("mailbox.editImap") : t("mailbox.connectMailbox")}</h2>
       <p className="text-sm text-muted mb-6">{t("mailbox.addImapDesc")}</p>
 
