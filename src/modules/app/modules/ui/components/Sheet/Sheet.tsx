@@ -13,11 +13,25 @@ interface Props {
   children: React.ReactNode;
   onClose: () => void;
   size?: SheetSize;
+  /** Opt out when the content renders its own header bar containing a SheetCloseButton. */
+  hideClose?: boolean;
+}
+
+export function SheetCloseButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Close"
+      className="shrink-0 text-subtle hover:text-secondary-text text-lg w-8 h-8 flex items-center justify-center rounded-full bg-surface hover:bg-surface-hover transition-colors cursor-pointer"
+    >
+      ✕
+    </button>
+  );
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function Sheet({ children, onClose, size = "lg" }: Props) {
+export default function Sheet({ children, onClose, size = "lg", hideClose }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -83,15 +97,13 @@ export default function Sheet({ children, onClose, size = "lg" }: Props) {
       >
         {/* Zero-height so the button adds neither width nor height to the content.
             The offset lives on the button's margin: padding here would grow the box. */}
-        <div className="sticky top-0 h-0 z-20 flex justify-end pr-3">
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="mt-4 text-subtle hover:text-secondary-text text-lg w-8 h-8 flex items-center justify-center rounded-full bg-surface hover:bg-surface-hover transition-colors cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
+        {!hideClose && (
+          <div className="sticky top-0 h-0 z-20 flex justify-end pr-3">
+            <div className="mt-4">
+              <SheetCloseButton onClick={onClose} />
+            </div>
+          </div>
+        )}
 
         <div className="p-6 pt-4">
           {children}
