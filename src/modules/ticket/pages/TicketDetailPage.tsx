@@ -255,7 +255,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   if (!ticket) return null;
 
   return (
-    <div className="w-full max-w-3xl">
+    <div className={`w-full ${ticketIdProp ? "" : "max-w-3xl"}`}>
 
       {lightbox && (
         <Lightbox
