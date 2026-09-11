@@ -334,14 +334,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         embedded={!!ticketIdProp}
         canSwitchToEdit={canSwitchToEdit}
         canEditName={canEditName}
-        canEditFields={canEditFields}
-        wsCategories={wsCategories}
         saving={saving}
         enterEdit={enterEdit}
         cancelEdit={cancelEdit}
         requestSave={requestSave}
+        onClose={onClose}
         t={t}
-        tEnum={tEnum}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

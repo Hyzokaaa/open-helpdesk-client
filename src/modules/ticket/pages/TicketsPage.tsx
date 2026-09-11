@@ -644,7 +644,7 @@ export default function TicketsPage() {
       )}
 
       {selectedTicketId && workspaceSlug && (
-        <Sheet onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
+        <Sheet hideClose onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
           <TicketDetailPage
             workspaceSlugProp={workspaceSlug}
             ticketIdProp={selectedTicketId}
