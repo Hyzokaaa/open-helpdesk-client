@@ -32,7 +32,7 @@ export default function TicketDetailHeader({
 }: TicketDetailHeaderProps) {
   return (
     <div className="mb-6">
-      <div className="flex justify-end mb-2 gap-2">
+      <div className="flex justify-end mb-2 gap-2 pr-9">
         {isEditing ? (
           <>
             <Button size="xs" color="light" onClick={cancelEdit}>{t("ticketDetail.cancel")}</Button>

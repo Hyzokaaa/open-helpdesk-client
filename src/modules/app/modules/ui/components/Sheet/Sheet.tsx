@@ -81,13 +81,16 @@ export default function Sheet({ children, onClose, size = "lg" }: Props) {
         tabIndex={-1}
         className={clsx("relative bg-surface rounded-xl shadow-2xl w-full max-h-[90vh] overflow-auto mx-4 my-4 outline-none", sizeClasses[size])}
       >
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="sticky top-3 float-right mr-3 mt-1 text-subtle hover:text-secondary-text text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-hover transition-colors cursor-pointer z-20"
-        >
-          ✕
-        </button>
+        {/* Zero-height so the button never steals width from the content below it */}
+        <div className="sticky top-0 h-0 z-20 flex justify-end pr-3 pt-4">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-subtle hover:text-secondary-text text-lg w-8 h-8 flex items-center justify-center rounded-full bg-surface hover:bg-surface-hover transition-colors cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
 
         <div className="p-6 pt-4">
           {children}

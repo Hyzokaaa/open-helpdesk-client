@@ -224,7 +224,7 @@ export default function WorkspaceCreatePage() {
     <Sheet onClose={step === "workspace" ? handleClose : goToWorkspace}>
       <div className="w-full">
         {/* Progress */}
-        <div className="flex gap-1 mb-4">
+        <div className="flex gap-1 mb-4 pr-9">
           {STEPS.map((_, i) => (
             <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? "bg-primary" : "bg-border-card"}`} />
           ))}
