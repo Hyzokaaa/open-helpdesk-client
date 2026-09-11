@@ -29,8 +29,8 @@ export default function TicketDetailHeader({
 }: TicketDetailHeaderProps) {
   return (
     <div
-      className={`sticky top-0 z-10 flex items-center gap-3 bg-surface mb-6 ${
-        embedded ? "-mx-6 -mt-4 px-6 py-4" : "py-2"
+      className={`sticky top-0 z-10 flex items-center gap-3 mb-2 ${
+        embedded ? "-mx-6 -mt-4 px-6 py-3 bg-surface" : "py-3 bg-page"
       }`}
     >
       <div className="min-w-0 flex-1">
