@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import clsx from "clsx";
+import { useModalLayer } from "../../shared/domain/modal-stack";
 
 type SheetSize = "sm" | "md" | "lg";
 
@@ -34,10 +35,10 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 export default function Sheet({ children, onClose, size = "lg", hideClose }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const layer = useModalLayer();
 
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
-    document.body.style.overflow = "hidden";
 
     // Focus the first focusable element inside the sheet
     requestAnimationFrame(() => {
@@ -47,13 +48,15 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
     });
 
     return () => {
-      document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
   }, []);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // A nested overlay owns the keyboard while it is open.
+      if (!layer.isTop()) return;
+
       if (e.key === "Escape") {
         onClose();
         return;
@@ -82,7 +85,7 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [onClose, layer]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">

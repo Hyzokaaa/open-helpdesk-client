@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useModalLayer } from "../../shared/domain/modal-stack";
 
 interface Props {
   src: string;
@@ -13,23 +14,15 @@ export default function Lightbox({ src, type, onClose }: Props) {
   const dragRef = useRef({ startX: 0, startY: 0, moved: false });
   const mediaRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const layer = useModalLayer();
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopImmediatePropagation();
-        onClose();
-      }
+      if (e.key === "Escape" && layer.isTop()) onClose();
     };
-    document.addEventListener("keydown", handleKey, true);
-    return () => document.removeEventListener("keydown", handleKey, true);
-  }, [onClose]);
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose, layer]);
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
