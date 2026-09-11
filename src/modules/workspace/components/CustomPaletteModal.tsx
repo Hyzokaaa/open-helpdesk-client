@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import { useModalLayer } from "@modules/app/modules/ui/shared/domain/modal-stack";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { generateScale, hexToRgbString, isValidHex, hexToHsv, hsvToHex } from "../domain/color-scale";
 
@@ -77,6 +78,16 @@ export default function CustomPaletteModal({ initialColor, onApply, onClose }: P
   const hueDrag = useDrag(useCallback((x: number) => {
     setHsv(([, s, v]) => [x * 360, s, v]);
   }, []));
+
+  const layer = useModalLayer();
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && layer.isTop()) onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose, layer]);
 
   const shadeOrder = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
 
