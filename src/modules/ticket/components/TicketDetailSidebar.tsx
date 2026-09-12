@@ -1,4 +1,3 @@
-import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
@@ -36,8 +35,6 @@ interface TicketDetailSidebarProps {
   canChangeStatus: boolean;
   canEditFields: boolean;
   canAssign: boolean;
-  canTransfer: boolean | null;
-  canDelete: boolean;
   canEditTags: boolean;
   canEditCustomFields: boolean;
   isTerminal: boolean;
@@ -62,8 +59,6 @@ interface TicketDetailSidebarProps {
   fetchTicket: (refreshActivity?: boolean) => void;
   fetchParticipants: () => void;
   handleDraftStatusChange: (status: string) => void;
-  handleDelete: () => void;
-  setShowTransferModal: (show: boolean) => void;
   navigate: (path: string) => void;
   formatDate: (date: string) => string;
   t: (key: any) => string;
@@ -75,7 +70,7 @@ const EMPTY = <span className="text-xs text-muted">—</span>;
 export default function TicketDetailSidebar({
   ticket, draft, setDraft,
   isEditing,
-  canChangeStatus, canEditFields, canAssign, canTransfer, canDelete, canEditTags, canEditCustomFields,
+  canChangeStatus, canEditFields, canAssign, canEditTags, canEditCustomFields,
   isTerminal,
   pendingTransfer, participants, members,
   wsCategories, wsProjects, editCategories, setEditCategories,
@@ -84,7 +79,7 @@ export default function TicketDetailSidebar({
   slaPolicy, slaLocked,
   workspaceSlug, ticketId, userId,
   getMemberName, fetchTicket, fetchParticipants,
-  handleDraftStatusChange, handleDelete, setShowTransferModal,
+  handleDraftStatusChange,
   navigate, formatDate, t, tEnum,
 }: TicketDetailSidebarProps) {
   const editing = isEditing && draft !== null;
@@ -209,27 +204,16 @@ export default function TicketDetailSidebar({
                 placeholder={t("ticketDetail.selectAssignee")}
               />
             ) : v.assigneeId ? (
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 min-w-0">
-                  <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="sm" />
-                  <MemberLink
-                    userId={v.assigneeId}
-                    members={members}
-                    getMemberName={getMemberName}
-                    navigate={navigate}
-                    workspaceSlug={workspaceSlug}
-                    align="left"
-                  />
-                </div>
-                {canTransfer && !pendingTransfer && (
-                  <button
-                    type="button"
-                    onClick={() => setShowTransferModal(true)}
-                    className="mt-1 text-xs text-primary font-body-medium hover:underline cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                  >
-                    {t("tickets.transfer")}
-                  </button>
-                )}
+              <div className="flex items-center gap-2 min-w-0">
+                <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="xs" />
+                <MemberLink
+                  userId={v.assigneeId}
+                  members={members}
+                  getMemberName={getMemberName}
+                  navigate={navigate}
+                  workspaceSlug={workspaceSlug}
+                  align="left"
+                />
               </div>
             ) : EMPTY}
           </PropertyRow>
@@ -321,16 +305,6 @@ export default function TicketDetailSidebar({
         </Card>
       )}
 
-      {canDelete && (
-        <Button
-          size="xs"
-          color="danger"
-          full
-          onClick={handleDelete}
-        >
-          {t("ticketDetail.deleteTicket")}
-        </Button>
-      )}
     </div>
   );
 }

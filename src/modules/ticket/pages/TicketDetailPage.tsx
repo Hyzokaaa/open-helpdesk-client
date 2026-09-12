@@ -335,9 +335,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         canSwitchToEdit={canSwitchToEdit}
         canEditName={canEditName}
         saving={saving}
+        canTransfer={canTransfer && !pendingTransfer}
+        canDelete={canDelete}
         enterEdit={enterEdit}
         cancelEdit={cancelEdit}
         requestSave={requestSave}
+        onTransfer={() => setShowTransferModal(true)}
+        onDelete={handleDelete}
         onClose={onClose}
         t={t}
       />
@@ -647,8 +651,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           canChangeStatus={canChangeStatus}
           canEditFields={canEditFields}
           canAssign={canAssign}
-          canTransfer={canTransfer}
-          canDelete={canDelete}
           canEditTags={canEditTags}
           canEditCustomFields={canEditCustomFields}
           isTerminal={isTerminal}
@@ -673,8 +675,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           fetchTicket={fetchTicket}
           fetchParticipants={fetchParticipants}
           handleDraftStatusChange={handleDraftStatusChange}
-          handleDelete={handleDelete}
-          setShowTransferModal={setShowTransferModal}
           navigate={navigate}
           formatDate={formatDate}
           t={t}

@@ -1,5 +1,6 @@
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
+import ActionMenu, { ActionMenuItem } from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import { SheetCloseButton } from "@modules/app/modules/ui/components/Sheet/Sheet";
 import type { TicketDetail } from "../services/ticket.service";
 import type { Draft } from "../hooks/useTicketEdit";
@@ -13,9 +14,13 @@ interface TicketDetailHeaderProps {
   canEditName: boolean;
   saving: boolean;
   embedded?: boolean;
+  canTransfer: boolean | null;
+  canDelete: boolean;
   enterEdit: () => void;
   cancelEdit: () => void;
   requestSave: () => void;
+  onTransfer: () => void;
+  onDelete: () => void;
   onClose?: () => void;
   t: (key: any) => string;
 }
@@ -23,10 +28,16 @@ interface TicketDetailHeaderProps {
 export default function TicketDetailHeader({
   ticket, draft, setDraft,
   isEditing, canSwitchToEdit, canEditName,
-  saving, embedded,
-  enterEdit, cancelEdit, requestSave, onClose,
+  saving, embedded, canTransfer, canDelete,
+  enterEdit, cancelEdit, requestSave, onTransfer, onDelete, onClose,
   t,
 }: TicketDetailHeaderProps) {
+  // Rare and destructive actions live here so the bar keeps the same shape across tickets.
+  const menuItems: ActionMenuItem[] = [
+    ...(canTransfer ? [{ label: t("tickets.transfer"), onClick: onTransfer }] : []),
+    ...(canDelete ? [{ label: t("ticketDetail.deleteTicket"), onClick: onDelete, danger: true }] : []),
+  ];
+
   return (
     <div
       className={`sticky top-0 z-10 flex items-center gap-3 mb-2 ${
@@ -56,6 +67,8 @@ export default function TicketDetailHeader({
         ) : canSwitchToEdit ? (
           <Button size="xs" onClick={enterEdit}>{t("ticketDetail.edit")}</Button>
         ) : null}
+
+        {!isEditing && <ActionMenu items={menuItems} />}
 
         {embedded && onClose && (
           <div className="ml-2">

@@ -4,17 +4,18 @@ interface UserAvatarProps {
   avatarUrl?: string | null;
   firstName?: string;
   lastName?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
 const sizeClasses = {
+  xs: "w-5 h-5 text-[9px]",
   sm: "w-6 h-6 text-[10px]",
   md: "w-8 h-8 text-xs",
   lg: "w-16 h-16 text-lg",
 };
 
-const iconSizes = { sm: 12, md: 16, lg: 28 };
+const iconSizes = { xs: 10, sm: 12, md: 16, lg: 28 };
 
 export default function UserAvatar({ avatarUrl, firstName, lastName, size = "md", className }: UserAvatarProps) {
   if (avatarUrl) {
