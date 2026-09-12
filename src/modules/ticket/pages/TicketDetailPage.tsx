@@ -47,6 +47,7 @@ import useTicketDetail from "../hooks/useTicketDetail";
 import useTicketEdit from "../hooks/useTicketEdit";
 import { renderMentions } from "../domain/render-mentions";
 import { sanitizeHtml } from "@modules/app/security/sanitize-html";
+import { isSameRichText } from "../domain/normalize-rich-text";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -253,6 +254,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const handleEditComment = async (commentId: string) => {
     if (!workspaceSlug || !ticketId) return;
     const content = commentEditorRef.current?.getHTML() || editingCommentContent;
+
+    // Saving an untouched comment would add a version history entry for nothing.
+    const original = comments.find((c) => c.id === commentId)?.content;
+    if (isSameRichText(content, original)) {
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      return;
+    }
+
     setSavingComment(true);
     try {
       const updated = await editComment(workspaceSlug, ticketId, commentId, content);

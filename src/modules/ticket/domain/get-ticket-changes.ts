@@ -1,3 +1,5 @@
+import { isSameRichText, summarizeRichText } from "./normalize-rich-text";
+
 export interface TicketSnapshot {
   name: string;
   description: string;
@@ -64,9 +66,12 @@ export function getTicketChanges(
     changes.push({ field: t("ticketDetail.name"), from: original.name, to: draft.name });
   }
 
-  if (draft.description !== original.description) {
-    const truncate = (s: string) => s.slice(0, 50) + (s.length > 50 ? "..." : "");
-    changes.push({ field: t("ticketDetail.description"), from: truncate(original.description), to: truncate(draft.description) });
+  if (!isSameRichText(draft.description, original.description)) {
+    changes.push({
+      field: t("ticketDetail.description"),
+      from: summarizeRichText(original.description),
+      to: summarizeRichText(draft.description),
+    });
   }
 
   if (draft.status !== original.status) {

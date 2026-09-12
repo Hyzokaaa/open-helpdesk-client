@@ -8,6 +8,7 @@ import {
 } from "../services/ticket.service";
 import { listCategories, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { getTicketChanges, type FieldChange, type ChangeLookups } from "../domain/get-ticket-changes";
+import { isSameRichText } from "../domain/normalize-rich-text";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { Department } from "@modules/department/services/department.service";
 import type { Organization } from "@modules/organization/services/organization.service";
@@ -154,7 +155,7 @@ export default function useTicketEdit(options: UseTicketEditOptions) {
     try {
       const updates: Partial<{ name: string; description: string; priority: string; categoryId: string | null; projectId: string | null; tagIds: string[]; departmentId: string | null; organizationId: string | null; customFields: Record<string, unknown> }> = {};
       if (draft.name !== ticket.name) updates.name = draft.name;
-      if (draft.description !== ticket.description) updates.description = draft.description;
+      if (!isSameRichText(draft.description, ticket.description)) updates.description = draft.description;
       if (draft.priority !== ticket.priority) updates.priority = draft.priority;
       if (draft.categoryId !== ticket.categoryId) updates.categoryId = draft.categoryId;
       if (draft.projectId !== ticket.projectId) updates.projectId = draft.projectId;
