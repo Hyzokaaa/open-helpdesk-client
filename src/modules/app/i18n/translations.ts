@@ -666,6 +666,7 @@ const translations = {
   "ticketDetail.selectAssignee": { en: "Select assignee...", es: "Seleccionar asignado..." },
   "ticketDetail.tags": { en: "Tags", es: "Etiquetas" },
   "ticketDetail.properties": { en: "Properties", es: "Propiedades" },
+  "ticketDetail.times": { en: "Times", es: "Tiempos" },
   "ticketDetail.details": { en: "Details", es: "Detalles" },
   "ticketDetail.tabDetails": { en: "Details", es: "Detalles" },
   "ticketDetail.tabActivity": { en: "Activity", es: "Actividad" },

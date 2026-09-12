@@ -35,6 +35,7 @@ export interface TicketDetail {
   assigneeId: string | null;
   firstResponseAt: string | null;
   resolvedAt: string | null;
+  resolvedById: string | null;
   ticketNumber: number;
   createdAt: string | null;
   originDate: string | null;

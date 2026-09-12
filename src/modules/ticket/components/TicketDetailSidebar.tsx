@@ -83,7 +83,6 @@ export default function TicketDetailSidebar({
 }: TicketDetailSidebarProps) {
   const editing = isEditing && draft !== null;
   const v = draft ?? ticket;
-  const assignee = members.find((m) => m.userId === v.assigneeId);
 
   return (
     <div className="space-y-4">
@@ -193,34 +192,49 @@ export default function TicketDetailSidebar({
             </PropertyRow>
           )}
 
-          {/* Read-only on purpose: assigning notifies people, so it is an action, not a field. */}
-          <PropertyRow label={t("ticketDetail.assignee")}>
-            {v.assigneeId ? (
-              <div className="flex items-center gap-2 min-w-0">
-                <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="xs" />
-                <MemberLink
-                  userId={v.assigneeId}
-                  members={members}
-                  getMemberName={getMemberName}
-                  navigate={navigate}
-                  workspaceSlug={workspaceSlug}
-                  align="left"
-                />
-              </div>
-            ) : EMPTY}
-          </PropertyRow>
-
           <PropertyRow label={t("ticketDetail.source")}>
             <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
           </PropertyRow>
 
-          {ticket.originDate && (
-            <PropertyRow label={t("ticketDetail.originalDate")}>
-              <span className="text-xs text-body">{formatDate(ticket.originDate)}</span>
-            </PropertyRow>
-          )}
+          {/* People close the block: badges first, avatars last, so each kind groups by shape.
+              Assignee is read-only on purpose — assigning notifies people, so it is an action. */}
+          {([
+            [t("ticketDetail.assignee"), v.assigneeId],
+            [t("ticketDetail.reportedBy"), ticket.reporterId],
+            ...(ticket.registeredById ? [[t("ticketDetail.registeredBy"), ticket.registeredById] as const] : []),
+          ] as const).map(([label, personId]) => {
+            const person = members.find((m) => m.userId === personId);
+            return (
+              <PropertyRow key={label} label={label}>
+                {personId ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserAvatar avatarUrl={person?.avatarUrl} firstName={person?.firstName} lastName={person?.lastName} size="xs" />
+                    <MemberLink
+                      userId={personId}
+                      members={members}
+                      getMemberName={getMemberName}
+                      navigate={navigate}
+                      workspaceSlug={workspaceSlug}
+                      align="left"
+                    />
+                  </div>
+                ) : EMPTY}
+              </PropertyRow>
+            );
+          })}
         </div>
       </Card>
+
+      <TicketDetailsCard
+        ticket={ticket}
+        members={members}
+        getMemberName={getMemberName}
+        navigate={navigate}
+        workspaceSlug={workspaceSlug}
+        isTerminal={isTerminal}
+        formatDate={formatDate}
+        t={t}
+      />
 
       {pendingTransfer && workspaceSlug && ticketId && (
         <PendingTransferCard
@@ -263,17 +277,6 @@ export default function TicketDetailSidebar({
         workspaceSlug={workspaceSlug}
         ticketId={ticketId}
         fetchParticipants={fetchParticipants}
-        t={t}
-      />
-
-      <TicketDetailsCard
-        ticket={ticket}
-        members={members}
-        getMemberName={getMemberName}
-        navigate={navigate}
-        workspaceSlug={workspaceSlug}
-        isTerminal={isTerminal}
-        formatDate={formatDate}
         t={t}
       />
 

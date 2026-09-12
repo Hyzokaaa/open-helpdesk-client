@@ -9,9 +9,11 @@ interface Props {
   navigate: (path: string) => void;
   workspaceSlug?: string;
   align?: "left" | "right";
+  /** Flows with surrounding text instead of taking its own line. */
+  inline?: boolean;
 }
 
-export default function MemberLink({ userId, members, getMemberName, navigate, workspaceSlug, align = "right" }: Props) {
+export default function MemberLink({ userId, members, getMemberName, navigate, workspaceSlug, align = "right", inline }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const [show, setShow] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -29,7 +31,7 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
   };
 
   return (
-    <span className={`${alignClass} min-w-0`}>
+    <span className={inline ? "" : `${alignClass} min-w-0`}>
       <button
         ref={ref}
         type="button"
@@ -38,7 +40,9 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
         onMouseLeave={() => setShow(false)}
         onFocus={handleEnter}
         onBlur={() => setShow(false)}
-        className={`text-body font-body-medium block break-words leading-snug cursor-pointer hover:text-primary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${alignClass}`}
+        className={`text-body font-body-medium cursor-pointer hover:text-primary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+          inline ? "inline underline decoration-dotted underline-offset-2" : `block break-words leading-snug ${alignClass}`
+        }`}
       >
         {getMemberName(userId)}
       </button>
