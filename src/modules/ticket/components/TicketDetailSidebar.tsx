@@ -48,7 +48,6 @@ interface TicketDetailSidebarProps {
   workspaceTags: Tag[];
   departments: Department[];
   organizations: Organization[];
-  assignableMembers: WorkspaceMember[];
   customFieldDefs: CustomFieldDefinition[];
   slaPolicy: SlaPolicy | null;
   slaLocked: boolean;
@@ -75,7 +74,7 @@ export default function TicketDetailSidebar({
   pendingTransfer, participants, members,
   wsCategories, wsProjects, editCategories, setEditCategories,
   workspaceTags, departments, organizations,
-  assignableMembers, customFieldDefs,
+  customFieldDefs,
   slaPolicy, slaLocked,
   workspaceSlug, ticketId, userId,
   getMemberName, fetchTicket, fetchParticipants,
@@ -194,16 +193,9 @@ export default function TicketDetailSidebar({
             </PropertyRow>
           )}
 
-          <PropertyRow label={t("ticketDetail.assignee")} control={editing && canAssign}>
-            {editing && canAssign ? (
-              <Select
-                options={assignableMembers}
-                label={(m) => `${m.firstName} ${m.lastName}`}
-                value={(m) => m.userId === v.assigneeId}
-                onChange={(m) => setDraft((d) => d ? { ...d, assigneeId: m.userId } : d)}
-                placeholder={t("ticketDetail.selectAssignee")}
-              />
-            ) : v.assigneeId ? (
+          {/* Read-only on purpose: assigning notifies people, so it is an action, not a field. */}
+          <PropertyRow label={t("ticketDetail.assignee")}>
+            {v.assigneeId ? (
               <div className="flex items-center gap-2 min-w-0">
                 <UserAvatar avatarUrl={assignee?.avatarUrl} firstName={assignee?.firstName} lastName={assignee?.lastName} size="xs" />
                 <MemberLink

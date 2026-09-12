@@ -14,11 +14,17 @@ interface TicketDetailHeaderProps {
   canEditName: boolean;
   saving: boolean;
   embedded?: boolean;
+  canChangeStatusAction: boolean;
+  canAssignAction: boolean;
+  canPickup: boolean;
   canTransfer: boolean | null;
   canDelete: boolean;
   enterEdit: () => void;
   cancelEdit: () => void;
   requestSave: () => void;
+  onChangeStatus: () => void;
+  onAssign: () => void;
+  onPickup: () => void;
   onTransfer: () => void;
   onDelete: () => void;
   onClose?: () => void;
@@ -28,12 +34,18 @@ interface TicketDetailHeaderProps {
 export default function TicketDetailHeader({
   ticket, draft, setDraft,
   isEditing, canSwitchToEdit, canEditName,
-  saving, embedded, canTransfer, canDelete,
-  enterEdit, cancelEdit, requestSave, onTransfer, onDelete, onClose,
+  saving, embedded,
+  canChangeStatusAction, canAssignAction, canPickup, canTransfer, canDelete,
+  enterEdit, cancelEdit, requestSave,
+  onChangeStatus, onAssign, onPickup, onTransfer, onDelete, onClose,
   t,
 }: TicketDetailHeaderProps) {
-  // Rare and destructive actions live here so the bar keeps the same shape across tickets.
+  // Mirrors the ticket list action menu: operations with side effects beyond the record
+  // live here, not as form fields.
   const menuItems: ActionMenuItem[] = [
+    ...(canChangeStatusAction ? [{ label: t("tickets.changeStatus"), onClick: onChangeStatus }] : []),
+    ...(canAssignAction ? [{ label: t("tickets.assign"), onClick: onAssign }] : []),
+    ...(canPickup ? [{ label: t("tickets.pickup"), onClick: onPickup }] : []),
     ...(canTransfer ? [{ label: t("tickets.transfer"), onClick: onTransfer }] : []),
     ...(canDelete ? [{ label: t("ticketDetail.deleteTicket"), onClick: onDelete, danger: true }] : []),
   ];

@@ -15,6 +15,8 @@ import { P } from "@modules/workspace/domain/permissions";
 import {
   changeTicketStatus,
   transferTicket,
+  assignTicket,
+  pickupTicket,
   deleteTicket,
 } from "../services/ticket.service";
 import {
@@ -32,7 +34,8 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
-import TicketTransferModal from "../components/TicketTransferModal";
+import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
+import TicketStatusModal from "../components/TicketStatusModal";
 import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketDetailHeader from "../components/TicketDetailHeader";
@@ -109,6 +112,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   });
 
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [statusModalValue, setStatusModalValue] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   const [sendingComment, setSendingComment] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
@@ -130,10 +135,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
-  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
-  const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
+
+  // Menu actions take effect immediately, so they must not depend on being in edit mode.
+  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
+  const canDelete = !isReadonly && can(P.TICKET_DELETE);
+  const canAssignAction = !isReadonly && can(P.TICKET_ASSIGN) && !isTerminal;
+  const canPickup = !isReadonly && !can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && ticket?.status === "open";
+  const canChangeStatusAction = !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canSwitchToEdit = !isReadonly && mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
@@ -288,12 +298,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       )}
 
       {showTransferModal && workspaceSlug && ticketId && (
-        <TicketTransferModal
+        <TicketMemberPickerModal
+          mode="transfer"
           assignableMembers={assignableMembers}
           currentUserId={user?.id ?? ""}
           t={t}
           onClose={() => setShowTransferModal(false)}
-          onTransfer={async (targetUserId) => {
+          onSubmit={async (targetUserId) => {
             try {
               await transferTicket(workspaceSlug, ticketId, targetUserId);
               toast.success(t("tickets.transferred"));
@@ -301,6 +312,45 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             } catch { toast.error(t("ticketDetail.actionError")); }
             setShowTransferModal(false);
           }}
+        />
+      )}
+
+      {showAssignModal && workspaceSlug && ticketId && (
+        <TicketMemberPickerModal
+          mode="assign"
+          assignableMembers={assignableMembers}
+          currentUserId={user?.id ?? ""}
+          initialTarget={ticket.assigneeId}
+          t={t}
+          onClose={() => setShowAssignModal(false)}
+          onSubmit={async (targetUserId) => {
+            try {
+              await assignTicket(workspaceSlug, ticketId, targetUserId);
+              toast.success(t("tickets.assigned"));
+              fetchTicket(true);
+            } catch { toast.error(t("ticketDetail.actionError")); }
+            setShowAssignModal(false);
+          }}
+        />
+      )}
+
+      {statusModalValue !== null && workspaceSlug && ticketId && (
+        <TicketStatusModal
+          subtitle={ticket.name}
+          selected={statusModalValue}
+          currentStatus={ticket.status}
+          onSelect={setStatusModalValue}
+          onClose={() => setStatusModalValue(null)}
+          onConfirm={async () => {
+            try {
+              await changeTicketStatus(workspaceSlug, ticketId, statusModalValue);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTicket(true);
+            } catch { toast.error(t("tickets.changeStatusError")); }
+            setStatusModalValue(null);
+          }}
+          t={t}
+          tEnum={tEnum}
         />
       )}
 
@@ -335,11 +385,23 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         canSwitchToEdit={canSwitchToEdit}
         canEditName={canEditName}
         saving={saving}
+        canChangeStatusAction={canChangeStatusAction}
+        canAssignAction={canAssignAction}
+        canPickup={!!canPickup}
         canTransfer={canTransfer && !pendingTransfer}
         canDelete={canDelete}
         enterEdit={enterEdit}
         cancelEdit={cancelEdit}
         requestSave={requestSave}
+        onChangeStatus={() => setStatusModalValue(ticket.status)}
+        onAssign={() => setShowAssignModal(true)}
+        onPickup={async () => {
+          try {
+            await pickupTicket(workspaceSlug!, ticketId!);
+            toast.success(t("tickets.pickedUp"));
+            fetchTicket(true);
+          } catch { toast.error(t("tickets.pickupError")); }
+        }}
         onTransfer={() => setShowTransferModal(true)}
         onDelete={handleDelete}
         onClose={onClose}
@@ -664,7 +726,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           workspaceTags={workspaceTags}
           departments={departments}
           organizations={organizations}
-          assignableMembers={assignableMembers}
           customFieldDefs={customFieldDefs}
           slaPolicy={slaPolicy}
           slaLocked={slaLocked}

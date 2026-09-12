@@ -41,6 +41,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import TicketBoard from "../components/TicketBoard";
 import TicketDetailPage from "./TicketDetailPage";
+import TicketStatusModal from "../components/TicketStatusModal";
 import TicketCreatePage from "./TicketCreatePage";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import useTicketFilters from "../hooks/useTicketFilters";
@@ -482,21 +483,16 @@ export default function TicketsPage() {
 
       {/* Single ticket status change modal */}
       {bulk.changeStatusTicket && !bulk.showDiscardReason && (
-        <Sheet size="sm" onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>
-          <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-          <p className="text-sm text-muted mb-4">{bulk.changeStatusTicket.name}</p>
-          <div className="flex flex-col gap-1.5 mb-6">
-            {STATUSES.map((s) => (
-              <button key={s} onClick={() => bulk.setSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.selectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
-                {tEnum("status", s)}
-              </button>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button size="sm" color="light" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
-            <Button size="sm" color="primary" disabled={!bulk.selectedStatus || bulk.selectedStatus === bulk.changeStatusTicket.status} onClick={bulk.handleChangeStatus}>{t("ticketDetail.confirmSave")}</Button>
-          </div>
-        </Sheet>
+        <TicketStatusModal
+          subtitle={bulk.changeStatusTicket.name}
+          selected={bulk.selectedStatus}
+          currentStatus={bulk.changeStatusTicket.status}
+          onSelect={bulk.setSelectedStatus}
+          onConfirm={bulk.handleChangeStatus}
+          onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}
+          t={t}
+          tEnum={tEnum}
+        />
       )}
 
       {/* Single ticket discard reason modal */}
