@@ -58,7 +58,7 @@ interface Column {
 }
 
 const BASE_COLUMNS: Column[] = [
-  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: false },
+  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: true },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
   { key: "category", labelKey: "tickets.col.category", sortable: true },
   { key: "priority", labelKey: "tickets.col.priority", sortable: true },
