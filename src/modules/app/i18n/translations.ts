@@ -1479,7 +1479,7 @@ const translations = {
   "portal.widgetSubtitle": { en: "How can we help you?", es: "¿Cómo podemos ayudarte?" },
   "portal.close": { en: "Close", es: "Cerrar" },
   "portal.successTitle": { en: "Ticket submitted!", es: "Ticket enviado!" },
-  "portal.successTicketNumber": { en: "Your ticket #{number} has been created.", es: "Tu ticket #{number} ha sido creado." },
+  "portal.successTicketNumber": { en: "Your ticket {number} has been created.", es: "Tu ticket {number} ha sido creado." },
   "portal.successMessage": { en: "You'll receive updates by email.", es: "Recibirás actualizaciones por correo." },
   "portal.submitAnother": { en: "Submit another ticket", es: "Enviar otro ticket" },
   "portal.poweredBy": { en: "Powered by Open Helpdesk", es: "Impulsado por Open Helpdesk" },

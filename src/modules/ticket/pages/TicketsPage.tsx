@@ -58,7 +58,7 @@ interface Column {
 }
 
 const BASE_COLUMNS: Column[] = [
-  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: false },
+  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: true },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
   { key: "category", labelKey: "tickets.col.category", sortable: true },
   { key: "priority", labelKey: "tickets.col.priority", sortable: true },
@@ -395,7 +395,7 @@ export default function TicketsPage() {
                     )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
-                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">#{ticket.ticketNumber}</span>}
+                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">{ticket.ticketNumber}</span>}
                         {col.key === "name" && (
                           <div className="flex items-center gap-1.5 max-w-xs">
                             {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (

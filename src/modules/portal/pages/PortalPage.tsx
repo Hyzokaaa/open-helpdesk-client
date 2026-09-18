@@ -65,7 +65,7 @@ export default function PortalPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<{ ticketNumber: number; portalToken: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{ ticketNumber: string; portalToken: string } | null>(null);
   const [, forceRender] = useState(0);
 
   useEffect(() => {
@@ -172,7 +172,13 @@ export default function PortalPage() {
       setSubmitted({ ticketNumber: res.ticketNumber, portalToken: res.portalToken });
       if (isWidget) {
         window.parent.postMessage(
-          JSON.stringify({ type: "ohd:submitted", ticketNumber: res.ticketNumber }),
+          // ticketNumber stays numeric so pages already embedding the widget
+          // keep working; ticketReference carries the formatted value.
+          JSON.stringify({
+            type: "ohd:submitted",
+            ticketNumber: Number(res.ticketNumber.replace(/\D/g, "")),
+            ticketReference: res.ticketNumber,
+          }),
           "*",
         );
       }
@@ -271,7 +277,7 @@ export default function PortalPage() {
             {t("portal.successTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-1">
-            {t("portal.successTicketNumber").replace("{number}", String(submitted.ticketNumber))}
+            {t("portal.successTicketNumber").replace("{number}", submitted.ticketNumber)}
           </p>
           <p className="text-gray-500 dark:text-gray-500 text-sm mb-4">
             {t("portal.successMessage")}

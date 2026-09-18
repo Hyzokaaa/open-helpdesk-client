@@ -65,7 +65,7 @@ export default function TicketDetailHeader({
           />
         ) : (
           <h2 className="text-lg font-body-bold text-heading truncate">
-            <span className="text-muted font-body-medium">#{ticket.ticketNumber}</span> {ticket.name}
+            <span className="text-muted font-body-medium">{ticket.ticketNumber}</span> {ticket.name}
           </h2>
         )}
       </div>
