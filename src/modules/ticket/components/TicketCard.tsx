@@ -51,7 +51,7 @@ export default function TicketCard({ ticket, tags, members, categoryName, onClic
     ? formatDate(ticket.createdAt)
     : "";
 
-  const ticketId = ticket.ticketNumber ? `#${ticket.ticketNumber}` : "";
+  const ticketId = ticket.ticketNumber || "";
 
   return (
     <div

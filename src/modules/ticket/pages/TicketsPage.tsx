@@ -395,7 +395,7 @@ export default function TicketsPage() {
                     )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
-                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">#{ticket.ticketNumber}</span>}
+                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">{ticket.ticketNumber}</span>}
                         {col.key === "name" && (
                           <div className="flex items-center gap-1.5 max-w-xs">
                             {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (

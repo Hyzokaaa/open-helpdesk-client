@@ -360,7 +360,7 @@ export default function UserStatsPage() {
                     >
                       {reorder(TICKET_COLUMNS).map((col) => (
                         <td key={col.key} className="px-4 py-2">
-                          {col.key === "ticketNumber" && <span className="text-xs text-muted">#{tk.ticketNumber}</span>}
+                          {col.key === "ticketNumber" && <span className="text-xs text-muted">{tk.ticketNumber}</span>}
                           {col.key === "name" && <span className="text-sm text-heading block truncate">{tk.name}</span>}
                           {col.key === "status" && <StatusBadge label={tEnum("status", tk.status)} color={tk.status === "resolved" ? "green" : tk.status === "open" ? "yellow" : "blue"} size="xs" />}
                           {col.key === "priority" && <StatusBadge label={tEnum("priority", tk.priority)} color={tk.priority === "urgent" ? "red" : tk.priority === "high" ? "yellow" : "gray"} size="xs" />}
