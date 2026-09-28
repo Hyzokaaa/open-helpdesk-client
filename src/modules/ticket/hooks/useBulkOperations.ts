@@ -41,6 +41,7 @@ interface UseBulkOperationsProps {
   workspaceSlug: string | undefined;
   selectedIds: Set<string>;
   clearSelection: () => void;
+  selectOnly: (ids: string[]) => void;
   onRefresh: () => void;
   t: (key: TranslationKey) => string;
 }
@@ -49,6 +50,7 @@ export default function useBulkOperations({
   workspaceSlug,
   selectedIds,
   clearSelection,
+  selectOnly,
   onRefresh,
   t,
 }: UseBulkOperationsProps): UseBulkOperationsReturn {
@@ -107,9 +109,19 @@ export default function useBulkOperations({
       return;
     }
     try {
-      await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
-      toast.success(`${selectedIds.size} ${t("tickets.bulkUpdated")}`);
-      clearSelection();
+      // The backend applies each ticket on its own and reports per ticket, so a partial failure
+      // (no permission, transition not allowed) still answers 200.
+      const results = await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
+      const failedIds = results.filter((r) => !r.success).map((r) => r.ticketId);
+      const updatedCount = results.length - failedIds.length;
+      if (updatedCount > 0) toast.success(`${updatedCount} ${t("tickets.bulkUpdated")}`);
+      if (failedIds.length > 0) {
+        toast.error(`${failedIds.length} ${t("tickets.bulkNotUpdated")}`);
+        // Leave the rejected ones selected so they are easy to spot
+        selectOnly(failedIds);
+      } else {
+        clearSelection();
+      }
       setBulkStatusModal(false);
       setBulkSelectedStatus("");
       setBulkDiscardReason(false);

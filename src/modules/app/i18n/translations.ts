@@ -111,6 +111,7 @@ const translations = {
   "tickets.assignError": { en: "Failed", es: "Error" },
   "tickets.bulkUpdated": { en: "ticket(s) updated", es: "ticket(s) actualizados" },
   "tickets.bulkUpdateError": { en: "Failed to update tickets", es: "Error al actualizar tickets" },
+  "tickets.bulkNotUpdated": { en: "ticket(s) could not be updated (no permission or transition not allowed)", es: "ticket(s) no se pudieron actualizar (sin permiso o transición no permitida)" },
   "tickets.bulkDeleted": { en: "ticket(s) deleted", es: "ticket(s) eliminados" },
   "tickets.bulkDeleteError": { en: "Failed to delete tickets", es: "Error al eliminar tickets" },
   "ticketDetail.notFound": { en: "Ticket not found", es: "Ticket no encontrado" },

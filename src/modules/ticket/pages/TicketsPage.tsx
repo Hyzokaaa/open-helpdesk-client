@@ -155,6 +155,7 @@ export default function TicketsPage() {
     workspaceSlug,
     selectedIds,
     clearSelection,
+    selectOnly: (ids) => setSelectedIds(new Set(ids)),
     onRefresh: fetchTickets,
     t,
   });
