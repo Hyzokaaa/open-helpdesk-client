@@ -28,6 +28,7 @@ import {
   PRIORITY_COLORS,
   STATUS_COLORS,
   STATUSES,
+  PICKUP_STATUSES,
 } from "../domain/ticket-enums";
 import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
@@ -117,6 +118,8 @@ export default function TicketsPage() {
   const [assignTicketId, setAssignTicketId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [assignMode, setAssignMode] = useState<"assign" | "transfer">("assign");
+  const [pickupTarget, setPickupTarget] = useState<TicketListItem | null>(null);
+  const [pickupStatus, setPickupStatus] = useState<string>(PICKUP_STATUSES[0]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -448,8 +451,8 @@ export default function TicketsPage() {
                           ...(can(P.TICKET_CHANGE_STATUS) && hasDirectAccess ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
                           // Admin/Supervisor: Assign (any ticket, any state except closed)
                           ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
-                          // Agent: Pickup (only open tickets)
-                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { pickupTicket(workspaceSlug!, ticket.id).then(() => { toast.success(t("tickets.pickedUp")); fetchTickets(); setBoardKey((k) => k + 1); }).catch(() => toast.error(t("tickets.pickupError"))); } }] : []),
+                          // Pickup into a chosen status (only open tickets); it assigns the ticket to whoever picks it up
+                          ...(can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { setPickupTarget(ticket); setPickupStatus(PICKUP_STATUSES[0]); } }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
@@ -491,6 +494,31 @@ export default function TicketsPage() {
           onSelect={bulk.setSelectedStatus}
           onConfirm={bulk.handleChangeStatus}
           onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}
+          t={t}
+          tEnum={tEnum}
+        />
+      )}
+
+      {/* Pickup into a chosen status */}
+      {pickupTarget && (
+        <TicketStatusModal
+          title={t("tickets.pickup")}
+          subtitle={pickupTarget.name}
+          selected={pickupStatus}
+          statuses={PICKUP_STATUSES}
+          onSelect={setPickupStatus}
+          onConfirm={async () => {
+            try {
+              await pickupTicket(workspaceSlug!, pickupTarget.id, pickupStatus);
+              toast.success(t("tickets.pickedUp"));
+              fetchTickets();
+              setBoardKey((k) => k + 1);
+            } catch {
+              toast.error(t("tickets.pickupError"));
+            }
+            setPickupTarget(null);
+          }}
+          onClose={() => setPickupTarget(null)}
           t={t}
           tEnum={tEnum}
         />

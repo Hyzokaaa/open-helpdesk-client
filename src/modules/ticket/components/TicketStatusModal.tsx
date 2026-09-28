@@ -7,6 +7,10 @@ interface Props {
   subtitle: string;
   selected: string;
   currentStatus?: string;
+  /** Statuses to offer; every status by default. */
+  statuses?: readonly string[];
+  /** Heading; "Change status" by default. */
+  title?: string;
   onSelect: (status: string) => void;
   onConfirm: () => void;
   onClose: () => void;
@@ -15,14 +19,14 @@ interface Props {
 }
 
 export default function TicketStatusModal({
-  subtitle, selected, currentStatus, onSelect, onConfirm, onClose, t, tEnum,
+  subtitle, selected, currentStatus, statuses = STATUSES, title, onSelect, onConfirm, onClose, t, tEnum,
 }: Props) {
   return (
     <Sheet size="sm" onClose={onClose}>
-      <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
+      <h3 className="text-base font-body-bold text-heading mb-1">{title ?? t("tickets.changeStatus")}</h3>
       <p className="text-sm text-muted mb-4">{subtitle}</p>
       <div className="flex flex-col gap-1.5 mb-6">
-        {STATUSES.map((s) => (
+        {statuses.map((s) => (
           <button
             key={s}
             onClick={() => onSelect(s)}
