@@ -114,6 +114,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [statusModalValue, setStatusModalValue] = useState<string | null>(null);
+  const [askDiscardReason, setAskDiscardReason] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   const [sendingComment, setSendingComment] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
@@ -342,6 +343,12 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           onSelect={setStatusModalValue}
           onClose={() => setStatusModalValue(null)}
           onConfirm={async () => {
+            // Discarding needs a reason, which the backend requires
+            if (statusModalValue === "discarded") {
+              setStatusModalValue(null);
+              setAskDiscardReason(true);
+              return;
+            }
             try {
               await changeTicketStatus(workspaceSlug, ticketId, statusModalValue);
               toast.success(t("tickets.statusUpdated"));
@@ -351,6 +358,22 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           }}
           t={t}
           tEnum={tEnum}
+        />
+      )}
+
+      {askDiscardReason && workspaceSlug && ticketId && (
+        <TicketDiscardReasonModal
+          t={t}
+          tEnum={tEnum}
+          onCancel={() => setAskDiscardReason(false)}
+          onSelectReason={async (reason) => {
+            setAskDiscardReason(false);
+            try {
+              await changeTicketStatus(workspaceSlug, ticketId, "discarded", reason);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTicket(true);
+            } catch { toast.error(t("tickets.changeStatusError")); }
+          }}
         />
       )}
 
