@@ -821,6 +821,7 @@ const translations = {
   "notifications.ticketCreated": { en: "New ticket", es: "Nuevo ticket" },
   "notifications.ticketAssigned": { en: "Assigned to me", es: "Asignado a mí" },
   "notifications.statusChanged": { en: "Status change", es: "Cambio de estado" },
+  "notifications.ticketUnassigned": { en: "Needs an assignee", es: "Sin asignar" },
   "notifications.commentCreated": { en: "New comment", es: "Nuevo comentario" },
   "notifications.transferRequest": { en: "Transfer request", es: "Solicitud de transferencia" },
   "notifications.csatSurvey": { en: "Satisfaction survey", es: "Encuesta de satisfacción" },

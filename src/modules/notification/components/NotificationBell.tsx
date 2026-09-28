@@ -154,6 +154,7 @@ export default function NotificationBell() {
                         "ticket-created": t("notifications.ticketCreated"),
                         "ticket-assigned": t("notifications.ticketAssigned"),
                         "status-changed": t("notifications.statusChanged"),
+                        "ticket-unassigned": t("notifications.ticketUnassigned"),
                         "comment-created": t("notifications.commentCreated"),
                         "transfer-request": t("notifications.transferRequest"),
                       } as Record<string, string>)[n.type] ?? t("notifications.ticketCreated")}

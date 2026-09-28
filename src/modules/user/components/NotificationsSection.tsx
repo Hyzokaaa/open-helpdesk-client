@@ -15,6 +15,8 @@ const EVENT_KEYS = [
   { key: "TicketCreated", labelKey: "notifications.ticketCreated" },
   { key: "TicketAssigned", labelKey: "notifications.ticketAssigned" },
   { key: "StatusChanged", labelKey: "notifications.statusChanged" },
+  // In-app only: a call to action for admins and supervisors, there is no email for it
+  { key: "TicketUnassigned", labelKey: "notifications.ticketUnassigned", inAppOnly: true },
   { key: "CommentCreated", labelKey: "notifications.commentCreated" },
   { key: "TransferRequest", labelKey: "notifications.transferRequest" },
 ] as const;
@@ -164,17 +166,19 @@ export default function NotificationsSection() {
           </div>
 
           <div className="rounded-lg border border-border-card divide-y divide-border-card">
-            {EVENT_KEYS.map(({ key, labelKey }) => (
+            {EVENT_KEYS.map(({ key, labelKey, ...rest }) => (
               <div key={key} className="flex items-center gap-2 px-3 py-2.5">
                 <span className="flex-1 text-xs text-body">{t(labelKey)}</span>
-                {prefs.emailEnabled && (
+                {prefs.emailEnabled && ("inAppOnly" in rest ? (
+                  <div className="w-14" />
+                ) : (
                   <div className="w-14 flex justify-center">
                     <Toggle
                       checked={prefs[`email${key}` as keyof NotificationPreferences] as boolean}
                       onChange={(v) => handleChange(`email${key}`, v)}
                     />
                   </div>
-                )}
+                ))}
                 {prefs.inAppEnabled && (
                   <div className="w-14 flex justify-center">
                     <Toggle
