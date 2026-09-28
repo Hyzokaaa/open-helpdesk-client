@@ -30,6 +30,7 @@ import {
   STATUSES,
   PICKUP_STATUSES,
 } from "../domain/ticket-enums";
+import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-ticket-status";
 import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
@@ -448,11 +449,14 @@ export default function TicketsPage() {
                         const items = [
                           { label: t("tickets.view"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); } },
                           ...(!isReporter && hasDirectAccess ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
-                          ...(can(P.TICKET_CHANGE_STATUS) && hasDirectAccess ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
+                          // Agents only on tickets assigned to them; an open one is picked up instead
+                          ...(can(P.TICKET_CHANGE_STATUS) && canMoveTicketStatus(ticket, user?.id, can) ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
                           // Admin/Supervisor: Assign (any ticket, any state except closed)
                           ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
                           // Pickup into a chosen status (only open tickets); it assigns the ticket to whoever picks it up
                           ...(can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { setPickupTarget(ticket); setPickupStatus(PICKUP_STATUSES[0]); } }] : []),
+                          // Agent: discard an open ticket straight from the queue (spam, duplicates)
+                          ...(canDiscardFromQueue(ticket, user?.id, can) ? [{ label: t("tickets.discard"), danger: true, onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus("discarded"); bulk.setShowDiscardReason(true); } }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),

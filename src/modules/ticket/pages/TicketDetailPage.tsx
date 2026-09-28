@@ -37,6 +37,7 @@ import useFormatDate from "@modules/app/hooks/useFormatDate";
 import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
 import TicketStatusModal from "../components/TicketStatusModal";
 import { PICKUP_STATUSES } from "../domain/ticket-enums";
+import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-ticket-status";
 import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketDetailHeader from "../components/TicketDetailHeader";
@@ -133,8 +134,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isReadonly = ticket?.accessLevel === "readonly";
+  // Agents only move tickets assigned to them; an open one goes through pickup instead.
+  const canMoveStatus = !!ticket && canMoveTicketStatus(ticket, user?.id, can);
 
-  const canChangeStatus = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
+  const canChangeStatus = isEditing && !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
@@ -146,7 +149,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canDelete = !isReadonly && can(P.TICKET_DELETE);
   const canAssignAction = !isReadonly && can(P.TICKET_ASSIGN) && !isTerminal;
   const canPickup = !isReadonly && can(P.TICKET_PICKUP) && ticket?.status === "open";
-  const canChangeStatusAction = !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
+  const canDiscard = !isReadonly && !!ticket && canDiscardFromQueue(ticket, user?.id, can);
+  const canChangeStatusAction = !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canSwitchToEdit = !isReadonly && mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
@@ -434,6 +438,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         canChangeStatusAction={canChangeStatusAction}
         canAssignAction={canAssignAction}
         canPickup={!!canPickup}
+        canDiscard={canDiscard}
         canTransfer={canTransfer && !pendingTransfer}
         canDelete={canDelete}
         enterEdit={enterEdit}
@@ -442,6 +447,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         onChangeStatus={() => setStatusModalValue(ticket.status)}
         onAssign={() => setShowAssignModal(true)}
         onPickup={() => setPickupStatus(PICKUP_STATUSES[0])}
+        onDiscard={() => setAskDiscardReason(true)}
         onTransfer={() => setShowTransferModal(true)}
         onDelete={handleDelete}
         onClose={onClose}
@@ -642,7 +648,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 loading={sendingComment}
                 onSubmit={handleAddComment}
                 onSubmitAndResolve={handleAddCommentAndResolve}
-                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
+                canResolve={!isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
                 cannedResponses={cannedResponses}
               />
             )}
