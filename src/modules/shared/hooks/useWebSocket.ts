@@ -22,6 +22,12 @@ type Listener = (data: RealtimeEvent) => void;
 // Consecutive server-side drops tolerated before giving up until the page reloads
 const MAX_REAUTH_ATTEMPTS = 3;
 
+// socket.io reads a path in the URL as a namespace, not a prefix: with API_URL behind a reverse
+// proxy at https://host/api it would connect to https://host/socket.io and miss the backend.
+const apiUrl = new URL(API_URL, window.location.origin);
+const SOCKET_ORIGIN = apiUrl.origin;
+const SOCKET_PATH = `${apiUrl.pathname.replace(/\/+$/, "")}/socket.io`;
+
 export default function useWebSocket(
   workspaceSlug: string | undefined,
   listeners: Partial<Record<EventName, Listener>>,
@@ -40,8 +46,10 @@ export default function useWebSocket(
   const connect = useCallback(() => {
     if (!workspaceSlug) return;
 
-    const socket = io(API_URL, {
-      transports: ["websocket", "polling"],
+    const socket = io(SOCKET_ORIGIN, {
+      path: SOCKET_PATH,
+      // Default transports: long-polling first, upgraded to websocket when the proxy allows it,
+      // so live updates still work behind a proxy that does not forward the upgrade headers.
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
