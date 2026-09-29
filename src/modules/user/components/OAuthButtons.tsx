@@ -1,6 +1,7 @@
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { API_URL } from "@modules/app/domain/constants/env";
 import type { AuthProviders } from "../services/auth.service";
+import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 
 interface Props {
   providers: AuthProviders;
@@ -28,7 +29,7 @@ function MicrosoftIcon() {
   );
 }
 
-export default function OAuthButtons({ providers, onSuccess }: Props & { onSuccess?: () => void }) {
+export default function OAuthButtons({ providers, rememberMe = false, onSuccess }: Props & { rememberMe?: boolean; onSuccess?: () => void }) {
   const { t } = useTranslation();
 
   const hasAny = providers.google || providers.microsoft;
@@ -39,6 +40,8 @@ export default function OAuthButtons({ providers, onSuccess }: Props & { onSucce
     const height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
+    // The popup's callback page opens the session, so it needs the user's choice
+    LocalStorage.set(LOCAL_STORAGE_KEY.OAUTH_REMEMBER_ME, rememberMe ? "1" : "0");
     window.open(
       `${API_URL}/auth/${provider}?redirect=${encodeURIComponent(window.location.origin)}`,
       `oauth-${provider}`,

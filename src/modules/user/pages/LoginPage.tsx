@@ -5,10 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { login, getProfile, getAuthProviders } from "../services/auth.service";
-import {
-  LOCAL_STORAGE_KEY,
-  LocalStorage,
-} from "@modules/app/domain/core/local-storage";
+import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
@@ -28,6 +25,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [providers, setProviders] = useState<{ google: boolean; microsoft: boolean }>({ google: false, microsoft: false });
 
@@ -49,8 +47,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await login({ email, password });
-      LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.accessToken);
+      const res = await login({ email, password, rememberMe });
+      saveSession(res);
 
       const profile = await getProfile();
       setUser(profile);
@@ -83,7 +81,7 @@ export default function LoginPage() {
               {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
             </p>
 
-            <OAuthButtons providers={providers} onSuccess={async () => {
+            <OAuthButtons providers={providers} rememberMe={rememberMe} onSuccess={async () => {
               const profile = await getProfile();
               setUser(profile);
               const { listWorkspaces } = await import("@modules/workspace/services/workspace.service");
@@ -109,6 +107,11 @@ export default function LoginPage() {
                   onChange={setPassword}
                 />
               </FormInput>
+
+              <label className="flex items-center gap-2 cursor-pointer mb-2">
+                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 accent-primary" />
+                <span className="text-sm text-secondary-text font-body-medium">{t("login.rememberMe")}</span>
+              </label>
 
               <Button type="submit" full loading={loading} className="mt-2">
                 {t("login.signIn")}

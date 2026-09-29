@@ -5,6 +5,7 @@ import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
 } from "@modules/app/domain/core/local-storage";
+import { clearSession } from "@modules/app/domain/core/session";
 import { getProfile } from "../services/auth.service";
 import useTheme from "@modules/app/hooks/useTheme";
 import { Theme } from "@modules/app/context/theme-context";
@@ -27,7 +28,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           }
         })
         .catch(() => {
-          LocalStorage.remove(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
+          clearSession();
           setUser(null);
         })
         .finally(() => setLoading(false));

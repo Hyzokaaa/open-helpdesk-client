@@ -15,9 +15,10 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 function NoAccessScreen() {
   const { t } = useTranslation();
   const { brandName, brandLogo } = useConfig();
+  const { signOut } = useUser();
 
   const handleLogout = () => {
-    localStorage.clear();
+    signOut();
     window.location.href = "/login";
   };
 

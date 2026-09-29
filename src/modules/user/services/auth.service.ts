@@ -12,6 +12,8 @@ interface SignupRequest {
 
 interface SignupResponse {
   accessToken: string;
+  /** Absent when the account came from a signup flow that does not open a session. */
+  refreshToken?: string;
   user: {
     id: string;
     email: string;
@@ -24,10 +26,12 @@ interface SignupResponse {
 interface LoginRequest {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 interface LoginResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 interface ProfileResponse {
@@ -93,6 +97,16 @@ export async function resendVerification(): Promise<void> {
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const res = await http.post<LoginResponse>("/auth/login", data);
   return res.data;
+}
+
+export async function exchangeOAuthCode(code: string, rememberMe: boolean): Promise<LoginResponse> {
+  const res = await http.post<LoginResponse>("/auth/oauth/exchange", { code, rememberMe });
+  return res.data;
+}
+
+/** Ends the session on the server. Best effort: signing out locally must never wait on it. */
+export async function logout(refreshToken: string): Promise<void> {
+  await http.post("/auth/logout", { refreshToken }, { headers: { "X-Silent-Errors": "true" } });
 }
 
 export async function getProfile(): Promise<AuthUser> {
