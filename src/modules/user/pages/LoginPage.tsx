@@ -39,6 +39,9 @@ export default function LoginPage() {
     if (searchParams.get("error") === "oauth_failed") {
       toast.error(t("login.oauthFailed"));
     }
+    if (searchParams.get("expired") === "1") {
+      toast.info(t("login.sessionExpired"), { toastId: "session-expired" });
+    }
   }, [searchParams, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {

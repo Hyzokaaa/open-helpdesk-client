@@ -193,6 +193,7 @@ const translations = {
   "login.withMicrosoft": { en: "Continue with Microsoft", es: "Continuar con Microsoft" },
   "login.orDivider": { en: "or", es: "o" },
   "login.oauthFailed": { en: "Authentication failed. Please try again.", es: "Error de autenticación. Inténtalo de nuevo." },
+  "login.sessionExpired": { en: "Your session has expired. Please sign in again.", es: "Tu sesión ha expirado. Inicia sesión de nuevo." },
   "login.authenticating": { en: "Authenticating...", es: "Autenticando..." },
 
   // Signup
