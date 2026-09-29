@@ -44,6 +44,7 @@ import { listMembers, type WorkspaceMember } from "@modules/workspace/services/w
 import TicketBoard from "../components/TicketBoard";
 import TicketDetailPage from "./TicketDetailPage";
 import TicketStatusModal from "../components/TicketStatusModal";
+import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketCreatePage from "./TicketCreatePage";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import useTicketFilters from "../hooks/useTicketFilters";
@@ -121,6 +122,9 @@ export default function TicketsPage() {
   const [assignMode, setAssignMode] = useState<"assign" | "transfer">("assign");
   const [pickupTarget, setPickupTarget] = useState<TicketListItem | null>(null);
   const [pickupStatus, setPickupStatus] = useState<string>(PICKUP_STATUSES[0]);
+  // Discarding straight from the queue has its own state, apart from the change-status flow, so
+  // backing out of it closes it instead of falling back to the status picker.
+  const [discardTarget, setDiscardTarget] = useState<TicketListItem | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -456,7 +460,7 @@ export default function TicketsPage() {
                           // Pickup into a chosen status (only open tickets); it assigns the ticket to whoever picks it up
                           ...(can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { setPickupTarget(ticket); setPickupStatus(PICKUP_STATUSES[0]); } }] : []),
                           // Agent: discard an open ticket straight from the queue (spam, duplicates)
-                          ...(canDiscardFromQueue(ticket, user?.id, can) ? [{ label: t("tickets.discard"), danger: true, onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus("discarded"); bulk.setShowDiscardReason(true); } }] : []),
+                          ...(canDiscardFromQueue(ticket, user?.id, can) ? [{ label: t("tickets.discard"), danger: true, onClick: () => setDiscardTarget(ticket) }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
@@ -525,6 +529,26 @@ export default function TicketsPage() {
           onClose={() => setPickupTarget(null)}
           t={t}
           tEnum={tEnum}
+        />
+      )}
+
+      {/* Discard straight from the queue */}
+      {discardTarget && (
+        <TicketDiscardReasonModal
+          t={t}
+          tEnum={tEnum}
+          onCancel={() => setDiscardTarget(null)}
+          onSelectReason={async (reason) => {
+            const target = discardTarget;
+            setDiscardTarget(null);
+            try {
+              await changeTicketStatus(workspaceSlug!, target.id, "discarded", reason);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTickets();
+            } catch {
+              toast.error(t("tickets.changeStatusError"));
+            }
+          }}
         />
       )}
 
