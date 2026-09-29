@@ -43,6 +43,14 @@ async function refreshSession(): Promise<boolean> {
 function renewAccessToken(config: InternalAxiosRequestConfig): Promise<boolean> {
   const stored = LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
   if (stored && config.headers.get("Authorization") !== `Bearer ${stored}`) return Promise.resolve(true);
+  return renewSession();
+}
+
+/**
+ * Trades the refresh token for a new access token, sharing one request among concurrent
+ * callers. For connections outside axios, such as the websocket, when theirs has lapsed.
+ */
+export function renewSession(): Promise<boolean> {
   renewing ??= refreshSession().finally(() => { renewing = null; });
   return renewing;
 }
