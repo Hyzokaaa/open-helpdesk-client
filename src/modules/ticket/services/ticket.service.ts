@@ -10,7 +10,7 @@ export interface TicketListItem {
   projectId: string | null;
   reporterId: string;
   assigneeId: string | null;
-  ticketNumber: number;
+  ticketNumber: string;
   createdAt: string | null;
   tagIds: string[];
   departmentId: string | null;
@@ -35,7 +35,8 @@ export interface TicketDetail {
   assigneeId: string | null;
   firstResponseAt: string | null;
   resolvedAt: string | null;
-  ticketNumber: number;
+  resolvedById: string | null;
+  ticketNumber: string;
   createdAt: string | null;
   originDate: string | null;
   tagIds: string[];

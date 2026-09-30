@@ -124,7 +124,7 @@ export default function PlatformMailboxSettings() {
 
       {showForm && (
         <Sheet onClose={() => setShowForm(false)}>
-          <div className="p-6">
+          <div>
             <h2 className="text-lg font-body-bold text-heading mb-1">
               {mailbox ? t("common.edit") : t("platformMailbox.configure")}
             </h2>

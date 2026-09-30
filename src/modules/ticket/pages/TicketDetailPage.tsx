@@ -10,10 +10,13 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import { P } from "@modules/workspace/domain/permissions";
 import {
   changeTicketStatus,
   transferTicket,
+  assignTicket,
+  pickupTicket,
   deleteTicket,
 } from "../services/ticket.service";
 import {
@@ -31,7 +34,10 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
-import TicketTransferModal from "../components/TicketTransferModal";
+import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
+import TicketStatusModal from "../components/TicketStatusModal";
+import { PICKUP_STATUSES } from "../domain/ticket-enums";
+import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-ticket-status";
 import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketDetailHeader from "../components/TicketDetailHeader";
@@ -108,6 +114,10 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   });
 
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [statusModalValue, setStatusModalValue] = useState<string | null>(null);
+  const [pickupStatus, setPickupStatus] = useState<string | null>(null);
+  const [askDiscardReason, setAskDiscardReason] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   const [sendingComment, setSendingComment] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
@@ -124,15 +134,23 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const isCreator = ticket?.reporterId === user?.id;
   const isTerminal = ticket?.status === "discarded" || ticket?.status === "resolved";
   const isReadonly = ticket?.accessLevel === "readonly";
+  // Agents only move tickets assigned to them; an open one goes through pickup instead.
+  const canMoveStatus = !!ticket && canMoveTicketStatus(ticket, user?.id, can);
 
-  const canChangeStatus = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
+  const canChangeStatus = isEditing && !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
-  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
-  const canDelete = isEditing && !isReadonly && can(P.TICKET_DELETE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
+
+  // Menu actions take effect immediately, so they must not depend on being in edit mode.
+  const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
+  const canDelete = !isReadonly && can(P.TICKET_DELETE);
+  const canAssignAction = !isReadonly && can(P.TICKET_ASSIGN) && !isTerminal;
+  const canPickup = !isReadonly && can(P.TICKET_PICKUP) && ticket?.status === "open";
+  const canDiscard = !isReadonly && !!ticket && canDiscardFromQueue(ticket, user?.id, can);
+  const canChangeStatusAction = !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canSwitchToEdit = !isReadonly && mode === "view" && (
     can(P.TICKET_EDIT_DESCRIPTION) || can(P.TICKET_EDIT_NAME) || can(P.TICKET_ASSIGN)
   );
@@ -254,7 +272,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   if (!ticket) return null;
 
   return (
-    <div className="w-full max-w-3xl">
+    <div className={`w-full ${ticketIdProp ? "" : "max-w-3xl"}`}>
 
       {lightbox && (
         <Lightbox
@@ -287,12 +305,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
       )}
 
       {showTransferModal && workspaceSlug && ticketId && (
-        <TicketTransferModal
+        <TicketMemberPickerModal
+          mode="transfer"
           assignableMembers={assignableMembers}
           currentUserId={user?.id ?? ""}
           t={t}
           onClose={() => setShowTransferModal(false)}
-          onTransfer={async (targetUserId) => {
+          onSubmit={async (targetUserId) => {
             try {
               await transferTicket(workspaceSlug, ticketId, targetUserId);
               toast.success(t("tickets.transferred"));
@@ -300,6 +319,88 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             } catch { toast.error(t("ticketDetail.actionError")); }
             setShowTransferModal(false);
           }}
+        />
+      )}
+
+      {showAssignModal && workspaceSlug && ticketId && (
+        <TicketMemberPickerModal
+          mode="assign"
+          assignableMembers={assignableMembers}
+          currentUserId={user?.id ?? ""}
+          initialTarget={ticket.assigneeId}
+          t={t}
+          onClose={() => setShowAssignModal(false)}
+          onSubmit={async (targetUserId) => {
+            try {
+              await assignTicket(workspaceSlug, ticketId, targetUserId);
+              toast.success(t("tickets.assigned"));
+              fetchTicket(true);
+            } catch { toast.error(t("ticketDetail.actionError")); }
+            setShowAssignModal(false);
+          }}
+        />
+      )}
+
+      {statusModalValue !== null && workspaceSlug && ticketId && (
+        <TicketStatusModal
+          subtitle={ticket.name}
+          selected={statusModalValue}
+          currentStatus={ticket.status}
+          onSelect={setStatusModalValue}
+          onClose={() => setStatusModalValue(null)}
+          onConfirm={async () => {
+            // Discarding needs a reason, which the backend requires
+            if (statusModalValue === "discarded") {
+              setStatusModalValue(null);
+              setAskDiscardReason(true);
+              return;
+            }
+            try {
+              await changeTicketStatus(workspaceSlug, ticketId, statusModalValue);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTicket(true);
+            } catch { toast.error(t("tickets.changeStatusError")); }
+            setStatusModalValue(null);
+          }}
+          t={t}
+          tEnum={tEnum}
+        />
+      )}
+
+      {askDiscardReason && workspaceSlug && ticketId && (
+        <TicketDiscardReasonModal
+          t={t}
+          tEnum={tEnum}
+          onCancel={() => setAskDiscardReason(false)}
+          onSelectReason={async (reason) => {
+            setAskDiscardReason(false);
+            try {
+              await changeTicketStatus(workspaceSlug, ticketId, "discarded", reason);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTicket(true);
+            } catch { toast.error(t("tickets.changeStatusError")); }
+          }}
+        />
+      )}
+
+      {pickupStatus !== null && workspaceSlug && ticketId && (
+        <TicketStatusModal
+          title={t("tickets.pickup")}
+          subtitle={ticket.name}
+          selected={pickupStatus}
+          statuses={PICKUP_STATUSES}
+          onSelect={setPickupStatus}
+          onClose={() => setPickupStatus(null)}
+          onConfirm={async () => {
+            try {
+              await pickupTicket(workspaceSlug, ticketId, pickupStatus);
+              toast.success(t("tickets.pickedUp"));
+              fetchTicket(true);
+            } catch { toast.error(t("tickets.pickupError")); }
+            setPickupStatus(null);
+          }}
+          t={t}
+          tEnum={tEnum}
         />
       )}
 
@@ -330,16 +431,27 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         draft={draft}
         setDraft={setDraft}
         isEditing={isEditing}
+        embedded={!!ticketIdProp}
         canSwitchToEdit={canSwitchToEdit}
         canEditName={canEditName}
-        canEditFields={canEditFields}
-        wsCategories={wsCategories}
         saving={saving}
+        canChangeStatusAction={canChangeStatusAction}
+        canAssignAction={canAssignAction}
+        canPickup={!!canPickup}
+        canDiscard={canDiscard}
+        canTransfer={canTransfer && !pendingTransfer}
+        canDelete={canDelete}
         enterEdit={enterEdit}
         cancelEdit={cancelEdit}
         requestSave={requestSave}
+        onChangeStatus={() => setStatusModalValue(ticket.status)}
+        onAssign={() => setShowAssignModal(true)}
+        onPickup={() => setPickupStatus(PICKUP_STATUSES[0])}
+        onDiscard={() => setAskDiscardReason(true)}
+        onTransfer={() => setShowTransferModal(true)}
+        onDelete={handleDelete}
+        onClose={onClose}
         t={t}
-        tEnum={tEnum}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -464,6 +576,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
+                      {(() => { const cm = members.find((m) => m.userId === c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
                       <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
                       {c.editedAt && (
                         <button
@@ -535,7 +648,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 loading={sendingComment}
                 onSubmit={handleAddComment}
                 onSubmitAndResolve={handleAddCommentAndResolve}
-                canResolve={!isTerminal && can(P.TICKET_CHANGE_STATUS)}
+                canResolve={!isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
                 cannedResponses={cannedResponses}
               />
             )}
@@ -646,8 +759,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           canChangeStatus={canChangeStatus}
           canEditFields={canEditFields}
           canAssign={canAssign}
-          canTransfer={canTransfer}
-          canDelete={canDelete}
           canEditTags={canEditTags}
           canEditCustomFields={canEditCustomFields}
           isTerminal={isTerminal}
@@ -661,7 +772,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           workspaceTags={workspaceTags}
           departments={departments}
           organizations={organizations}
-          assignableMembers={assignableMembers}
           customFieldDefs={customFieldDefs}
           slaPolicy={slaPolicy}
           slaLocked={slaLocked}
@@ -672,8 +782,6 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           fetchTicket={fetchTicket}
           fetchParticipants={fetchParticipants}
           handleDraftStatusChange={handleDraftStatusChange}
-          handleDelete={handleDelete}
-          setShowTransferModal={setShowTransferModal}
           navigate={navigate}
           formatDate={formatDate}
           t={t}

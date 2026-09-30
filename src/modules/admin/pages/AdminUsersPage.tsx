@@ -49,6 +49,8 @@ export default function AdminUsersPage() {
   const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
 
+  const activeAdminCount = users.filter(u => u.isSystemAdmin && u.isActive).length;
+
   const columnKeys = ["name", "email", "role", "status"];
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(columnKeys);
@@ -102,7 +104,7 @@ export default function AdminUsersPage() {
       await toggleSystemAdmin(target.id, !target.isSystemAdmin);
       setConfirmToggleAdmin(null);
       fetchData();
-    } catch { toast.error(t("admin.updateAdminError")); }
+    } catch (err: any) { toast.error(err?.message || t("admin.updateAdminError")); }
   };
 
   const handleEditUser = (u: UserItem) => {
@@ -134,7 +136,7 @@ export default function AdminUsersPage() {
       await toggleUserActive(target.id, !target.isActive);
       setConfirmToggleActive(null);
       fetchData();
-    } catch { toast.error(t("admin.updateStatusError")); }
+    } catch (err: any) { toast.error(err?.message || t("admin.updateStatusError")); }
   };
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
@@ -254,23 +256,22 @@ export default function AdminUsersPage() {
                   </td>
                 ))}
                 <td className="px-2 py-3 sticky right-0 bg-surface">
-                  {u.id !== user.id && (
-                    <ActionMenu items={[
-                      {
-                        label: t("admin.editProfile"),
-                        onClick: () => handleEditUser(u),
-                      },
-                      {
+                  {(() => {
+                    const isLastAdmin = u.isSystemAdmin && u.isActive && activeAdminCount <= 1;
+                    const items = [
+                      { label: t("admin.editProfile"), onClick: () => handleEditUser(u) },
+                      ...(!isLastAdmin ? [{
                         label: u.isSystemAdmin ? t("admin.removeAdmin") : t("admin.makeAdmin"),
                         onClick: () => setConfirmToggleAdmin(u),
-                      },
-                      {
+                      }] : []),
+                      ...((!isLastAdmin && u.id !== user?.id) ? [{
                         label: u.isActive ? t("admin.deactivate") : t("admin.activate"),
                         onClick: () => setConfirmToggleActive(u),
                         danger: u.isActive,
-                      },
-                    ]} />
-                  )}
+                      }] : []),
+                    ];
+                    return items.length > 0 ? <ActionMenu items={items} /> : null;
+                  })()}
                 </td>
               </tr>
             ))}

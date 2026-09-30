@@ -10,4 +10,5 @@ export interface AuthUser {
   theme: string;
   dateFormat: string;
   timezone: string;
+  avatarUrl: string | null;
 }

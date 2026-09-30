@@ -257,7 +257,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   };
 
   return (
-    <div className="p-6">
+    <div>
       <h2 className="text-lg font-body-bold text-heading mb-1">
         {isEdit ? t("emailSender.editTitle") : t("emailSender.configure")}
       </h2>

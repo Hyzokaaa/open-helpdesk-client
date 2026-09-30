@@ -73,7 +73,8 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, cat
 
   const isTicketReadonly = useCallback((ticket: TicketListItem) => {
     if (canViewAll) return false;
-    return ticket.assigneeId !== userId && ticket.reporterId !== userId && ticket.status !== 'open';
+    // Agents move their own tickets, or open ones, which dragging picks up
+    return ticket.assigneeId !== userId && ticket.status !== 'open';
   }, [canViewAll, userId]);
 
   const handleDragStart = (event: DragStartEvent) => {

@@ -12,6 +12,8 @@ interface SignupRequest {
 
 interface SignupResponse {
   accessToken: string;
+  /** Absent when the account came from a signup flow that does not open a session. */
+  refreshToken?: string;
   user: {
     id: string;
     email: string;
@@ -24,10 +26,12 @@ interface SignupResponse {
 interface LoginRequest {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 interface LoginResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 interface ProfileResponse {
@@ -42,6 +46,7 @@ interface ProfileResponse {
   theme: string;
   dateFormat: string;
   timezone: string;
+  avatarUrl: string | null;
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<void> {
@@ -94,9 +99,30 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   return res.data;
 }
 
+export async function exchangeOAuthCode(code: string, rememberMe: boolean): Promise<LoginResponse> {
+  const res = await http.post<LoginResponse>("/auth/oauth/exchange", { code, rememberMe });
+  return res.data;
+}
+
+/** Ends the session on the server. Best effort: signing out locally must never wait on it. */
+export async function logout(refreshToken: string): Promise<void> {
+  await http.post("/auth/logout", { refreshToken }, { headers: { "X-Silent-Errors": "true" } });
+}
+
 export async function getProfile(): Promise<AuthUser> {
   const res = await http.get<ProfileResponse>("/users/me");
   return res.data;
+}
+
+export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await http.post<{ avatarUrl: string }>("/users/me/avatar", formData);
+  return res.data;
+}
+
+export async function deleteAvatar(): Promise<void> {
+  await http.delete("/users/me/avatar");
 }
 
 export interface AuthProviders {

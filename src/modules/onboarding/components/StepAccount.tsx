@@ -5,7 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { signup, getProfile } from "@modules/user/services/auth.service";
-import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
+import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -40,7 +40,7 @@ export default function StepAccount({ onDone }: Props) {
     setLoading(true);
     try {
       const res = await signup({ email, password, firstName, lastName });
-      LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.accessToken);
+      saveSession(res);
       const profile = await getProfile();
       setUser(profile);
       onDone();

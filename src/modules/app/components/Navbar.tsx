@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
+import UserAvatar from "@modules/user/components/UserAvatar";
 import NotificationBell from "@modules/notification/components/NotificationBell";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -25,8 +26,6 @@ export default function Navbar({ onMenuToggle }: Props) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
-  const initials = user ? ((user.firstName[0] ?? "") + (user.lastName[0] ?? "")).toUpperCase() || "?" : "?";
-
   return (
     <header className="w-full border-b border-border-card bg-surface px-6 md:px-8">
       <div className="flex items-center justify-between h-14 max-w-[1200px] mx-auto">
@@ -48,12 +47,7 @@ export default function Navbar({ onMenuToggle }: Props) {
               onClick={() => setMenuOpen((o) => !o)}
               className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </div>
+              <UserAvatar avatarUrl={user?.avatarUrl} firstName={user?.firstName} lastName={user?.lastName} size="md" />
               <span className="text-sm text-secondary-text font-body-medium hidden sm:inline">
                 {user?.firstName} {user?.lastName}
               </span>

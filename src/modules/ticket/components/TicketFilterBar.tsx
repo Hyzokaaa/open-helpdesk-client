@@ -11,6 +11,7 @@ import type { Tab } from "../hooks/useTicketFilters";
 
 interface TicketFilterBarProps {
   tab: Tab;
+  setTab: (tab: Tab) => void;
   filters: TicketFilters;
   setFilters: React.Dispatch<React.SetStateAction<TicketFilters>>;
   filterTagIds: string[];
@@ -31,6 +32,7 @@ interface TicketFilterBarProps {
 
 export default function TicketFilterBar({
   tab,
+  setTab,
   filters,
   setFilters,
   filterTagIds,
@@ -130,10 +132,22 @@ export default function TicketFilterBar({
           {popoverOpen && (
             <div className="absolute right-0 z-50 mt-1 bg-surface border border-border-input rounded-lg shadow-lg w-72 max-h-[420px] overflow-y-auto">
               <div className="p-3 space-y-4">
-                {/* Status (only in active tab, list view) */}
-                {tab === "active" && !isBoard && (
-                  <FilterSection label={t("tickets.col.status")}>
-                    <div className="flex flex-wrap gap-1">
+                {/* Status group (active/resolved/discarded) */}
+                <FilterSection label={t("tickets.col.status")}>
+                  <div className="flex flex-wrap gap-1">
+                    {(["active", "resolved", "discarded"] as const).map((t_) => (
+                      <FilterPill
+                        key={t_}
+                        active={tab === t_}
+                        onClick={() => { setTab(t_); setFilters((f) => ({ ...f, status: undefined, page: 1 })); }}
+                      >
+                        {t(`tickets.${t_}`)}
+                      </FilterPill>
+                    ))}
+                  </div>
+                  {/* Detailed status (only in active tab, list view) */}
+                  {tab === "active" && !isBoard && (
+                    <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border-card">
                       <FilterPill
                         active={!filters.status}
                         onClick={() => setFilters((f) => ({ ...f, status: undefined, page: 1 }))}
@@ -150,8 +164,8 @@ export default function TicketFilterBar({
                         </FilterPill>
                       ))}
                     </div>
-                  </FilterSection>
-                )}
+                  )}
+                </FilterSection>
 
                 {/* Priority */}
                 <FilterSection label={t("tickets.col.priority")}>

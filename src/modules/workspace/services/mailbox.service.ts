@@ -19,6 +19,8 @@ export interface MailboxDto {
   addressMode?: string;
   acceptedAddresses?: string[];
   autoReply?: boolean;
+  postProcessAction?: string;
+  postProcessFolder?: string | null;
 }
 
 export interface CreateMailboxRequest {
@@ -34,6 +36,8 @@ export interface CreateMailboxRequest {
   addressMode?: string;
   acceptedAddresses?: string[];
   autoReply?: boolean;
+  postProcessAction?: string;
+  postProcessFolder?: string | null;
 }
 
 export interface UpdateMailboxRequest {
@@ -50,6 +54,8 @@ export interface UpdateMailboxRequest {
   addressMode?: string;
   acceptedAddresses?: string[];
   autoReply?: boolean;
+  postProcessAction?: string;
+  postProcessFolder?: string | null;
 }
 
 export async function listMailboxes(slug: string): Promise<MailboxDto[]> {

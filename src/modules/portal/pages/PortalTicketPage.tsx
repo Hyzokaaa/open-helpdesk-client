@@ -163,7 +163,7 @@ export default function PortalTicketPage() {
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-4">
           {/* Ticket number and meta */}
           <div className="flex items-center gap-2 mb-2 text-xs text-gray-400 dark:text-gray-500">
-            <span className="font-mono">#{ticket.ticketNumber}</span>
+            <span className="font-mono">{ticket.ticketNumber}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
             <span>{formatDate(ticket.createdAt)}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />

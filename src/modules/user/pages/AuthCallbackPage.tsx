@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
 } from "@modules/app/domain/core/local-storage";
-import { getProfile } from "../services/auth.service";
+import { clearSession, saveSession } from "@modules/app/domain/core/session";
+import { exchangeOAuthCode, getProfile } from "../services/auth.service";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
@@ -14,9 +15,11 @@ export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
+  // The code is single-use in practice; React's dev double effect must not spend it twice
+  const exchanged = useRef(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const code = searchParams.get("code");
     const error = searchParams.get("error");
 
     if (error) {
@@ -25,29 +28,39 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    if (!token) {
+    if (!code) {
       navigate("/login", { replace: true });
       return;
     }
 
-    LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, token);
+    if (exchanged.current) return;
+    exchanged.current = true;
 
-    if (window.opener) {
-      window.opener.postMessage("oauth:success", window.location.origin);
-      window.close();
-      return;
-    }
+    const fail = () => {
+      clearSession();
+      toast.error(t("login.oauthFailed"));
+      navigate("/login", { replace: true });
+    };
 
-    getProfile()
-      .then((profile) => {
-        setUser(profile);
-        navigate("/dashboard", { replace: true });
+    const rememberMe = LocalStorage.get(LOCAL_STORAGE_KEY.OAUTH_REMEMBER_ME) === "1";
+    LocalStorage.remove(LOCAL_STORAGE_KEY.OAUTH_REMEMBER_ME);
+
+    exchangeOAuthCode(code, rememberMe)
+      .then((tokens) => {
+        saveSession(tokens);
+
+        if (window.opener) {
+          window.opener.postMessage("oauth:success", window.location.origin);
+          window.close();
+          return;
+        }
+
+        return getProfile().then((profile) => {
+          setUser(profile);
+          navigate("/dashboard", { replace: true });
+        });
       })
-      .catch(() => {
-        LocalStorage.remove(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
-        toast.error(t("login.oauthFailed"));
-        navigate("/login", { replace: true });
-      });
+      .catch(fail);
   }, [searchParams, navigate, setUser, t]);
 
   return (

@@ -5,10 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { signup, getProfile, getAuthProviders } from "../services/auth.service";
-import {
-  LOCAL_STORAGE_KEY,
-  LocalStorage,
-} from "@modules/app/domain/core/local-storage";
+import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
@@ -62,7 +59,7 @@ export default function SignupPage() {
         email, password, firstName, lastName,
         ...(isInviteFlow ? { invitationToken } : { workspaceName }),
       });
-      LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.accessToken);
+      saveSession(res);
 
       const profile = await getProfile();
       setUser(profile);

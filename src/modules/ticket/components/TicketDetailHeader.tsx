@@ -1,10 +1,9 @@
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
-import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import { STATUS_COLORS, PRIORITY_COLORS } from "../domain/ticket-enums";
+import ActionMenu, { ActionMenuItem } from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
+import { SheetCloseButton } from "@modules/app/modules/ui/components/Sheet/Sheet";
 import type { TicketDetail } from "../services/ticket.service";
 import type { Draft } from "../hooks/useTicketEdit";
-import type { TicketCategoryDto } from "@modules/project/services/project.service";
 
 interface TicketDetailHeaderProps {
   ticket: TicketDetail;
@@ -13,26 +12,68 @@ interface TicketDetailHeaderProps {
   isEditing: boolean;
   canSwitchToEdit: boolean;
   canEditName: boolean;
-  canEditFields: boolean;
-  wsCategories: TicketCategoryDto[];
   saving: boolean;
+  embedded?: boolean;
+  canChangeStatusAction: boolean;
+  canAssignAction: boolean;
+  canPickup: boolean;
+  canDiscard: boolean;
+  canTransfer: boolean | null;
+  canDelete: boolean;
   enterEdit: () => void;
   cancelEdit: () => void;
   requestSave: () => void;
+  onChangeStatus: () => void;
+  onAssign: () => void;
+  onPickup: () => void;
+  onDiscard: () => void;
+  onTransfer: () => void;
+  onDelete: () => void;
+  onClose?: () => void;
   t: (key: any) => string;
-  tEnum: (prefix: string, value: string) => string;
 }
 
 export default function TicketDetailHeader({
   ticket, draft, setDraft,
-  isEditing, canSwitchToEdit, canEditName, canEditFields,
-  wsCategories, saving,
+  isEditing, canSwitchToEdit, canEditName,
+  saving, embedded,
+  canChangeStatusAction, canAssignAction, canPickup, canDiscard, canTransfer, canDelete,
   enterEdit, cancelEdit, requestSave,
-  t, tEnum,
+  onChangeStatus, onAssign, onPickup, onDiscard, onTransfer, onDelete, onClose,
+  t,
 }: TicketDetailHeaderProps) {
+  // Mirrors the ticket list action menu: operations with side effects beyond the record
+  // live here, not as form fields.
+  const menuItems: ActionMenuItem[] = [
+    ...(canChangeStatusAction ? [{ label: t("tickets.changeStatus"), onClick: onChangeStatus }] : []),
+    ...(canAssignAction ? [{ label: t("tickets.assign"), onClick: onAssign }] : []),
+    ...(canPickup ? [{ label: t("tickets.pickup"), onClick: onPickup }] : []),
+    ...(canDiscard ? [{ label: t("tickets.discard"), onClick: onDiscard, danger: true }] : []),
+    ...(canTransfer ? [{ label: t("tickets.transfer"), onClick: onTransfer }] : []),
+    ...(canDelete ? [{ label: t("ticketDetail.deleteTicket"), onClick: onDelete, danger: true }] : []),
+  ];
+
   return (
-    <div className="mb-6">
-      <div className="flex justify-end mb-2 gap-2">
+    <div
+      className={`sticky top-0 z-10 flex items-center gap-3 mb-2 ${
+        embedded ? "-mx-6 -mt-4 px-6 py-3 bg-surface" : "py-3 bg-page"
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        {isEditing && draft && canEditName ? (
+          <Input
+            value={draft.name}
+            onChange={(v) => setDraft((d) => d ? { ...d, name: v } : d)}
+            autoFocus
+          />
+        ) : (
+          <h2 className="text-lg font-body-bold text-heading truncate">
+            <span className="text-muted font-body-medium">{ticket.ticketNumber}</span> {ticket.name}
+          </h2>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
         {isEditing ? (
           <>
             <Button size="xs" color="light" onClick={cancelEdit}>{t("ticketDetail.cancel")}</Button>
@@ -41,30 +82,15 @@ export default function TicketDetailHeader({
         ) : canSwitchToEdit ? (
           <Button size="xs" onClick={enterEdit}>{t("ticketDetail.edit")}</Button>
         ) : null}
+
+        {!isEditing && <ActionMenu items={menuItems} />}
+
+        {embedded && onClose && (
+          <div className="ml-2">
+            <SheetCloseButton onClick={onClose} />
+          </div>
+        )}
       </div>
-      {isEditing && draft && canEditName ? (
-        <Input
-          value={draft.name}
-          onChange={(v) => setDraft((d) => d ? { ...d, name: v } : d)}
-          autoFocus
-          size="lg"
-        />
-      ) : (
-        <h2 className="text-lg font-body-bold text-heading"><span className="text-muted font-body-medium">#{ticket.ticketNumber}</span> {ticket.name}</h2>
-      )}
-      {!isEditing && (
-        <div className="flex items-center gap-2 mt-2">
-          <StatusBadge
-            label={tEnum("status", ticket.status)}
-            color={STATUS_COLORS[ticket.status] || "gray"}
-          />
-          <StatusBadge
-            label={tEnum("priority", ticket.priority)}
-            color={PRIORITY_COLORS[ticket.priority] || "gray"}
-          />
-          {(() => { const cat = wsCategories.find((c) => c.id === ticket.categoryId); return <StatusBadge label={cat?.name ?? "—"} color={(cat?.color as any) || "primary"} size="xs" />; })()}
-        </div>
-      )}
     </div>
   );
 }

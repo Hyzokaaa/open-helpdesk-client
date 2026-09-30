@@ -33,7 +33,7 @@ export interface CreatePortalTicketData {
 }
 
 export interface CreatePortalTicketResponse {
-  ticketNumber: number;
+  ticketNumber: string;
   portalToken: string;
   message: string;
 }
@@ -55,7 +55,7 @@ export interface PortalTicketAttachment {
 }
 
 export interface PortalTicketDetail {
-  ticketNumber: number;
+  ticketNumber: string;
   name: string;
   description: string;
   status: string;

@@ -5,7 +5,6 @@ import {
   bulkChangeStatus,
   bulkDeleteTickets,
   changeTicketStatus,
-  pickupTicket,
 } from "../services/ticket.service";
 import type { TranslationKey } from "@modules/app/i18n/translations";
 
@@ -41,6 +40,7 @@ interface UseBulkOperationsProps {
   workspaceSlug: string | undefined;
   selectedIds: Set<string>;
   clearSelection: () => void;
+  selectOnly: (ids: string[]) => void;
   onRefresh: () => void;
   t: (key: TranslationKey) => string;
 }
@@ -49,6 +49,7 @@ export default function useBulkOperations({
   workspaceSlug,
   selectedIds,
   clearSelection,
+  selectOnly,
   onRefresh,
   t,
 }: UseBulkOperationsProps): UseBulkOperationsReturn {
@@ -76,19 +77,15 @@ export default function useBulkOperations({
       return;
     }
     try {
-      const isFromOpen = changeStatusTicket.status === "open";
-      const shouldPickup = isFromOpen && selectedStatus !== "open" && selectedStatus !== "discarded";
-
-      if (shouldPickup) {
-        await pickupTicket(workspaceSlug, changeStatusTicket.id, selectedStatus);
-      } else {
-        await changeTicketStatus(
-          workspaceSlug,
-          changeStatusTicket.id,
-          selectedStatus,
-          selectedStatus === "discarded" ? discardReason : undefined,
-        );
-      }
+      // A plain status change never assigns. Agents only reach this on tickets already assigned
+      // to them (open ones go through pickup), and a supervisor moving an open ticket leaves it
+      // unassigned on purpose so it can be assigned to someone else.
+      await changeTicketStatus(
+        workspaceSlug,
+        changeStatusTicket.id,
+        selectedStatus,
+        selectedStatus === "discarded" ? discardReason : undefined,
+      );
       toast.success(t("tickets.statusUpdated"));
       setChangeStatusTicket(null);
       setSelectedStatus("");
@@ -107,9 +104,19 @@ export default function useBulkOperations({
       return;
     }
     try {
-      await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
-      toast.success(`${selectedIds.size} ${t("tickets.bulkUpdated")}`);
-      clearSelection();
+      // The backend applies each ticket on its own and reports per ticket, so a partial failure
+      // (no permission, transition not allowed) still answers 200.
+      const results = await bulkChangeStatus(workspaceSlug, [...selectedIds], bulkSelectedStatus, reason);
+      const failedIds = results.filter((r) => !r.success).map((r) => r.ticketId);
+      const updatedCount = results.length - failedIds.length;
+      if (updatedCount > 0) toast.success(`${updatedCount} ${t("tickets.bulkUpdated")}`);
+      if (failedIds.length > 0) {
+        toast.error(`${failedIds.length} ${t("tickets.bulkNotUpdated")}`);
+        // Leave the rejected ones selected so they are easy to spot
+        selectOnly(failedIds);
+      } else {
+        clearSelection();
+      }
       setBulkStatusModal(false);
       setBulkSelectedStatus("");
       setBulkDiscardReason(false);

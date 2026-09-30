@@ -191,7 +191,7 @@ function WebhookForm({ slug, webhook, onSaved, onDirtyChange }: { slug: string; 
   };
 
   return (
-    <div className="p-6">
+    <div>
       <h2 className="text-lg font-body-bold text-heading mb-1">
         {isEdit ? t("webhooks.editTitle") : t("webhooks.addTitle")}
       </h2>

@@ -47,6 +47,7 @@ export interface WorkspaceMember {
   role: string;
   autoCreated: boolean;
   organizationId: string | null;
+  avatarUrl: string | null;
 }
 
 export interface UserListItem {
@@ -71,6 +72,11 @@ export async function listWorkspaces(sort?: {
 
 export async function getWorkspace(slug: string): Promise<WorkspaceDetail> {
   const res = await http.get<WorkspaceDetail>(`/workspaces/${slug}`);
+  return res.data;
+}
+
+export async function checkSlug(name: string): Promise<{ slug: string; available: boolean; suggestions: string[] }> {
+  const res = await http.get<{ slug: string; available: boolean; suggestions: string[] }>(`/workspaces/check-slug?name=${encodeURIComponent(name)}`);
   return res.data;
 }
 

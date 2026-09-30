@@ -28,7 +28,9 @@ import {
   PRIORITY_COLORS,
   STATUS_COLORS,
   STATUSES,
+  PICKUP_STATUSES,
 } from "../domain/ticket-enums";
+import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-ticket-status";
 import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import { Tag, listTags } from "@modules/tag/services/tag.service";
@@ -41,6 +43,8 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import TicketBoard from "../components/TicketBoard";
 import TicketDetailPage from "./TicketDetailPage";
+import TicketStatusModal from "../components/TicketStatusModal";
+import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketCreatePage from "./TicketCreatePage";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import useTicketFilters from "../hooks/useTicketFilters";
@@ -57,7 +61,7 @@ interface Column {
 }
 
 const BASE_COLUMNS: Column[] = [
-  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: false },
+  { key: "ticketNumber", labelKey: "tickets.col.number", sortable: true },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
   { key: "category", labelKey: "tickets.col.category", sortable: true },
   { key: "priority", labelKey: "tickets.col.priority", sortable: true },
@@ -99,11 +103,14 @@ export default function TicketsPage() {
 
   const COLUMNS = useMemo(() => {
     const cols = [...BASE_COLUMNS];
+    if (departments.length > 0) {
+      cols.splice(2, 0, { key: "department", labelKey: "ticketDetail.department", sortable: true });
+    }
     if (orgs.length > 0) {
-      cols.splice(2, 0, { key: "organization", labelKey: "ticketDetail.organization", sortable: false });
+      cols.splice(2, 0, { key: "organization", labelKey: "ticketDetail.organization", sortable: true });
     }
     return cols;
-  }, [orgs.length]);
+  }, [orgs.length, departments.length]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketMode, setTicketMode] = useState<"view" | "edit">("view");
   const [ticketDirty, setTicketDirty] = useState(false);
@@ -113,6 +120,11 @@ export default function TicketsPage() {
   const [assignTicketId, setAssignTicketId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [assignMode, setAssignMode] = useState<"assign" | "transfer">("assign");
+  const [pickupTarget, setPickupTarget] = useState<TicketListItem | null>(null);
+  const [pickupStatus, setPickupStatus] = useState<string>(PICKUP_STATUSES[0]);
+  // Discarding straight from the queue has its own state, apart from the change-status flow, so
+  // backing out of it closes it instead of falling back to the status picker.
+  const [discardTarget, setDiscardTarget] = useState<TicketListItem | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -151,6 +163,7 @@ export default function TicketsPage() {
     workspaceSlug,
     selectedIds,
     clearSelection,
+    selectOnly: (ids) => setSelectedIds(new Set(ids)),
     onRefresh: fetchTickets,
     t,
   });
@@ -198,6 +211,7 @@ export default function TicketsPage() {
   const tickets = result?.items ?? [];
   const tagMap = new Map(tags.map((t) => [t.id, t]));
   const orgMap = new Map(orgs.map((o) => [o.id, o]));
+  const deptMap = new Map(departments.map((d) => [d.id, d]));
 
   const formatDate = useFormatDate();
 
@@ -236,24 +250,11 @@ export default function TicketsPage() {
         </div>
       </div>
 
-      {/* Tier 2: Status tabs + Search + Filters popover */}
+      {/* Tier 2: Search + Filters popover */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-1 shrink-0">
-          {(["active", "resolved", "discarded"] as const).map((t_) => (
-            <button
-              key={t_}
-              onClick={() => { setTab(t_); setFilters({ ...filters, status: undefined, page: 1 }); }}
-              className={clsx(
-                "px-2.5 py-1 rounded text-xs font-body-medium transition-colors cursor-pointer whitespace-nowrap",
-                tab === t_ ? "bg-primary-600 text-on-primary" : "text-muted hover:bg-surface-hover",
-              )}
-            >
-              {t(`tickets.${t_}`)}
-            </button>
-          ))}
-        </div>
         <TicketFilterBar
           tab={tab}
+          setTab={setTab}
           filters={filters}
           setFilters={setFilters}
           filterTagIds={filterTagIds}
@@ -403,7 +404,7 @@ export default function TicketsPage() {
                     )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
-                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">#{ticket.ticketNumber}</span>}
+                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">{ticket.ticketNumber}</span>}
                         {col.key === "name" && (
                           <div className="flex items-center gap-1.5 max-w-xs">
                             {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (
@@ -417,6 +418,9 @@ export default function TicketsPage() {
                         )}
                         {col.key === "organization" && (
                           <span className="text-xs text-muted">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
+                        )}
+                        {col.key === "department" && (
+                          <span className="text-xs text-muted">{ticket.departmentId ? deptMap.get(ticket.departmentId)?.name ?? "—" : "—"}</span>
                         )}
                         {col.key === "category" && (() => {
                           const cat = categories.find((c) => c.id === ticket.categoryId);
@@ -449,11 +453,14 @@ export default function TicketsPage() {
                         const items = [
                           { label: t("tickets.view"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("view"); } },
                           ...(!isReporter && hasDirectAccess ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
-                          ...(can(P.TICKET_CHANGE_STATUS) && hasDirectAccess ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
+                          // Agents only on tickets assigned to them; an open one is picked up instead
+                          ...(can(P.TICKET_CHANGE_STATUS) && canMoveTicketStatus(ticket, user?.id, can) ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
                           // Admin/Supervisor: Assign (any ticket, any state except closed)
                           ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
-                          // Agent: Pickup (only open tickets)
-                          ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { pickupTicket(workspaceSlug!, ticket.id).then(() => { toast.success(t("tickets.pickedUp")); fetchTickets(); setBoardKey((k) => k + 1); }).catch(() => toast.error(t("tickets.pickupError"))); } }] : []),
+                          // Pickup into a chosen status (only open tickets); it assigns the ticket to whoever picks it up
+                          ...(can(P.TICKET_PICKUP) && isOpen ? [{ label: t("tickets.pickup"), onClick: () => { setPickupTarget(ticket); setPickupStatus(PICKUP_STATUSES[0]); } }] : []),
+                          // Agent: discard an open ticket straight from the queue (spam, duplicates)
+                          ...(canDiscardFromQueue(ticket, user?.id, can) ? [{ label: t("tickets.discard"), danger: true, onClick: () => setDiscardTarget(ticket) }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
@@ -488,98 +495,130 @@ export default function TicketsPage() {
 
       {/* Single ticket status change modal */}
       {bulk.changeStatusTicket && !bulk.showDiscardReason && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-            <p className="text-sm text-muted mb-4">{bulk.changeStatusTicket.name}</p>
-            <div className="flex flex-col gap-1.5 mb-6">
-              {STATUSES.map((s) => (
-                <button key={s} onClick={() => bulk.setSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.selectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
-                  {tEnum("status", s)}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button size="sm" color="light" onClick={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!bulk.selectedStatus || bulk.selectedStatus === bulk.changeStatusTicket.status} onClick={bulk.handleChangeStatus}>{t("ticketDetail.confirmSave")}</Button>
-            </div>
-          </div>
-        </div>
+        <TicketStatusModal
+          subtitle={bulk.changeStatusTicket.name}
+          selected={bulk.selectedStatus}
+          currentStatus={bulk.changeStatusTicket.status}
+          onSelect={bulk.setSelectedStatus}
+          onConfirm={bulk.handleChangeStatus}
+          onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}
+          t={t}
+          tEnum={tEnum}
+        />
+      )}
+
+      {/* Pickup into a chosen status */}
+      {pickupTarget && (
+        <TicketStatusModal
+          title={t("tickets.pickup")}
+          subtitle={pickupTarget.name}
+          selected={pickupStatus}
+          statuses={PICKUP_STATUSES}
+          onSelect={setPickupStatus}
+          onConfirm={async () => {
+            try {
+              await pickupTicket(workspaceSlug!, pickupTarget.id, pickupStatus);
+              toast.success(t("tickets.pickedUp"));
+              fetchTickets();
+              setBoardKey((k) => k + 1);
+            } catch {
+              toast.error(t("tickets.pickupError"));
+            }
+            setPickupTarget(null);
+          }}
+          onClose={() => setPickupTarget(null)}
+          t={t}
+          tEnum={tEnum}
+        />
+      )}
+
+      {/* Discard straight from the queue */}
+      {discardTarget && (
+        <TicketDiscardReasonModal
+          t={t}
+          tEnum={tEnum}
+          onCancel={() => setDiscardTarget(null)}
+          onSelectReason={async (reason) => {
+            const target = discardTarget;
+            setDiscardTarget(null);
+            try {
+              await changeTicketStatus(workspaceSlug!, target.id, "discarded", reason);
+              toast.success(t("tickets.statusUpdated"));
+              fetchTickets();
+            } catch {
+              toast.error(t("tickets.changeStatusError"));
+            }
+          }}
+        />
       )}
 
       {/* Single ticket discard reason modal */}
       {bulk.showDiscardReason && bulk.changeStatusTicket && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
-            <div className="flex flex-col gap-2">
-              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
-                <button
-                  key={reason}
-                  onClick={async () => {
-                    try {
-                      await changeTicketStatus(workspaceSlug!, bulk.changeStatusTicket!.id, "discarded", reason);
-                      toast.success(t("tickets.statusUpdated"));
-                      bulk.setChangeStatusTicket(null);
-                      bulk.setSelectedStatus("");
-                      bulk.setDiscardReason("");
-                      bulk.setShowDiscardReason(false);
-                      fetchTickets();
-                    } catch {
-                      toast.error(t("tickets.changeStatusError"));
-                    }
-                  }}
-                  className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
-                >
-                  {tEnum("discardReason", reason)}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">
-              {t("ticketDetail.cancel")}
-            </button>
+        <Sheet size="sm" onClose={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+          <div className="flex flex-col gap-2">
+            {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+              <button
+                key={reason}
+                onClick={async () => {
+                  try {
+                    await changeTicketStatus(workspaceSlug!, bulk.changeStatusTicket!.id, "discarded", reason);
+                    toast.success(t("tickets.statusUpdated"));
+                    bulk.setChangeStatusTicket(null);
+                    bulk.setSelectedStatus("");
+                    bulk.setDiscardReason("");
+                    bulk.setShowDiscardReason(false);
+                    fetchTickets();
+                  } catch {
+                    toast.error(t("tickets.changeStatusError"));
+                  }
+                }}
+                className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body"
+              >
+                {tEnum("discardReason", reason)}
+              </button>
+            ))}
           </div>
-        </div>
+          <button onClick={() => { bulk.setShowDiscardReason(false); bulk.setDiscardReason(""); }} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">
+            {t("ticketDetail.cancel")}
+          </button>
+        </Sheet>
       )}
 
       {/* Bulk status change modal */}
       {bulk.bulkStatusModal && !bulk.bulkDiscardReason && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
-            <p className="text-sm text-muted mb-4">{selectedIds.size} {t("tickets.ticketCount")}</p>
-            <div className="flex flex-col gap-1.5 mb-6">
-              {STATUSES.map((s) => (
-                <button key={s} onClick={() => bulk.setBulkSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.bulkSelectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
-                  {tEnum("status", s)}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button size="sm" color="light" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!bulk.bulkSelectedStatus} onClick={() => bulk.handleBulkStatusChange()}>{t("ticketDetail.confirmSave")}</Button>
-            </div>
+        <Sheet size="sm" onClose={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("tickets.changeStatus")}</h3>
+          <p className="text-sm text-muted mb-4">{selectedIds.size} {t("tickets.ticketCount")}</p>
+          <div className="flex flex-col gap-1.5 mb-6">
+            {STATUSES.map((s) => (
+              <button key={s} onClick={() => bulk.setBulkSelectedStatus(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-body-medium transition-colors cursor-pointer ${bulk.bulkSelectedStatus === s ? "bg-surface-active text-primary border border-primary/30" : "text-secondary-text hover:bg-surface-hover border border-transparent"}`}>
+                {tEnum("status", s)}
+              </button>
+            ))}
           </div>
-        </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" color="light" onClick={() => { bulk.setBulkStatusModal(false); bulk.setBulkSelectedStatus(""); }}>{t("ticketDetail.cancel")}</Button>
+            <Button size="sm" color="primary" disabled={!bulk.bulkSelectedStatus} onClick={() => bulk.handleBulkStatusChange()}>{t("ticketDetail.confirmSave")}</Button>
+          </div>
+        </Sheet>
       )}
 
       {/* Bulk discard reason modal */}
       {bulk.bulkDiscardReason && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => bulk.setBulkDiscardReason(false)}>
-          <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
-            <div className="flex flex-col gap-2">
-              {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
-                <button key={reason} onClick={() => bulk.handleBulkStatusChange(reason)} className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body">
-                  {tEnum("discardReason", reason)}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => bulk.setBulkDiscardReason(false)} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">{t("ticketDetail.cancel")}</button>
+        <Sheet size="sm" onClose={() => bulk.setBulkDiscardReason(false)}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t("ticketDetail.discardReasonTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t("ticketDetail.discardReasonMessage")}</p>
+          <div className="flex flex-col gap-2">
+            {(["duplicate", "spam", "no-response", "wont-fix"] as const).map((reason) => (
+              <button key={reason} onClick={() => bulk.handleBulkStatusChange(reason)} className="w-full text-left px-3 py-2 rounded text-sm hover:bg-surface-hover transition-colors cursor-pointer text-body">
+                {tEnum("discardReason", reason)}
+              </button>
+            ))}
           </div>
-        </div>
+          <button onClick={() => bulk.setBulkDiscardReason(false)} className="mt-3 text-xs text-subtle hover:text-secondary-text cursor-pointer">{t("ticketDetail.cancel")}</button>
+        </Sheet>
       )}
 
       {bulk.confirmBulkDelete && (
@@ -603,34 +642,31 @@ export default function TicketsPage() {
       )}
 
       {assignTicketId && workspaceSlug && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }} />
-          <div className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
-            <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
-            <Select
-              options={members.filter((m) => m.role !== "user")}
-              value={(m) => m.userId === assignTarget}
-              onChange={(m) => setAssignTarget(m.userId)}
-              label={(m) => `${m.firstName} ${m.lastName}`}
-              placeholder={t("ticketDetail.selectAssignee")}
-            />
-            <div className="flex gap-2 mt-4 justify-end">
-              <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
-              <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
-                const action = assignMode === "transfer"
-                  ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
-                  : assignTicket(workspaceSlug, assignTicketId, assignTarget);
-                const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
-                action
-                  .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
-                  .catch(() => toast.error(t("tickets.assignError")));
-                setAssignTicketId(null);
-                setAssignTarget(null);
-              }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
-            </div>
+        <Sheet size="sm" onClose={() => { setAssignTicketId(null); setAssignTarget(null); }}>
+          <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
+          <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
+          <Select
+            options={members.filter((m) => m.role !== "user")}
+            value={(m) => m.userId === assignTarget}
+            onChange={(m) => setAssignTarget(m.userId)}
+            label={(m) => `${m.firstName} ${m.lastName}`}
+            placeholder={t("ticketDetail.selectAssignee")}
+          />
+          <div className="flex gap-2 mt-4 justify-end">
+            <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
+            <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
+              const action = assignMode === "transfer"
+                ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
+                : assignTicket(workspaceSlug, assignTicketId, assignTarget);
+              const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
+              action
+                .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
+                .catch(() => toast.error(t("tickets.assignError")));
+              setAssignTicketId(null);
+              setAssignTarget(null);
+            }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
           </div>
-        </div>
+        </Sheet>
       )}
 
       {showDiscard && (
@@ -650,7 +686,7 @@ export default function TicketsPage() {
       )}
 
       {selectedTicketId && workspaceSlug && (
-        <Sheet onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
+        <Sheet hideClose onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
           <TicketDetailPage
             workspaceSlugProp={workspaceSlug}
             ticketIdProp={selectedTicketId}

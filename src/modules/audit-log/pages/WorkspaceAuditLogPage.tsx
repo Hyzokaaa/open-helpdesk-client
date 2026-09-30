@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
-import Select from "@modules/app/modules/ui/components/Select/Select";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
+import FilterPopover, { FilterChip, buildInitialState, getActiveFilterCount, getFilterChips, type FilterSection, type FilterState } from "@modules/app/modules/ui/components/FilterPopover/FilterPopover";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import { listMembers, WorkspaceMember } from "@modules/workspace/services/workspace.service";
@@ -16,41 +16,43 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 
-const ACTIONS = [
-  // Ticket
-  "ticket-created", "ticket-updated", "ticket-status-changed", "ticket-assigned",
-  "ticket-picked-up", "ticket-transferred", "ticket-deleted",
-  // Transfer
-  "transfer-request-created", "transfer-request-accepted", "transfer-request-rejected",
-  "transfer-request-cancelled", "transfer-request-expired",
-  // Comment
-  "comment-created",
-  // Workspace
-  "workspace-created", "workspace-updated", "workspace-deleted",
-  "workspace-palette-updated", "workspace-sla-updated", "workspace-import-started",
-  // Members
-  "member-added", "member-removed", "member-role-changed",
-  // Invitations
-  "invitation-created", "invitation-batch-created", "invitation-cancelled",
-  // Mailbox
-  "mailbox-created", "mailbox-updated", "mailbox-deleted",
-  "mailbox-paused", "mailbox-resumed", "mailbox-poll-triggered", "mailbox-import-started",
-  // Email
-  "imap-poll-completed", "imap-poll-failed", "email-received",
-  "email-sender-configured", "email-sender-deleted",
-  // Config
-  "custom-field-created", "custom-field-updated", "custom-field-deleted", "custom-field-reordered",
-  "tag-created", "tag-deleted",
-  "canned-response-created", "canned-response-updated", "canned-response-deleted",
-  "webhook-created", "webhook-updated", "webhook-deleted",
-  "api-key-created", "api-key-deleted",
-  // KB
-  "kb-category-created", "kb-category-updated", "kb-category-deleted",
-  "kb-article-created", "kb-article-updated", "kb-article-deleted",
-  // SLA
-  "sla-first-response-breached", "sla-resolution-breached",
-  // Portal
-  "portal-ticket-created",
+const ACTION_GROUPS: { value: string; group: string }[] = [
+  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
+  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
+  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
+  { value: "ticket-deleted", group: "Ticket" },
+  { value: "transfer-request-created", group: "Transfer" }, { value: "transfer-request-accepted", group: "Transfer" },
+  { value: "transfer-request-rejected", group: "Transfer" }, { value: "transfer-request-cancelled", group: "Transfer" },
+  { value: "transfer-request-expired", group: "Transfer" },
+  { value: "comment-created", group: "Ticket" },
+  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
+  { value: "workspace-deleted", group: "Workspace" }, { value: "workspace-palette-updated", group: "Workspace" },
+  { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
+  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
+  { value: "member-role-changed", group: "Members" },
+  { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
+  { value: "invitation-cancelled", group: "Members" },
+  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
+  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
+  { value: "mailbox-resumed", group: "Email" }, { value: "mailbox-poll-triggered", group: "Email" },
+  { value: "mailbox-import-started", group: "Email" },
+  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
+  { value: "imap-poll-failed", group: "Email" }, { value: "email-received", group: "Email" },
+  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
+  { value: "custom-field-created", group: "Config" }, { value: "custom-field-updated", group: "Config" },
+  { value: "custom-field-deleted", group: "Config" }, { value: "custom-field-reordered", group: "Config" },
+  { value: "tag-created", group: "Config" }, { value: "tag-deleted", group: "Config" },
+  { value: "canned-response-created", group: "Config" }, { value: "canned-response-updated", group: "Config" },
+  { value: "canned-response-deleted", group: "Config" },
+  { value: "webhook-created", group: "Config" }, { value: "webhook-updated", group: "Config" },
+  { value: "webhook-deleted", group: "Config" },
+  { value: "api-key-created", group: "Config" }, { value: "api-key-deleted", group: "Config" },
+  { value: "kb-category-created", group: "Knowledge Base" }, { value: "kb-category-updated", group: "Knowledge Base" },
+  { value: "kb-category-deleted", group: "Knowledge Base" },
+  { value: "kb-article-created", group: "Knowledge Base" }, { value: "kb-article-updated", group: "Knowledge Base" },
+  { value: "kb-article-deleted", group: "Knowledge Base" },
+  { value: "sla-first-response-breached", group: "SLA" }, { value: "sla-resolution-breached", group: "SLA" },
+  { value: "portal-ticket-created", group: "Ticket" },
 ];
 
 const ENTITY_TYPES = [
@@ -149,7 +151,47 @@ export default function WorkspaceAuditLogPage() {
   const [denied, setDenied] = useState<'permission' | 'upgrade' | false>(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [searchInput, setSearchInput] = useState("");
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
+
+  const filterSections: FilterSection[] = useMemo(() => [
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
+    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
+    { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
+    { key: "userIds", label: t("auditLog.col.user"), type: "multi", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
+  ], [t, members]);
+
+  const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
+
+  const handleFilterChange = (newState: FilterState) => {
+    setFilterState(newState);
+    const getSelected = (key: string) => {
+      const val = newState[key];
+      return val?.type === "multi" && val.selected.length > 0 ? val.selected : undefined;
+    };
+    setFilters({
+      ...filters,
+      actions: getSelected("actions"),
+      entityTypes: getSelected("entityTypes"),
+      categories: getSelected("categories"),
+      userIds: getSelected("userIds"),
+      page: 1,
+    });
+  };
+
+  const activeFilterCount = getActiveFilterCount(filterState);
+  const filterChips = getFilterChips(filterSections, filterState);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setSelected(null);
+  }, []);
+
+  useEffect(() => {
+    if (selected) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [selected, handleEscape]);
 
   const fetchLog = () => {
     if (!workspaceSlug) return;
@@ -203,45 +245,57 @@ export default function WorkspaceAuditLogPage() {
     <div className="w-full">
       <h2 className="text-lg font-body-bold text-heading mb-4">{t("auditLog.title")}</h2>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="w-44">
-          <Select
-            options={["all", ...ACTIONS]}
-            label={(a) => a === "all" ? t("auditLog.allActions") : t(`auditLog.action.${a}` as any)}
-            value={(a) => a === (filters.action ?? "all")}
-            onChange={(a) => setFilters({ ...filters, action: a === "all" ? undefined : a, page: 1 })}
-            placeholder={t("auditLog.allActions")}
+      {/* Search + Filters */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="relative flex-1 max-w-sm">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              const val = e.target.value.trim();
+              clearTimeout((window as any).__auditSearchTimer);
+              (window as any).__auditSearchTimer = setTimeout(() => {
+                setFilters(f => ({ ...f, search: val || undefined, page: 1 }));
+              }, 500);
+            }}
+            placeholder={t("auditLog.search")}
+            className="w-full pl-8 pr-3 py-1.5 rounded-input border-input bg-surface text-sm text-body placeholder:text-muted focus:outline-none focus:border-primary-400 transition-colors"
           />
         </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...ENTITY_TYPES]}
-            label={(e) => e === "all" ? t("auditLog.allEntities") : t(`auditLog.entity.${e}` as any)}
-            value={(e) => e === (filters.entityType ?? "all")}
-            onChange={(e) => setFilters({ ...filters, entityType: e === "all" ? undefined : e, page: 1 })}
-            placeholder={t("auditLog.allEntities")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...CATEGORIES]}
-            label={(c) => c === "all" ? t("auditLog.allCategories") : t(`auditLog.category.${c}` as any)}
-            value={(c) => c === (filters.category ?? "all")}
-            onChange={(c) => setFilters({ ...filters, category: c === "all" ? undefined : c, page: 1 })}
-            placeholder={t("auditLog.allCategories")}
-          />
-        </div>
-        <div className="w-44">
-          <Select
-            options={["all", ...members.map((m) => m.userId)]}
-            label={(id) => id === "all" ? t("auditLog.allUsers") : getMemberName(id)}
-            value={(id) => id === (filters.userId ?? "all")}
-            onChange={(id) => setFilters({ ...filters, userId: id === "all" ? undefined : id, page: 1 })}
-            placeholder={t("auditLog.allUsers")}
-          />
+        <div className="ml-auto">
+          <FilterPopover sections={filterSections} state={filterState} onChange={handleFilterChange} />
         </div>
       </div>
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {filterChips.map((chip) => (
+            <FilterChip
+              key={chip.key}
+              label={chip.label}
+              onRemove={() => {
+                if (chip.summary) {
+                  handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: [] } });
+                } else {
+                  const val = filterState[chip.sectionKey];
+                  if (val?.type === "multi") {
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "multi", selected: val.selected.filter(v => v !== chip.value) } });
+                  } else {
+                    handleFilterChange({ ...filterState, [chip.sectionKey]: { type: "single", value: undefined } });
+                  }
+                }
+              }}
+            />
+          ))}
+          <button
+            onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters({ page: 1, limit: 20 }); }}
+            className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
+          >
+            {t("filters.clearAll")}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
@@ -280,7 +334,7 @@ export default function WorkspaceAuditLogPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} />
+                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} />
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">
@@ -288,12 +342,17 @@ export default function WorkspaceAuditLogPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelected(item)}
-                        className="text-xs text-primary hover:underline cursor-pointer"
-                      >
-                        {t("auditLog.view")}
-                      </button>
+                      {(() => {
+                        const hasMetadataMatch = filters.search && item.metadata && JSON.stringify(item.metadata).toLowerCase().includes(filters.search.toLowerCase());
+                        return (
+                          <button
+                            onClick={() => setSelected(item)}
+                            className={`text-xs cursor-pointer ${hasMetadataMatch ? "bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-body-semibold" : "text-primary hover:underline"}`}
+                          >
+                            {t("auditLog.view")}{hasMetadataMatch ? " ●" : ""}
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -352,18 +411,12 @@ export default function WorkspaceAuditLogPage() {
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
               <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
-              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} />
+              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
               <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? getMemberName(selected.userId) : t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                {selected.metadata ? (
-                  <pre className="text-xs text-body bg-surface-hover rounded p-3 overflow-x-auto whitespace-pre-wrap break-all">
-                    {JSON.stringify(selected.metadata, null, 2)}
-                  </pre>
-                ) : (
-                  <span className="text-xs text-muted">—</span>
-                )}
+                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
@@ -374,16 +427,27 @@ export default function WorkspaceAuditLogPage() {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value, search }: { label: string; value: string; search?: string }) {
   return (
     <div>
       <p className="text-xs font-body-semibold text-subtle uppercase mb-0.5">{label}</p>
-      <p className="text-sm text-body break-all">{value}</p>
+      <p className="text-sm text-body break-all">{search ? <HighlightText text={value} search={search} /> : value}</p>
     </div>
   );
 }
 
-export function MetadataSummary({ metadata, action, t }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string }) {
+export function HighlightText({ text, search }: { text: string; search?: string }): ReactNode {
+  if (!search || !text) return text;
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    regex.test(part) ? <mark key={i} className="bg-yellow-200/70 text-inherit rounded-sm px-0.5">{part}</mark> : part,
+  );
+}
+
+export function MetadataSummary({ metadata, action, t, search }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const parts: string[] = [];
@@ -430,5 +494,39 @@ export function MetadataSummary({ metadata, action, t }: { metadata: Record<stri
   if (metadata.provider) parts.push(String(metadata.provider));
 
   if (parts.length === 0) return <span className="text-xs text-muted">—</span>;
-  return <span className="text-xs text-muted">{parts.join(" — ")}</span>;
+  const joined = parts.join(" — ");
+  return <span className="text-xs text-muted">{search ? <HighlightText text={joined} search={search} /> : joined}</span>;
+}
+
+export function MetadataKeyValue({ metadata, search }: { metadata: Record<string, unknown> | null; search?: string }) {
+  if (!metadata) return <span className="text-xs text-muted">—</span>;
+
+  const before = metadata.before as Record<string, unknown> | undefined;
+  const after = metadata.after as Record<string, unknown> | undefined;
+
+  const entries = Object.entries(metadata).filter(([key]) => key !== "before" && key !== "after");
+
+  // Merge before/after into diff rows
+  if (before && after) {
+    for (const key of Object.keys(after)) {
+      if (String(before[key]) !== String(after[key])) {
+        entries.push([key, `${before[key] ?? "—"} → ${after[key] ?? "—"}`]);
+      }
+    }
+  }
+
+  if (entries.length === 0) return <span className="text-xs text-muted">—</span>;
+
+  return (
+    <div className="bg-surface-hover rounded p-3 space-y-2">
+      {entries.map(([key, val]) => (
+        <div key={key} className="flex gap-2 items-baseline">
+          <span className="text-xs font-body-semibold text-subtle min-w-[80px] shrink-0">{key}</span>
+          <span className="text-xs text-body break-all">
+            {search ? <HighlightText text={String(val)} search={search} /> : String(val)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }

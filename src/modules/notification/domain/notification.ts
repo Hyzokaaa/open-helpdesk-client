@@ -20,6 +20,7 @@ export interface NotificationPreferences {
   inAppTicketCreated: boolean;
   inAppTicketAssigned: boolean;
   inAppStatusChanged: boolean;
+  inAppTicketUnassigned: boolean;
   inAppCommentCreated: boolean;
   inAppTransferRequest: boolean;
   emailUpgradeAvailable: boolean;

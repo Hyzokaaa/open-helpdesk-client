@@ -1,9 +1,9 @@
-import clsx from "clsx";
-import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
+import UserAvatar from "@modules/user/components/UserAvatar";
+import MemberLink from "./MemberLink";
+import PropertyRow from "./PropertyRow";
 import TagSelector from "@modules/tag/components/TagSelector";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
 import SlaStatusCard from "./SlaStatusCard";
@@ -35,8 +35,6 @@ interface TicketDetailSidebarProps {
   canChangeStatus: boolean;
   canEditFields: boolean;
   canAssign: boolean;
-  canTransfer: boolean | null;
-  canDelete: boolean;
   canEditTags: boolean;
   canEditCustomFields: boolean;
   isTerminal: boolean;
@@ -50,7 +48,6 @@ interface TicketDetailSidebarProps {
   workspaceTags: Tag[];
   departments: Department[];
   organizations: Organization[];
-  assignableMembers: WorkspaceMember[];
   customFieldDefs: CustomFieldDefinition[];
   slaPolicy: SlaPolicy | null;
   slaLocked: boolean;
@@ -61,333 +58,172 @@ interface TicketDetailSidebarProps {
   fetchTicket: (refreshActivity?: boolean) => void;
   fetchParticipants: () => void;
   handleDraftStatusChange: (status: string) => void;
-  handleDelete: () => void;
-  setShowTransferModal: (show: boolean) => void;
   navigate: (path: string) => void;
   formatDate: (date: string) => string;
   t: (key: any) => string;
   tEnum: (prefix: string, value: string) => string;
 }
 
+const EMPTY = <span className="text-xs text-muted">—</span>;
+
 export default function TicketDetailSidebar({
   ticket, draft, setDraft,
   isEditing,
-  canChangeStatus, canEditFields, canAssign, canTransfer, canDelete, canEditTags, canEditCustomFields,
+  canChangeStatus, canEditFields, canAssign, canEditTags, canEditCustomFields,
   isTerminal,
   pendingTransfer, participants, members,
   wsCategories, wsProjects, editCategories, setEditCategories,
   workspaceTags, departments, organizations,
-  assignableMembers, customFieldDefs,
+  customFieldDefs,
   slaPolicy, slaLocked,
   workspaceSlug, ticketId, userId,
   getMemberName, fetchTicket, fetchParticipants,
-  handleDraftStatusChange, handleDelete, setShowTransferModal,
+  handleDraftStatusChange,
   navigate, formatDate, t, tEnum,
 }: TicketDetailSidebarProps) {
+  const editing = isEditing && draft !== null;
+  const v = draft ?? ticket;
+
   return (
     <div className="space-y-4">
-      {isEditing && draft ? (
-        <>
-          <Card className="p-4">
-            {canChangeStatus ? (
-              <FormInput label={t("ticketDetail.status")} className={clsx("!mb-0")}>
-                <Select
-                  options={[...STATUSES]}
-                  label={(s) => tEnum("status", s)}
-                  value={(s) => s === draft.status}
-                  onChange={handleDraftStatusChange}
-                />
-              </FormInput>
-            ) : (
-              <>
-                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.status")}</p>
-                <StatusBadge label={tEnum("status", draft.status)} color={STATUS_COLORS[draft.status] || "gray"} />
-              </>
-            )}
-          </Card>
+      <Card className="p-4">
+        <p className="text-xs text-subtle font-body-semibold mb-1">
+          {t("ticketDetail.properties")}
+        </p>
 
-          <Card className="p-4">
-            {canEditFields ? (
-              <FormInput label={t("ticketDetail.priority")} className={clsx("!mb-0")}>
-                <Select
-                  options={[...PRIORITIES]}
-                  label={(p) => tEnum("priority", p)}
-                  value={(p) => p === draft.priority}
-                  onChange={(p) => setDraft((d) => d ? { ...d, priority: p } : d)}
-                />
-              </FormInput>
+        <div className="divide-y divide-border-card/50">
+          <PropertyRow label={t("ticketDetail.status")} control={editing && canChangeStatus}>
+            {editing && canChangeStatus ? (
+              <Select
+                options={[...STATUSES]}
+                label={(s) => tEnum("status", s)}
+                value={(s) => s === v.status}
+                onChange={handleDraftStatusChange}
+              />
             ) : (
-              <>
-                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.priority")}</p>
-                <StatusBadge label={tEnum("priority", draft.priority)} color={PRIORITY_COLORS[draft.priority] || "gray"} />
-              </>
+              <StatusBadge label={tEnum("status", v.status)} color={STATUS_COLORS[v.status] || "gray"} size="xs" />
             )}
-          </Card>
+          </PropertyRow>
+
+          <PropertyRow label={t("ticketDetail.priority")} control={editing && canEditFields}>
+            {editing && canEditFields ? (
+              <Select
+                options={[...PRIORITIES]}
+                label={(p) => tEnum("priority", p)}
+                value={(p) => p === v.priority}
+                onChange={(p) => setDraft((d) => d ? { ...d, priority: p } : d)}
+              />
+            ) : (
+              <StatusBadge label={tEnum("priority", v.priority)} color={PRIORITY_COLORS[v.priority] || "gray"} size="xs" />
+            )}
+          </PropertyRow>
 
           {wsProjects.length > 0 && (
-            <Card className="p-4">
-              {canEditFields ? (
-                <FormInput label={t("ticketDetail.project")} className={clsx("!mb-0")}>
-                  <Select
-                    options={[{ id: "", name: "—", description: null } as Project, ...wsProjects]}
-                    label={(p) => p.name}
-                    value={(p) => p.id === (draft.projectId ?? "")}
-                    onChange={(p) => {
-                      const newProjectId = p.id || null;
-                      setDraft((d) => d ? { ...d, projectId: newProjectId } : d);
-                      if (newProjectId && workspaceSlug) {
-                        listCategories(workspaceSlug, newProjectId).then((cats) => {
-                          const inProject = cats.filter((c) => c.inProject);
-                          setEditCategories(inProject.length > 0 ? inProject : wsCategories);
-                          if (draft && inProject.length > 0 && !inProject.some((c) => c.id === draft.categoryId)) {
-                            const def = inProject[0];
-                            if (def) setDraft((d) => d ? { ...d, categoryId: def.id } : d);
-                          }
-                        });
-                      } else {
-                        setEditCategories(wsCategories);
-                      }
-                    }}
-                  />
-                </FormInput>
-              ) : (
-                <>
-                  <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.project")}</p>
-                  {draft.projectId ? (
-                    <StatusBadge label={wsProjects.find((p) => p.id === draft.projectId)?.name ?? "—"} color="primary" size="xs" />
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
-                  )}
-                </>
-              )}
-            </Card>
+            <PropertyRow label={t("ticketDetail.project")} control={editing && canEditFields}>
+              {editing && canEditFields ? (
+                <Select
+                  options={[{ id: "", name: "—", description: null } as Project, ...wsProjects]}
+                  label={(p) => p.name}
+                  value={(p) => p.id === (v.projectId ?? "")}
+                  onChange={(p) => {
+                    const newProjectId = p.id || null;
+                    setDraft((d) => d ? { ...d, projectId: newProjectId } : d);
+                    if (newProjectId && workspaceSlug) {
+                      listCategories(workspaceSlug, newProjectId).then((cats) => {
+                        const inProject = cats.filter((c) => c.inProject);
+                        setEditCategories(inProject.length > 0 ? inProject : wsCategories);
+                        if (draft && inProject.length > 0 && !inProject.some((c) => c.id === draft.categoryId)) {
+                          const def = inProject[0];
+                          if (def) setDraft((d) => d ? { ...d, categoryId: def.id } : d);
+                        }
+                      });
+                    } else {
+                      setEditCategories(wsCategories);
+                    }
+                  }}
+                />
+              ) : v.projectId ? (
+                <StatusBadge label={wsProjects.find((p) => p.id === v.projectId)?.name ?? "—"} color="primary" size="xs" />
+              ) : EMPTY}
+            </PropertyRow>
           )}
 
-          <Card className="p-4">
-            {canEditFields ? (
-              <FormInput label={t("ticketDetail.category")} className={clsx("!mb-0")}>
-                <Select
-                  options={editCategories.length > 0 ? editCategories : wsCategories}
-                  label={(c) => c.name}
-                  value={(c) => c.id === draft.categoryId}
-                  onChange={(c) => setDraft((d) => d ? { ...d, categoryId: c.id } : d)}
-                />
-              </FormInput>
-            ) : (
-              <>
-                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.category")}</p>
-                {(() => { const cat = wsCategories.find((c) => c.id === draft.categoryId); return <StatusBadge label={cat?.name ?? "—"} color={(cat?.color as any) || "primary"} size="xs" />; })()}
-              </>
-            )}
-          </Card>
+          <PropertyRow label={t("ticketDetail.category")} control={editing && canEditFields}>
+            {editing && canEditFields ? (
+              <Select
+                options={editCategories.length > 0 ? editCategories : wsCategories}
+                label={(c) => c.name}
+                value={(c) => c.id === v.categoryId}
+                onChange={(c) => setDraft((d) => d ? { ...d, categoryId: c.id } : d)}
+              />
+            ) : (() => {
+              const cat = wsCategories.find((c) => c.id === v.categoryId);
+              return <StatusBadge label={cat?.name ?? "—"} color={(cat?.color as any) || "primary"} size="xs" />;
+            })()}
+          </PropertyRow>
 
           {departments.length > 0 && (
-            <Card className="p-4">
-              {canAssign ? (
-                <FormInput label={t("ticketDetail.department")} className="!mb-0">
-                  <Select
-                    options={[{ id: "", name: "—", description: "" } as Department, ...departments]}
-                    label={(d) => d.name}
-                    value={(d) => d.id === (draft.departmentId ?? "")}
-                    onChange={(d) => setDraft((prev) => prev ? { ...prev, departmentId: d.id || null } : prev)}
-                  />
-                </FormInput>
-              ) : (
-                <>
-                  <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
-                  {draft.departmentId ? (
-                    <StatusBadge label={departments.find((d) => d.id === draft.departmentId)?.name ?? "—"} color="primary" size="xs" />
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
-                  )}
-                </>
-              )}
-            </Card>
+            <PropertyRow label={t("ticketDetail.department")} control={editing && canAssign}>
+              {editing && canAssign ? (
+                <Select
+                  options={[{ id: "", name: "—", description: "" } as Department, ...departments]}
+                  label={(d) => d.name}
+                  value={(d) => d.id === (v.departmentId ?? "")}
+                  onChange={(d) => setDraft((prev) => prev ? { ...prev, departmentId: d.id || null } : prev)}
+                />
+              ) : v.departmentId ? (
+                <StatusBadge label={departments.find((d) => d.id === v.departmentId)?.name ?? "—"} color="primary" size="xs" />
+              ) : EMPTY}
+            </PropertyRow>
           )}
 
           {organizations.length > 0 && (
-            <Card className="p-4">
-              {canAssign ? (
-                <FormInput label={t("ticketDetail.organization")} className="!mb-0">
-                  <Select
-                    options={[{ id: "", name: "—", description: null, notes: null, domains: [], logo: null } as Organization, ...organizations]}
-                    label={(o) => o.name}
-                    value={(o) => o.id === (draft.organizationId ?? "")}
-                    onChange={(o) => setDraft((prev) => prev ? { ...prev, organizationId: o.id || null } : prev)}
-                  />
-                </FormInput>
-              ) : (
-                <>
-                  <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.organization")}</p>
-                  {draft.organizationId ? (
-                    <StatusBadge label={organizations.find((o) => o.id === draft.organizationId)?.name ?? "—"} color="primary" size="xs" />
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
-                  )}
-                </>
-              )}
-            </Card>
-          )}
-
-          {canAssign ? (
-            <Card className="p-4">
-              <FormInput label={t("ticketDetail.assignee")} className="!mb-0">
+            <PropertyRow label={t("ticketDetail.organization")} control={editing && canAssign}>
+              {editing && canAssign ? (
                 <Select
-                  options={assignableMembers}
-                  label={(m) => `${m.firstName} ${m.lastName}`}
-                  value={(m) => m.userId === draft.assigneeId}
-                  onChange={(m) => setDraft((d) => d ? { ...d, assigneeId: m.userId } : d)}
-                  placeholder={t("ticketDetail.selectAssignee")}
+                  options={[{ id: "", name: "—", description: null, notes: null, domains: [], logo: null } as Organization, ...organizations]}
+                  label={(o) => o.name}
+                  value={(o) => o.id === (v.organizationId ?? "")}
+                  onChange={(o) => setDraft((prev) => prev ? { ...prev, organizationId: o.id || null } : prev)}
                 />
-              </FormInput>
-            </Card>
-          ) : ticket.assigneeId ? (
-            <Card className="p-4">
-              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-              <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
-              {canTransfer && !pendingTransfer && (
-                <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
-                  {t("tickets.transfer")}
-                </Button>
-              )}
-            </Card>
-          ) : null}
-
-          {pendingTransfer && workspaceSlug && ticketId && (
-            <PendingTransferCard
-              pendingTransfer={pendingTransfer}
-              workspaceSlug={workspaceSlug}
-              ticketId={ticketId}
-              userId={userId}
-              fetchTicket={fetchTicket}
-              t={t}
-            />
+              ) : v.organizationId ? (
+                <StatusBadge label={organizations.find((o) => o.id === v.organizationId)?.name ?? "—"} color="primary" size="xs" />
+              ) : EMPTY}
+            </PropertyRow>
           )}
 
-          <Card className="p-4">
-            <FormInput label={t("ticketDetail.tags")} className="!mb-0">
-              <TagSelector
-                tags={workspaceTags}
-                selectedIds={draft.tagIds}
-                onChange={(ids) => setDraft((d) => d ? { ...d, tagIds: ids } : d)}
-                disabled={!canEditTags}
-              />
-            </FormInput>
-          </Card>
-
-          {customFieldDefs.length > 0 && (
-            <Card className="p-4">
-              {canEditCustomFields ? (
-                <CustomFieldsForm
-                  definitions={customFieldDefs}
-                  values={draft.customFields}
-                  onChange={(values) => setDraft((d) => d ? { ...d, customFields: values } : d)}
-                />
-              ) : (
-                <CustomFieldsReadonly definitions={customFieldDefs} values={draft.customFields} />
-              )}
-            </Card>
-          )}
-        </>
-      ) : (
-        <>
-          <Card className="p-4">
-            <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.status")}</p>
-            <StatusBadge label={tEnum("status", ticket.status)} color={STATUS_COLORS[ticket.status] || "gray"} />
-          </Card>
-
-          <Card className="p-4">
-            <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.priority")}</p>
-            <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} />
-          </Card>
-
-          {ticket.projectId && (() => {
-            const proj = wsProjects.find((p) => p.id === ticket.projectId);
-            return proj ? (
-              <Card className="p-4">
-                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.project")}</p>
-                <StatusBadge label={proj.name} color="primary" size="xs" />
-              </Card>
-            ) : null;
-          })()}
-
-          <Card className="p-4">
-            <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.category")}</p>
-            {(() => { const cat = wsCategories.find((c) => c.id === ticket.categoryId); return <StatusBadge label={cat?.name ?? "—"} color={(cat?.color as any) || "primary"} size="xs" />; })()}
-          </Card>
-
-          <Card className="p-4">
-            <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.source")}</p>
+          <PropertyRow label={t("ticketDetail.source")}>
             <StatusBadge label={tEnum("source", ticket.source)} color="gray" size="xs" />
-          </Card>
+          </PropertyRow>
 
-          {ticket.originDate && (
-            <Card className="p-4">
-              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.originalDate")}</p>
-              <p className="text-sm text-body">{formatDate(ticket.originDate)}</p>
-            </Card>
-          )}
-
-          {ticket.departmentId && (() => {
-            const dept = departments.find((d) => d.id === ticket.departmentId);
-            return dept ? (
-              <Card className="p-4">
-                <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.department")}</p>
-                <StatusBadge label={dept.name} color="primary" size="xs" />
-              </Card>
-            ) : null;
-          })()}
-
-          {ticket.assigneeId && (
-            <Card className="p-4">
-              <p className="text-xs text-subtle font-body-medium mb-1">{t("ticketDetail.assignee")}</p>
-              <p className="text-sm text-body font-body-medium">{getMemberName(ticket.assigneeId)}</p>
-              {canTransfer && !pendingTransfer && (
-                <Button size="xs" color="light" className="mt-2 w-full" onClick={() => { setShowTransferModal(true); }}>
-                  {t("tickets.transfer")}
-                </Button>
-              )}
-            </Card>
-          )}
-
-          {pendingTransfer && workspaceSlug && ticketId && (
-            <PendingTransferCard
-              pendingTransfer={pendingTransfer}
-              workspaceSlug={workspaceSlug}
-              ticketId={ticketId}
-              userId={userId}
-              fetchTicket={fetchTicket}
-              t={t}
-            />
-          )}
-
-          <Card className="p-4">
-            <FormInput label={t("ticketDetail.tags")} className="!mb-0">
-              <TagSelector
-                tags={workspaceTags}
-                selectedIds={ticket.tagIds}
-                onChange={() => {}}
-                disabled
-              />
-            </FormInput>
-          </Card>
-
-          {customFieldDefs.length > 0 && (
-            <Card className="p-4">
-              <CustomFieldsReadonly definitions={customFieldDefs} values={ticket.customFields ?? {}} />
-            </Card>
-          )}
-        </>
-      )}
-
-      <TicketFollowersCard
-        participants={participants}
-        canAssign={canAssign}
-        workspaceSlug={workspaceSlug}
-        ticketId={ticketId}
-        fetchParticipants={fetchParticipants}
-        t={t}
-      />
+          {/* People close the block: badges first, avatars last, so each kind groups by shape.
+              Assignee is read-only on purpose — assigning notifies people, so it is an action. */}
+          {([
+            [t("ticketDetail.assignee"), v.assigneeId],
+            [t("ticketDetail.reportedBy"), ticket.reporterId],
+            ...(ticket.registeredById ? [[t("ticketDetail.registeredBy"), ticket.registeredById] as const] : []),
+          ] as const).map(([label, personId]) => {
+            const person = members.find((m) => m.userId === personId);
+            return (
+              <PropertyRow key={label} label={label}>
+                {personId ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserAvatar avatarUrl={person?.avatarUrl} firstName={person?.firstName} lastName={person?.lastName} size="xs" />
+                    <MemberLink
+                      userId={personId}
+                      members={members}
+                      getMemberName={getMemberName}
+                      navigate={navigate}
+                      workspaceSlug={workspaceSlug}
+                      align="left"
+                    />
+                  </div>
+                ) : EMPTY}
+              </PropertyRow>
+            );
+          })}
+        </div>
+      </Card>
 
       <TicketDetailsCard
         ticket={ticket}
@@ -397,6 +233,50 @@ export default function TicketDetailSidebar({
         workspaceSlug={workspaceSlug}
         isTerminal={isTerminal}
         formatDate={formatDate}
+        t={t}
+      />
+
+      {pendingTransfer && workspaceSlug && ticketId && (
+        <PendingTransferCard
+          pendingTransfer={pendingTransfer}
+          workspaceSlug={workspaceSlug}
+          ticketId={ticketId}
+          userId={userId}
+          fetchTicket={fetchTicket}
+          t={t}
+        />
+      )}
+
+      <Card className="p-4">
+        <p className="text-xs text-subtle font-body-semibold mb-2">{t("ticketDetail.tags")}</p>
+        <TagSelector
+          tags={workspaceTags}
+          selectedIds={v.tagIds}
+          onChange={(ids) => setDraft((d) => d ? { ...d, tagIds: ids } : d)}
+          disabled={!editing || !canEditTags}
+        />
+      </Card>
+
+      {customFieldDefs.length > 0 && (
+        <Card className="p-4">
+          {editing && canEditCustomFields ? (
+            <CustomFieldsForm
+              definitions={customFieldDefs}
+              values={v.customFields ?? {}}
+              onChange={(values) => setDraft((d) => d ? { ...d, customFields: values } : d)}
+            />
+          ) : (
+            <CustomFieldsReadonly definitions={customFieldDefs} values={v.customFields ?? {}} />
+          )}
+        </Card>
+      )}
+
+      <TicketFollowersCard
+        participants={participants}
+        canAssign={canAssign}
+        workspaceSlug={workspaceSlug}
+        ticketId={ticketId}
+        fetchParticipants={fetchParticipants}
         t={t}
       />
 
@@ -420,16 +300,6 @@ export default function TicketDetailSidebar({
         </Card>
       )}
 
-      {canDelete && (
-        <Button
-          size="xs"
-          color="danger"
-          full
-          onClick={handleDelete}
-        >
-          {t("ticketDetail.deleteTicket")}
-        </Button>
-      )}
     </div>
   );
 }

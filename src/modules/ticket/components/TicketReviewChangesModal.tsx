@@ -1,4 +1,5 @@
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import type { FieldChange } from "../domain/get-ticket-changes";
 
 interface Props {
@@ -11,9 +12,9 @@ interface Props {
 
 export default function TicketReviewChangesModal({ changes, saving, onConfirm, onCancel, t }: Props) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={onCancel}>
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-body-bold text-heading mb-4">{t("ticketDetail.reviewChangesTitle")}</h3>
+    <Sheet size="md" onClose={onCancel}>
+      <h3 className="text-base font-body-bold text-heading mb-4">{t("ticketDetail.reviewChangesTitle")}</h3>
+      <div className="overflow-x-auto">
         <table className="w-full text-sm mb-4" style={{ borderSpacing: "0 4px" }}>
           <thead>
             <tr className="text-left text-xs text-subtle border-b border-border-row">
@@ -32,11 +33,11 @@ export default function TicketReviewChangesModal({ changes, saving, onConfirm, o
             ))}
           </tbody>
         </table>
-        <div className="flex justify-end gap-2">
-          <Button size="xs" color="light" onClick={onCancel}>{t("ticketDetail.cancel")}</Button>
-          <Button size="xs" color="primary" loading={saving} onClick={onConfirm}>{t("ticketDetail.confirmSave")}</Button>
-        </div>
       </div>
-    </div>
+      <div className="flex justify-end gap-2">
+        <Button size="xs" color="light" onClick={onCancel}>{t("ticketDetail.cancel")}</Button>
+        <Button size="xs" color="primary" loading={saving} onClick={onConfirm}>{t("ticketDetail.confirmSave")}</Button>
+      </div>
+    </Sheet>
   );
 }

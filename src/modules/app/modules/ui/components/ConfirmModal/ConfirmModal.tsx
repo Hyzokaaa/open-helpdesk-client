@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import Button from "../Button/Button";
+import { useModalLayer } from "../../shared/domain/modal-stack";
 
 interface Props {
   title: string;
@@ -19,6 +21,16 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: Props) {
+  const layer = useModalLayer();
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && layer.isTop()) onCancel();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onCancel, layer]);
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
