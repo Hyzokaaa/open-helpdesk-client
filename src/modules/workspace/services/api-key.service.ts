@@ -33,7 +33,13 @@ export const API_KEY_SCOPES = [
   "comments:write",
   "members:read",
   "auth:exchange",
+  "auth:exchange:admin",
 ] as const;
+
+export const ADMIN_EXCHANGE_SCOPE = "auth:exchange:admin";
+
+/** Pre-selected for a new key. Acting as an admin is never on by default. */
+export const DEFAULT_API_KEY_SCOPES: string[] = API_KEY_SCOPES.filter((s) => s !== ADMIN_EXCHANGE_SCOPE);
 
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number];
 
