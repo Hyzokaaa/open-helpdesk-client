@@ -35,7 +35,6 @@ import WebhookSettings from "../components/WebhookSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
 import BrandingSettings from "../components/BrandingSettings";
 import useTranslation from "@modules/app/i18n/useTranslation";
-import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import { P } from "../domain/permissions";
 
@@ -52,7 +51,6 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const { t } = useTranslation();
   const { can } = usePermissions(workspaceSlug);
   const { setPalette } = useContext(PaletteContext);
-  const { saasMode } = useConfig();
   const { handlePlanLimitError, isFeatureLocked } = useExtensions();
 
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
@@ -238,7 +236,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 verified={workspace.customDomainVerified}
                 verificationToken={workspace.domainVerificationToken}
                 cnameTarget={workspace.cnameTarget}
-                saasMode={saasMode}
+                canSkipVerification={!!user?.isSystemAdmin}
                 onUpdate={(d, v, t) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: t })}
               />
             </CollapsibleSection>
