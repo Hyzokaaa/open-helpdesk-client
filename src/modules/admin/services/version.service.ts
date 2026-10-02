@@ -12,6 +12,8 @@ interface LatestRelease {
 
 export interface VersionInfo {
   backend: string;
+  /** Product version this installation runs, or null when its components match no release. */
+  currentProduct: string | null;
   latestRelease: LatestRelease | null;
   latestComponents: {
     backend: string | null;
@@ -19,7 +21,7 @@ export interface VersionInfo {
   };
 }
 
-export async function getVersionInfo(): Promise<VersionInfo> {
-  const res = await http.get<VersionInfo>("/admin/version");
+export async function getVersionInfo(clientVersion: string): Promise<VersionInfo> {
+  const res = await http.get<VersionInfo>("/admin/version", { params: { client: clientVersion } });
   return res.data;
 }
