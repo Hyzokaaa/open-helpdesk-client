@@ -13,13 +13,13 @@ import { canCreateWorkspace } from "../domain/can-create-workspace";
 export default function WorkspacesPage() {
   const { t, tEnum } = useTranslation();
   const navigate = useNavigate();
-  const { domainWorkspaces, saasMode } = useConfig();
+  const { domainWorkspaces } = useConfig();
   const { user } = useUser();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isCustomDomain = !!domainWorkspaces;
-  const showCreate = canCreateWorkspace(saasMode, isCustomDomain, user?.isSystemAdmin ?? false);
+  const showCreate = canCreateWorkspace(user, isCustomDomain);
   const lockedSlug = domainWorkspaces?.length === 1 ? domainWorkspaces[0].slug : null;
 
   useEffect(() => {

@@ -47,6 +47,9 @@ interface ProfileResponse {
   dateFormat: string;
   timezone: string;
   avatarUrl: string | null;
+  capabilities: {
+    createWorkspace: boolean;
+  };
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<void> {

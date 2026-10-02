@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -33,6 +33,8 @@ import {
 import { getEmailSender } from "../services/email-sender.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
+import useUser from "@modules/user/hooks/useUser";
+import { canCreateWorkspace } from "../domain/can-create-workspace";
 
 type Step = "workspace" | "departments" | "email" | "invite" | "done";
 const STEPS: Step[] = ["workspace", "departments", "email", "invite", "done"];
@@ -41,7 +43,8 @@ const ROLES = ["admin", "supervisor", "agent"] as const;
 export default function WorkspaceCreatePage() {
   const navigate = useNavigate();
   const { t, tEnum } = useTranslation();
-  const { emailConfigured } = useConfig();
+  const { emailConfigured, domainWorkspaces, loading: configLoading } = useConfig();
+  const { user, loading: userLoading } = useUser();
 
   const [step, setStep] = useState<Step>("workspace");
   const [slug, setSlug] = useState("");
@@ -219,6 +222,11 @@ export default function WorkspaceCreatePage() {
   const goToWorkspace = () => navigate(`/dashboard/workspaces/${slug}/tickets`);
   const handleClose = () => navigate(-1);
   const goBack = () => { const prev = STEPS[stepIndex - 1]; if (prev && prev !== "workspace") setStep(prev); };
+
+  // Reachable by URL too, so check here and not only where the button is shown
+  if (!configLoading && !userLoading && !canCreateWorkspace(user, !!domainWorkspaces)) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <Sheet onClose={step === "workspace" ? handleClose : goToWorkspace}>
