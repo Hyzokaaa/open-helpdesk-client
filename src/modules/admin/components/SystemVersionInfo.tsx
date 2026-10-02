@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { getVersionInfo, type VersionInfo } from "../services/version.service";
-
-declare const __APP_VERSION__: string;
+import { APP_VERSION } from "@modules/app/domain/constants/app-version";
 
 function compareSemver(a: string, b: string): number {
   const pa = a.replace(/^v/, "").split(".").map(Number);
@@ -39,10 +38,10 @@ export default function SystemVersionInfo() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const clientVersion = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "unknown";
+  const clientVersion = APP_VERSION;
 
   useEffect(() => {
-    getVersionInfo()
+    getVersionInfo(clientVersion)
       .then(setInfo)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -69,6 +68,12 @@ export default function SystemVersionInfo() {
 
   return (
     <div>
+      <p className="text-sm text-body mb-4">
+        {info.currentProduct
+          ? <>{t("admin.versionInstalled")} <span className="font-body-bold">Open Helpdesk v{info.currentProduct}</span></>
+          : <>{t("admin.versionInstalled")} <span className="font-body-bold">{t("admin.versionDevelopmentBuild")}</span></>}
+      </p>
+
       {overall === "behind" && info.latestRelease && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
           <p className="text-sm text-amber-800">

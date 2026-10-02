@@ -1648,6 +1648,8 @@ const translations = {
   "adminBranding.logoHint": { en: "PNG, SVG, JPEG, WebP. Max 1MB", es: "PNG, SVG, JPEG, WebP. Máx 1MB" },
   "adminSettings.title": { en: "System Settings", es: "Configuración del Sistema" },
   "adminSettings.version": { en: "Version", es: "Versión" },
+  "admin.versionInstalled": { en: "Installed version:", es: "Versión instalada:" },
+  "admin.versionDevelopmentBuild": { en: "development build (components do not match a release)", es: "versión de desarrollo (los componentes no coinciden con ninguna release)" },
   "admin.versionComponent": { en: "Component", es: "Componente" },
   "admin.versionCurrent": { en: "Current", es: "Actual" },
   "admin.versionRelease": { en: "Latest Release", es: "Último Release" },
