@@ -30,6 +30,7 @@ export const P = {
 
   ATTACHMENT_UPLOAD: "attachment.upload",
   ATTACHMENT_DELETE: "attachment.delete",
+  ATTACHMENT_DELETE_ANY: "attachment.delete.any",
 
   USER_CREATE: "user.create",
   USER_LIST: "user.list",

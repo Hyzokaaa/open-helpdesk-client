@@ -659,7 +659,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <p className="text-xs font-body-medium text-subtle uppercase mb-3">
               {t("ticketDetail.attachments")} ({attachments.length})
             </p>
-            {!isReadonly && (
+            {!isReadonly && can(P.ATTACHMENT_UPLOAD) && (
               <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-exs text-subtle">
@@ -719,7 +719,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                         </div>
                       )}
                     </button>
-                    {!isReadonly && (
+                    {a.canDelete && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

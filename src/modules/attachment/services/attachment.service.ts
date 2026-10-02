@@ -11,6 +11,11 @@ export interface AttachmentDetail extends AttachmentInfo {
   downloadUrl: string;
 }
 
+export interface TicketAttachment extends AttachmentDetail {
+  /** Decided by the backend: admins and supervisors delete any attachment, everyone else only their own. */
+  canDelete: boolean;
+}
+
 export interface StagedUpload {
   token: string;
   originalName: string;
@@ -61,8 +66,8 @@ export async function uploadToComment(
 export async function listTicketAttachments(
   workspaceSlug: string,
   ticketId: string,
-): Promise<AttachmentDetail[]> {
-  const res = await http.get<AttachmentDetail[]>(
+): Promise<TicketAttachment[]> {
+  const res = await http.get<TicketAttachment[]>(
     `/workspaces/${workspaceSlug}/tickets/${ticketId}/attachments`,
   );
   return res.data;

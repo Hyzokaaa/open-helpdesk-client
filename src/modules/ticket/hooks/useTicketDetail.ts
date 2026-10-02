@@ -13,7 +13,7 @@ import {
   listComments,
 } from "@modules/comment/services/comment.service";
 import {
-  AttachmentDetail,
+  TicketAttachment,
   listTicketAttachments,
   uploadToTicket,
 } from "@modules/attachment/services/attachment.service";
@@ -45,7 +45,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [pendingTransfer, setPendingTransfer] = useState<PendingTransfer | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
-  const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
+  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [participants, setParticipants] = useState<TicketParticipant[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
