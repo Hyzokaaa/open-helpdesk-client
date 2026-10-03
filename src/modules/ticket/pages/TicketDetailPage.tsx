@@ -589,7 +589,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     </div>
                     <div className="flex items-center gap-2">
                       {c.createdAt && <p className="text-exs text-subtle">{formatDate(c.createdAt)}</p>}
-                      {!isReadonly && (c.authorId === user?.id || can(P.TICKET_EDIT_DESCRIPTION)) && editingCommentId !== c.id && (
+                      {c.authorId === user?.id && editingCommentId !== c.id && (
                         <button
                           onClick={() => { setEditingCommentId(c.id); setEditingCommentContent(c.content); }}
                           className="text-exs text-muted hover:text-primary cursor-pointer"
@@ -642,16 +642,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               ))}
             </div>
 
-            {!isReadonly && (
-              <CommentInput
-                members={members}
-                loading={sendingComment}
-                onSubmit={handleAddComment}
-                onSubmitAndResolve={handleAddCommentAndResolve}
-                canResolve={!isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
-                cannedResponses={cannedResponses}
-              />
-            )}
+            {/* Read-only participants still take part in the conversation */}
+            <CommentInput
+              members={members}
+              loading={sendingComment}
+              onSubmit={handleAddComment}
+              onSubmitAndResolve={handleAddCommentAndResolve}
+              canResolve={!isReadonly && !isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
+              cannedResponses={cannedResponses}
+            />
           </div>
 
           {/* Attachments */}
@@ -659,7 +658,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <p className="text-xs font-body-medium text-subtle uppercase mb-3">
               {t("ticketDetail.attachments")} ({attachments.length})
             </p>
-            {!isReadonly && can(P.ATTACHMENT_UPLOAD) && (
+            {can(P.ATTACHMENT_UPLOAD) && (
               <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-exs text-subtle">
