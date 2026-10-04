@@ -1,52 +1,103 @@
 import { describe, expect, it } from "vitest";
-import { overwriteParam, previewImportFile, summarizeImportResult, truncateText } from "./workspace-import";
+import {
+  brandingText,
+  exportPasswordProblem,
+  filenameFromDisposition,
+  ImportPreview,
+  offeredSettings,
+  overwriteParam,
+  previewSections,
+  summarizeImportResult,
+  truncateText,
+} from "./workspace-import";
 
-describe("previewImportFile", () => {
-  it("offers every setting the file holds a value for", () => {
-    const preview = previewImportFile({
-      workspace: {
-        name: "Acme",
-        description: "Support desk",
-        slaPolicy: { high: 4 },
-        metadata: { palette: "blue", other: 1 },
-        appName: "Acme Help",
-        appSubtitle: null,
-      },
-    });
-    expect(preview.settings).toEqual({
-      palette: "blue",
-      sla: true,
-      description: "Support desk",
-      branding: { appName: "Acme Help", appSubtitle: null },
-    });
+const preview = (over: Partial<ImportPreview> = {}): ImportPreview => ({
+  version: 2,
+  counts: {},
+  settings: { palette: null, sla: false, description: null, branding: null },
+  ...over,
+});
+
+describe("exportPasswordProblem", () => {
+  it("asks for at least 12 characters before comparing", () => {
+    expect(exportPasswordProblem("short", "short")).toBe("tooShort");
+    expect(exportPasswordProblem("a".repeat(11), "b")).toBe("tooShort");
   });
 
-  it("does not offer settings that are missing, null or empty", () => {
-    const preview = previewImportFile({
-      workspace: { name: "Old", description: "  ", slaPolicy: null, metadata: { palette: null } },
-    });
-    expect(preview.settings).toEqual({});
+  it("rejects a password longer than the server accepts", () => {
+    const long = "a".repeat(257);
+    expect(exportPasswordProblem(long, long)).toBe("tooLong");
   });
 
-  it("copes with an older file without appName or appSubtitle and with a file without workspace", () => {
-    expect(previewImportFile({ workspace: { metadata: null } }).settings).toEqual({});
-    expect(previewImportFile({}).settings).toEqual({});
-    expect(previewImportFile(null)).toEqual({ sections: [], settings: {} });
+  it("requires the confirmation to match", () => {
+    expect(exportPasswordProblem("a".repeat(12), "a".repeat(13))).toBe("mismatch");
+    expect(exportPasswordProblem("a".repeat(12), "a".repeat(12))).toBeNull();
+    expect(exportPasswordProblem("a".repeat(256), "a".repeat(256))).toBeNull();
+  });
+});
+
+describe("filenameFromDisposition", () => {
+  it("reads quoted and bare filenames", () => {
+    expect(filenameFromDisposition('attachment; filename="acme-2026-10-04.ohd"', "acme.ohd")).toBe("acme-2026-10-04.ohd");
+    expect(filenameFromDisposition("attachment; filename=acme-2026-10-04.ohd", "acme.ohd")).toBe("acme-2026-10-04.ohd");
   });
 
+  it("prefers the RFC 5987 encoded name", () => {
+    expect(filenameFromDisposition(
+      "attachment; filename=\"x.ohd\"; filename*=UTF-8''caf%C3%A9-2026-10-04.ohd", "f.ohd",
+    )).toBe("café-2026-10-04.ohd");
+  });
+
+  it("falls back when the header is missing or names nothing usable", () => {
+    expect(filenameFromDisposition(undefined, "acme.ohd")).toBe("acme.ohd");
+    expect(filenameFromDisposition("attachment", "acme.ohd")).toBe("acme.ohd");
+    expect(filenameFromDisposition('attachment; filename=""', "acme.ohd")).toBe("acme.ohd");
+  });
+
+  it("drops any directory part", () => {
+    expect(filenameFromDisposition('attachment; filename="../../etc/x.ohd"', "f.ohd")).toBe("x.ohd");
+    expect(filenameFromDisposition('attachment; filename="..\\x.ohd"', "f.ohd")).toBe("x.ohd");
+  });
+});
+
+describe("previewSections", () => {
   it("lists the non-empty sections in display order", () => {
-    const preview = previewImportFile({
-      users: [{}, {}],
-      tickets: [{}, {}, {}],
-      organizations: [],
-      kbArticles: [{}],
-      projects: "not a list",
-    });
-    expect(preview.sections).toEqual([
+    expect(previewSections(preview({
+      counts: { users: 2, tickets: 3, organizations: 0, kbArticles: 1, cannedResponses: 4 },
+    }))).toEqual([
       { section: "tickets", count: 3 },
       { section: "users", count: 2 },
       { section: "kbArticles", count: 1 },
+      { section: "cannedResponses", count: 4 },
     ]);
+  });
+
+  it("is empty for an export without records", () => {
+    expect(previewSections(preview())).toEqual([]);
+  });
+});
+
+describe("offeredSettings", () => {
+  it("offers every setting the export holds a value for, in a stable order", () => {
+    expect(offeredSettings({
+      palette: "blue", sla: true, description: "Support desk", branding: { appName: "Acme Help", appSubtitle: null },
+    })).toEqual(["palette", "sla", "description", "branding"]);
+  });
+
+  it("does not offer settings that are missing, null or blank", () => {
+    expect(offeredSettings({
+      palette: "", sla: false, description: "  ", branding: { appName: null, appSubtitle: " " },
+    })).toEqual([]);
+    expect(offeredSettings(preview().settings)).toEqual([]);
+    expect(offeredSettings(undefined)).toEqual([]);
+  });
+});
+
+describe("brandingText", () => {
+  it("joins what is set with a middle dot", () => {
+    expect(brandingText({ appName: "Acme", appSubtitle: "Help" })).toBe("Acme · Help");
+    expect(brandingText({ appName: null, appSubtitle: "Help" })).toBe("Help");
+    expect(brandingText(null)).toBe("");
   });
 });
 

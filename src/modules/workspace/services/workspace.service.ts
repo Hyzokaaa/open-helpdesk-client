@@ -1,5 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
-import { ImportSetting, overwriteParam } from "../domain/workspace-import";
+import { filenameFromDisposition, ImportPreview, ImportSetting, overwriteParam } from "../domain/workspace-import";
 
 export interface Workspace {
   id: string;
@@ -272,8 +272,28 @@ export async function toggleSystemMailbox(slug: string, enabled: boolean): Promi
   return res.data;
 }
 
-export async function exportWorkspace(slug: string): Promise<Blob> {
-  const res = await http.get(`/workspaces/${slug}/export`, { responseType: 'blob' });
+/** The workspace as a file encrypted with `password`, and the name the server gave it. */
+export async function exportWorkspace(slug: string, password: string): Promise<{ blob: Blob; filename: string }> {
+  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password }, { responseType: "blob" });
+  const disposition = res.headers["content-disposition"] as string | undefined;
+  return { blob: res.data, filename: filenameFromDisposition(disposition, `${slug}.ohd`) };
+}
+
+/** An export is read from an uploaded file or fetched by the server from an export link. */
+export type ImportSource = { kind: "file"; file: File } | { kind: "url"; url: string };
+
+function importForm(source: ImportSource, password: string): FormData {
+  const form = new FormData();
+  if (source.kind === "file") form.append("file", source.file, source.file.name);
+  else form.append("url", source.url);
+  if (password) form.append("password", password);
+  return form;
+}
+
+/** What an export brings, read by the server without importing anything. */
+export async function previewWorkspaceImport(slug: string, source: ImportSource, password: string): Promise<ImportPreview> {
+  // No Content-Type: the browser sets multipart/form-data with its boundary
+  const res = await http.post<ImportPreview>(`/workspaces/${slug}/import/preview`, importForm(source, password));
   return res.data;
 }
 
@@ -304,17 +324,21 @@ export interface ImportResult {
 }
 
 /** Without `overwrite` the import changes none of the target's settings. */
-export async function importWorkspace(slug: string, data: unknown, overwrite: ImportSetting[] = []): Promise<ImportResult> {
-  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, data, { params: { overwrite: overwriteParam(overwrite) } });
+export async function importWorkspace(
+  slug: string,
+  source: ImportSource,
+  password: string,
+  overwrite: ImportSetting[] = [],
+): Promise<ImportResult> {
+  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, importForm(source, password), {
+    params: { overwrite: overwriteParam(overwrite) },
+  });
   return res.data;
 }
 
-export async function importWorkspaceFromUrl(slug: string, url: string, overwrite: ImportSetting[] = []): Promise<ImportResult> {
-  return importWorkspace(slug, { url }, overwrite);
-}
-
-export async function createExportToken(slug: string): Promise<{ url: string; expiresAt: string }> {
-  const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`);
+/** A single-use link to an export encrypted with `password`; the importer needs both. */
+export async function createExportToken(slug: string, password: string): Promise<{ url: string; expiresAt: string }> {
+  const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`, { password });
   return res.data;
 }
 

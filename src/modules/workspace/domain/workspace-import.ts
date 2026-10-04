@@ -2,11 +2,16 @@
 export const IMPORT_SETTINGS = ["palette", "sla", "description", "branding"] as const;
 export type ImportSetting = (typeof IMPORT_SETTINGS)[number];
 
-/** Sections of an export file worth announcing before the import, in display order. */
+/** Sections of an export worth announcing before the import, in display order. */
 export const IMPORT_FILE_SECTIONS = [
   "tickets", "comments", "users", "categories", "organizations", "departments", "projects", "kbArticles",
+  "customFields", "cannedResponses",
 ] as const;
 export type ImportFileSection = (typeof IMPORT_FILE_SECTIONS)[number];
+
+/** Minimum length the server accepts for an export password. */
+export const EXPORT_PASSWORD_MIN = 12;
+export const EXPORT_PASSWORD_MAX = 256;
 
 /** Counters of an ImportResult, in display order. commentsSkipped is reported apart, as a warning. */
 export const IMPORT_RESULT_COUNTERS = [
@@ -17,48 +22,74 @@ export const IMPORT_RESULT_COUNTERS = [
 ] as const;
 export type ImportResultCounter = (typeof IMPORT_RESULT_COUNTERS)[number];
 
-/** Incoming value of each setting the file carries; a setting the file lacks is absent. */
-export interface ImportFileSettings {
-  palette?: string;
-  sla?: true;
-  description?: string;
-  branding?: { appName: string | null; appSubtitle: string | null };
+/** What the server read from an export, before importing it. */
+export interface ImportPreview {
+  version: number | string;
+  counts: Partial<Record<ImportFileSection, number>>;
+  settings: {
+    palette: string | null;
+    sla: boolean;
+    description: string | null;
+    branding: { appName: string | null; appSubtitle: string | null } | null;
+  };
 }
 
-export interface ImportFilePreview {
-  sections: { section: ImportFileSection; count: number }[];
-  settings: ImportFileSettings;
+export type ExportPasswordProblem = "tooShort" | "tooLong" | "mismatch";
+
+/** Why a new export password cannot be used yet, or null when it can. */
+export function exportPasswordProblem(password: string, confirmation: string): ExportPasswordProblem | null {
+  if (password.length < EXPORT_PASSWORD_MIN) return "tooShort";
+  if (password.length > EXPORT_PASSWORD_MAX) return "tooLong";
+  if (password !== confirmation) return "mismatch";
+  return null;
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+/** File name a Content-Disposition header announces, or the fallback when it names none. */
+export function filenameFromDisposition(header: string | null | undefined, fallback: string): string {
+  if (!header) return fallback;
+  let name = "";
+  const encoded = /filename\*\s*=\s*[^']*''([^;]+)/i.exec(header);
+  if (encoded) {
+    try {
+      name = decodeURIComponent(encoded[1].trim().replace(/^"|"$/g, ""));
+    } catch { /* malformed encoding: fall back to the plain parameter */ }
+  }
+  if (!name) {
+    const plain = /filename\s*=\s*(?:"([^"]*)"|([^;]+))/i.exec(header);
+    name = (plain?.[1] ?? plain?.[2] ?? "").trim();
+  }
+  // Never let a header pick a path
+  const base = name.split(/[\\/]/).pop()?.trim() ?? "";
+  return base || fallback;
+}
 
-const nonEmptyText = (value: unknown): string | null =>
-  typeof value === "string" && value.trim() ? value : null;
+/** The non-empty sections of a preview, in display order. */
+export function previewSections(preview: ImportPreview): { section: ImportFileSection; count: number }[] {
+  return IMPORT_FILE_SECTIONS
+    .map((section) => ({ section, count: preview.counts?.[section] ?? 0 }))
+    .filter(({ count }) => count > 0);
+}
+
+const nonEmpty = (value: string | null | undefined): value is string => !!value && !!value.trim();
 
 /**
- * What an export file brings: the non-empty sections and the settings it holds a value for.
- * A setting whose value is null or empty is not offered, since overwriting would only blank
- * the target's own value.
+ * Settings worth offering to overwrite: those the export holds a value for. An empty value is
+ * not offered, since overwriting would only blank the target's own.
  */
-export function previewImportFile(data: unknown): ImportFilePreview {
-  const file = isObject(data) ? data : {};
-  const sections = IMPORT_FILE_SECTIONS
-    .map((section) => ({ section, count: Array.isArray(file[section]) ? (file[section] as unknown[]).length : 0 }))
-    .filter(({ count }) => count > 0);
+export function offeredSettings(settings: ImportPreview["settings"] | undefined): ImportSetting[] {
+  if (!settings) return [];
+  return IMPORT_SETTINGS.filter((key) => {
+    if (key === "palette") return nonEmpty(settings.palette);
+    if (key === "sla") return settings.sla === true;
+    if (key === "description") return nonEmpty(settings.description);
+    return !!settings.branding && (nonEmpty(settings.branding.appName) || nonEmpty(settings.branding.appSubtitle));
+  });
+}
 
-  const settings: ImportFileSettings = {};
-  const ws = isObject(file.workspace) ? file.workspace : {};
-  const palette = isObject(ws.metadata) ? nonEmptyText(ws.metadata.palette) : null;
-  if (palette) settings.palette = palette;
-  if (isObject(ws.slaPolicy)) settings.sla = true;
-  const description = nonEmptyText(ws.description);
-  if (description) settings.description = description;
-  const appName = nonEmptyText(ws.appName);
-  const appSubtitle = nonEmptyText(ws.appSubtitle);
-  if (appName || appSubtitle) settings.branding = { appName, appSubtitle };
-
-  return { sections, settings };
+/** One-line preview of incoming branding: "appName · appSubtitle", skipping what is empty. */
+export function brandingText(branding: ImportPreview["settings"]["branding"]): string {
+  if (!branding) return "";
+  return [branding.appName, branding.appSubtitle].filter(nonEmpty).join(" · ");
 }
 
 /** Value of the `overwrite` query param, or undefined so the param is left out entirely. */

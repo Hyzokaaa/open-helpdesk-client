@@ -1,24 +1,24 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import Input from "@modules/app/modules/ui/components/Input/Input";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { TranslationKey } from "@modules/app/i18n/translations";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
-import { ImportResult, importWorkspace, importWorkspaceFromUrl } from "../services/workspace.service";
+import { ImportResult, ImportSource, importWorkspace, previewWorkspaceImport } from "../services/workspace.service";
 import { getPalette, isCustomPalette } from "../domain/palettes";
 import {
-  IMPORT_SETTINGS,
+  brandingText,
   ImportFileSection,
+  ImportPreview,
   ImportResultCounter,
   ImportSetting,
-  previewImportFile,
+  offeredSettings,
+  previewSections,
   summarizeImportResult,
   truncateText,
 } from "../domain/workspace-import";
-
-/** A parsed export file can be previewed; a URL is only fetched by the server. */
-export type ImportSource = { kind: "file"; data: unknown } | { kind: "url"; url: string };
 
 interface Props {
   slug: string;
@@ -36,6 +36,8 @@ const SECTION_LABELS: Record<ImportFileSection, TranslationKey> = {
   departments: "workspaceImport.section.departments",
   projects: "workspaceImport.section.projects",
   kbArticles: "workspaceImport.section.kbArticles",
+  customFields: "workspaceImport.section.customFields",
+  cannedResponses: "workspaceImport.section.cannedResponses",
 };
 
 const COUNTER_LABELS: Record<ImportResultCounter, TranslationKey> = {
@@ -69,12 +71,29 @@ const SETTING_LABELS: Record<ImportSetting, { overwrite: TranslationKey; applied
 
 export default function WorkspaceImportSheet({ slug, source, onClose, onImported }: Props) {
   const { t, lang } = useTranslation();
-  const preview = useMemo(() => (source.kind === "file" ? previewImportFile(source.data) : null), [source]);
-  // A URL file cannot be read here, so every setting is offered without a preview
-  const offered = IMPORT_SETTINGS.filter((key) => !preview || preview.settings[key] !== undefined);
+  const [password, setPassword] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const offered = offeredSettings(preview?.settings);
   const [selected, setSelected] = useState<Set<ImportSetting>>(new Set());
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const sourceLabel = source.kind === "url" ? source.url : source.file.name;
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    setPreviewError(null);
+    try {
+      setPreview(await previewWorkspaceImport(slug, source, password));
+    } catch (err) {
+      const e = err as HttpResponseError;
+      if (e?.status === 400 && e.message) setPreviewError(e.message);
+      else if (!e?.handled) setPreviewError(t("workspaceImport.previewError"));
+    } finally {
+      setPreviewing(false);
+    }
+  };
 
   const toggle = (key: ImportSetting) => {
     const next = new Set(selected);
@@ -86,9 +105,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
   const handleImport = async () => {
     setImporting(true);
     try {
-      const res = source.kind === "file"
-        ? await importWorkspace(slug, source.data, [...selected])
-        : await importWorkspaceFromUrl(slug, source.url, [...selected]);
+      const res = await importWorkspace(slug, source, password, [...selected]);
       setResult(res);
       onImported(res);
     } catch (err) {
@@ -115,9 +132,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
     }
     if (key === "sla") return t("workspaceImport.preview.sla");
     if (key === "description" && settings.description) return `“${truncateText(settings.description, 120)}”`;
-    if (key === "branding" && settings.branding) {
-      return [settings.branding.appName, settings.branding.appSubtitle].filter(Boolean).join(" · ");
-    }
+    if (key === "branding") return brandingText(settings.branding) || null;
     return null;
   };
 
@@ -155,27 +170,45 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
     );
   }
 
+  if (!preview) {
+    return (
+      <Sheet onClose={previewing ? () => {} : onClose} size="sm">
+        <h3 className="text-base font-body-bold text-heading mb-1">{t("workspaceImport.confirmTitle")}</h3>
+        <p className="text-sm text-muted mb-4 break-all">{sourceLabel}</p>
+        <form onSubmit={(e) => { e.preventDefault(); void handlePreview(); }}>
+          <label className="block text-xs text-subtle font-body-medium mb-1">{t("workspaceImport.password")}</label>
+          <Input type="password" value={password} onChange={(v) => { setPassword(v); setPreviewError(null); }} disabled={previewing} autoFocus />
+          <p className="text-xs text-muted mt-1">{t("workspaceImport.passwordHint")}</p>
+          {previewError && <p className="text-sm text-red-600 dark:text-red-400 mt-3" role="alert">{previewError}</p>}
+          <div className="flex justify-end gap-2 mt-6">
+            <Button size="sm" color="light" onClick={onClose} disabled={previewing}>{t("workspaceImport.cancel")}</Button>
+            <Button size="sm" color="primary" type="submit" loading={previewing}>{t("workspaceImport.continue")}</Button>
+          </div>
+        </form>
+      </Sheet>
+    );
+  }
+
+  const sections = previewSections(preview);
+
   return (
     <Sheet onClose={importing ? () => {} : onClose} size="sm">
       <h3 className="text-base font-body-bold text-heading mb-1">{t("workspaceImport.confirmTitle")}</h3>
-      <p className="text-sm text-muted mb-4 break-all">
-        {source.kind === "url" ? source.url : t("workspaceImport.confirmFile")}
-      </p>
+      <p className="text-sm text-muted mb-1 break-all">{sourceLabel}</p>
+      <p className="text-sm text-muted mb-4">{t("workspaceImport.confirmFile")}</p>
 
-      {preview && (
-        preview.sections.length === 0 ? (
+      {sections.length === 0 ? (
           <p className="text-sm text-muted mb-4">{t("workspaceImport.fileEmpty")}</p>
         ) : (
           <ul className="space-y-1 text-sm mb-4">
-            {preview.sections.map(({ section, count }) => (
+            {sections.map(({ section, count }) => (
               <li key={section} className="flex justify-between">
                 <span className="text-muted">{t(SECTION_LABELS[section])}</span>
                 <span className="text-body font-body-medium">{count}</span>
               </li>
             ))}
           </ul>
-        )
-      )}
+        )}
 
       <p className="text-xs text-subtle font-body-medium mb-1">{t("workspaceImport.settingsTitle")}</p>
       {offered.length === 0 ? (
