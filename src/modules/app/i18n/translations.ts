@@ -380,6 +380,7 @@ const translations = {
   "mailbox.address": { en: "Email Address", es: "Dirección de Email" },
   "mailbox.imapHost": { en: "IMAP Server", es: "Servidor IMAP" },
   "mailbox.imapPort": { en: "Port", es: "Puerto" },
+  "mailbox.invalidPort": { en: "Enter a port between 1 and 65535", es: "Introduce un puerto entre 1 y 65535" },
   "mailbox.imapUser": { en: "Username", es: "Usuario" },
   "mailbox.imapPass": { en: "Password", es: "Contraseña" },
   "mailbox.folder": { en: "Folder", es: "Carpeta" },
