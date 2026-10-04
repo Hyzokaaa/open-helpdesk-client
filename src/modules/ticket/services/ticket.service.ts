@@ -242,7 +242,8 @@ export async function getPendingTransfer(
   ticketId: string,
 ): Promise<PendingTransfer | null> {
   const res = await http.get<PendingTransfer | null>(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/pending`);
-  return res.data;
+  // A null from the backend arrives as an empty body, i.e. ""
+  return res.data || null;
 }
 
 export async function acceptTransfer(
