@@ -37,8 +37,9 @@ export default function AccountSection() {
     if (!nameValid) return;
     setSaving(true);
     try {
-      await updateName(firstName.trim(), lastName.trim());
-      setUser({ ...user, firstName: firstName.trim(), lastName: lastName.trim() });
+      // Show what was stored, not what was typed: the server strips markup from names
+      const saved = await updateName(firstName.trim(), lastName.trim());
+      setUser({ ...user, firstName: saved.firstName, lastName: saved.lastName });
     } catch {
       toast.error("Failed to update name");
     } finally {

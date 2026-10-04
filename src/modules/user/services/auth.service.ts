@@ -52,8 +52,10 @@ interface ProfileResponse {
   };
 }
 
-export async function updateName(firstName: string, lastName: string): Promise<void> {
-  await http.patch("/users/me/name", { firstName, lastName });
+/** Returns the name as the server stored it: markup and invisible characters are removed there. */
+export async function updateName(firstName: string, lastName: string): Promise<{ firstName: string; lastName: string }> {
+  const res = await http.patch<{ firstName: string; lastName: string }>("/users/me/name", { firstName, lastName });
+  return { firstName: res.data.firstName, lastName: res.data.lastName };
 }
 
 export async function updateLanguage(language: string): Promise<void> {
