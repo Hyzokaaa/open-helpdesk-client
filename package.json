@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "sync-lockfile": "node scripts/sync-lockfile.js"
   },
   "dependencies": {
