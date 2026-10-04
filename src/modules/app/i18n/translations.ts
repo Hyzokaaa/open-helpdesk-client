@@ -624,6 +624,7 @@ const translations = {
   "ticketCreate.descriptionPlaceholder": { en: "Provide details about the issue...", es: "Proporciona detalles sobre el problema..." },
   "ticketCreate.priority": { en: "Priority", es: "Prioridad" },
   "ticketCreate.category": { en: "Category", es: "Categoría" },
+  "ticketCreate.noCategories": { en: "This workspace has no ticket categories yet. Ask an admin to add one.", es: "Este espacio aún no tiene categorías de ticket. Pide a un administrador que agregue una." },
   "ticketCreate.tags": { en: "Tags", es: "Etiquetas" },
   "ticketCreate.attachments": { en: "Attachments", es: "Adjuntos" },
   "ticketCreate.addFiles": { en: "Add files", es: "Agregar archivos" },

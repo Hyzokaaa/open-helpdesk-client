@@ -49,6 +49,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
   const [categoryId, setCategoryId] = useState("");
   const [allCategories, setAllCategories] = useState<TicketCategoryDto[]>([]);
   const [visibleCategories, setVisibleCategories] = useState<TicketCategoryDto[]>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -89,6 +90,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
       listProjects(workspaceSlug).then(setProjects).catch(() => {});
       listCategories(workspaceSlug).then((cats) => {
         setAllCategories(cats);
+        setCategoriesLoaded(true);
         if (initialProjectId) {
           listCategories(workspaceSlug, initialProjectId).then((projCats) => {
             const inProject = projCats.filter((c) => c.inProject);
@@ -228,7 +230,8 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
 
   const isImage = (file: File) => file.type.startsWith("image/");
   const hasFilesPending = files.some((f) => f.status === "uploading" || f.status === "pending" || f.status === "error");
-  const canSubmit = name.trim().length >= 3 && !hasFilesPending;
+  // The backend requires a category
+  const canSubmit = name.trim().length >= 3 && !!categoryId && !hasFilesPending;
   const hasFilesErrored = files.some((f) => f.status === "error");
 
   return (
@@ -282,6 +285,9 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
                 value={(c) => c.id === categoryId}
                 onChange={(c) => setCategoryId(c.id)}
               />
+              {categoriesLoaded && allCategories.length === 0 && (
+                <p className="text-exs text-amber-600 mt-1">{t("ticketCreate.noCategories")}</p>
+              )}
             </FormInput>
           </div>
 
