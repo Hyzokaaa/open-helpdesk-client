@@ -272,9 +272,22 @@ export async function toggleSystemMailbox(slug: string, enabled: boolean): Promi
   return res.data;
 }
 
-/** The workspace as a file encrypted with `password`, and the name the server gave it. */
-export async function exportWorkspace(slug: string, password: string): Promise<{ blob: Blob; filename: string }> {
-  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password }, { responseType: "blob" });
+/** Bytes moved so far, and the total when the other side announced it. */
+export type TransferProgress = (loaded: number, total: number | undefined) => void;
+
+/**
+ * The workspace as a file encrypted with `password`, and the name the server gave it. Large
+ * workspaces carry their files too, so this may take minutes; `onProgress` follows the download.
+ */
+export async function exportWorkspace(
+  slug: string,
+  password: string,
+  onProgress?: TransferProgress,
+): Promise<{ blob: Blob; filename: string }> {
+  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password }, {
+    responseType: "blob",
+    onDownloadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
+  });
   const disposition = res.headers["content-disposition"] as string | undefined;
   return { blob: res.data, filename: filenameFromDisposition(disposition, `${slug}.ohd`) };
 }
@@ -290,10 +303,20 @@ function importForm(source: ImportSource, password: string): FormData {
   return form;
 }
 
-/** What an export brings, read by the server without importing anything. */
-export async function previewWorkspaceImport(slug: string, source: ImportSource, password: string): Promise<ImportPreview> {
+/**
+ * What an export brings, read by the server without importing anything. The file is uploaded
+ * here and again by importWorkspace; `onProgress` follows each upload.
+ */
+export async function previewWorkspaceImport(
+  slug: string,
+  source: ImportSource,
+  password: string,
+  onProgress?: TransferProgress,
+): Promise<ImportPreview> {
   // No Content-Type: the browser sets multipart/form-data with its boundary
-  const res = await http.post<ImportPreview>(`/workspaces/${slug}/import/preview`, importForm(source, password));
+  const res = await http.post<ImportPreview>(`/workspaces/${slug}/import/preview`, importForm(source, password), {
+    onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
+  });
   return res.data;
 }
 
@@ -312,6 +335,8 @@ export interface ImportResult {
   descriptionEditsImported: number;
   commentEditsImported: number;
   attachmentsImported: number;
+  /** Attachments whose file the export did not carry (older exports); reported as a warning */
+  attachmentsSkipped: number;
   participantsImported: number;
   cannedResponsesImported: number;
   customFieldsImported: number;
@@ -329,9 +354,11 @@ export async function importWorkspace(
   source: ImportSource,
   password: string,
   overwrite: ImportSetting[] = [],
+  onProgress?: TransferProgress,
 ): Promise<ImportResult> {
   const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, importForm(source, password), {
     params: { overwrite: overwriteParam(overwrite) },
+    onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });
   return res.data;
 }

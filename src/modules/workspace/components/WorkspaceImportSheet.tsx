@@ -13,10 +13,15 @@ import {
   ImportFileSection,
   ImportPreview,
   ImportResultCounter,
+  ImportResultWarning,
   ImportSetting,
+  formatBytes,
+  importWarnings,
   offeredSettings,
+  previewFiles,
   previewSections,
   summarizeImportResult,
+  transferPercent,
   truncateText,
 } from "../domain/workspace-import";
 
@@ -38,7 +43,20 @@ const SECTION_LABELS: Record<ImportFileSection, TranslationKey> = {
   kbArticles: "workspaceImport.section.kbArticles",
   customFields: "workspaceImport.section.customFields",
   cannedResponses: "workspaceImport.section.cannedResponses",
+  attachments: "workspaceImport.section.attachments",
 };
+
+const WARNING_LABELS: Record<ImportResultWarning, TranslationKey> = {
+  commentsSkipped: "workspaceImport.commentsSkipped",
+  attachmentsSkipped: "workspaceImport.attachmentsSkipped",
+};
+
+/** Message for a failed preview or import, or null when the http layer already told the user. */
+function failureMessage(e: HttpResponseError | undefined, fallback: string, tooLarge: string): string | null {
+  if (e?.status === 413) return tooLarge;
+  if (e?.status === 400 && e.message) return e.message;
+  return e?.handled ? null : fallback;
+}
 
 const COUNTER_LABELS: Record<ImportResultCounter, TranslationKey> = {
   ticketsImported: "workspaceImport.result.ticketsImported",
@@ -79,19 +97,28 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
   const [selected, setSelected] = useState<Set<ImportSetting>>(new Set());
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  // Upload percentage of the running request; null when unknown or nothing is uploading
+  const [uploaded, setUploaded] = useState<number | null>(null);
   const sourceLabel = source.kind === "url" ? source.url : source.file.name;
+  // Only a file goes up with the request (twice: preview, then import); a URL is fetched by the server
+  const trackUpload = source.kind === "file"
+    ? (loaded: number, total: number | undefined) => setUploaded(transferPercent(loaded, total))
+    : undefined;
+  // Shown while the file is still going up; once it is all sent the server is working on it
+  const uploadLabel = (label: string) =>
+    uploaded !== null && uploaded < 100 ? t("workspaceImport.uploadProgress").replace("{percent}", String(uploaded)) : label;
 
   const handlePreview = async () => {
     setPreviewing(true);
     setPreviewError(null);
+    setUploaded(null);
     try {
-      setPreview(await previewWorkspaceImport(slug, source, password));
+      setPreview(await previewWorkspaceImport(slug, source, password, trackUpload));
     } catch (err) {
-      const e = err as HttpResponseError;
-      if (e?.status === 400 && e.message) setPreviewError(e.message);
-      else if (!e?.handled) setPreviewError(t("workspaceImport.previewError"));
+      setPreviewError(failureMessage(err as HttpResponseError, t("workspaceImport.previewError"), t("workspaceImport.tooLarge")));
     } finally {
       setPreviewing(false);
+      setUploaded(null);
     }
   };
 
@@ -104,16 +131,17 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
 
   const handleImport = async () => {
     setImporting(true);
+    setUploaded(null);
     try {
-      const res = await importWorkspace(slug, source, password, [...selected]);
+      const res = await importWorkspace(slug, source, password, [...selected], trackUpload);
       setResult(res);
       onImported(res);
     } catch (err) {
-      const e = err as HttpResponseError;
-      if (e?.status === 400 && e.message) toast.error(e.message);
-      else if (!e?.handled) toast.error(t("workspaceSettings.importError"));
+      const message = failureMessage(err as HttpResponseError, t("workspaceSettings.importError"), t("workspaceImport.tooLarge"));
+      if (message) toast.error(message);
     } finally {
       setImporting(false);
+      setUploaded(null);
     }
   };
 
@@ -132,7 +160,12 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
     }
     if (key === "sla") return t("workspaceImport.preview.sla");
     if (key === "description" && settings.description) return `“${truncateText(settings.description, 120)}”`;
-    if (key === "branding") return brandingText(settings.branding) || null;
+    if (key === "branding") {
+      return brandingText(settings.branding, {
+        logo: t("workspaceImport.preview.logo"),
+        icon: t("workspaceImport.preview.icon"),
+      }) || null;
+    }
     return null;
   };
 
@@ -158,11 +191,11 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         <p className="text-sm text-body">
           {applied.length ? applied.map((key) => t(SETTING_LABELS[key].applied)).join(", ") : t("workspaceImport.noSettingsApplied")}
         </p>
-        {result.commentsSkipped > 0 && (
-          <p className="mt-4 text-sm text-amber-800 dark:text-amber-300">
-            {t("workspaceImport.commentsSkipped").replace("{count}", String(result.commentsSkipped))}
+        {importWarnings(result).map(({ warning, count }) => (
+          <p key={warning} className="mt-4 text-sm text-amber-800 dark:text-amber-300">
+            {t(WARNING_LABELS[warning]).replace("{count}", String(count))}
           </p>
-        )}
+        ))}
         <div className="flex justify-end mt-6">
           <Button size="sm" color="primary" onClick={onClose}>{t("workspaceImport.close")}</Button>
         </div>
@@ -182,7 +215,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
           {previewError && <p className="text-sm text-red-600 dark:text-red-400 mt-3" role="alert">{previewError}</p>}
           <div className="flex justify-end gap-2 mt-6">
             <Button size="sm" color="light" onClick={onClose} disabled={previewing}>{t("workspaceImport.cancel")}</Button>
-            <Button size="sm" color="primary" type="submit" loading={previewing}>{t("workspaceImport.continue")}</Button>
+            <Button size="sm" color="primary" type="submit" loading={previewing}>{uploadLabel(t("workspaceImport.continue"))}</Button>
           </div>
         </form>
       </Sheet>
@@ -190,6 +223,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
   }
 
   const sections = previewSections(preview);
+  const files = previewFiles(preview);
 
   return (
     <Sheet onClose={importing ? () => {} : onClose} size="sm">
@@ -209,6 +243,11 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
             ))}
           </ul>
         )}
+      {files && (
+        <p className="text-sm text-muted mb-4">
+          {t("workspaceImport.files").replace("{count}", String(files.files)).replace("{size}", formatBytes(files.bytes))}
+        </p>
+      )}
 
       <p className="text-xs text-subtle font-body-medium mb-1">{t("workspaceImport.settingsTitle")}</p>
       {offered.length === 0 ? (
@@ -242,7 +281,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
       <div className="flex justify-end gap-2 mt-6">
         <Button size="sm" color="light" onClick={onClose} disabled={importing}>{t("workspaceImport.cancel")}</Button>
         <Button size="sm" color="primary" onClick={handleImport} loading={importing}>
-          {importing ? t("workspaceSettings.importing") : t("workspaceImport.confirm")}
+          {importing ? uploadLabel(t("workspaceSettings.importing")) : t("workspaceImport.confirm")}
         </Button>
       </div>
     </Sheet>

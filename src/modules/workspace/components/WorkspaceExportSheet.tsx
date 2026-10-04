@@ -7,7 +7,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import { TranslationKey } from "@modules/app/i18n/translations";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { createExportToken, exportWorkspace } from "../services/workspace.service";
-import { EXPORT_PASSWORD_MIN, ExportPasswordProblem, exportPasswordProblem } from "../domain/workspace-import";
+import { EXPORT_PASSWORD_MIN, ExportPasswordProblem, exportPasswordProblem, formatBytes } from "../domain/workspace-import";
 
 /** A file downloaded now, or a single-use link another instance fetches later. */
 export type ExportMode = "file" | "url";
@@ -41,6 +41,8 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
   const [confirmation, setConfirmation] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Bytes of the export received so far; 0 while the server is still preparing it
+  const [downloaded, setDownloaded] = useState(0);
   const [link, setLink] = useState<{ url: string; expiresAt: string } | null>(null);
   const problem = exportPasswordProblem(password, confirmation);
 
@@ -48,9 +50,10 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
     setSubmitted(true);
     if (problem) return;
     setBusy(true);
+    setDownloaded(0);
     try {
       if (mode === "file") {
-        const { blob, filename } = await exportWorkspace(slug, password);
+        const { blob, filename } = await exportWorkspace(slug, password, (loaded) => setDownloaded(loaded));
         download(blob, filename);
         toast.success(t("workspaceSettings.exportSuccess"));
         onClose();
@@ -117,6 +120,16 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
           </p>
         )}
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("workspaceExport.warning")}</p>
+        {busy && mode === "file" && (
+          <p className="text-sm text-muted" role="status" aria-live="polite">
+            {t("workspaceExport.preparing")}
+            {downloaded > 0 && (
+              <span className="block text-xs mt-1">
+                {t("workspaceExport.downloaded").replace("{size}", formatBytes(downloaded))}
+              </span>
+            )}
+          </p>
+        )}
         <div className="flex justify-end gap-2 pt-3">
           <Button size="sm" color="light" onClick={onClose} disabled={busy}>{t("workspaceImport.cancel")}</Button>
           <Button size="sm" color="primary" type="submit" loading={busy}>

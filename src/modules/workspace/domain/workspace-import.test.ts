@@ -3,11 +3,15 @@ import {
   brandingText,
   exportPasswordProblem,
   filenameFromDisposition,
+  formatBytes,
   ImportPreview,
+  importWarnings,
   offeredSettings,
   overwriteParam,
+  previewFiles,
   previewSections,
   summarizeImportResult,
+  transferPercent,
   truncateText,
 } from "./workspace-import";
 
@@ -63,12 +67,13 @@ describe("filenameFromDisposition", () => {
 describe("previewSections", () => {
   it("lists the non-empty sections in display order", () => {
     expect(previewSections(preview({
-      counts: { users: 2, tickets: 3, organizations: 0, kbArticles: 1, cannedResponses: 4 },
+      counts: { users: 2, tickets: 3, organizations: 0, kbArticles: 1, cannedResponses: 4, attachments: 5, files: 6, filesBytes: 99 },
     }))).toEqual([
       { section: "tickets", count: 3 },
       { section: "users", count: 2 },
       { section: "kbArticles", count: 1 },
       { section: "cannedResponses", count: 4 },
+      { section: "attachments", count: 5 },
     ]);
   });
 
@@ -91,6 +96,16 @@ describe("offeredSettings", () => {
     expect(offeredSettings(preview().settings)).toEqual([]);
     expect(offeredSettings(undefined)).toEqual([]);
   });
+
+  it("offers branding when the export only carries a logo or an icon", () => {
+    const settings = preview().settings;
+    expect(offeredSettings({ ...settings, branding: { appName: null, appSubtitle: null, logo: true, icon: false } }))
+      .toEqual(["branding"]);
+    expect(offeredSettings({ ...settings, branding: { appName: null, appSubtitle: null, logo: false, icon: true } }))
+      .toEqual(["branding"]);
+    expect(offeredSettings({ ...settings, branding: { appName: null, appSubtitle: null, logo: false, icon: false } }))
+      .toEqual([]);
+  });
 });
 
 describe("brandingText", () => {
@@ -98,6 +113,55 @@ describe("brandingText", () => {
     expect(brandingText({ appName: "Acme", appSubtitle: "Help" })).toBe("Acme · Help");
     expect(brandingText({ appName: null, appSubtitle: "Help" })).toBe("Help");
     expect(brandingText(null)).toBe("");
+  });
+
+  it("mentions a carried logo and icon with the given labels", () => {
+    const labels = { logo: "logo included", icon: "icon included" };
+    expect(brandingText({ appName: "Acme", appSubtitle: null, logo: true, icon: true }, labels))
+      .toBe("Acme · logo included · icon included");
+    expect(brandingText({ appName: null, appSubtitle: null, logo: false, icon: true }, labels)).toBe("icon included");
+    expect(brandingText({ appName: "Acme", appSubtitle: null, logo: false, icon: false }, labels)).toBe("Acme");
+  });
+});
+
+describe("formatBytes", () => {
+  it("picks a readable unit with at most one decimal", () => {
+    expect(formatBytes(0)).toBe("0 B");
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(1024 * 1024)).toBe("1 MB");
+    expect(formatBytes(34.5 * 1024 * 1024)).toBe("34.5 MB");
+    expect(formatBytes(250 * 1024 * 1024)).toBe("250 MB");
+    expect(formatBytes(2.1 * 1024 ** 3)).toBe("2.1 GB");
+  });
+
+  it("treats invalid sizes as zero", () => {
+    expect(formatBytes(-1)).toBe("0 B");
+    expect(formatBytes(Number.NaN)).toBe("0 B");
+  });
+});
+
+describe("previewFiles", () => {
+  it("reports the files and their total size", () => {
+    expect(previewFiles(preview({ counts: { files: 12, filesBytes: 2048 } }))).toEqual({ files: 12, bytes: 2048 });
+  });
+
+  it("is null for an export without files, such as an older one", () => {
+    expect(previewFiles(preview())).toBeNull();
+    expect(previewFiles(preview({ counts: { attachments: 3, files: 0 } }))).toBeNull();
+  });
+});
+
+describe("transferPercent", () => {
+  it("is a whole percentage capped at 100", () => {
+    expect(transferPercent(1, 3)).toBe(33);
+    expect(transferPercent(5, 5)).toBe(100);
+    expect(transferPercent(6, 5)).toBe(100);
+  });
+
+  it("is null when the total is unknown", () => {
+    expect(transferPercent(10, undefined)).toBeNull();
+    expect(transferPercent(10, 0)).toBeNull();
   });
 });
 
@@ -126,6 +190,22 @@ describe("summarizeImportResult", () => {
 
   it("treats counters a server omits as zero", () => {
     expect(summarizeImportResult({})).toEqual([]);
+  });
+});
+
+describe("importWarnings", () => {
+  it("reports skipped comments and attachments above zero, in order", () => {
+    expect(importWarnings({ attachmentsSkipped: 4, commentsSkipped: 1 })).toEqual([
+      { warning: "commentsSkipped", count: 1 },
+      { warning: "attachmentsSkipped", count: 4 },
+    ]);
+    expect(importWarnings({ attachmentsSkipped: 2, commentsSkipped: 0 })).toEqual([
+      { warning: "attachmentsSkipped", count: 2 },
+    ]);
+  });
+
+  it("is empty when nothing was left out or the server omits the counters", () => {
+    expect(importWarnings({})).toEqual([]);
   });
 });
 
