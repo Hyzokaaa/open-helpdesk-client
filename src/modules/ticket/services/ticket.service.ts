@@ -65,7 +65,6 @@ export interface TicketFilters {
   priority?: string;
   assigneeId?: string;
   reporterId?: string;
-  registeredById?: string;
   tagIds?: string[];
   departmentId?: string;
   organizationId?: string;
