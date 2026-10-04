@@ -22,6 +22,8 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 import { CustomFieldDefinition } from "@modules/custom-field/domain/custom-field-types";
 import { listCustomFields } from "@modules/custom-field/services/custom-field.service";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -61,6 +63,9 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [onBehalfOf, setOnBehalfOf] = useState("");
   const [allMembers, setAllMembers] = useState<WorkspaceMember[]>([]);
+  const { can } = usePermissions(workspaceSlug);
+  // Users may only open tickets for themselves; the backend rejects onBehalfOf without this permission
+  const canCreateOnBehalf = can(P.TICKET_CREATE_ON_BEHALF);
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
 
@@ -203,7 +208,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         departmentId: departmentId || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         uploadTokens: uploadTokens.length > 0 ? uploadTokens : undefined,
-        onBehalfOf: onBehalfOf.trim() || undefined,
+        onBehalfOf: canCreateOnBehalf ? onBehalfOf.trim() || undefined : undefined,
       });
 
       toast.success(t("ticketCreate.success"));
@@ -306,6 +311,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
             <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
           </FormInput>
 
+          {canCreateOnBehalf && (
           <FormInput label={t("ticketCreate.onBehalfOf")}>
             <Input
               placeholder={t("ticketCreate.onBehalfOfPlaceholder")}
@@ -324,6 +330,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
               </p>
             )}
           </FormInput>
+          )}
 
           <CustomFieldsForm
             definitions={customFieldDefs}
