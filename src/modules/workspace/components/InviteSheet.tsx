@@ -12,8 +12,8 @@ import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
-
-const ROLES = ["admin", "supervisor", "agent"] as const;
+import useUser from "@modules/user/hooks/useUser";
+import { invitableRoles } from "../domain/invitable-roles";
 
 interface Props {
   workspaceSlug: string;
@@ -27,6 +27,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
   const navigate = useNavigate();
   const { emailConfigured } = useConfig();
   const { getAgentLimit } = useExtensions();
+  const { user } = useUser();
   const defaultRole = fixedRole ?? "agent";
   const [rows, setRows] = useState([{ email: "", role: defaultRole }]);
   const [sending, setSending] = useState(false);
@@ -62,6 +63,9 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
 
     load();
   }, [workspaceSlug]);
+
+  const myRole = members.find((m) => m.userId === user?.id)?.role;
+  const roleOptions = invitableRoles(myRole, !!user?.isSystemAdmin);
 
   const memberEmails = useMemo(
     () => new Set(members.map((m) => m.email.toLowerCase())),
@@ -171,7 +175,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
                     {!fixedRole && (
                       <FormInput label={i === 0 ? t("members.role") : undefined} required className="flex-1 !mb-0">
                         <Select
-                          options={[...ROLES]}
+                          options={roleOptions}
                           label={(r) => r}
                           value={(r) => r === row.role}
                           onChange={(r) => updateRow(i, "role", r)}
