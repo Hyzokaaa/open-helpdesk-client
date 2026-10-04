@@ -1647,6 +1647,7 @@ const translations = {
   "systemEmail.saved": { en: "System email settings saved", es: "Configuración de correo del sistema guardada" },
   "systemEmail.deleted": { en: "System email settings removed", es: "Configuración de correo del sistema eliminada" },
   "systemEmail.saveError": { en: "Failed to save email settings", es: "Error al guardar la configuración de correo" },
+  "systemEmail.fromNotEmail": { en: "Enter a From address that is a valid email (your SMTP login is not one).", es: "Indica una dirección Remitente que sea un email válido (tu usuario SMTP no lo es)." },
   "systemEmail.deleteError": { en: "Failed to remove email settings", es: "Error al eliminar la configuración de correo" },
   "systemEmail.testSuccess": { en: "SMTP connection successful", es: "Conexión SMTP exitosa" },
   "systemEmail.testFailed": { en: "SMTP connection failed", es: "Conexión SMTP fallida" },
