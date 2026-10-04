@@ -14,6 +14,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useUser from "@modules/user/hooks/useUser";
 import { invitableRoles } from "../domain/invitable-roles";
+import { isValidEmail } from "@modules/shared/domain/is-valid-email";
 
 interface Props {
   workspaceSlug: string;
@@ -94,6 +95,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
   const getRowError = (email: string, index: number): string | null => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) return null;
+    if (!isValidEmail(normalized)) return t("invitations.invalidEmail");
     if (memberEmails.has(normalized)) return t("invitations.alreadyMember");
     if (pendingEmails.has(normalized)) return t("invitations.alreadyInvited");
     const seen = validRows.slice(0, index).map((r) => r.email.trim().toLowerCase());

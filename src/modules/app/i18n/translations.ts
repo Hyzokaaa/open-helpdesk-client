@@ -64,6 +64,8 @@ const translations = {
   "invitations.expired": { en: "Expired", es: "Expirada" },
   "invitations.expiredMessage": { en: "This invitation has expired", es: "Esta invitación ha expirado" },
   "invitations.duplicateEmail": { en: "Duplicate email in this batch", es: "Email duplicado en este lote" },
+  "invitations.invalidEmail": { en: "Not a valid email address", es: "No es una dirección de email válida" },
+  "invitations.invalidEmails": { en: "Fix these email addresses before sending: {emails}", es: "Corrige estas direcciones de email antes de enviar: {emails}" },
   "invitations.alreadyMember": { en: "Already a member of this workspace", es: "Ya es miembro de este workspace" },
   "invitations.alreadyInvited": { en: "Already has a pending invitation", es: "Ya tiene una invitación pendiente" },
   "invitations.agentLimitExceeded": { en: "You can only add {slots} more agent(s) on your current plan. Upgrade to add more.", es: "Solo puedes agregar {slots} agente(s) más en tu plan actual. Mejora tu plan para agregar más." },

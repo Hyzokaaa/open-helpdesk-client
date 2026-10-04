@@ -35,6 +35,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useUser from "@modules/user/hooks/useUser";
 import { canCreateWorkspace } from "../domain/can-create-workspace";
+import { findInvalidEmails } from "@modules/shared/domain/is-valid-email";
 
 type Step = "workspace" | "departments" | "email" | "invite" | "done";
 const STEPS: Step[] = ["workspace", "departments", "email", "invite", "done"];
@@ -189,6 +190,12 @@ export default function WorkspaceCreatePage() {
   const handleInvite = async () => {
     const valid = newInvites.filter((i) => i.email.trim());
     if (!valid.length || !slug) return;
+    // One malformed address makes the backend reject the whole batch
+    const invalid = findInvalidEmails(valid.map((i) => i.email));
+    if (invalid.length > 0) {
+      toast.error(t("invitations.invalidEmails").replace("{emails}", invalid.join(", ")));
+      return;
+    }
     setInviting(true);
     try {
       const results = await createInvitationBatch(slug, valid.map((i) => ({ email: i.email.trim(), role: i.role })));
