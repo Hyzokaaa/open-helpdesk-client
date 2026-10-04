@@ -741,6 +741,8 @@ const translations = {
   "settings.newPassword": { en: "New password", es: "Nueva contraseña" },
   "settings.confirmPassword": { en: "Confirm new password", es: "Confirmar nueva contraseña" },
   "settings.passwordMismatch": { en: "Passwords do not match", es: "Las contraseñas no coinciden" },
+  "settings.avatarTooLarge": { en: "The image must be 1 MB or smaller", es: "La imagen debe pesar 1 MB o menos" },
+  "settings.avatarWrongType": { en: "Use a PNG, JPEG or WebP image", es: "Usa una imagen PNG, JPEG o WebP" },
   "settings.passwordPolicy": { en: "Password must be 8 to 128 characters and not only spaces", es: "La contraseña debe tener entre 8 y 128 caracteres y no solo espacios" },
   "settings.passwordUpdated": { en: "Password updated", es: "Contraseña actualizada" },
   "settings.passwordError": { en: "Failed to update password", es: "Error al cambiar contraseña" },

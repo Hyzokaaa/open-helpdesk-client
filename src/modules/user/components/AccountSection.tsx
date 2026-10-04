@@ -9,6 +9,9 @@ import useUser from "../hooks/useUser";
 import { updateName, uploadAvatar, deleteAvatar } from "../services/auth.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
+const AVATAR_MAX_BYTES = 1024 * 1024;
+const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
 export default function AccountSection() {
   const { user, setUser } = useUser();
   const { t } = useTranslation();
@@ -46,6 +49,17 @@ export default function AccountSection() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // The backend accepts avatars up to 1 MB in PNG, JPEG or WebP
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error(t("settings.avatarTooLarge"));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    if (!AVATAR_TYPES.includes(file.type)) {
+      toast.error(t("settings.avatarWrongType"));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const { avatarUrl } = await uploadAvatar(file);
