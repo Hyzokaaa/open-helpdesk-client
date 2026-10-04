@@ -11,6 +11,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 import OAuthButtons from "../components/OAuthButtons";
+import { isPasswordAcceptable } from "../domain/password-policy";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -52,6 +53,10 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPasswordAcceptable(password)) {
+      toast.error(t("settings.passwordPolicy"));
+      return;
+    }
     setLoading(true);
 
     try {
