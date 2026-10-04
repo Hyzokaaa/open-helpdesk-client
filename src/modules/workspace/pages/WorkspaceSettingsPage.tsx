@@ -21,9 +21,8 @@ import {
   listMembers,
   WorkspaceMember,
   exportWorkspace,
-  importWorkspace,
-  importWorkspaceFromUrl,
   createExportToken,
+  ImportResult,
 } from "../services/workspace.service";
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
@@ -34,6 +33,7 @@ import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
 import BrandingSettings from "../components/BrandingSettings";
+import WorkspaceImportSheet, { ImportSource } from "../components/WorkspaceImportSheet";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import { P } from "../domain/permissions";
@@ -62,7 +62,9 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const [loading, setLoading] = useState(true);
   const [customPaletteLocked, setCustomPaletteLocked] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const [importSource, setImportSource] = useState<ImportSource | null>(null);
+  // Bumped after an import overwrote settings, so the sections holding their own copy remount
+  const [importRound, setImportRound] = useState(0);
   const [importUrl, setImportUrl] = useState("");
   const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -116,6 +118,19 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleImported = async (result: ImportResult) => {
+    if (importSource?.kind === "url") setImportUrl("");
+    if (!workspaceSlug || !result.settingsApplied?.length) return;
+    try {
+      const updated = await getWorkspace(workspaceSlug);
+      setWorkspace(updated);
+      setName(updated.name);
+      setDescription(updated.description);
+      if (result.settingsApplied.includes("palette")) setPalette(updated.palette ?? "green");
+      setImportRound((round) => round + 1);
+    } catch { /* the import succeeded; a reload shows the new settings */ }
   };
 
   const handleDelete = async () => {
@@ -199,7 +214,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
 
           {canManageSettings && (
             <CollapsibleSection title={t("workspaceSettings.sla")}>
-              <SlaSettings slug={workspaceSlug!} />
+              <SlaSettings key={importRound} slug={workspaceSlug!} />
             </CollapsibleSection>
           )}
 
@@ -218,6 +233,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("branding.title")}>
               <BrandingSettings
+                key={importRound}
                 slug={workspaceSlug!}
                 appName={workspace.appName}
                 appSubtitle={workspace.appSubtitle}
@@ -286,37 +302,32 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                   <p className="text-xs text-muted mb-2">{t("workspaceSettings.importDesc")}</p>
                   <input ref={importFileRef} type="file" accept=".json" className="hidden" onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (!file || !workspaceSlug) return;
-                    setImporting(true);
+                    e.target.value = '';
+                    if (!file) return;
                     try {
-                      const text = await file.text();
-                      const data = JSON.parse(text);
-                      const result = await importWorkspace(workspaceSlug, data);
-                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.categoriesImported} ${t("workspaceSettings.importCategories")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}, ${result.commentsImported} ${t("workspaceSettings.importComments")}`);
-                    } catch { toast.error(t("workspaceSettings.importError")); }
-                    finally { setImporting(false); if (importFileRef.current) importFileRef.current.value = ''; }
+                      setImportSource({ kind: "file", data: JSON.parse(await file.text()) });
+                    } catch { toast.error(t("workspaceImport.invalidFile")); }
                   }} />
                   <div className="flex gap-2">
-                    <Button size="xs" color="light" loading={importing} onClick={() => importFileRef.current?.click()}>
-                      {importing ? t("workspaceSettings.importing") : t("workspaceSettings.import")}
+                    <Button size="xs" color="light" onClick={() => importFileRef.current?.click()}>
+                      {t("workspaceSettings.import")}
                     </Button>
                   </div>
 
                   <div className="flex gap-2 mt-3">
                     <Input value={importUrl} onChange={setImportUrl} size="sm" placeholder={t("workspaceSettings.importUrlPlaceholder")} />
-                    <Button size="xs" color="light" loading={importing} disabled={!importUrl.trim()} onClick={async () => {
-                      if (!workspaceSlug || !importUrl.trim()) return;
-                      setImporting(true);
-                      try {
-                        const result = await importWorkspaceFromUrl(workspaceSlug, importUrl.trim());
-                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.categoriesImported} ${t("workspaceSettings.importCategories")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}`);
-                        setImportUrl("");
-                      } catch { toast.error(t("workspaceSettings.importError")); }
-                      finally { setImporting(false); }
-                    }}>
+                    <Button size="xs" color="light" disabled={!importUrl.trim()} onClick={() => setImportSource({ kind: "url", url: importUrl.trim() })}>
                       {t("workspaceSettings.importUrl")}
                     </Button>
                   </div>
+                  {importSource && (
+                    <WorkspaceImportSheet
+                      slug={workspaceSlug!}
+                      source={importSource}
+                      onClose={() => setImportSource(null)}
+                      onImported={handleImported}
+                    />
+                  )}
                 </div>
               </div>
             </CollapsibleSection>

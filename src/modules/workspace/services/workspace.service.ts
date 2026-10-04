@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import { ImportSetting, overwriteParam } from "../domain/workspace-import";
 
 export interface Workspace {
   id: string;
@@ -281,24 +282,35 @@ export interface ImportResult {
   membersAdded: number;
   tagsImported: number;
   categoriesImported: number;
+  organizationsImported: number;
+  departmentsImported: number;
+  projectsImported: number;
   ticketsImported: number;
   commentsImported: number;
+  /** Comments the import could not place; reported as a warning */
+  commentsSkipped: number;
+  descriptionEditsImported: number;
+  commentEditsImported: number;
   attachmentsImported: number;
   participantsImported: number;
   cannedResponsesImported: number;
   customFieldsImported: number;
   csatResponsesImported: number;
+  kbCategoriesImported: number;
+  kbArticlesImported: number;
   auditLogImported: number;
+  /** Target settings the import overwrote, among those asked for */
+  settingsApplied: ImportSetting[];
 }
 
-export async function importWorkspace(slug: string, data: any): Promise<ImportResult> {
-  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, data);
+/** Without `overwrite` the import changes none of the target's settings. */
+export async function importWorkspace(slug: string, data: unknown, overwrite: ImportSetting[] = []): Promise<ImportResult> {
+  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, data, { params: { overwrite: overwriteParam(overwrite) } });
   return res.data;
 }
 
-export async function importWorkspaceFromUrl(slug: string, url: string): Promise<ImportResult> {
-  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, { url });
-  return res.data;
+export async function importWorkspaceFromUrl(slug: string, url: string, overwrite: ImportSetting[] = []): Promise<ImportResult> {
+  return importWorkspace(slug, { url }, overwrite);
 }
 
 export async function createExportToken(slug: string): Promise<{ url: string; expiresAt: string }> {
