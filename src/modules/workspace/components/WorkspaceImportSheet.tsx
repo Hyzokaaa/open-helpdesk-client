@@ -16,6 +16,7 @@ import {
   ImportResultWarning,
   ImportSetting,
   formatBytes,
+  alreadyPresentNotice,
   importWarnings,
   offeredSettings,
   previewFiles,
@@ -172,6 +173,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
   if (result) {
     const counters = summarizeImportResult(result);
     const applied = result.settingsApplied ?? [];
+    const alreadyPresent = alreadyPresentNotice(result);
     return (
       <Sheet onClose={onClose} size="sm">
         <h3 className="text-base font-body-bold text-heading mb-3">{t("workspaceSettings.importSuccess")}</h3>
@@ -191,6 +193,13 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         <p className="text-sm text-body">
           {applied.length ? applied.map((key) => t(SETTING_LABELS[key].applied)).join(", ") : t("workspaceImport.noSettingsApplied")}
         </p>
+        {alreadyPresent && (
+          <p className="mt-4 text-sm text-muted">
+            {t(alreadyPresent.attachments > 0 ? "workspaceImport.alreadyPresentWithAttachments" : "workspaceImport.alreadyPresent")
+              .replace("{count}", String(alreadyPresent.tickets))
+              .replace("{attachments}", String(alreadyPresent.attachments))}
+          </p>
+        )}
         {importWarnings(result).map(({ warning, count }) => (
           <p key={warning} className="mt-4 text-sm text-amber-800 dark:text-amber-300">
             {t(WARNING_LABELS[warning]).replace("{count}", String(count))}

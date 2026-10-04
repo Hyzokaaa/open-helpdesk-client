@@ -170,6 +170,18 @@ export function importWarnings(
     .filter(({ count }) => count > 0);
 }
 
+/**
+ * Tickets the import left as they were because the workspace already had them, and the files
+ * those tickets carried; null when there were none. Not a warning: nothing was lost or overwritten.
+ */
+export function alreadyPresentNotice(
+  result: { ticketsAlreadyPresent?: number; attachmentsOfExistingTickets?: number },
+): { tickets: number; attachments: number } | null {
+  const tickets = result.ticketsAlreadyPresent ?? 0;
+  if (tickets <= 0) return null;
+  return { tickets, attachments: Math.max(0, result.attachmentsOfExistingTickets ?? 0) };
+}
+
 export function truncateText(text: string, max: number): string {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;

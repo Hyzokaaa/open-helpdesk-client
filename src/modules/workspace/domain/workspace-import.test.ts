@@ -5,6 +5,7 @@ import {
   filenameFromDisposition,
   formatBytes,
   ImportPreview,
+  alreadyPresentNotice,
   importWarnings,
   offeredSettings,
   overwriteParam,
@@ -206,6 +207,24 @@ describe("importWarnings", () => {
 
   it("is empty when nothing was left out or the server omits the counters", () => {
     expect(importWarnings({})).toEqual([]);
+  });
+});
+
+describe("alreadyPresentNotice", () => {
+  it("reports tickets already present and the attachments they carried", () => {
+    expect(alreadyPresentNotice({ ticketsAlreadyPresent: 8, attachmentsOfExistingTickets: 2 })).toEqual({ tickets: 8, attachments: 2 });
+    expect(alreadyPresentNotice({ ticketsAlreadyPresent: 3 })).toEqual({ tickets: 3, attachments: 0 });
+  });
+
+  it("is null when no ticket was already present or the server omits the counters", () => {
+    expect(alreadyPresentNotice({ ticketsAlreadyPresent: 0, attachmentsOfExistingTickets: 0 })).toBeNull();
+    expect(alreadyPresentNotice({})).toBeNull();
+  });
+
+  it("is not counted among the warnings or the imported counters", () => {
+    const result = { ticketsAlreadyPresent: 5, attachmentsOfExistingTickets: 1 };
+    expect(importWarnings(result as never)).toEqual([]);
+    expect(summarizeImportResult(result as never)).toEqual([]);
   });
 });
 

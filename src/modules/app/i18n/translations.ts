@@ -1901,6 +1901,8 @@ const translations = {
   "workspaceImport.applied.sla": { en: "SLA policy", es: "Política de SLA" },
   "workspaceImport.applied.description": { en: "Description", es: "Descripción" },
   "workspaceImport.applied.branding": { en: "App name, subtitle, logo and icon", es: "Nombre, subtítulo, logo e icono de la aplicación" },
+  "workspaceImport.alreadyPresent": { en: "{count} tickets already existed in this workspace and were left as they were. Nothing existing is overwritten.", es: "{count} tickets ya existían en este espacio de trabajo y se dejaron como estaban. No se sobrescribe nada existente." },
+  "workspaceImport.alreadyPresentWithAttachments": { en: "{count} tickets already existed in this workspace and were left as they were (including {attachments} attachments). Nothing existing is overwritten.", es: "{count} tickets ya existían en este espacio de trabajo y se dejaron como estaban (incluidos {attachments} adjuntos). No se sobrescribe nada existente." },
   "workspaceImport.commentsSkipped": { en: "{count} comments could not be imported and were skipped.", es: "{count} comentarios no se pudieron importar y se omitieron." },
   "workspaceImport.result.ticketsImported": { en: "Tickets", es: "Tickets" },
   "workspaceImport.result.commentsImported": { en: "Comments", es: "Comentarios" },

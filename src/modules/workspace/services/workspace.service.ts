@@ -329,6 +329,8 @@ export interface ImportResult {
   departmentsImported: number;
   projectsImported: number;
   ticketsImported: number;
+  /** Tickets left as they were because the workspace already had them; reported as a notice */
+  ticketsAlreadyPresent?: number;
   commentsImported: number;
   /** Comments the import could not place; reported as a warning */
   commentsSkipped: number;
@@ -337,6 +339,8 @@ export interface ImportResult {
   attachmentsImported: number;
   /** Attachments whose file the export did not carry (older exports); reported as a warning */
   attachmentsSkipped: number;
+  /** Attachments of tickets the workspace already had, so not imported again */
+  attachmentsOfExistingTickets?: number;
   participantsImported: number;
   cannedResponsesImported: number;
   customFieldsImported: number;
