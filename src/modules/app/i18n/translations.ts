@@ -1867,6 +1867,12 @@ const translations = {
   "stats.paginationOf": { en: "of", es: "de" },
   // KB management
   "kb.loadError": { en: "Failed to load article", es: "Error al cargar el artículo" },
+  // Select component
+  "select.noResults": { en: "No results", es: "Sin resultados" },
+  // Error boundary (rendered outside the providers, uses the standalone t())
+  "errorBoundary.title": { en: "Something went wrong", es: "Algo salió mal" },
+  "errorBoundary.message": { en: "An unexpected error occurred. Please reload the page to try again.", es: "Ocurrió un error inesperado. Recarga la página para intentarlo de nuevo." },
+  "errorBoundary.reload": { en: "Reload", es: "Recargar" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
