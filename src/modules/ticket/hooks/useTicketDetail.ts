@@ -1,3 +1,4 @@
+import { canBeAssignee } from "../domain/can-be-assignee";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -151,7 +152,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
   };
 
   const assignableMembers = members.filter(
-    (m) => m.role === "admin" || m.role === "agent",
+    (m) => canBeAssignee(m.role),
   );
 
   return {
