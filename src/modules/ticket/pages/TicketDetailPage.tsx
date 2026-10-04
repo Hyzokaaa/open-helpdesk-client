@@ -31,7 +31,7 @@ import {
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
-import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
+import { improveText, translateText, saveAiCache, clearAiCache, AI_TEXT_MAX_LENGTH } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
@@ -121,6 +121,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [pickupStatus, setPickupStatus] = useState<string | null>(null);
   const [askDiscardReason, setAskDiscardReason] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
+  // AI results for members who cannot write the ticket's AI cache (it needs ticket.edit.description);
+  // null marks a server-cached entry dismissed locally
+  const [localAiResults, setLocalAiResults] = useState<Record<string, { source: string; result: string } | null>>({});
   const [sendingComment, setSendingComment] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
@@ -511,8 +514,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     { key: "improve", label: t("ticketDetail.aiImprove"), action: () => improveText(ticket.description, slug) },
                     { key: `translate:${targetLang}`, label: t("ticketDetail.aiTranslate"), action: () => translateText(ticket.description, slug, targetLang) },
                   ];
-                  const cache = ticket.aiCache ?? {};
-                  const cachedEntries = Object.entries(cache).filter(([, v]) => v.source === ticket.description);
+                  const canSaveAiCache = can(P.TICKET_EDIT_DESCRIPTION);
+                  const cache: Record<string, { source: string; result: string } | null> = { ...(ticket.aiCache ?? {}), ...localAiResults };
+                  const cachedEntries = Object.entries(cache).filter(
+                    (e): e is [string, { source: string; result: string }] => e[1] !== null && e[1].source === ticket.description,
+                  );
 
                   return (
                     <>
@@ -522,12 +528,18 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             key={item.key}
                             onClick={async () => {
                               if (aiProcessing) return;
+                              if (ticket.description.length > AI_TEXT_MAX_LENGTH) {
+                                toast.error(t("ticketDetail.aiTextTooLong"));
+                                return;
+                              }
                               setAiProcessing(item.key);
                               try {
                                 const result = await item.action();
-                                if (workspaceSlug && ticketId) {
+                                if (canSaveAiCache && workspaceSlug && ticketId) {
                                   await saveAiCache(workspaceSlug, ticketId, item.key, ticket.description, result);
                                   fetchTicket();
+                                } else {
+                                  setLocalAiResults((prev) => ({ ...prev, [item.key]: { source: ticket.description, result } }));
                                 }
                               } catch { /* ignore */ }
                               finally { setAiProcessing(null); }
@@ -548,7 +560,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             <p className="text-exs font-body-semibold text-primary">{t("ticketDetail.aiResult")}</p>
                             <button
                               onClick={async () => {
-                                if (workspaceSlug && ticketId) {
+                                if (!canSaveAiCache || localAiResults[key]) {
+                                  setLocalAiResults((prev) => ({ ...prev, [key]: null }));
+                                  if (!canSaveAiCache) return;
+                                }
+                                if (workspaceSlug && ticketId && ticket.aiCache?.[key]) {
                                   await clearAiCache(workspaceSlug, ticketId, key);
                                   fetchTicket();
                                 }

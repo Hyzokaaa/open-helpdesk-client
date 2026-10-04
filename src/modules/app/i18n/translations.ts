@@ -687,6 +687,7 @@ const translations = {
   "ticketDetail.aiProcessing": { en: "Processing...", es: "Procesando..." },
   "ticketDetail.aiResult": { en: "AI Result", es: "Resultado IA" },
   "ticketDetail.aiDismiss": { en: "Dismiss", es: "Descartar" },
+  "ticketDetail.aiTextTooLong": { en: "This description is too long for the AI assistant (20,000 characters max).", es: "Esta descripción es demasiado larga para el asistente de IA (máximo 20.000 caracteres)." },
   "ticketDetail.deleteTicket": { en: "Delete Ticket", es: "Eliminar Ticket" },
   "ticketDetail.deleteTitle": { en: "Delete Ticket", es: "Eliminar Ticket" },
   "ticketDetail.deleteMessage": { en: "This ticket will be deleted. This action cannot be undone.", es: "Este ticket será eliminado. Esta acción no se puede deshacer." },
