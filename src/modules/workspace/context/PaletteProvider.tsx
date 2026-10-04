@@ -92,7 +92,8 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    getWorkspace(slug)
+    // Only cosmetic: a 403 or network error must not raise an error toast
+    getWorkspace(slug, { silent: true })
       .then((ws) => showPalette(ws.palette ?? DEFAULT_PALETTE))
       .catch(() => { /* keep the current palette */ });
   }, [workspaceSlug, isHome]);

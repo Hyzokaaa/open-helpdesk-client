@@ -70,8 +70,11 @@ export async function listWorkspaces(sort?: {
   return res.data;
 }
 
-export async function getWorkspace(slug: string): Promise<WorkspaceDetail> {
-  const res = await http.get<WorkspaceDetail>(`/workspaces/${slug}`);
+export async function getWorkspace(slug: string, options?: { silent?: boolean }): Promise<WorkspaceDetail> {
+  const res = await http.get<WorkspaceDetail>(
+    `/workspaces/${slug}`,
+    options?.silent ? { headers: { "X-Silent-Errors": "true" } } : undefined,
+  );
   return res.data;
 }
 
