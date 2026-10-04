@@ -96,7 +96,8 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchComments();
     fetchAttachments();
     if (workspaceSlug) {
-      listMembers(workspaceSlug).then(setMembers);
+      // Customers cannot list members (403); their ticket names come from the ticket itself
+      listMembers(workspaceSlug).then(setMembers).catch(() => {});
       listTags(workspaceSlug).then(setWorkspaceTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});

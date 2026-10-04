@@ -186,7 +186,8 @@ export default function TicketsPage() {
       listTags(workspaceSlug).then(setTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
-      listMembers(workspaceSlug).then(setMembers);
+      // Customers cannot list members (403); their ticket names come from the ticket itself
+      listMembers(workspaceSlug).then(setMembers).catch(() => {});
       listCategories(workspaceSlug).then(setCategories).catch(() => {});
       listProjects(workspaceSlug).then(setProjects).catch(() => {});
     }
