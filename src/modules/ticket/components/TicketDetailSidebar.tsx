@@ -35,6 +35,7 @@ interface TicketDetailSidebarProps {
   canChangeStatus: boolean;
   canEditFields: boolean;
   canAssign: boolean;
+  canManageFollowers: boolean;
   canEditTags: boolean;
   canEditCustomFields: boolean;
   isTerminal: boolean;
@@ -69,7 +70,7 @@ const EMPTY = <span className="text-xs text-muted">—</span>;
 export default function TicketDetailSidebar({
   ticket, draft, setDraft,
   isEditing,
-  canChangeStatus, canEditFields, canAssign, canEditTags, canEditCustomFields,
+  canChangeStatus, canEditFields, canAssign, canManageFollowers, canEditTags, canEditCustomFields,
   isTerminal,
   pendingTransfer, participants, members,
   wsCategories, wsProjects, editCategories, setEditCategories,
@@ -273,7 +274,8 @@ export default function TicketDetailSidebar({
 
       <TicketFollowersCard
         participants={participants}
-        canAssign={canAssign}
+        canManageFollowers={canManageFollowers}
+        currentUserId={userId}
         workspaceSlug={workspaceSlug}
         ticketId={ticketId}
         fetchParticipants={fetchParticipants}

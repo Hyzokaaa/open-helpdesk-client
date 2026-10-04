@@ -143,6 +143,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
+  const canManageFollowers = isEditing && !isReadonly && can(P.TICKET_PARTICIPANTS_MANAGE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
 
@@ -751,6 +752,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           canChangeStatus={canChangeStatus}
           canEditFields={canEditFields}
           canAssign={canAssign}
+          canManageFollowers={canManageFollowers}
           canEditTags={canEditTags}
           canEditCustomFields={canEditCustomFields}
           isTerminal={isTerminal}
