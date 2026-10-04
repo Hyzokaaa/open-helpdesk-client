@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { subDays, startOfDay, endOfDay, format } from "date-fns";
+import { getDateRange } from "../domain/get-date-range";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import useColumnDrag from "@modules/shared/hooks/useColumnDrag";
@@ -43,16 +43,6 @@ const CARD_BORDERS = [
   "border-l-purple-500",
   "border-l-pink-500",
 ];
-
-function getDateRange(preset: string) {
-  if (preset === "all") return { dateFrom: "", dateTo: "" };
-  const now = new Date();
-  const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
-  return {
-    dateFrom: format(startOfDay(subDays(now, days)), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-    dateTo: format(endOfDay(now), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-  };
-}
 
 export default function UserStatsPage() {
   const { workspaceSlug, userId } = useParams();
