@@ -130,7 +130,6 @@ export async function deleteAvatar(): Promise<void> {
 
 export interface AuthProviders {
   google: boolean;
-  microsoft: boolean;
 }
 
 export async function getAuthProviders(): Promise<AuthProviders> {
@@ -138,6 +137,6 @@ export async function getAuthProviders(): Promise<AuthProviders> {
     const res = await http.get<AuthProviders>("/auth/providers");
     return res.data;
   } catch {
-    return { google: false, microsoft: false };
+    return { google: false };
   }
 }

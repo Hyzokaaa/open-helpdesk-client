@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
-import { signup, getProfile, getAuthProviders } from "../services/auth.service";
+import { signup, getProfile, getAuthProviders, type AuthProviders } from "../services/auth.service";
 import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -31,7 +31,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<{ google: boolean; microsoft: boolean }>({ google: false, microsoft: false });
+  const [providers, setProviders] = useState<AuthProviders>({ google: false });
 
   useEffect(() => {
     getAuthProviders().then(setProviders).catch(() => {});
