@@ -167,7 +167,7 @@ export default function PortalTicketPage() {
             <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
             <span>{formatDate(ticket.createdAt)}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
-            <span>{ticket.creatorName}</span>
+            <span>{ticket.reporterName}</span>
           </div>
 
           {/* Title */}
@@ -287,11 +287,11 @@ export default function PortalTicketPage() {
             {ticket.comments.map((c) => (
               <div
                 key={c.id}
-                className={`flex ${c.isCreator ? "justify-end" : "justify-start"}`}
+                className={`flex ${c.isReporter ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[85%] rounded-lg p-3 ${
-                    c.isCreator
+                    c.isReporter
                       ? "bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800"
                       : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                   }`}
@@ -300,7 +300,7 @@ export default function PortalTicketPage() {
                     <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                       {c.authorName}
                     </span>
-                    {!c.isCreator && (
+                    {!c.isReporter && (
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                         {t("portalTicket.agent")}
                       </span>
