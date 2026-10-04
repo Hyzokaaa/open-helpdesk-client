@@ -1490,6 +1490,7 @@ const translations = {
   "portal.selectOption": { en: "Select an option", es: "Seleccionar una opcion" },
   "portal.trackTicket": { en: "Track your ticket", es: "Seguir tu ticket" },
   "portal.trackTicketDesc": { en: "Save this link to check your ticket status and add comments.", es: "Guarda este enlace para ver el estado de tu ticket y agregar comentarios." },
+  "portal.trackLinkEmailed": { en: "We've emailed you a link to follow this ticket.", es: "Te enviamos por correo un enlace para seguir este ticket." },
 
   // Portal Ticket Tracking
   "portalTicket.notFound": { en: "Ticket not found", es: "Ticket no encontrado" },

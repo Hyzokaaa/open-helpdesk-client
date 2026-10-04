@@ -34,7 +34,8 @@ export interface CreatePortalTicketData {
 
 export interface CreatePortalTicketResponse {
   ticketNumber: string;
-  portalToken: string;
+  /** null when the email already has an account: the link is emailed to that inbox only */
+  portalToken: string | null;
   message: string;
 }
 

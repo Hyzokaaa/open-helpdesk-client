@@ -65,7 +65,7 @@ export default function PortalPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<{ ticketNumber: string; portalToken: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{ ticketNumber: string; portalToken: string | null } | null>(null);
   const [, forceRender] = useState(0);
 
   useEffect(() => {
@@ -283,6 +283,7 @@ export default function PortalPage() {
             {t("portal.successMessage")}
           </p>
 
+          {submitted.portalToken ? (
           <>
               <a
                 href={`/portal/tickets/${submitted.portalToken}`}
@@ -300,6 +301,11 @@ export default function PortalPage() {
                 {t("portal.trackTicketDesc")}
               </p>
           </>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t("portal.trackLinkEmailed")}
+            </p>
+          )}
 
           <button
             type="button"
