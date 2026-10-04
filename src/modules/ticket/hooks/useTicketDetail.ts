@@ -1,5 +1,6 @@
 import { canBeAssignee } from "../domain/can-be-assignee";
-import { useCallback, useEffect, useState } from "react";
+import { collectTicketPeople, findPerson } from "../domain/ticket-people";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   TicketDetail,
@@ -146,9 +147,14 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     [workspaceSlug, ticketId],
   );
 
+  // Members without workspace.members.view get no member list; the ticket and its
+  // comments carry the names of the people involved instead.
+  const people = useMemo(() => collectTicketPeople({ ticket, comments }), [ticket, comments]);
+  const getPerson = (userId: string) => findPerson(userId, members, people);
+
   const getMemberName = (userId: string) => {
-    const m = members.find((m) => m.userId === userId);
-    return m ? `${m.firstName} ${m.lastName}` : userId;
+    const p = getPerson(userId);
+    return p ? `${p.firstName} ${p.lastName}` : userId;
   };
 
   const assignableMembers = members.filter(
@@ -180,6 +186,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchParticipants,
     handleDroppedFiles,
     getMemberName,
+    getPerson,
     assignableMembers,
   };
 }

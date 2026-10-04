@@ -56,6 +56,8 @@ interface TicketDetailSidebarProps {
   ticketId: string | undefined;
   userId: string | undefined;
   getMemberName: (id: string) => string;
+  /** Member entry, or the name the ticket carries when the caller cannot list members. */
+  getPerson?: (id: string) => { firstName: string; lastName: string; avatarUrl?: string | null } | undefined;
   fetchTicket: (refreshActivity?: boolean) => void;
   fetchParticipants: () => void;
   handleDraftStatusChange: (status: string) => void;
@@ -78,7 +80,7 @@ export default function TicketDetailSidebar({
   customFieldDefs,
   slaPolicy, slaLocked,
   workspaceSlug, ticketId, userId,
-  getMemberName, fetchTicket, fetchParticipants,
+  getMemberName, getPerson, fetchTicket, fetchParticipants,
   handleDraftStatusChange,
   navigate, formatDate, t, tEnum,
 }: TicketDetailSidebarProps) {
@@ -204,7 +206,7 @@ export default function TicketDetailSidebar({
             [t("ticketDetail.reportedBy"), ticket.reporterId],
             ...(ticket.registeredById ? [[t("ticketDetail.registeredBy"), ticket.registeredById] as const] : []),
           ] as const).map(([label, personId]) => {
-            const person = members.find((m) => m.userId === personId);
+            const person = personId ? (getPerson ? getPerson(personId) : members.find((m) => m.userId === personId)) : undefined;
             return (
               <PropertyRow key={label} label={label}>
                 {personId ? (

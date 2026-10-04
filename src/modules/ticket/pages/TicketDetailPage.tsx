@@ -95,6 +95,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchParticipants,
     handleDroppedFiles,
     getMemberName,
+    getPerson,
     assignableMembers,
   } = useTicketDetail({ workspaceSlug, ticketId, isPlanLimitError, t });
 
@@ -595,7 +596,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      {(() => { const cm = members.find((m) => m.userId === c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
+                      {(() => { const cm = getPerson(c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
                       <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
                       {c.editedAt && (
                         <button
@@ -655,6 +656,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             {/* Read-only participants still take part in the conversation */}
             <CommentInput
               members={members}
+              allowMentions={can(P.WORKSPACE_MEMBERS_VIEW)}
               loading={sendingComment}
               onSubmit={handleAddComment}
               onSubmitAndResolve={handleAddCommentAndResolve}
@@ -789,6 +791,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           ticketId={ticketId}
           userId={user?.id}
           getMemberName={getMemberName}
+          getPerson={getPerson}
           fetchTicket={fetchTicket}
           fetchParticipants={fetchParticipants}
           handleDraftStatusChange={handleDraftStatusChange}

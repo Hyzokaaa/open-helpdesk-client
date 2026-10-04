@@ -1,5 +1,6 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
+import type { PersonSummary } from "@modules/shared/domain/person-summary";
 
 export interface TicketListItem {
   id: string;
@@ -49,6 +50,10 @@ export interface TicketDetail {
   descriptionEditedAt: string | null;
   accessLevel?: 'full' | 'readonly';
   aiCache?: Record<string, { source: string; result: string }>;
+  reporter?: PersonSummary | null;
+  assignee?: PersonSummary | null;
+  registeredBy?: PersonSummary | null;
+  resolvedBy?: PersonSummary | null;
 }
 
 export interface DescriptionEditItem {
