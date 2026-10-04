@@ -292,7 +292,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       const text = await file.text();
                       const data = JSON.parse(text);
                       const result = await importWorkspace(workspaceSlug, data);
-                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}, ${result.commentsImported} ${t("workspaceSettings.importComments")}`);
+                      toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.categoriesImported} ${t("workspaceSettings.importCategories")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}, ${result.commentsImported} ${t("workspaceSettings.importComments")}`);
                     } catch { toast.error(t("workspaceSettings.importError")); }
                     finally { setImporting(false); if (importFileRef.current) importFileRef.current.value = ''; }
                   }} />
@@ -309,7 +309,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                       setImporting(true);
                       try {
                         const result = await importWorkspaceFromUrl(workspaceSlug, importUrl.trim());
-                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}`);
+                        toast.success(`${t("workspaceSettings.importSuccess")}: ${result.ticketsImported} ${t("workspaceSettings.importTickets")}, ${result.categoriesImported} ${t("workspaceSettings.importCategories")}, ${result.usersCreated} ${t("workspaceSettings.importUsersCreated")}`);
                         setImportUrl("");
                       } catch { toast.error(t("workspaceSettings.importError")); }
                       finally { setImporting(false); }

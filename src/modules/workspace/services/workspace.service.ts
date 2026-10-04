@@ -277,6 +277,7 @@ export interface ImportResult {
   usersCreated: number;
   membersAdded: number;
   tagsImported: number;
+  categoriesImported: number;
   ticketsImported: number;
   commentsImported: number;
   attachmentsImported: number;

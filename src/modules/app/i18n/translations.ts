@@ -1839,6 +1839,7 @@ const translations = {
   "workspaceSettings.importTickets": { en: "tickets", es: "tickets" },
   "workspaceSettings.importUsersCreated": { en: "users created", es: "usuarios creados" },
   "workspaceSettings.importComments": { en: "comments", es: "comentarios" },
+  "workspaceSettings.importCategories": { en: "categories", es: "categorías" },
 
   // Departments errors
   "departments.createError": { en: "Failed to create department", es: "Error al crear departamento" },
