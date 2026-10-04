@@ -2,6 +2,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet, { SheetCloseButton } from "@modules/app/modules/ui/components/Sheet/Sheet";
+import { sanitizeHtml } from "@modules/app/security/sanitize-html";
 
 interface VersionItem {
   id: string;
@@ -41,7 +42,7 @@ export default function VersionHistoryModal({ title, items, onClose }: Props) {
               </div>
               <div
                 className="text-sm text-muted tiptap"
-                dangerouslySetInnerHTML={{ __html: item.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.content) }}
               />
             </div>
           ))}

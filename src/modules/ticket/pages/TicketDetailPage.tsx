@@ -45,6 +45,8 @@ import TicketDetailSidebar from "../components/TicketDetailSidebar";
 import useVersionHistory from "../hooks/useVersionHistory";
 import useTicketDetail from "../hooks/useTicketDetail";
 import useTicketEdit from "../hooks/useTicketEdit";
+import { renderMentions } from "../domain/render-mentions";
+import { sanitizeHtml } from "@modules/app/security/sanitize-html";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -491,7 +493,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               <>
                 <div
                   className="text-sm text-body break-words overflow-hidden tiptap"
-                  dangerouslySetInnerHTML={{ __html: ticket.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(ticket.description) }}
                 />
                 {ticket.descriptionEditedAt && (
                   <button
@@ -626,16 +628,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   ) : (
                     <div
                       className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
-                      dangerouslySetInnerHTML={{
-                        __html: c.content.replace(
-                          /@\[([^\]]+)\]\(([^)]+)\)/g,
-                          (_match, _name, userId) => {
-                            const current = members.find((m) => m.userId === userId);
-                            const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                            return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
-                          },
-                        ),
-                      }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderMentions(c.content, members)) }}
                     />
                   )}
                 </Card>

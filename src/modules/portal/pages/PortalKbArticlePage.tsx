@@ -4,6 +4,7 @@ import { getPortalKbArticle, PortalKbArticleDetail } from "../services/portal.se
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import PortalKbLayout from "../components/PortalKbLayout";
+import { sanitizeHtml } from "@modules/app/security/sanitize-html";
 
 export default function PortalKbArticlePage() {
   const { t } = useTranslation();
@@ -47,7 +48,7 @@ export default function PortalKbArticlePage() {
 
           <h1 className="text-2xl font-bold text-heading mb-6">{article.title}</h1>
 
-          <div className="kb-content text-sm text-body" dangerouslySetInnerHTML={{ __html: article.content }} />
+          <div className="kb-content text-sm text-body" dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }} />
 
           <div className="mt-12 pt-6 border-t border-border-card text-center">
             <p className="text-sm text-muted mb-2">{t("portalKb.didntFind")}</p>
