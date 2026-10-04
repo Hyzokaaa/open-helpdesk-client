@@ -1469,6 +1469,7 @@ const translations = {
   "portal.department": { en: "Department", es: "Departamento" },
   "portal.selectDepartment": { en: "Select a department (optional)", es: "Selecciona un departamento (opcional)" },
   "portal.subjectPlaceholder": { en: "Brief summary of your issue", es: "Resumen breve de tu problema" },
+  "portal.subjectTooShort": { en: "The subject needs at least 3 characters", es: "El asunto necesita al menos 3 caracteres" },
   "portal.description": { en: "Description", es: "Descripción" },
   "portal.descriptionPlaceholder": { en: "Describe your issue in detail...", es: "Describe tu problema en detalle..." },
   "portal.attachments": { en: "Attachments", es: "Archivos adjuntos" },
