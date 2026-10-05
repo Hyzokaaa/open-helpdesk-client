@@ -30,6 +30,15 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
     setShow(true);
   };
 
+  // Without a member entry (a customer cannot list members) there is no profile to open: plain text
+  if (!m) {
+    return (
+      <span className={inline ? "text-body font-body-medium" : `${alignClass} min-w-0 block break-words leading-snug text-body font-body-medium`}>
+        {getMemberName(userId)}
+      </span>
+    );
+  }
+
   return (
     <span className={inline ? "" : `${alignClass} min-w-0`}>
       <button

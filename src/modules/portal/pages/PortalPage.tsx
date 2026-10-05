@@ -65,7 +65,7 @@ export default function PortalPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<{ ticketNumber: string; portalToken: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{ ticketNumber: string; portalToken: string | null } | null>(null);
   const [, forceRender] = useState(0);
 
   useEffect(() => {
@@ -183,7 +183,9 @@ export default function PortalPage() {
         );
       }
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || t("portal.submitError");
+      // Validation errors arrive as an array of messages
+      const raw = err?.response?.data?.message;
+      const message = Array.isArray(raw) ? raw.join(". ") : raw || err?.message || t("portal.submitError");
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -200,10 +202,12 @@ export default function PortalPage() {
       if (Array.isArray(v) && v.length === 0) return false;
       return true;
     });
+  // The backend requires at least 3 characters
+  const subjectTooShort = subject.trim() !== "" && subject.trim().length < 3;
   const canSubmit =
     name.trim() !== "" &&
     email.trim() !== "" &&
-    subject.trim() !== "" &&
+    subject.trim().length >= 3 &&
     description.trim() !== "" &&
     requiredCustomFieldsFilled &&
     !hasPending &&
@@ -283,6 +287,7 @@ export default function PortalPage() {
             {t("portal.successMessage")}
           </p>
 
+          {submitted.portalToken ? (
           <>
               <a
                 href={`/portal/tickets/${submitted.portalToken}`}
@@ -300,6 +305,11 @@ export default function PortalPage() {
                 {t("portal.trackTicketDesc")}
               </p>
           </>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t("portal.trackLinkEmailed")}
+            </p>
+          )}
 
           <button
             type="button"
@@ -409,6 +419,9 @@ export default function PortalPage() {
                 required
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
               />
+              {subjectTooShort && (
+                <p className="text-xs text-red-500 mt-1">{t("portal.subjectTooShort")}</p>
+              )}
             </div>
 
             {departments.length > 0 && (

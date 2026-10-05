@@ -11,6 +11,8 @@ import useFormatDate from "@modules/app/hooks/useFormatDate";
 import {
   ApiKeyDto,
   API_KEY_SCOPES,
+  ADMIN_EXCHANGE_SCOPE,
+  DEFAULT_API_KEY_SCOPES,
   listApiKeys,
   createApiKey,
   deleteApiKey,
@@ -75,7 +77,14 @@ export default function ApiKeySettings({ slug }: Props) {
             return (
               <div key={k.id} className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border-card bg-surface">
                 <div className="min-w-0">
-                  <p className="text-xs font-body-medium text-body">{k.name}</p>
+                  <p className="text-xs font-body-medium text-body flex items-center gap-2">
+                    {k.name}
+                    {k.scopes.includes(ADMIN_EXCHANGE_SCOPE) && (
+                      <span className="text-exs font-body-semibold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        {t("apiKeys.actsAsAdminBadge")}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-exs text-muted">
                     {k.prefix}... · {k.scopes.length}/{API_KEY_SCOPES.length} {t("apiKeys.scopes")}
                     {k.expiresAt ? (
@@ -140,7 +149,7 @@ interface ExpirationOption {
 function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: string; onCreated: () => void; onClose: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
-  const [scopes, setScopes] = useState<string[]>([...API_KEY_SCOPES]);
+  const [scopes, setScopes] = useState<string[]>([...DEFAULT_API_KEY_SCOPES]);
   const [expiration, setExpiration] = useState<ExpirationOption | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
@@ -184,19 +193,19 @@ function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: s
         { value: "members:read", label: t("apiKeys.scopeMembersRead") },
       ],
     },
-    {
-      label: t("apiKeys.scopeGroupAuth"),
-      scopes: [
-        { value: "auth:exchange", label: t("apiKeys.scopeAuthExchange") },
-      ],
-    },
   ];
 
   const toggleScope = (scope: string) => {
-    setScopes((prev) =>
-      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope],
-    );
+    setScopes((prev) => {
+      if (!prev.includes(scope)) return [...prev, scope];
+      // Acting for admins only makes sense on top of the exchange itself
+      const removed = scope === "auth:exchange" ? [scope, ADMIN_EXCHANGE_SCOPE] : [scope];
+      return prev.filter((s) => !removed.includes(s));
+    });
   };
+
+  const hasExchange = scopes.includes("auth:exchange");
+  const hasAdminExchange = scopes.includes(ADMIN_EXCHANGE_SCOPE);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,6 +287,40 @@ function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: s
                   </div>
                 </div>
               ))}
+
+              <div>
+                <p className="text-exs text-muted mb-1">{t("apiKeys.scopeGroupAuth")}</p>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasExchange}
+                    onChange={() => toggleScope("auth:exchange")}
+                    className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/50"
+                  />
+                  <span>
+                    <span className="block text-xs text-body">{t("apiKeys.scopeAuthExchange")}</span>
+                    <span className="block text-exs text-muted">{t("apiKeys.scopeAuthExchangeHint")}</span>
+                  </span>
+                </label>
+                <label className={`flex items-start gap-2 ml-6 mt-2 ${hasExchange ? "cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
+                  <input
+                    type="checkbox"
+                    checked={hasAdminExchange}
+                    disabled={!hasExchange}
+                    onChange={() => toggleScope(ADMIN_EXCHANGE_SCOPE)}
+                    className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/50"
+                  />
+                  <span>
+                    <span className="block text-xs text-body">{t("apiKeys.scopeAuthExchangeAdmin")}</span>
+                    <span className="block text-exs text-muted">{t("apiKeys.scopeAuthExchangeAdminHint")}</span>
+                  </span>
+                </label>
+                {hasAdminExchange && (
+                  <div className="ml-6 mt-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                    <p className="text-exs text-amber-800 dark:text-amber-300">{t("apiKeys.scopeAuthExchangeAdminWarning")}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

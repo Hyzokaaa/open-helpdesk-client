@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { inputClass } from "../../shared/domain/input-class";
 import { Size } from "../../domain/size";
 import { useFormInputId } from "../FormInput/form-input-context";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface Props<T> {
   options: T[];
@@ -27,6 +28,7 @@ export default function Select<T>({
   searchable,
 }: Props<T>) {
   const formId = useFormInputId();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -116,13 +118,13 @@ export default function Select<T>({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t("filters.search")}
               className="w-full px-3 py-2 text-sm border-b border-border-input bg-surface text-body outline-none"
             />
           )}
           <div className="overflow-auto">
             {filtered.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-muted">No results</p>
+              <p className="px-3 py-2 text-sm text-muted">{t("select.noResults")}</p>
             ) : (
               filtered.map((option, i) => (
                 <button

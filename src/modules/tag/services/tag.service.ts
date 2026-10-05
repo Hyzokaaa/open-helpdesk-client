@@ -6,8 +6,8 @@ export interface Tag {
   color: string | null;
 }
 
-export async function listTags(workspaceId: string): Promise<Tag[]> {
-  const res = await http.get<Tag[]>(`/workspaces/${workspaceId}/tags`);
+export async function listTags(workspaceId: string, options?: { silent?: boolean }): Promise<Tag[]> {
+  const res = await http.get<Tag[]>(`/workspaces/${workspaceId}/tags`, options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined);
   return res.data;
 }
 

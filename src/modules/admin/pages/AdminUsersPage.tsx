@@ -23,6 +23,7 @@ import {
   updateUserProfile,
 } from "../services/admin.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
 
 export default function AdminUsersPage() {
   const { user } = useUser();
@@ -87,6 +88,10 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPasswordAcceptable(password)) {
+      toast.error(t("settings.passwordPolicy"));
+      return;
+    }
     setCreatingUser(true);
     try {
       await createUser({ email, password, firstName, lastName, isSystemAdmin: isAdmin, isEmailVerified });

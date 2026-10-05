@@ -31,7 +31,7 @@ import {
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
-import { improveText, translateText, saveAiCache, clearAiCache } from "@modules/ai/services/ai.service";
+import { improveText, translateText, saveAiCache, clearAiCache, AI_TEXT_MAX_LENGTH } from "@modules/ai/services/ai.service";
 import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
@@ -45,6 +45,8 @@ import TicketDetailSidebar from "../components/TicketDetailSidebar";
 import useVersionHistory from "../hooks/useVersionHistory";
 import useTicketDetail from "../hooks/useTicketDetail";
 import useTicketEdit from "../hooks/useTicketEdit";
+import { renderMentions } from "../domain/render-mentions";
+import { sanitizeHtml } from "@modules/app/security/sanitize-html";
 
 interface Props {
   workspaceSlugProp?: string;
@@ -93,6 +95,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     fetchParticipants,
     handleDroppedFiles,
     getMemberName,
+    getPerson,
     assignableMembers,
   } = useTicketDetail({ workspaceSlug, ticketId, isPlanLimitError, t });
 
@@ -119,6 +122,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [pickupStatus, setPickupStatus] = useState<string | null>(null);
   const [askDiscardReason, setAskDiscardReason] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
+  // AI results for members who cannot write the ticket's AI cache (it needs ticket.edit.description);
+  // null marks a server-cached entry dismissed locally
+  const [localAiResults, setLocalAiResults] = useState<Record<string, { source: string; result: string } | null>>({});
   const [sendingComment, setSendingComment] = useState(false);
   const [detailTab, setDetailTab] = useState<"details" | "activity">("details");
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
@@ -141,6 +147,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
+  const canManageFollowers = isEditing && !isReadonly && can(P.TICKET_PARTICIPANTS_MANAGE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
 
@@ -491,7 +498,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               <>
                 <div
                   className="text-sm text-body break-words overflow-hidden tiptap"
-                  dangerouslySetInnerHTML={{ __html: ticket.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(ticket.description) }}
                 />
                 {ticket.descriptionEditedAt && (
                   <button
@@ -508,8 +515,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     { key: "improve", label: t("ticketDetail.aiImprove"), action: () => improveText(ticket.description, slug) },
                     { key: `translate:${targetLang}`, label: t("ticketDetail.aiTranslate"), action: () => translateText(ticket.description, slug, targetLang) },
                   ];
-                  const cache = ticket.aiCache ?? {};
-                  const cachedEntries = Object.entries(cache).filter(([, v]) => v.source === ticket.description);
+                  const canSaveAiCache = can(P.TICKET_EDIT_DESCRIPTION);
+                  const cache: Record<string, { source: string; result: string } | null> = { ...(ticket.aiCache ?? {}), ...localAiResults };
+                  const cachedEntries = Object.entries(cache).filter(
+                    (e): e is [string, { source: string; result: string }] => e[1] !== null && e[1].source === ticket.description,
+                  );
 
                   return (
                     <>
@@ -519,12 +529,18 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             key={item.key}
                             onClick={async () => {
                               if (aiProcessing) return;
+                              if (ticket.description.length > AI_TEXT_MAX_LENGTH) {
+                                toast.error(t("ticketDetail.aiTextTooLong"));
+                                return;
+                              }
                               setAiProcessing(item.key);
                               try {
                                 const result = await item.action();
-                                if (workspaceSlug && ticketId) {
+                                if (canSaveAiCache && workspaceSlug && ticketId) {
                                   await saveAiCache(workspaceSlug, ticketId, item.key, ticket.description, result);
                                   fetchTicket();
+                                } else {
+                                  setLocalAiResults((prev) => ({ ...prev, [item.key]: { source: ticket.description, result } }));
                                 }
                               } catch { /* ignore */ }
                               finally { setAiProcessing(null); }
@@ -545,7 +561,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                             <p className="text-exs font-body-semibold text-primary">{t("ticketDetail.aiResult")}</p>
                             <button
                               onClick={async () => {
-                                if (workspaceSlug && ticketId) {
+                                if (!canSaveAiCache || localAiResults[key]) {
+                                  setLocalAiResults((prev) => ({ ...prev, [key]: null }));
+                                  if (!canSaveAiCache) return;
+                                }
+                                if (workspaceSlug && ticketId && ticket.aiCache?.[key]) {
                                   await clearAiCache(workspaceSlug, ticketId, key);
                                   fetchTicket();
                                 }
@@ -576,7 +596,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      {(() => { const cm = members.find((m) => m.userId === c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
+                      {(() => { const cm = getPerson(c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
                       <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
                       {c.editedAt && (
                         <button
@@ -589,7 +609,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     </div>
                     <div className="flex items-center gap-2">
                       {c.createdAt && <p className="text-exs text-subtle">{formatDate(c.createdAt)}</p>}
-                      {!isReadonly && (c.authorId === user?.id || can(P.TICKET_EDIT_DESCRIPTION)) && editingCommentId !== c.id && (
+                      {c.authorId === user?.id && editingCommentId !== c.id && (
                         <button
                           onClick={() => { setEditingCommentId(c.id); setEditingCommentContent(c.content); }}
                           className="text-exs text-muted hover:text-primary cursor-pointer"
@@ -626,32 +646,23 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   ) : (
                     <div
                       className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
-                      dangerouslySetInnerHTML={{
-                        __html: c.content.replace(
-                          /@\[([^\]]+)\]\(([^)]+)\)/g,
-                          (_match, _name, userId) => {
-                            const current = members.find((m) => m.userId === userId);
-                            const displayName = current ? `${current.firstName} ${current.lastName}` : _name;
-                            return `<span class="inline-block bg-primary-50 text-primary font-body-semibold rounded px-0.5 mx-0.5">@${displayName}</span>`;
-                          },
-                        ),
-                      }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderMentions(c.content, members)) }}
                     />
                   )}
                 </Card>
               ))}
             </div>
 
-            {!isReadonly && (
-              <CommentInput
-                members={members}
-                loading={sendingComment}
-                onSubmit={handleAddComment}
-                onSubmitAndResolve={handleAddCommentAndResolve}
-                canResolve={!isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
-                cannedResponses={cannedResponses}
-              />
-            )}
+            {/* Read-only participants still take part in the conversation */}
+            <CommentInput
+              members={members}
+              allowMentions={can(P.WORKSPACE_MEMBERS_VIEW)}
+              loading={sendingComment}
+              onSubmit={handleAddComment}
+              onSubmitAndResolve={handleAddCommentAndResolve}
+              canResolve={!isReadonly && !isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
+              cannedResponses={cannedResponses}
+            />
           </div>
 
           {/* Attachments */}
@@ -659,7 +670,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <p className="text-xs font-body-medium text-subtle uppercase mb-3">
               {t("ticketDetail.attachments")} ({attachments.length})
             </p>
-            {!isReadonly && (
+            {can(P.ATTACHMENT_UPLOAD) && (
               <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-exs text-subtle">
@@ -719,7 +730,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                         </div>
                       )}
                     </button>
-                    {!isReadonly && (
+                    {a.canDelete && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -759,6 +770,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           canChangeStatus={canChangeStatus}
           canEditFields={canEditFields}
           canAssign={canAssign}
+          canManageFollowers={canManageFollowers}
           canEditTags={canEditTags}
           canEditCustomFields={canEditCustomFields}
           isTerminal={isTerminal}
@@ -779,6 +791,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           ticketId={ticketId}
           userId={user?.id}
           getMemberName={getMemberName}
+          getPerson={getPerson}
           fetchTicket={fetchTicket}
           fetchParticipants={fetchParticipants}
           handleDraftStatusChange={handleDraftStatusChange}

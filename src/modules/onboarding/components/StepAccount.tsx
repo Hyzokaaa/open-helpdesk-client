@@ -8,6 +8,7 @@ import { signup, getProfile } from "@modules/user/services/auth.service";
 import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
 
 interface Props {
   onDone: () => void;
@@ -32,7 +33,7 @@ export default function StepAccount({ onDone }: Props) {
       return;
     }
 
-    if (password.length < 6) {
+    if (!isPasswordAcceptable(password)) {
       toast.error(t("onboarding.passwordTooShort"));
       return;
     }

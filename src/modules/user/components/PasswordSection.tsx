@@ -5,6 +5,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { changePassword } from "../services/auth.service";
+import { isPasswordAcceptable } from "../domain/password-policy";
 import useTranslation from "@modules/app/i18n/useTranslation";
 
 export default function PasswordSection() {
@@ -14,7 +15,8 @@ export default function PasswordSection() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const passwordValid = currentPassword.length > 0 && newPassword.length >= 6 && newPassword === confirmPassword;
+  const passwordValid = currentPassword.length > 0 && isPasswordAcceptable(newPassword) && newPassword === confirmPassword;
+  const passwordTooWeak = newPassword.length > 0 && !isPasswordAcceptable(newPassword);
   const passwordMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   const handleSubmit = async () => {
@@ -68,6 +70,9 @@ export default function PasswordSection() {
           </FormInput>
         </div>
 
+        {passwordTooWeak && (
+          <p className="text-xs text-red-500 mt-2">{t("settings.passwordPolicy")}</p>
+        )}
         {passwordMismatch && (
           <p className="text-xs text-red-500 mt-2">{t("settings.passwordMismatch")}</p>
         )}

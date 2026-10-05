@@ -1,8 +1,8 @@
 {
   "name": "open-helpdesk-client",
-  "version": "1.21.1",
+  "version": "1.22.0",
   "compatibility": {
-    "backend": ">=1.21.1 <2.0.0"
+    "backend": ">=1.22.0 <2.0.0"
   },
   "private": true,
   "type": "module",
@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "sync-lockfile": "node scripts/sync-lockfile.js"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "axios": "^1.12.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.4.16",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.1",

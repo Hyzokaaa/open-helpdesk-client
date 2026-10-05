@@ -8,6 +8,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import { createWorkspace } from "@modules/workspace/services/workspace.service";
 import { createInvitationBatch } from "@modules/workspace/services/invitation.service";
+import { findInvalidEmails } from "@modules/shared/domain/is-valid-email";
 
 interface Invite {
   email: string;
@@ -53,11 +54,21 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
     e.preventDefault();
     if (!workspaceName.trim()) return;
 
+    // Validate before creating the workspace: a rejected invitation batch after it exists
+    // would make the user resubmit and create a second workspace.
+    const invalid = findInvalidEmails(invites.map((i) => i.email));
+    if (invalid.length > 0) {
+      toast.error(t("invitations.invalidEmails").replace("{emails}", invalid.join(", ")));
+      return;
+    }
+
     setLoading(true);
     try {
       const ws = await createWorkspace({ name: workspaceName.trim(), description: "" });
 
-      const validInvites = invites.filter((i) => i.email.trim());
+      const validInvites = invites
+        .filter((i) => i.email.trim())
+        .map((i) => ({ ...i, email: i.email.trim() }));
       if (validInvites.length > 0) {
         await createInvitationBatch(ws.slug, validInvites);
       }

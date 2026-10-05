@@ -11,4 +11,8 @@ export interface AuthUser {
   dateFormat: string;
   timezone: string;
   avatarUrl: string | null;
+  /** What this user may do across the installation, as decided by the backend. */
+  capabilities: {
+    createWorkspace: boolean;
+  };
 }

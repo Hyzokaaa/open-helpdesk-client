@@ -5,6 +5,7 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import { AuditLogItem, listAuditLog } from "../services/audit-log.service";
+import { commentPreview, describeChanges, formatChange } from "../domain/audit-summary";
 
 const COLLAPSED_COUNT = 5;
 
@@ -113,9 +114,7 @@ function describeAction(
 
     case "ticket-updated": {
       if (!before || !after) return t("auditLog.feed.updated");
-      const changes = Object.keys(after)
-        .filter((k) => String(before[k]) !== String(after[k]))
-        .map((k) => `${k}: ${before[k]} → ${after[k]}`);
+      const changes = describeChanges(meta, {}, t).map(formatChange);
       if (changes.length === 0) return t("auditLog.feed.updated");
       return `${t("auditLog.feed.updated")} (${changes.join(", ")})`;
     }
@@ -138,16 +137,8 @@ function describeAction(
       return t("auditLog.feed.deleted");
 
     case "comment-created": {
-      const content = meta.content as string | undefined;
-      if (content) {
-        const clean = content
-          .replace(/<[^>]+>/g, "") // Strip HTML tags
-          .replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1") // Clean mentions
-          .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"') // Unescape entities
-          .trim();
-        const preview = clean.length > 60 ? clean.slice(0, 60) + "..." : clean;
-        return `${t("auditLog.feed.commented")}: "${preview}"`;
-      }
+      const preview = commentPreview(meta.content, 60);
+      if (preview) return `${t("auditLog.feed.commented")}: "${preview}"`;
       return t("auditLog.feed.commented");
     }
 

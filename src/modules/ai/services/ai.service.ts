@@ -1,5 +1,8 @@
 import { http } from "@modules/app/modules/http/domain/http";
 
+/** Backend limit (ai-request-limits.ts): longer text is rejected with a 400. */
+export const AI_TEXT_MAX_LENGTH = 20000;
+
 export async function improveText(text: string, workspaceSlug: string, language?: string): Promise<string> {
   const res = await http.post<{ result: string }>("/ai/improve", { text, workspaceSlug, language });
   return res.data.result;
