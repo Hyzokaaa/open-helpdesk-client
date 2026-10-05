@@ -235,7 +235,7 @@ export function previewWarnings(preview: ImportPreview): PreviewWarning[] {
 
 export type ResultNotice =
   | "mailboxesPaused" | "webhooksDisabled" | "customDomainUnverified" | "customDomainSkipped"
-  | "credentialsMissing" | "apiKeysNotMigrated";
+  | "credentialsMissing" | "emailSenderNotApplied" | "apiKeysNotMigrated";
 
 /**
  * What the admin still has to do after an import, in display order. The API keys notice is
@@ -247,7 +247,7 @@ export function resultNotices(result: {
   settingsApplied?: readonly ImportSetting[];
   customDomainSkipped?: string | null;
   credentialsIncluded?: boolean;
-}): ResultNotice[] {
+}, requested: readonly ImportSetting[] = []): ResultNotice[] {
   const notices: ResultNotice[] = [];
   const mailboxes = result.mailboxesImported ?? 0;
   const webhooks = result.webhooksImported ?? 0;
@@ -258,6 +258,8 @@ export function resultNotices(result: {
   if (nonEmpty(result.customDomainSkipped)) notices.push("customDomainSkipped");
   const needsSecrets = mailboxes > 0 || webhooks > 0 || applied.includes("emailSender");
   if (needsSecrets && result.credentialsIncluded !== true) notices.push("credentialsMissing");
+  // The server skips a sender without its password: applying it would stop all mail from the workspace
+  if (requested.includes("emailSender") && !applied.includes("emailSender")) notices.push("emailSenderNotApplied");
   notices.push("apiKeysNotMigrated");
   return notices;
 }

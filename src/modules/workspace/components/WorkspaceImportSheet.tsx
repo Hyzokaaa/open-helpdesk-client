@@ -103,6 +103,7 @@ const RESULT_NOTICE_LABELS: Record<ResultNotice, TranslationKey> = {
   customDomainUnverified: "workspaceImport.notice.customDomainUnverified",
   customDomainSkipped: "workspaceImport.notice.customDomainSkipped",
   credentialsMissing: "workspaceImport.notice.credentialsMissing",
+  emailSenderNotApplied: "workspaceImport.notice.emailSenderNotApplied",
   apiKeysNotMigrated: "workspaceImport.notice.apiKeysNotMigrated",
 };
 
@@ -251,7 +252,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
             {t(WARNING_LABELS[warning]).replace("{count}", String(count))}
           </p>
         ))}
-        {resultNotices(result).map((notice) => (
+        {resultNotices(result, [...selected]).map((notice) => (
           <p
             key={notice}
             className={notice === "apiKeysNotMigrated" ? "mt-4 text-sm text-muted" : "mt-4 text-sm text-amber-800 dark:text-amber-300"}

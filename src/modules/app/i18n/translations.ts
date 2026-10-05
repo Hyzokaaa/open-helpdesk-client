@@ -1953,6 +1953,7 @@ const translations = {
   "workspaceImport.notice.customDomainUnverified": { en: "The custom domain arrives unverified: check its DNS records again in Settings → Custom Domain.", es: "El dominio personalizado llega sin verificar: vuelve a comprobar sus registros DNS en Configuración → Dominio Personalizado." },
   "workspaceImport.notice.customDomainSkipped": { en: "The custom domain was not set: {reason}", es: "El dominio personalizado no se estableció: {reason}" },
   "workspaceImport.notice.credentialsMissing": { en: "Passwords and secrets were not in the file: enter them again before using these mailboxes, the email sender and the webhooks.", es: "Las contraseñas y los secretos no venían en el archivo: vuelve a introducirlos antes de usar estos buzones, el remitente de correo y los webhooks." },
+  "workspaceImport.notice.emailSenderNotApplied": { en: "Your custom email sender was not changed: the file has no password for it. Set it up in Settings → Custom Email Sender.", es: "Tu remitente de email no se cambió: el archivo no trae su contraseña. Configúralo en Ajustes → Remitente de email." },
   "workspaceImport.notice.apiKeysNotMigrated": { en: "API keys were not migrated: create new ones here and update your integrations.", es: "Las claves de API no se migraron: crea claves nuevas aquí y actualiza tus integraciones." },
 
   // Departments errors

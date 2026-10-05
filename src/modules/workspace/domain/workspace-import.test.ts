@@ -349,3 +349,13 @@ describe("truncateText", () => {
     expect(truncateText("abcdefghij", 5)).toBe("abcd…");
   });
 });
+
+describe('resultNotices email sender', () => {
+  it('explains a requested email sender the server did not apply', () => {
+    expect(resultNotices({ settingsApplied: [] }, ['emailSender'])).toContain('emailSenderNotApplied');
+  });
+  it('says nothing when the sender was applied or not requested', () => {
+    expect(resultNotices({ settingsApplied: ['emailSender'], credentialsIncluded: true }, ['emailSender'])).not.toContain('emailSenderNotApplied');
+    expect(resultNotices({ settingsApplied: [] })).not.toContain('emailSenderNotApplied');
+  });
+});
