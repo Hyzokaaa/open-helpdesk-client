@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -62,7 +63,13 @@ export default function ApiKeySettings({ slug }: Props) {
 
   return (
     <div>
-      <div className="flex justify-end mb-3">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="text-xs text-muted">
+          {t("apiKeys.docsIntro")}{" "}
+          <Link to="/docs" className="text-primary hover:underline">
+            {t("apiKeys.docsLink")}
+          </Link>
+        </p>
         <Button size="xs" color="light" onClick={() => setShowCreate(true)}>
           {t("apiKeys.create")}
         </Button>
