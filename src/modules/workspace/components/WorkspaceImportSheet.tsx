@@ -22,6 +22,10 @@ import {
   offeredSettings,
   previewFiles,
   previewSections,
+  previewWarnings,
+  PreviewWarning,
+  resultNotices,
+  ResultNotice,
   summarizeImportResult,
   transferPercent,
   truncateText,
@@ -45,6 +49,9 @@ const SECTION_LABELS: Record<ImportFileSection, TranslationKey> = {
   kbArticles: "workspaceImport.section.kbArticles",
   customFields: "workspaceImport.section.customFields",
   cannedResponses: "workspaceImport.section.cannedResponses",
+  mailboxes: "workspaceImport.section.mailboxes",
+  emailRules: "workspaceImport.section.emailRules",
+  webhooks: "workspaceImport.section.webhooks",
   attachments: "workspaceImport.section.attachments",
 };
 
@@ -80,6 +87,23 @@ const COUNTER_LABELS: Record<ImportResultCounter, TranslationKey> = {
   kbCategoriesImported: "workspaceImport.result.kbCategoriesImported",
   kbArticlesImported: "workspaceImport.result.kbArticlesImported",
   auditLogImported: "workspaceImport.result.auditLogImported",
+  mailboxesImported: "workspaceImport.result.mailboxesImported",
+  emailRulesImported: "workspaceImport.result.emailRulesImported",
+  webhooksImported: "workspaceImport.result.webhooksImported",
+};
+
+const PREVIEW_WARNING_LABELS: Record<PreviewWarning, TranslationKey> = {
+  mailboxesPaused: "workspaceImport.warning.mailboxesPaused",
+  credentialsMissing: "workspaceImport.warning.credentialsMissing",
+};
+
+const RESULT_NOTICE_LABELS: Record<ResultNotice, TranslationKey> = {
+  mailboxesPaused: "workspaceImport.notice.mailboxesPaused",
+  webhooksDisabled: "workspaceImport.notice.webhooksDisabled",
+  customDomainUnverified: "workspaceImport.notice.customDomainUnverified",
+  customDomainSkipped: "workspaceImport.notice.customDomainSkipped",
+  credentialsMissing: "workspaceImport.notice.credentialsMissing",
+  apiKeysNotMigrated: "workspaceImport.notice.apiKeysNotMigrated",
 };
 
 const SETTING_LABELS: Record<ImportSetting, { overwrite: TranslationKey; applied: TranslationKey }> = {
@@ -87,6 +111,9 @@ const SETTING_LABELS: Record<ImportSetting, { overwrite: TranslationKey; applied
   sla: { overwrite: "workspaceImport.overwrite.sla", applied: "workspaceImport.applied.sla" },
   description: { overwrite: "workspaceImport.overwrite.description", applied: "workspaceImport.applied.description" },
   branding: { overwrite: "workspaceImport.overwrite.branding", applied: "workspaceImport.applied.branding" },
+  name: { overwrite: "workspaceImport.overwrite.name", applied: "workspaceImport.applied.name" },
+  emailSender: { overwrite: "workspaceImport.overwrite.emailSender", applied: "workspaceImport.applied.emailSender" },
+  customDomain: { overwrite: "workspaceImport.overwrite.customDomain", applied: "workspaceImport.applied.customDomain" },
 };
 
 export default function WorkspaceImportSheet({ slug, source, onClose, onImported }: Props) {
@@ -170,6 +197,16 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         icon: t("workspaceImport.preview.icon"),
       }) || null;
     }
+    if (key === "name" && settings.name) return `“${truncateText(settings.name, 120)}”`;
+    if (key === "emailSender" && settings.emailSender?.fromAddress) {
+      const credentials = t(settings.emailSender.hasCredentials
+        ? "workspaceImport.preview.credentialsIncluded"
+        : "workspaceImport.preview.passwordAgain");
+      return `${settings.emailSender.fromAddress} · ${credentials}`;
+    }
+    if (key === "customDomain" && settings.customDomain) {
+      return `${settings.customDomain} · ${t("workspaceImport.preview.verifyAgain")}`;
+    }
     return null;
   };
 
@@ -214,6 +251,14 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
             {t(WARNING_LABELS[warning]).replace("{count}", String(count))}
           </p>
         ))}
+        {resultNotices(result).map((notice) => (
+          <p
+            key={notice}
+            className={notice === "apiKeysNotMigrated" ? "mt-4 text-sm text-muted" : "mt-4 text-sm text-amber-800 dark:text-amber-300"}
+          >
+            {t(RESULT_NOTICE_LABELS[notice]).replace("{reason}", result.customDomainSkipped ?? "")}
+          </p>
+        ))}
         <div className="flex justify-end mt-6">
           <Button size="sm" color="primary" onClick={onClose}>{t("workspaceImport.close")}</Button>
         </div>
@@ -242,6 +287,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
 
   const sections = previewSections(preview);
   const files = previewFiles(preview);
+  const warnings = previewWarnings(preview);
 
   return (
     <Sheet onClose={importing ? () => {} : onClose} size="sm">
@@ -266,6 +312,22 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
           {t("workspaceImport.files").replace("{count}", String(files.files)).replace("{size}", formatBytes(files.bytes))}
         </p>
       )}
+      {typeof preview.credentialsIncluded === "boolean" && (
+        <p className="text-sm text-muted mb-4">
+          {t(preview.credentialsIncluded ? "workspaceImport.credentialsIncluded" : "workspaceImport.credentialsNotIncluded")}
+        </p>
+      )}
+      {warnings.map((warning) => (
+        <p
+          key={warning}
+          role={warning === "mailboxesPaused" ? "alert" : undefined}
+          className={warning === "mailboxesPaused"
+            ? "text-sm font-body-medium text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded px-3 py-2 mb-4"
+            : "text-sm text-amber-800 dark:text-amber-300 mb-4"}
+        >
+          {t(PREVIEW_WARNING_LABELS[warning])}
+        </p>
+      ))}
 
       <p className="text-xs text-subtle font-body-medium mb-1">{t("workspaceImport.settingsTitle")}</p>
       {offered.length === 0 ? (

@@ -278,13 +278,16 @@ export type TransferProgress = (loaded: number, total: number | undefined) => vo
 /**
  * The workspace as a file encrypted with `password`, and the name the server gave it. Large
  * workspaces carry their files too, so this may take minutes; `onProgress` follows the download.
+ * With `includeCredentials` the file also carries mailbox and sender passwords and webhook
+ * secrets; API keys are never exported.
  */
 export async function exportWorkspace(
   slug: string,
   password: string,
   onProgress?: TransferProgress,
+  includeCredentials = false,
 ): Promise<{ blob: Blob; filename: string }> {
-  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password }, {
+  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password, includeCredentials }, {
     responseType: "blob",
     onDownloadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });
@@ -350,8 +353,17 @@ export interface ImportResult {
   kbCategoriesImported: number;
   kbArticlesImported: number;
   auditLogImported: number;
-  /** Target settings the import overwrote, among those asked for */
+  /** Mailboxes arrive paused, so they do not read the same inbox as the source */
+  mailboxesImported: number;
+  emailRulesImported: number;
+  /** Webhooks arrive disabled */
+  webhooksImported: number;
+  /** Target settings the import overwrote, among those asked for; a custom domain arrives unverified */
   settingsApplied: ImportSetting[];
+  /** Why the custom domain asked for was not set, or null */
+  customDomainSkipped: string | null;
+  /** Whether the export carried passwords and secrets; without them they must be entered again */
+  credentialsIncluded: boolean;
 }
 
 /**
@@ -375,8 +387,14 @@ export async function importWorkspace(
 }
 
 /** A single-use link to an export encrypted with `password`; the importer needs both. */
-export async function createExportToken(slug: string, password: string): Promise<{ url: string; expiresAt: string }> {
-  const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`, { password });
+export async function createExportToken(
+  slug: string,
+  password: string,
+  includeCredentials = false,
+): Promise<{ url: string; expiresAt: string }> {
+  const res = await http.post<{ url: string; expiresAt: string }>(
+    `/workspaces/${slug}/export/token`, { password, includeCredentials },
+  );
   return res.data;
 }
 

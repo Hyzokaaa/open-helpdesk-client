@@ -39,6 +39,8 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  // Off by default: passwords and secrets are re-entered in the destination unless asked for
+  const [includeCredentials, setIncludeCredentials] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   // Bytes of the export received so far; 0 while the server is still preparing it
@@ -53,12 +55,12 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
     setDownloaded(0);
     try {
       if (mode === "file") {
-        const { blob, filename } = await exportWorkspace(slug, password, (loaded) => setDownloaded(loaded));
+        const { blob, filename } = await exportWorkspace(slug, password, (loaded) => setDownloaded(loaded), includeCredentials);
         download(blob, filename);
         toast.success(t("workspaceSettings.exportSuccess"));
         onClose();
       } else {
-        const res = await createExportToken(slug, password);
+        const res = await createExportToken(slug, password, includeCredentials);
         setLink(res);
         try {
           await navigator.clipboard.writeText(res.url);
@@ -120,6 +122,20 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
           </p>
         )}
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("workspaceExport.warning")}</p>
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeCredentials}
+            onChange={() => setIncludeCredentials(!includeCredentials)}
+            disabled={busy}
+            className="w-4 h-4 mt-0.5 accent-primary"
+          />
+          <span className="text-sm text-body">{t("workspaceExport.includeCredentials")}</span>
+        </label>
+        {includeCredentials && (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">{t("workspaceExport.includeCredentialsWarning")}</p>
+        )}
+        <p className="text-xs text-muted">{t("workspaceExport.apiKeysNote")}</p>
         {busy && mode === "file" && (
           <p className="text-sm text-muted" role="status" aria-live="polite">
             {t("workspaceExport.preparing")}

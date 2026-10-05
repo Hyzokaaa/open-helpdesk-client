@@ -1,11 +1,16 @@
-/** Target settings an import may overwrite; the backend leaves them untouched unless named. */
-export const IMPORT_SETTINGS = ["palette", "sla", "description", "branding"] as const;
+/**
+ * Target settings an import may overwrite; the backend leaves them untouched unless named. The
+ * order is the order of the `overwrite` param.
+ */
+export const IMPORT_SETTINGS = [
+  "palette", "sla", "description", "branding", "name", "emailSender", "customDomain",
+] as const;
 export type ImportSetting = (typeof IMPORT_SETTINGS)[number];
 
 /** Sections of an export worth announcing before the import, in display order. */
 export const IMPORT_FILE_SECTIONS = [
   "tickets", "comments", "users", "categories", "organizations", "departments", "projects", "kbArticles",
-  "customFields", "cannedResponses", "attachments",
+  "customFields", "cannedResponses", "mailboxes", "emailRules", "webhooks", "attachments",
 ] as const;
 export type ImportFileSection = (typeof IMPORT_FILE_SECTIONS)[number];
 
@@ -19,6 +24,7 @@ export const IMPORT_RESULT_COUNTERS = [
   "organizationsImported", "departmentsImported", "projectsImported", "descriptionEditsImported",
   "commentEditsImported", "attachmentsImported", "participantsImported", "cannedResponsesImported",
   "customFieldsImported", "csatResponsesImported", "kbCategoriesImported", "kbArticlesImported", "auditLogImported",
+  "mailboxesImported", "emailRulesImported", "webhooksImported",
 ] as const;
 export type ImportResultCounter = (typeof IMPORT_RESULT_COUNTERS)[number];
 
@@ -34,6 +40,12 @@ export interface ImportBranding {
   icon?: boolean;
 }
 
+/** Incoming custom email sender: its address, and whether the export carries its password. */
+export interface ImportEmailSender {
+  fromAddress: string | null;
+  hasCredentials: boolean;
+}
+
 /** What the server read from an export, before importing it. */
 export interface ImportPreview {
   version: number | string;
@@ -44,7 +56,13 @@ export interface ImportPreview {
     sla: boolean;
     description: string | null;
     branding: ImportBranding | null;
+    /** Absent in exports from servers that did not migrate these settings yet */
+    name?: string | null;
+    emailSender?: ImportEmailSender | null;
+    customDomain?: string | null;
   };
+  /** Whether the export carries mailbox and sender passwords and webhook secrets */
+  credentialsIncluded?: boolean;
 }
 
 export type ExportPasswordProblem = "tooShort" | "tooLong" | "mismatch";
@@ -95,6 +113,9 @@ export function offeredSettings(settings: ImportPreview["settings"] | undefined)
     if (key === "palette") return nonEmpty(settings.palette);
     if (key === "sla") return settings.sla === true;
     if (key === "description") return nonEmpty(settings.description);
+    if (key === "name") return nonEmpty(settings.name);
+    if (key === "emailSender") return nonEmpty(settings.emailSender?.fromAddress);
+    if (key === "customDomain") return nonEmpty(settings.customDomain);
     const b = settings.branding;
     return !!b && (nonEmpty(b.appName) || nonEmpty(b.appSubtitle) || b.logo === true || b.icon === true);
   });
@@ -194,6 +215,51 @@ export function completedNotice(result: { ticketsCompleted?: number }): { ticket
 /** Value of the `completeExisting` query param, or undefined so the param is left out entirely. */
 export function completeExistingParam(enabled: boolean): "true" | undefined {
   return enabled ? "true" : undefined;
+}
+
+export type PreviewWarning = "mailboxesPaused" | "credentialsMissing";
+
+/**
+ * What to tell the admin before importing: mailboxes arrive paused and must be stopped at the
+ * source, and passwords and secrets the file does not carry must be entered again.
+ */
+export function previewWarnings(preview: ImportPreview): PreviewWarning[] {
+  const warnings: PreviewWarning[] = [];
+  const mailboxes = preview.counts?.mailboxes ?? 0;
+  const webhooks = preview.counts?.webhooks ?? 0;
+  if (mailboxes > 0) warnings.push("mailboxesPaused");
+  const needsSecrets = mailboxes > 0 || webhooks > 0 || nonEmpty(preview.settings?.emailSender?.fromAddress);
+  if (needsSecrets && preview.credentialsIncluded !== true) warnings.push("credentialsMissing");
+  return warnings;
+}
+
+export type ResultNotice =
+  | "mailboxesPaused" | "webhooksDisabled" | "customDomainUnverified" | "customDomainSkipped"
+  | "credentialsMissing" | "apiKeysNotMigrated";
+
+/**
+ * What the admin still has to do after an import, in display order. The API keys notice is
+ * always last and always present: keys are never migrated.
+ */
+export function resultNotices(result: {
+  mailboxesImported?: number;
+  webhooksImported?: number;
+  settingsApplied?: readonly ImportSetting[];
+  customDomainSkipped?: string | null;
+  credentialsIncluded?: boolean;
+}): ResultNotice[] {
+  const notices: ResultNotice[] = [];
+  const mailboxes = result.mailboxesImported ?? 0;
+  const webhooks = result.webhooksImported ?? 0;
+  const applied = result.settingsApplied ?? [];
+  if (mailboxes > 0) notices.push("mailboxesPaused");
+  if (webhooks > 0) notices.push("webhooksDisabled");
+  if (applied.includes("customDomain")) notices.push("customDomainUnverified");
+  if (nonEmpty(result.customDomainSkipped)) notices.push("customDomainSkipped");
+  const needsSecrets = mailboxes > 0 || webhooks > 0 || applied.includes("emailSender");
+  if (needsSecrets && result.credentialsIncluded !== true) notices.push("credentialsMissing");
+  notices.push("apiKeysNotMigrated");
+  return notices;
 }
 
 export function truncateText(text: string, max: number): string {

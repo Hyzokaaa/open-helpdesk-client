@@ -13,6 +13,8 @@ import {
   overwriteParam,
   previewFiles,
   previewSections,
+  previewWarnings,
+  resultNotices,
   summarizeImportResult,
   transferPercent,
   truncateText,
@@ -80,6 +82,15 @@ describe("previewSections", () => {
     ]);
   });
 
+  it("lists mailboxes, email rules and webhooks before the attachments", () => {
+    expect(previewSections(preview({ counts: { attachments: 1, webhooks: 2, mailboxes: 3, emailRules: 4 } }))).toEqual([
+      { section: "mailboxes", count: 3 },
+      { section: "emailRules", count: 4 },
+      { section: "webhooks", count: 2 },
+      { section: "attachments", count: 1 },
+    ]);
+  });
+
   it("is empty for an export without records", () => {
     expect(previewSections(preview())).toEqual([]);
   });
@@ -108,6 +119,69 @@ describe("offeredSettings", () => {
       .toEqual(["branding"]);
     expect(offeredSettings({ ...settings, branding: { appName: null, appSubtitle: null, logo: false, icon: false } }))
       .toEqual([]);
+  });
+});
+
+describe("offeredSettings for name, email sender and custom domain", () => {
+  const base = preview().settings;
+
+  it("offers them after the older settings, in the overwrite order", () => {
+    expect(offeredSettings({
+      ...base, palette: "blue", name: "Acme", emailSender: { fromAddress: "help@acme.test", hasCredentials: false },
+      customDomain: "help.acme.test",
+    })).toEqual(["palette", "name", "emailSender", "customDomain"]);
+  });
+
+  it("does not offer them when blank, null or absent", () => {
+    expect(offeredSettings({
+      ...base, name: " ", emailSender: { fromAddress: null, hasCredentials: true }, customDomain: "",
+    })).toEqual([]);
+    expect(offeredSettings({ ...base, name: null, emailSender: null, customDomain: null })).toEqual([]);
+  });
+});
+
+describe("previewWarnings", () => {
+  it("warns that mailboxes arrive paused and that their passwords are missing", () => {
+    expect(previewWarnings(preview({ counts: { mailboxes: 2 }, credentialsIncluded: false })))
+      .toEqual(["mailboxesPaused", "credentialsMissing"]);
+  });
+
+  it("still warns about paused mailboxes when the credentials travel with the file", () => {
+    expect(previewWarnings(preview({ counts: { mailboxes: 1 }, credentialsIncluded: true }))).toEqual(["mailboxesPaused"]);
+  });
+
+  it("asks for secrets again when webhooks or a sender come without credentials", () => {
+    expect(previewWarnings(preview({ counts: { webhooks: 1 }, credentialsIncluded: false }))).toEqual(["credentialsMissing"]);
+    expect(previewWarnings(preview({
+      settings: { ...preview().settings, emailSender: { fromAddress: "a@b.test", hasCredentials: false } },
+    }))).toEqual(["credentialsMissing"]);
+  });
+
+  it("is empty when nothing needs a secret", () => {
+    expect(previewWarnings(preview({ counts: { tickets: 4, emailRules: 3 } }))).toEqual([]);
+  });
+});
+
+describe("resultNotices", () => {
+  it("always ends with the API keys notice", () => {
+    expect(resultNotices({})).toEqual(["apiKeysNotMigrated"]);
+  });
+
+  it("lists what is left to do in display order", () => {
+    expect(resultNotices({
+      mailboxesImported: 1, webhooksImported: 2, settingsApplied: ["customDomain"],
+      customDomainSkipped: "already used by another workspace", credentialsIncluded: false,
+    })).toEqual([
+      "mailboxesPaused", "webhooksDisabled", "customDomainUnverified", "customDomainSkipped",
+      "credentialsMissing", "apiKeysNotMigrated",
+    ]);
+  });
+
+  it("does not ask for secrets the file carried, nor report an empty skip reason", () => {
+    expect(resultNotices({ mailboxesImported: 1, credentialsIncluded: true, customDomainSkipped: "" }))
+      .toEqual(["mailboxesPaused", "apiKeysNotMigrated"]);
+    expect(resultNotices({ settingsApplied: ["emailSender"], credentialsIncluded: false, customDomainSkipped: null }))
+      .toEqual(["credentialsMissing", "apiKeysNotMigrated"]);
   });
 });
 
@@ -177,6 +251,11 @@ describe("overwriteParam", () => {
     expect(overwriteParam(["branding", "palette", "branding"])).toBe("palette,branding");
     expect(overwriteParam(new Set(["sla", "description"] as const))).toBe("sla,description");
   });
+
+  it("puts name, email sender and custom domain after the older keys", () => {
+    expect(overwriteParam(["customDomain", "name", "palette", "emailSender", "branding"]))
+      .toBe("palette,branding,name,emailSender,customDomain");
+  });
 });
 
 describe("summarizeImportResult", () => {
@@ -189,6 +268,15 @@ describe("summarizeImportResult", () => {
       { counter: "organizationsImported", count: 1 },
       { counter: "kbArticlesImported", count: 3 },
     ]);
+  });
+
+  it("reports mailboxes, email rules and webhooks after the rest", () => {
+    expect(summarizeImportResult({ webhooksImported: 1, ticketsImported: 2, mailboxesImported: 3, emailRulesImported: 0 }))
+      .toEqual([
+        { counter: "ticketsImported", count: 2 },
+        { counter: "mailboxesImported", count: 3 },
+        { counter: "webhooksImported", count: 1 },
+      ]);
   });
 
   it("treats counters a server omits as zero", () => {
