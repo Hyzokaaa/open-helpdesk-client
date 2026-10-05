@@ -1464,6 +1464,15 @@ const translations = {
   "auditLog.system": { en: "System", es: "Sistema" },
   "auditLog.filterFrom": { en: "From", es: "Desde" },
   "auditLog.filterTo": { en: "To", es: "Hasta" },
+  "auditLog.field.name": { en: "Name", es: "Nombre" },
+  "auditLog.field.priority": { en: "Priority", es: "Prioridad" },
+  "auditLog.field.categoryId": { en: "Category", es: "Categoría" },
+  "auditLog.field.departmentId": { en: "Department", es: "Departamento" },
+  "auditLog.field.organizationId": { en: "Organization", es: "Organización" },
+  "auditLog.field.projectId": { en: "Project", es: "Proyecto" },
+  "auditLog.field.tagIds": { en: "Tags", es: "Etiquetas" },
+  "auditLog.value.deleted": { en: "(deleted)", es: "(eliminado)" },
+  "auditLog.value.unavailable": { en: "(unavailable)", es: "(no disponible)" },
 
   // Portal
   "portal.selectWorkspace": { en: "Select a helpdesk", es: "Selecciona un helpdesk" },

@@ -12,9 +12,11 @@ export interface Organization {
 
 export async function listOrganizations(
   workspaceSlug: string,
+  options?: { silent?: boolean },
 ): Promise<Organization[]> {
   const res = await http.get<Organization[]>(
     `/workspaces/${workspaceSlug}/organizations`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
   );
   return res.data;
 }

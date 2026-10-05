@@ -16,6 +16,31 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
+import { commentPreview, describeChanges, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { listDepartments } from "@modules/department/services/department.service";
+import { listProjects, listCategories } from "@modules/project/services/project.service";
+import { listOrganizations } from "@modules/organization/services/organization.service";
+import { listTags } from "@modules/tag/services/tag.service";
+
+/** Names by id for the references old entries stored as bare ids; a list the user cannot read stays out. */
+async function loadReferenceNames(slug: string): Promise<ReferenceNames> {
+  const silent = { silent: true };
+  const toMap = (rows: { id: string; name: string }[]) => new Map(rows.map((r) => [r.id, r.name]));
+  const [categories, departments, organizations, projects, tags] = await Promise.allSettled([
+    listCategories(slug, undefined, silent),
+    listDepartments(slug, silent),
+    listOrganizations(slug, silent),
+    listProjects(slug, silent),
+    listTags(slug, silent),
+  ]);
+  const names: ReferenceNames = {};
+  if (categories.status === "fulfilled") names.categoryId = toMap(categories.value);
+  if (departments.status === "fulfilled") names.departmentId = toMap(departments.value);
+  if (organizations.status === "fulfilled") names.organizationId = toMap(organizations.value);
+  if (projects.status === "fulfilled") names.projectId = toMap(projects.value);
+  if (tags.status === "fulfilled") names.tagIds = toMap(tags.value);
+  return names;
+}
 
 const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
@@ -162,6 +187,8 @@ export default function WorkspaceAuditLogPage() {
   const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
   const [searchInput, setSearchInput] = useState("");
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
+  const [referenceNames, setReferenceNames] = useState<ReferenceNames>({});
+  const canViewLog = can(P.AUDIT_LOG_VIEW);
 
   const filterSections: FilterSection[] = useMemo(() => [
     { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
@@ -223,6 +250,13 @@ export default function WorkspaceAuditLogPage() {
   useEffect(() => {
     if (workspaceSlug) listMembers(workspaceSlug).then(setMembers);
   }, [workspaceSlug]);
+
+  useEffect(() => {
+    if (!workspaceSlug || !canViewLog) return;
+    let cancelled = false;
+    loadReferenceNames(workspaceSlug).then((names) => { if (!cancelled) setReferenceNames(names); });
+    return () => { cancelled = true; };
+  }, [workspaceSlug, canViewLog]);
 
   useEffect(() => {
     fetchLog();
@@ -343,7 +377,7 @@ export default function WorkspaceAuditLogPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} />
+                      <MetadataSummary metadata={item.metadata} action={item.action} t={t} search={filters.search} names={referenceNames} />
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">
@@ -425,7 +459,7 @@ export default function WorkspaceAuditLogPage() {
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
+                <MetadataKeyValue metadata={selected.metadata} action={selected.action} t={t} search={filters.search} names={referenceNames} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
@@ -456,7 +490,7 @@ export function HighlightText({ text, search }: { text: string; search?: string 
   );
 }
 
-export function MetadataSummary({ metadata, action, t, search }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string }) {
+export function MetadataSummary({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const parts: string[] = [];
@@ -465,20 +499,14 @@ export function MetadataSummary({ metadata, action, t, search }: { metadata: Rec
   const label = (metadata.name ?? metadata.title ?? metadata.address ?? metadata.ticketName ?? metadata.email) as string | undefined;
   if (label) parts.push(label);
 
-  // Before/after diffs (updates)
-  const before = metadata.before as Record<string, unknown> | undefined;
-  const after = metadata.after as Record<string, unknown> | undefined;
-  if (before && after) {
-    const changes = Object.keys(after)
-      .filter((key) => formatInlineValue(before[key]) !== formatInlineValue(after[key]))
-      .map((key) => `${key}: ${formatInlineValue(before[key])} → ${formatInlineValue(after[key])}`);
-    if (changes.length > 0) parts.push(changes.join(", "));
-  }
+  // Before/after diffs (updates): translated field names, names instead of ids
+  const changes = describeChanges(metadata, names, t);
+  if (changes.length > 0) parts.push(changes.map(formatChange).join(", "));
 
-  // Comment preview
-  if (action === "comment-created" && metadata.content) {
-    const clean = String(metadata.content).replace(/@\[([^\]]+)\]\([^)]+\)/g, "@$1");
-    parts.push(`"${clean.length > 50 ? clean.slice(0, 50) + "..." : clean}"`);
+  // Comment preview: plain text, also for older entries that stored the HTML
+  if (isCommentAction(action)) {
+    const preview = commentPreview(metadata.content);
+    if (preview) parts.push(`"${preview}"`);
   }
 
   // Assignment info
@@ -508,21 +536,19 @@ export function MetadataSummary({ metadata, action, t, search }: { metadata: Rec
   return <span className="text-xs text-muted">{search ? <HighlightText text={joined} search={search} /> : joined}</span>;
 }
 
-export function MetadataKeyValue({ metadata, search }: { metadata: Record<string, unknown> | null; search?: string }) {
+const DIFF_KEYS = new Set(["before", "after", "beforeLabels", "afterLabels"]);
+
+export function MetadataKeyValue({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
-  const before = metadata.before as Record<string, unknown> | undefined;
-  const after = metadata.after as Record<string, unknown> | undefined;
+  const entries: [string, unknown][] = Object.entries(metadata)
+    .filter(([key]) => !DIFF_KEYS.has(key))
+    // Comments as plain text, also for older entries that stored the HTML
+    .map(([key, val]) => (key === "content" && isCommentAction(action) ? [key, commentPreview(val, 300)] : [key, val]));
 
-  const entries = Object.entries(metadata).filter(([key]) => key !== "before" && key !== "after");
-
-  // Merge before/after into diff rows
-  if (before && after) {
-    for (const key of Object.keys(after)) {
-      if (formatInlineValue(before[key]) !== formatInlineValue(after[key])) {
-        entries.push([key, `${formatInlineValue(before[key])} → ${formatInlineValue(after[key])}`]);
-      }
-    }
+  // Merge before/after into diff rows, by field name and with names instead of ids
+  for (const change of describeChanges(metadata, names, t)) {
+    entries.push([change.label || "before → after", `${change.from} → ${change.to}`]);
   }
 
   if (entries.length === 0) return <span className="text-xs text-muted">—</span>;

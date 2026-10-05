@@ -377,7 +377,7 @@ export default function SystemLogsPage() {
               <DetailRow label={t("auditLog.detail.workspaceId")} value={selected.workspaceId ?? "—"} />
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
+                <MetadataKeyValue metadata={selected.metadata} action={selected.action} t={t} search={filters.search} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>
