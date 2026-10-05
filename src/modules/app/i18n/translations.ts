@@ -1534,6 +1534,8 @@ const translations = {
   "apiKeys.title": { en: "API Keys", es: "Claves API" },
   "apiKeys.empty": { en: "No API keys created yet", es: "Aun no hay claves API" },
   "apiKeys.create": { en: "Create API Key", es: "Crear clave API" },
+  "apiKeys.docsIntro": { en: "Endpoints, scopes and examples:", es: "Endpoints, permisos y ejemplos:" },
+  "apiKeys.docsLink": { en: "API documentation", es: "Documentación de la API" },
   "apiKeys.createTitle": { en: "Create API Key", es: "Crear clave API" },
   "apiKeys.createDescription": { en: "API keys allow external applications to access your workspace via the REST API.", es: "Las claves API permiten a aplicaciones externas acceder a tu espacio via la API REST." },
   "apiKeys.createError": { en: "Failed to create API key", es: "Error al crear clave API" },

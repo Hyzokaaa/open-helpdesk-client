@@ -8,6 +8,7 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
+import { API_URL } from "@modules/app/domain/constants/env";
 import {
   ApiKeyDto,
   API_KEY_SCOPES,
@@ -62,7 +63,18 @@ export default function ApiKeySettings({ slug }: Props) {
 
   return (
     <div>
-      <div className="flex justify-end mb-3">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="text-xs text-muted">
+          {t("apiKeys.docsIntro")}{" "}
+          <a
+            href={`${API_URL.replace(/\/+$/, "")}/api/v1/docs`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {t("apiKeys.docsLink")}
+          </a>
+        </p>
         <Button size="xs" color="light" onClick={() => setShowCreate(true)}>
           {t("apiKeys.create")}
         </Button>
