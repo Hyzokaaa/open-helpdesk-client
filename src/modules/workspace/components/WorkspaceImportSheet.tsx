@@ -17,6 +17,7 @@ import {
   ImportSetting,
   formatBytes,
   alreadyPresentNotice,
+  completedNotice,
   importWarnings,
   offeredSettings,
   previewFiles,
@@ -96,6 +97,8 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const offered = offeredSettings(preview?.settings);
   const [selected, setSelected] = useState<Set<ImportSetting>>(new Set());
+  // Off by default: tickets already here are left alone unless asked to complete them
+  const [completeExisting, setCompleteExisting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   // Upload percentage of the running request; null when unknown or nothing is uploading
@@ -134,7 +137,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
     setImporting(true);
     setUploaded(null);
     try {
-      const res = await importWorkspace(slug, source, password, [...selected], trackUpload);
+      const res = await importWorkspace(slug, source, password, [...selected], trackUpload, completeExisting);
       setResult(res);
       onImported(res);
     } catch (err) {
@@ -174,6 +177,7 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
     const counters = summarizeImportResult(result);
     const applied = result.settingsApplied ?? [];
     const alreadyPresent = alreadyPresentNotice(result);
+    const completed = completedNotice(result);
     return (
       <Sheet onClose={onClose} size="sm">
         <h3 className="text-base font-body-bold text-heading mb-3">{t("workspaceSettings.importSuccess")}</h3>
@@ -193,6 +197,11 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         <p className="text-sm text-body">
           {applied.length ? applied.map((key) => t(SETTING_LABELS[key].applied)).join(", ") : t("workspaceImport.noSettingsApplied")}
         </p>
+        {completed && (
+          <p className="mt-4 text-sm text-muted">
+            {t("workspaceImport.completed").replace("{count}", String(completed.tickets))}
+          </p>
+        )}
         {alreadyPresent && (
           <p className="mt-4 text-sm text-muted">
             {t(alreadyPresent.attachments > 0 ? "workspaceImport.alreadyPresentWithAttachments" : "workspaceImport.alreadyPresent")
@@ -286,6 +295,20 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
           </div>
         </>
       )}
+
+      <label className="flex items-start gap-2 cursor-pointer mt-4">
+        <input
+          type="checkbox"
+          checked={completeExisting}
+          onChange={() => setCompleteExisting(!completeExisting)}
+          disabled={importing}
+          className="w-4 h-4 mt-0.5 accent-primary"
+        />
+        <span className="text-sm min-w-0">
+          <span className="text-body">{t("workspaceImport.completeExisting")}</span>
+          <span className="block text-xs text-muted break-words">{t("workspaceImport.completeExistingHint")}</span>
+        </span>
+      </label>
 
       <div className="flex justify-end gap-2 mt-6">
         <Button size="sm" color="light" onClick={onClose} disabled={importing}>{t("workspaceImport.cancel")}</Button>

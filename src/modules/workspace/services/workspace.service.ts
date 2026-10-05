@@ -1,5 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
-import { filenameFromDisposition, ImportPreview, ImportSetting, overwriteParam } from "../domain/workspace-import";
+import { completeExistingParam, filenameFromDisposition, ImportPreview, ImportSetting, overwriteParam } from "../domain/workspace-import";
 
 export interface Workspace {
   id: string;
@@ -329,8 +329,10 @@ export interface ImportResult {
   departmentsImported: number;
   projectsImported: number;
   ticketsImported: number;
-  /** Tickets left as they were because the workspace already had them; reported as a notice */
+  /** Tickets the workspace already had, left as they were (not completed, or lacking nothing); reported as a notice */
   ticketsAlreadyPresent?: number;
+  /** Tickets the workspace already had that the import completed (completeExisting); reported as a notice */
+  ticketsCompleted?: number;
   commentsImported: number;
   /** Comments the import could not place; reported as a warning */
   commentsSkipped: number;
@@ -339,7 +341,7 @@ export interface ImportResult {
   attachmentsImported: number;
   /** Attachments whose file the export did not carry (older exports); reported as a warning */
   attachmentsSkipped: number;
-  /** Attachments of tickets the workspace already had, so not imported again */
+  /** Attachments of tickets the workspace already had and did not complete, so not imported again */
   attachmentsOfExistingTickets?: number;
   participantsImported: number;
   cannedResponsesImported: number;
@@ -352,16 +354,21 @@ export interface ImportResult {
   settingsApplied: ImportSetting[];
 }
 
-/** Without `overwrite` the import changes none of the target's settings. */
+/**
+ * Without `overwrite` the import changes none of the target's settings. With `completeExisting`
+ * the tickets the workspace already has get what they lack (empty fields, missing comments,
+ * attachments...) instead of being left alone; nothing already there is changed or removed.
+ */
 export async function importWorkspace(
   slug: string,
   source: ImportSource,
   password: string,
   overwrite: ImportSetting[] = [],
   onProgress?: TransferProgress,
+  completeExisting = false,
 ): Promise<ImportResult> {
   const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, importForm(source, password), {
-    params: { overwrite: overwriteParam(overwrite) },
+    params: { overwrite: overwriteParam(overwrite), completeExisting: completeExistingParam(completeExisting) },
     onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });
   return res.data;

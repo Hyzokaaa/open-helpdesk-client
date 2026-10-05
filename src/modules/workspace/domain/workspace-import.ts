@@ -182,6 +182,20 @@ export function alreadyPresentNotice(
   return { tickets, attachments: Math.max(0, result.attachmentsOfExistingTickets ?? 0) };
 }
 
+/**
+ * Tickets the workspace already had that the import completed with what they lacked; null when
+ * none was. Not a warning either: only empty fields were filled and missing items added.
+ */
+export function completedNotice(result: { ticketsCompleted?: number }): { tickets: number } | null {
+  const tickets = result.ticketsCompleted ?? 0;
+  return tickets > 0 ? { tickets } : null;
+}
+
+/** Value of the `completeExisting` query param, or undefined so the param is left out entirely. */
+export function completeExistingParam(enabled: boolean): "true" | undefined {
+  return enabled ? "true" : undefined;
+}
+
 export function truncateText(text: string, max: number): string {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;

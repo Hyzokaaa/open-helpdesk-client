@@ -6,6 +6,8 @@ import {
   formatBytes,
   ImportPreview,
   alreadyPresentNotice,
+  completedNotice,
+  completeExistingParam,
   importWarnings,
   offeredSettings,
   overwriteParam,
@@ -225,6 +227,31 @@ describe("alreadyPresentNotice", () => {
     const result = { ticketsAlreadyPresent: 5, attachmentsOfExistingTickets: 1 };
     expect(importWarnings(result as never)).toEqual([]);
     expect(summarizeImportResult(result as never)).toEqual([]);
+  });
+});
+
+describe("completedNotice", () => {
+  it("reports the tickets the import completed", () => {
+    expect(completedNotice({ ticketsCompleted: 4 })).toEqual({ tickets: 4 });
+  });
+
+  it("is null when none was completed or the server omits the counter", () => {
+    expect(completedNotice({ ticketsCompleted: 0 })).toBeNull();
+    expect(completedNotice({})).toBeNull();
+  });
+
+  it("is reported apart from the warnings, the imported counters and the already-present notice", () => {
+    const result = { ticketsCompleted: 2, ticketsAlreadyPresent: 0 };
+    expect(importWarnings(result as never)).toEqual([]);
+    expect(summarizeImportResult(result as never)).toEqual([]);
+    expect(alreadyPresentNotice(result)).toBeNull();
+  });
+});
+
+describe("completeExistingParam", () => {
+  it("sends true only when ticked, and leaves the param out otherwise", () => {
+    expect(completeExistingParam(true)).toBe("true");
+    expect(completeExistingParam(false)).toBeUndefined();
   });
 });
 
