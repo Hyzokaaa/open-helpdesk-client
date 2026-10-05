@@ -20,6 +20,7 @@ import {
   completedNotice,
   importWarnings,
   offeredSettings,
+  hasCustomDomainConflict,
   previewFiles,
   previewSections,
   previewWarnings,
@@ -351,6 +352,9 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
                   <span className="text-sm min-w-0">
                     <span className="text-body">{t(SETTING_LABELS[key].overwrite)}</span>
                     {detail && <span className="block text-xs text-muted break-words">{detail}</span>}
+                    {key === "customDomain" && hasCustomDomainConflict(preview?.settings) && (
+                      <span className="block text-xs text-yellow-700 dark:text-yellow-400 break-words">{t("workspaceImport.preview.customDomainConflict")}</span>
+                    )}
                   </span>
                 </label>
               );

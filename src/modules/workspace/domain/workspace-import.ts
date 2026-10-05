@@ -60,9 +60,16 @@ export interface ImportPreview {
     name?: string | null;
     emailSender?: ImportEmailSender | null;
     customDomain?: string | null;
+    /** Whether another workspace of this installation already uses that custom domain (the import would skip it) */
+    customDomainConflict?: boolean;
   };
   /** Whether the export carries mailbox and sender passwords and webhook secrets */
   credentialsIncluded?: boolean;
+}
+
+/** Whether the file's custom domain is taken by another workspace here, so importing it would be skipped. */
+export function hasCustomDomainConflict(settings: ImportPreview["settings"] | null | undefined): boolean {
+  return !!settings && settings.customDomainConflict === true && !!settings.customDomain?.trim();
 }
 
 export type ExportPasswordProblem = "tooShort" | "tooLong" | "mismatch";

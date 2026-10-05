@@ -1947,6 +1947,7 @@ const translations = {
   "workspaceImport.applied.customDomain": { en: "Custom domain", es: "Dominio personalizado" },
   "workspaceImport.preview.credentialsIncluded": { en: "credentials included", es: "credenciales incluidas" },
   "workspaceImport.preview.passwordAgain": { en: "password must be entered again", es: "habrá que introducir de nuevo la contraseña" },
+  "workspaceImport.preview.customDomainConflict": { en: "This domain is used by another workspace here. Remove it there first, or it will be skipped.", es: "Este dominio lo usa otro workspace de esta instalación. Quítalo allí primero o se omitirá." },
   "workspaceImport.preview.verifyAgain": { en: "must be verified again by DNS", es: "habrá que verificarlo de nuevo por DNS" },
   "workspaceImport.credentialsIncluded": { en: "This export includes passwords and secrets.", es: "Esta exportación incluye contraseñas y secretos." },
   "workspaceImport.credentialsNotIncluded": { en: "This export does not include passwords or secrets.", es: "Esta exportación no incluye contraseñas ni secretos." },

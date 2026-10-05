@@ -18,6 +18,7 @@ import {
   summarizeImportResult,
   transferPercent,
   truncateText,
+  hasCustomDomainConflict,
 } from "./workspace-import";
 
 const preview = (over: Partial<ImportPreview> = {}): ImportPreview => ({
@@ -357,5 +358,18 @@ describe('resultNotices email sender', () => {
   it('says nothing when the sender was applied or not requested', () => {
     expect(resultNotices({ settingsApplied: ['emailSender'], credentialsIncluded: true }, ['emailSender'])).not.toContain('emailSenderNotApplied');
     expect(resultNotices({ settingsApplied: [] })).not.toContain('emailSenderNotApplied');
+  });
+});
+
+describe("hasCustomDomainConflict", () => {
+  const base = { palette: null, sla: false, description: null, branding: null };
+
+  it("is true only when the file carries a custom domain another workspace here uses", () => {
+    expect(hasCustomDomainConflict({ ...base, customDomain: "help.acme.test", customDomainConflict: true })).toBe(true);
+    expect(hasCustomDomainConflict({ ...base, customDomain: "help.acme.test", customDomainConflict: false })).toBe(false);
+    // Servers that do not report the conflict yet
+    expect(hasCustomDomainConflict({ ...base, customDomain: "help.acme.test" })).toBe(false);
+    expect(hasCustomDomainConflict({ ...base, customDomain: " ", customDomainConflict: true })).toBe(false);
+    expect(hasCustomDomainConflict(null)).toBe(false);
   });
 });
