@@ -1,155 +1,161 @@
 import CodeBlock from "../components/CodeBlock";
-import { C, H1, H2, Lead, Note, P, Table, UL } from "../components/prose";
+import FieldTable from "../components/FieldTable";
+import { renderInline } from "../components/RichText";
+import { C, H1, H2, H3, Lead, Note, P, Table, UL } from "../components/prose";
+import { documentWebhooks, signatureHeader, webhookDelivery } from "../domain/extensions";
+import { deliveryFacts, verificationExample } from "../domain/guide-facts";
 import type { DocsLang, GuideProps } from "./guide-types";
 
-/** Mirrors WebhookEvent and the events WebhookDeliveryService delivers in the backend. */
-const EVENTS: { event: string; delivered: boolean; en: string; es: string }[] = [
-  { event: "ticket.created", delivered: true, en: "A ticket was opened, from any source.", es: "Se abrió un ticket, desde cualquier origen." },
-  { event: "ticket.statusChanged", delivered: true, en: "A ticket moved to another status. Note the camelCase name.", es: "Un ticket cambió de estado. Fíjate en el nombre en camelCase." },
-  { event: "ticket.assigned", delivered: true, en: "A ticket was assigned, reassigned or unassigned.", es: "Un ticket se asignó, reasignó o desasignó." },
-  { event: "comment.created", delivered: true, en: "A comment was added to a ticket.", es: "Se añadió un comentario a un ticket." },
-  { event: "ticket.updated", delivered: false, en: "Selectable, not delivered yet.", es: "Seleccionable, todavía no se envía." },
-  { event: "ticket.deleted", delivered: false, en: "Selectable, not delivered yet.", es: "Seleccionable, todavía no se envía." },
-];
-
-const PAYLOAD = `{
-  "event": "ticket.created",
-  "data": {
-    "ticketId": "01JABCDEF0123456789ABCDEFG",
-    "ticketName": "Cannot log in",
-    "workspaceId": "01JWORKSPACE0123456789ABCD",
-    "workspaceSlug": "acme",
-    "...": "..."
-  },
-  "timestamp": "2026-10-05T12:00:00.000Z"
-}`;
-
-const VERIFY = `const crypto = require('crypto');
-const express = require('express');
-
-function isValidSignature(rawBody, signatureHeader, secret) {
-  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  const a = Buffer.from(expected, 'hex');
-  const b = Buffer.from(String(signatureHeader || ''), 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
-const app = express();
-
-// Keep the raw body for this route: the signature covers the exact bytes sent
-app.post('/hooks/helpdesk', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!isValidSignature(req.body, req.get('X-Webhook-Signature'), process.env.WEBHOOK_SECRET)) {
-    return res.sendStatus(401);
-  }
-  const { event, data } = JSON.parse(req.body.toString('utf8'));
-  res.sendStatus(204);
-  // handle the event asynchronously...
-});`;
-
-const TEXT: Record<DocsLang, Record<string, string>> = {
-  en: { event: "Event", delivered: "Delivered", meaning: "Meaning", yes: "yes", no: "no", header: "Header", value: "Value" },
-  es: { event: "Evento", delivered: "Se envía", meaning: "Significado", yes: "sí", no: "no", header: "Cabecera", value: "Valor" },
+/**
+ * Spanish wording of the event descriptions. The events, their payloads and the English text
+ * come from the API document (x-webhooks); an event missing here falls back to the document.
+ */
+const EVENT_DESCRIPTIONS_ES: Record<string, string> = {
+  "ticket.created": "Se abrió un ticket: en la aplicación, por la API pública, desde el portal público o por un correo entrante.",
+  "ticket.updated":
+    "Se editaron campos de un ticket (título, descripción, prioridad, categoría, etiquetas, departamento, organización, proyecto, campos personalizados), en la aplicación o por la API pública. Solo se envía si algo cambió; los cambios de estado y de asignado tienen sus propios eventos.",
+  "ticket.statusChanged": "Un ticket cambió de estado, en la aplicación o por la API pública. Fíjate en el nombre en camelCase.",
+  "ticket.assigned": "Un ticket se asignó, reasignó o desasignó, en la aplicación o por la API pública.",
+  "ticket.deleted": "Se eliminó un ticket, uno a uno o en bloque en la aplicación, o por la API pública.",
+  "comment.created": "Se añadió un comentario a un ticket: en la aplicación, por la API pública, desde el portal público o como respuesta por correo.",
 };
 
-export default function WebhooksGuide({ lang }: GuideProps) {
+/** Spanish wording of the header descriptions, keyed by header name; others fall back to the document. */
+const HEADER_DESCRIPTIONS_ES: Record<string, string> = {
+  "Content-Type": "Siempre JSON.",
+  "X-Webhook-Event": "El nombre del evento, igual que `event` en el cuerpo.",
+  "X-Webhook-Signature": "HMAC-SHA256 del cuerpo exacto de la petición con el secreto del webhook como clave, en hexadecimal y sin prefijo.",
+};
+
+const TEXT: Record<DocsLang, Record<string, string>> = {
+  en: {
+    lead: "Members who manage the workspace settings configure webhooks in **Settings → Webhooks** with a URL, the events to receive and a secret. For each event the server sends a request with a JSON body `{ event, data, timestamp }`.",
+    loading: "The events and delivery details appear once the API document has loaded.",
+    unavailable:
+      "The events, their payloads and the delivery details come from the API document, which could not be loaded. Reload the page to see them.",
+    delivery: "Delivery",
+    headers: "Headers",
+    header: "Header",
+    value: "Value",
+    events: "Events",
+    eventsIntro: "Fields marked required are always present. Ignore fields you do not know; new ones may be added.",
+    notSent: "Not sent yet",
+    notSentNote: "Can be selected on a webhook, but the server does not send it yet.",
+    body: "Body",
+    example: "Example",
+    verify: "Verifying the signature",
+    verifyIntro: "Verify the signature against the raw body, before parsing it, with a constant-time comparison. Node.js with Express:",
+    replay: "The signature does not cover a timestamp header; check `timestamp` in the body to reject old replays.",
+  },
+  es: {
+    lead: "Los miembros que gestionan los ajustes del espacio configuran webhooks en **Ajustes → Webhooks** con una URL, los eventos que quieren recibir y un secreto. Por cada evento, el servidor envía una petición con un cuerpo JSON `{ event, data, timestamp }`.",
+    loading: "Los eventos y los detalles de entrega aparecen cuando se carga el documento de la API.",
+    unavailable:
+      "Los eventos, sus contenidos y los detalles de entrega vienen del documento de la API, que no se pudo cargar. Recarga la página para verlos.",
+    delivery: "Entrega",
+    headers: "Cabeceras",
+    header: "Cabecera",
+    value: "Valor",
+    events: "Eventos",
+    eventsIntro: "Los campos marcados como obligatorios siempre están presentes. Ignora los campos que no conozcas; pueden añadirse otros nuevos.",
+    notSent: "Aún no se envía",
+    notSentNote: "Se puede seleccionar en un webhook, pero el servidor todavía no lo envía.",
+    body: "Cuerpo",
+    example: "Ejemplo",
+    verify: "Verificar la firma",
+    verifyIntro: "Verifica la firma sobre el cuerpo sin procesar, antes de interpretarlo, con una comparación de tiempo constante. Ejemplo en Node.js con Express:",
+    replay: "La firma no cubre ninguna cabecera de fecha; comprueba `timestamp` en el cuerpo para rechazar repeticiones antiguas.",
+  },
+};
+
+
+export default function WebhooksGuide({ lang, document, documentStatus }: GuideProps) {
   const text = TEXT[lang];
-  const eventsTable = (
-    <Table
-      head={[text.event, text.delivered, text.meaning]}
-      rows={EVENTS.map((e) => [<C>{e.event}</C>, e.delivered ? text.yes : text.no, e[lang]])}
-    />
+  const delivery = document ? webhookDelivery(document) : null;
+  const events = document ? documentWebhooks(document) : [];
+  const header = signatureHeader(delivery);
+
+  const intro = (
+    <>
+      <H1>Webhooks</H1>
+      <Lead>{renderInline(text.lead)}</Lead>
+    </>
   );
 
-  if (lang === "es") {
+  if (documentStatus === "loading") {
     return (
       <>
-        <H1>Webhooks</H1>
-        <Lead>
-          Los miembros que gestionan los ajustes del espacio configuran webhooks en <strong>Ajustes → Webhooks</strong> con
-          una URL, los eventos que quieren recibir y un secreto. Por cada evento, el servidor envía un <C>POST</C> con un
-          cuerpo JSON.
-        </Lead>
-        <CodeBlock code={PAYLOAD} label="JSON" className="mb-4" />
-        <P>
-          <C>data</C> es el contenido del evento: siempre incluye <C>workspaceId</C> y, en estos eventos, <C>ticketId</C> y{" "}
-          <C>ticketName</C>, además de campos propios de cada evento como <C>oldStatus</C>/<C>newStatus</C>,{" "}
-          <C>newAssigneeId</C>/<C>previousAssigneeId</C> o <C>commentId</C>/<C>authorId</C>/<C>commentContent</C>. Ignora
-          los campos que no conozcas; pueden añadirse otros nuevos.
-        </P>
+        {intro}
+        <P className="text-muted">{text.loading}</P>
+      </>
+    );
+  }
 
-        <H2>Eventos</H2>
-        {eventsTable}
-
-        <H2>Cabeceras</H2>
-        <Table
-          head={[text.header, text.value]}
-          rows={[
-            [<C>X-Webhook-Event</C>, "El nombre del evento."],
-            [<C>X-Webhook-Signature</C>, "HMAC-SHA256 del cuerpo exacto de la petición con el secreto del webhook como clave, en hexadecimal."],
-          ]}
-        />
-
-        <H2>Entrega</H2>
-        <UL>
-          <li>Se intenta una sola vez, con un tiempo límite de 10 segundos y sin reintentos.</li>
-          <li>Responde enseguida con un <C>2xx</C> y haz el trabajo de forma asíncrona.</li>
-        </UL>
-
-        <H2>Verificar la firma</H2>
-        <P>
-          Verifica la firma sobre el cuerpo sin procesar, antes de interpretarlo, con una comparación de tiempo constante.
-          Ejemplo en Node.js con Express:
-        </P>
-        <CodeBlock code={VERIFY} label="Node.js" className="mb-4" />
-        <Note>
-          La firma no cubre ninguna cabecera de fecha; comprueba <C>timestamp</C> en el cuerpo para rechazar repeticiones
-          antiguas.
-        </Note>
+  if (!delivery || events.length === 0) {
+    return (
+      <>
+        {intro}
+        <Note tone="warning">{text.unavailable}</Note>
       </>
     );
   }
 
   return (
     <>
-      <H1>Webhooks</H1>
-      <Lead>
-        Members who manage the workspace settings configure webhooks in <strong>Settings → Webhooks</strong> with a URL, the
-        events to receive and a secret. For each event the server sends a <C>POST</C> with a JSON body.
-      </Lead>
-      <CodeBlock code={PAYLOAD} label="JSON" className="mb-4" />
-      <P>
-        <C>data</C> is the event payload: it always includes <C>workspaceId</C> and, for these events, <C>ticketId</C> and{" "}
-        <C>ticketName</C>, plus event-specific fields such as <C>oldStatus</C>/<C>newStatus</C>,{" "}
-        <C>newAssigneeId</C>/<C>previousAssigneeId</C> or <C>commentId</C>/<C>authorId</C>/<C>commentContent</C>. Ignore
-        fields you do not know; new ones may be added.
-      </P>
+      {intro}
 
-      <H2>Events</H2>
-      {eventsTable}
-
-      <H2>Headers</H2>
-      <Table
-        head={[text.header, text.value]}
-        rows={[
-          [<C>X-Webhook-Event</C>, "The event name."],
-          [<C>X-Webhook-Signature</C>, "The HMAC-SHA256 of the raw request body keyed with the webhook secret, hex-encoded."],
-        ]}
-      />
-
-      <H2>Delivery</H2>
+      <H2 id="delivery">{text.delivery}</H2>
       <UL>
-        <li>Delivery is attempted once, with a 10 second timeout and no retries.</li>
-        <li>Respond with a <C>2xx</C> quickly and do the work asynchronously.</li>
+        {deliveryFacts(delivery, lang).map((fact) => <li key={fact}>{renderInline(fact)}</li>)}
       </UL>
 
-      <H2>Verifying the signature</H2>
-      <P>
-        Verify the signature against the raw body, before parsing it, with a constant-time comparison. Node.js with Express:
-      </P>
-      <CodeBlock code={VERIFY} label="Node.js" className="mb-4" />
-      <Note>
-        The signature does not cover a timestamp header; check <C>timestamp</C> in the body to reject old replays.
-      </Note>
+      {delivery.headers && delivery.headers.length > 0 && (
+        <>
+          <H3>{text.headers}</H3>
+          <Table
+            head={[text.header, text.value]}
+            rows={delivery.headers.map((h) => [
+              <C>{h.name}</C>,
+              renderInline((lang === "es" && HEADER_DESCRIPTIONS_ES[h.name]) || h.description || h.value || ""),
+            ])}
+          />
+        </>
+      )}
+
+      <H2 id="events">{text.events}</H2>
+      <P>{text.eventsIntro}</P>
+      {events.map((e) => (
+        <section key={e.event} id={`event-${e.event}`} className="mb-8 scroll-mt-20">
+          <div className="flex items-center flex-wrap gap-2 mt-6 mb-2">
+            <h3 className="font-mono text-base text-heading">{e.event}</h3>
+            {!e.delivered && (
+              <span className="rounded px-1.5 py-px text-xs font-body-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                {text.notSent}
+              </span>
+            )}
+          </div>
+          <P>
+            {renderInline(e.delivered ? (lang === "es" && EVENT_DESCRIPTIONS_ES[e.event]) || e.description || e.summary || "" : text.notSentNote)}
+          </P>
+          {e.delivered && (
+            <>
+              <FieldTable fields={e.fields} />
+              {e.example !== undefined && (
+                <CodeBlock code={JSON.stringify(e.example, null, 2)} label={`${text.example} · JSON`} className="mb-4" />
+              )}
+            </>
+          )}
+        </section>
+      ))}
+
+      {header && (
+        <>
+          <H2 id="verify">{text.verify}</H2>
+          <P>{text.verifyIntro}</P>
+          <CodeBlock code={verificationExample(header)} label="Node.js" className="mb-4" />
+          <Note>{renderInline(text.replay)}</Note>
+        </>
+      )}
     </>
   );
 }

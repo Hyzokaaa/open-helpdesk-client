@@ -88,6 +88,53 @@ export interface SecuritySchemeObject {
   "x-scopes"?: DocumentedScope[];
 }
 
+/** One entry of `x-webhooks`: the request the server sends for an event (Redoc convention). */
+export interface WebhookOperationObject {
+  summary?: string;
+  description?: string;
+  requestBody?: RequestBodyObject | RefObject;
+  /** Set on events that can be selected on a webhook but are not sent. */
+  "x-not-delivered"?: boolean;
+}
+
+export interface DocumentedHeader {
+  name: string;
+  value?: string;
+  description?: string;
+}
+
+/** `x-webhook-delivery`: how the server delivers webhooks. */
+export interface WebhookDelivery {
+  method?: string;
+  contentType?: string;
+  body?: string;
+  headers?: DocumentedHeader[];
+  signature?: { header: string; algorithm: string; encoding?: string; signedContent?: string; key?: string };
+  timeoutMs?: number;
+  attempts?: number;
+  retries?: number;
+  successStatus?: string;
+  failure?: string;
+  redirects?: string;
+  ordering?: string;
+  subscription?: string;
+}
+
+/** `x-rate-limit`: the throttling of the public API. */
+export interface RateLimit {
+  limit: number;
+  windowSeconds: number;
+  scope?: string;
+  description?: string;
+  tracker?: string;
+  trackerNote?: string;
+  perEndpoint?: boolean;
+  storage?: string;
+  storageNote?: string;
+  exceededStatus?: number;
+  headers?: DocumentedHeader[];
+}
+
 export interface OpenApiDocument {
   openapi: string;
   info: { title: string; version: string; description?: string };
@@ -101,4 +148,7 @@ export interface OpenApiDocument {
     responses?: Record<string, ResponseObject>;
     securitySchemes?: Record<string, SecuritySchemeObject>;
   };
+  "x-webhooks"?: Record<string, { post?: WebhookOperationObject }>;
+  "x-webhook-delivery"?: WebhookDelivery;
+  "x-rate-limit"?: RateLimit;
 }

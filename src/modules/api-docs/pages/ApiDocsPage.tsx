@@ -78,7 +78,13 @@ export default function ApiDocsPage() {
     const next = GUIDES[guideIndex + 1];
     content = (
       <article className="max-w-3xl">
-        <guide.Component lang={docsLang} document={document} groups={groups} baseUrl={API_BASE_URL} />
+        <guide.Component
+          lang={docsLang}
+          document={document}
+          documentStatus={loading ? "loading" : document ? "ready" : "error"}
+          groups={groups}
+          baseUrl={API_BASE_URL}
+        />
         <nav className="mt-12 pt-6 border-t border-border-card flex justify-between gap-4 text-sm">
           {prev ? (
             <Link to={DOCS_ROUTES.guide(prev.slug)} className="text-secondary-text hover:text-primary">
