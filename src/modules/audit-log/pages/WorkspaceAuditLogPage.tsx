@@ -15,6 +15,7 @@ import {
   AuditLogFilters,
   listAuditLog,
 } from "../services/audit-log.service";
+import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
 
 const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
@@ -28,6 +29,9 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
   { value: "workspace-deleted", group: "Workspace" }, { value: "workspace-palette-updated", group: "Workspace" },
   { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
+  { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
+  { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
+  { value: "workspace-import-failed", group: "Workspace" },
   { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
   { value: "member-role-changed", group: "Members" },
   { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
@@ -87,6 +91,11 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "workspace-palette-updated": "blue",
   "workspace-sla-updated": "blue",
   "workspace-import-started": "green",
+  "workspace-exported": "blue",
+  "workspace-export-created": "blue",
+  "workspace-export-link-downloaded": "blue",
+  "workspace-import-completed": "green",
+  "workspace-import-failed": "red",
   // Members
   "member-added": "green",
   "member-removed": "red",
@@ -461,8 +470,8 @@ export function MetadataSummary({ metadata, action, t, search }: { metadata: Rec
   const after = metadata.after as Record<string, unknown> | undefined;
   if (before && after) {
     const changes = Object.keys(after)
-      .filter((key) => String(before[key]) !== String(after[key]))
-      .map((key) => `${key}: ${before[key] ?? "—"} → ${after[key] ?? "—"}`);
+      .filter((key) => formatInlineValue(before[key]) !== formatInlineValue(after[key]))
+      .map((key) => `${key}: ${formatInlineValue(before[key])} → ${formatInlineValue(after[key])}`);
     if (changes.length > 0) parts.push(changes.join(", "));
   }
 
@@ -488,7 +497,8 @@ export function MetadataSummary({ metadata, action, t, search }: { metadata: Rec
   if (metadata.count) parts.push(`×${metadata.count}`);
 
   // Error info
-  if (metadata.error) parts.push(`Error: ${String(metadata.error).slice(0, 80)}`);
+  if (metadata.error) parts.push(`Error: ${formatInlineValue(metadata.error).slice(0, 80)}`);
+  if (metadata.reason) parts.push(formatInlineValue(metadata.reason).slice(0, 80));
 
   // Provider (OAuth)
   if (metadata.provider) parts.push(String(metadata.provider));
@@ -509,8 +519,8 @@ export function MetadataKeyValue({ metadata, search }: { metadata: Record<string
   // Merge before/after into diff rows
   if (before && after) {
     for (const key of Object.keys(after)) {
-      if (String(before[key]) !== String(after[key])) {
-        entries.push([key, `${before[key] ?? "—"} → ${after[key] ?? "—"}`]);
+      if (formatInlineValue(before[key]) !== formatInlineValue(after[key])) {
+        entries.push([key, `${formatInlineValue(before[key])} → ${formatInlineValue(after[key])}`]);
       }
     }
   }
@@ -519,14 +529,21 @@ export function MetadataKeyValue({ metadata, search }: { metadata: Record<string
 
   return (
     <div className="bg-surface-hover rounded p-3 space-y-2">
-      {entries.map(([key, val]) => (
-        <div key={key} className="flex gap-2 items-baseline">
-          <span className="text-xs font-body-semibold text-subtle min-w-[80px] shrink-0">{key}</span>
-          <span className="text-xs text-body break-all">
-            {search ? <HighlightText text={String(val)} search={search} /> : String(val)}
-          </span>
-        </div>
-      ))}
+      {entries.map(([key, val]) => {
+        // Older entries may hold objects or arrays: shown as indented JSON, never "[object Object]"
+        const text = formatDetailValue(val);
+        const content = search ? <HighlightText text={text} search={search} /> : text;
+        return (
+          <div key={key} className="flex gap-2 items-baseline">
+            <span className="text-xs font-body-semibold text-subtle min-w-[80px] shrink-0">{key}</span>
+            {isStructuredValue(val) ? (
+              <pre className="text-xs text-body whitespace-pre-wrap break-all font-mono m-0 min-w-0">{content}</pre>
+            ) : (
+              <span className="text-xs text-body break-all">{content}</span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
