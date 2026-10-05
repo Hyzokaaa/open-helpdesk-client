@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
@@ -8,7 +9,6 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
-import { API_URL } from "@modules/app/domain/constants/env";
 import {
   ApiKeyDto,
   API_KEY_SCOPES,
@@ -66,14 +66,9 @@ export default function ApiKeySettings({ slug }: Props) {
       <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-xs text-muted">
           {t("apiKeys.docsIntro")}{" "}
-          <a
-            href={`${API_URL.replace(/\/+$/, "")}/api/v1/docs`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
+          <Link to="/docs" className="text-primary hover:underline">
             {t("apiKeys.docsLink")}
-          </a>
+          </Link>
         </p>
         <Button size="xs" color="light" onClick={() => setShowCreate(true)}>
           {t("apiKeys.create")}

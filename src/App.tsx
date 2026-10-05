@@ -70,6 +70,7 @@ const PortalKbArticlePage = lazy(() => import("@modules/portal/pages/PortalKbArt
 const WorkspaceKbPage = lazy(() => import("@modules/knowledge-base/pages/WorkspaceKbPage"));
 const PrivacyPage = lazy(() => import("@modules/legal/pages/PrivacyPage"));
 const TermsPage = lazy(() => import("@modules/legal/pages/TermsPage"));
+const ApiDocsPage = lazy(() => import("@modules/api-docs/pages/ApiDocsPage"));
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -97,6 +98,9 @@ function AppRoutes() {
       {extraPublicRoutes}
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/docs" element={<ApiDocsPage />} />
+      <Route path="/docs/:section" element={<ApiDocsPage />} />
+      <Route path="/docs/reference/:operation" element={<ApiDocsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
