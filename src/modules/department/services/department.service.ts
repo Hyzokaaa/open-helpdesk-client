@@ -23,9 +23,11 @@ export interface DepartmentDetail {
 
 export async function listDepartments(
   workspaceSlug: string,
+  options?: { silent?: boolean },
 ): Promise<Department[]> {
   const res = await http.get<Department[]>(
     `/workspaces/${workspaceSlug}/departments`,
+    options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined,
   );
   return res.data;
 }

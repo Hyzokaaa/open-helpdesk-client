@@ -1,4 +1,7 @@
 import { Component, type ReactNode } from "react";
+// This boundary wraps the providers, so it cannot use the useTranslation hook;
+// the standalone t() reads the stored language from localStorage instead.
+import { t } from "@modules/app/i18n/translations";
 
 interface Props {
   children: ReactNode;
@@ -35,16 +38,16 @@ export default class ErrorBoundary extends Component<Props, State> {
       <div className="min-h-screen flex items-center justify-center bg-surface p-6">
         <div className="text-center max-w-md">
           <h1 className="text-xl font-body-bold text-heading mb-2">
-            Something went wrong
+            {t("errorBoundary.title")}
           </h1>
           <p className="text-sm text-muted mb-6">
-            An unexpected error occurred. Please reload the page to try again.
+            {t("errorBoundary.message")}
           </p>
           <button
             onClick={this.handleReload}
             className="px-4 py-2 text-sm font-body-semibold rounded-button bg-primary-600 text-on-primary hover:bg-primary-700 transition-colors cursor-pointer"
           >
-            Reload
+            {t("errorBoundary.reload")}
           </button>
         </div>
       </div>

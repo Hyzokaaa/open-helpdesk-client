@@ -396,7 +396,9 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     return () => clearTimeout(timeout);
   }, [address]);
 
-  const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
+  // A port that is not a whole number in range is reported instead of silently replaced by 993
+  const portValid = /^\d+$/.test(imapPort.trim()) && Number(imapPort) >= 1 && Number(imapPort) <= 65535;
+  const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit) && portValid;
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
 
   const handleTest = async () => {
@@ -497,6 +499,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           </div>
           <FormInput label={t("mailbox.imapPort")}>
             <Input value={imapPort} onChange={setImapPort} placeholder="993" />
+            {!portValid && <p className="text-exs text-red-500 mt-1">{t("mailbox.invalidPort")}</p>}
           </FormInput>
         </div>
 

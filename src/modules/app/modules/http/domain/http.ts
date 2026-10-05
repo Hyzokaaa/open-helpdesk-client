@@ -90,6 +90,19 @@ http.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+/**
+ * A request made with `responseType: 'blob'` gets its error body as a Blob too; read it back
+ * as JSON so the server's message reaches the user like for any other request.
+ */
+async function readErrorBody(data: unknown): Promise<unknown> {
+  if (typeof Blob === "undefined" || !(data instanceof Blob)) return data;
+  try {
+    return JSON.parse(await data.text());
+  } catch {
+    return undefined;
+  }
+}
+
 http.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -97,6 +110,7 @@ http.interceptors.response.use(
 
     if (axios.isAxiosError(error) && error.response) {
       let handled = false;
+      error.response.data = await readErrorBody(error.response.data);
 
       // Only a request that carried a token can mean it expired; /auth/* answers 401 for a
       // wrong password, which must stay on the login form.

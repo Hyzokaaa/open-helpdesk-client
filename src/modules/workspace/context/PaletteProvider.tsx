@@ -65,6 +65,22 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       lastSlugRef.current = workspaceSlug;
     }
 
+    const showPalette = (name: string) => {
+      setPaletteState(name);
+      if (name !== DEFAULT_PALETTE) {
+        applyPalette(getPalette(name));
+      } else {
+        clearPalette();
+      }
+    };
+
+    // Falling back to the custom domain's workspace: the public resolve-domain data already
+    // carries its palette, and GET /workspaces/:slug is members-only (403 for a visitor).
+    if (!workspaceSlug && !lastSlugRef.current && domainWorkspaces?.[0]) {
+      showPalette(domainWorkspaces[0].palette ?? DEFAULT_PALETTE);
+      return;
+    }
+
     if (!slug) {
       if (domainPalette && domainPalette !== DEFAULT_PALETTE) {
         applyPalette(getPalette(domainPalette));
@@ -76,16 +92,10 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    getWorkspace(slug).then((ws) => {
-      const name = ws.palette ?? DEFAULT_PALETTE;
-      setPaletteState(name);
-      const def = getPalette(name);
-      if (name !== DEFAULT_PALETTE) {
-        applyPalette(def);
-      } else {
-        clearPalette();
-      }
-    });
+    // Only cosmetic: a 403 or network error must not raise an error toast
+    getWorkspace(slug, { silent: true })
+      .then((ws) => showPalette(ws.palette ?? DEFAULT_PALETTE))
+      .catch(() => { /* keep the current palette */ });
   }, [workspaceSlug, isHome]);
 
   const setPalette = (name: string) => {

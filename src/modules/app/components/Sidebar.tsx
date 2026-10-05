@@ -26,7 +26,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const { t } = useTranslation();
   const { extraSettingsNav, extraAdminNav } = useExtensions();
   const { clearWorkspacePalette } = useContext(PaletteContext);
-  const { domainWorkspaces, loading: configLoading, saasMode, brandName, brandSubtitle, brandLogo, brandIcon } = useConfig();
+  const { domainWorkspaces, loading: configLoading, brandName, brandSubtitle, brandLogo, brandIcon } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
   const lockedWorkspace = domainWorkspaces?.length === 1 ? domainWorkspaces[0] : null;
 
@@ -51,7 +51,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const isLocked = !!lockedWorkspace;
   const configReady = !configLoading;
   const domainSlugs = domainWorkspaces?.map((w) => w.slug) ?? null;
-  const showCreateWorkspace = canCreateWorkspace(saasMode, isCustomDomain, user?.isSystemAdmin ?? false);
+  const showCreateWorkspace = canCreateWorkspace(user, isCustomDomain);
   const filteredWorkspaces = domainSlugs ? workspaces.filter((ws) => domainSlugs.includes(ws.slug)) : workspaces;
   const isSingleWorkspace = filteredWorkspaces.length <= 1 && !showCreateWorkspace;
 

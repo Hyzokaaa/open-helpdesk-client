@@ -2,6 +2,7 @@ import CollapsibleSection from "@modules/app/modules/ui/components/CollapsibleSe
 import useTranslation from "@modules/app/i18n/useTranslation";
 import SystemEmailPage from "@modules/settings/pages/SystemEmailPage";
 import PlatformMailboxSettings from "../components/PlatformMailboxSettings";
+import WorkspaceCreationSettings from "../components/WorkspaceCreationSettings";
 
 export default function AdminSettingsPage() {
   const { t } = useTranslation();
@@ -13,7 +14,11 @@ export default function AdminSettingsPage() {
       </h2>
 
       <div className="space-y-4">
-        <CollapsibleSection title={t("adminSettings.emailSending")} defaultOpen>
+        <CollapsibleSection title={t("adminSettings.workspaceCreation")} defaultOpen>
+          <WorkspaceCreationSettings />
+        </CollapsibleSection>
+
+        <CollapsibleSection title={t("adminSettings.emailSending")}>
           <SystemEmailPage embedded />
         </CollapsibleSection>
 

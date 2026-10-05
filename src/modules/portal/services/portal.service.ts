@@ -34,7 +34,8 @@ export interface CreatePortalTicketData {
 
 export interface CreatePortalTicketResponse {
   ticketNumber: string;
-  portalToken: string;
+  /** null when the email already has an account: the link is emailed to that inbox only */
+  portalToken: string | null;
   message: string;
 }
 
@@ -42,7 +43,7 @@ export interface PortalTicketComment {
   id: string;
   content: string;
   authorName: string;
-  isCreator: boolean;
+  isReporter: boolean;
   createdAt: string;
 }
 
@@ -63,7 +64,7 @@ export interface PortalTicketDetail {
   categoryName: string | null;
   customFields: Record<string, unknown>;
   createdAt: string;
-  creatorName: string;
+  reporterName: string;
   workspaceName: string;
   workspacePalette: string | null;
   attachments: PortalTicketAttachment[];

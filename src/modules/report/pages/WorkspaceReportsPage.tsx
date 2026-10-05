@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { subDays, startOfDay, endOfDay, format } from "date-fns";
+import { getDateRange } from "../domain/get-date-range";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -14,16 +14,6 @@ import TicketsByCategoryChart from "../components/TicketsByCategoryChart";
 import TopAgentsChart from "../components/TopAgentsChart";
 import CsatChart from "../components/CsatChart";
 import TicketsByOrganizationChart from "../components/TicketsByOrganizationChart";
-
-function getDateRange(preset: string) {
-  if (preset === "all") return { dateFrom: "", dateTo: "" };
-  const now = new Date();
-  const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
-  return {
-    dateFrom: format(startOfDay(subDays(now, days)), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-    dateTo: format(endOfDay(now), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-  };
-}
 
 function toFullOverview(basic: ReportOverviewBasic): ReportOverview {
   return { ...basic, csatScore: null, csatResponseCount: 0, slaFirstResponseMet: null, slaResolutionMet: null };

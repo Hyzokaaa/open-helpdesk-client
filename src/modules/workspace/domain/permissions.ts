@@ -10,6 +10,7 @@ export const P = {
   TAG_VIEW: "tag.view",
 
   TICKET_CREATE: "ticket.create",
+  TICKET_CREATE_ON_BEHALF: "ticket.create.on-behalf",
   TICKET_VIEW: "ticket.view",
   TICKET_VIEW_OWN: "ticket.view.own",
   TICKET_EDIT_NAME: "ticket.edit.name",
@@ -25,11 +26,13 @@ export const P = {
   TRANSFER_REQUEST_RESPOND: "transfer-request.respond",
   TICKET_DELETE: "ticket.delete",
   TICKET_EDIT_DISCARDED: "ticket.edit.discarded",
+  TICKET_PARTICIPANTS_MANAGE: "ticket.participants.manage",
 
   COMMENT_CREATE: "comment.create",
 
   ATTACHMENT_UPLOAD: "attachment.upload",
   ATTACHMENT_DELETE: "attachment.delete",
+  ATTACHMENT_DELETE_ANY: "attachment.delete.any",
 
   USER_CREATE: "user.create",
   USER_LIST: "user.list",

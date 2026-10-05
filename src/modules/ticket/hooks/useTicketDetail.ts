@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { canBeAssignee } from "../domain/can-be-assignee";
+import { collectTicketPeople, findPerson } from "../domain/ticket-people";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   TicketDetail,
@@ -13,7 +15,7 @@ import {
   listComments,
 } from "@modules/comment/services/comment.service";
 import {
-  AttachmentDetail,
+  TicketAttachment,
   listTicketAttachments,
   uploadToTicket,
 } from "@modules/attachment/services/attachment.service";
@@ -45,7 +47,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [pendingTransfer, setPendingTransfer] = useState<PendingTransfer | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
-  const [attachments, setAttachments] = useState<AttachmentDetail[]>([]);
+  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [participants, setParticipants] = useState<TicketParticipant[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
@@ -94,7 +96,8 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchComments();
     fetchAttachments();
     if (workspaceSlug) {
-      listMembers(workspaceSlug).then(setMembers);
+      // Customers cannot list members (403); their ticket names come from the ticket itself
+      listMembers(workspaceSlug).then(setMembers).catch(() => {});
       listTags(workspaceSlug).then(setWorkspaceTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});
@@ -145,13 +148,18 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     [workspaceSlug, ticketId],
   );
 
+  // Members without workspace.members.view get no member list; the ticket and its
+  // comments carry the names of the people involved instead.
+  const people = useMemo(() => collectTicketPeople({ ticket, comments }), [ticket, comments]);
+  const getPerson = (userId: string) => findPerson(userId, members, people);
+
   const getMemberName = (userId: string) => {
-    const m = members.find((m) => m.userId === userId);
-    return m ? `${m.firstName} ${m.lastName}` : userId;
+    const p = getPerson(userId);
+    return p ? `${p.firstName} ${p.lastName}` : userId;
   };
 
   const assignableMembers = members.filter(
-    (m) => m.role === "admin" || m.role === "agent",
+    (m) => canBeAssignee(m.role),
   );
 
   return {
@@ -179,6 +187,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchParticipants,
     handleDroppedFiles,
     getMemberName,
+    getPerson,
     assignableMembers,
   };
 }

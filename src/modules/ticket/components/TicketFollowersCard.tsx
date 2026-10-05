@@ -1,10 +1,13 @@
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import { removeParticipant } from "../services/ticket.service";
 import type { TicketParticipant } from "../services/ticket.service";
+import { canRemoveFollower } from "../domain/can-remove-follower";
 
 interface TicketFollowersCardProps {
   participants: TicketParticipant[];
-  canAssign: boolean;
+  /** ticket.participants.manage, needed to remove anyone other than yourself */
+  canManageFollowers: boolean;
+  currentUserId: string | undefined;
   workspaceSlug: string | undefined;
   ticketId: string | undefined;
   fetchParticipants: () => void;
@@ -13,7 +16,8 @@ interface TicketFollowersCardProps {
 
 export default function TicketFollowersCard({
   participants,
-  canAssign,
+  canManageFollowers,
+  currentUserId,
   workspaceSlug,
   ticketId,
   fetchParticipants,
@@ -36,7 +40,7 @@ export default function TicketFollowersCard({
                 </div>
                 <span className="text-xs text-body">{p.firstName} {p.lastName}</span>
               </div>
-              {canAssign && (
+              {canRemoveFollower(p.userId, currentUserId, canManageFollowers) && (
                 <button
                   onClick={async () => {
                     if (!workspaceSlug || !ticketId) return;

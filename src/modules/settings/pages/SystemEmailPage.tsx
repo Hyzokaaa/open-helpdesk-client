@@ -6,6 +6,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { isValidEmail } from "@modules/shared/domain/is-valid-email";
 import {
   SystemEmailDto,
   getSystemEmail,
@@ -175,6 +176,12 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSave) return;
+    // The backend requires the From address to be an email; logins such as "apikey" are not
+    const from = (smtpFrom || smtpLogin).trim();
+    if (!isValidEmail(from)) {
+      toast.error(t("systemEmail.fromNotEmail"));
+      return;
+    }
     setSaving(true);
     try {
       await saveSystemEmail({
@@ -182,7 +189,7 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
         smtpPort: resolvedPort,
         smtpUser: smtpLogin,
         smtpPass: password,
-        smtpFrom: smtpFrom || smtpLogin,
+        smtpFrom: from,
         encryption,
       });
       toast.success(t("systemEmail.saved"));

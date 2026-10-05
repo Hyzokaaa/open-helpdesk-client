@@ -20,6 +20,9 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "ticket-deleted", group: "Ticket" }, { value: "comment-created", group: "Ticket" },
   { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
   { value: "workspace-deleted", group: "Workspace" },
+  { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
+  { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
+  { value: "workspace-import-failed", group: "Workspace" },
   { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
   { value: "member-role-changed", group: "Members" },
   { value: "user-created", group: "User" }, { value: "user-activated", group: "User" },
@@ -74,6 +77,11 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "workspace-created": "green",
   "workspace-updated": "blue",
   "workspace-deleted": "red",
+  "workspace-exported": "blue",
+  "workspace-export-created": "blue",
+  "workspace-export-link-downloaded": "blue",
+  "workspace-import-completed": "green",
+  "workspace-import-failed": "red",
   "member-added": "green",
   "member-removed": "red",
   "member-role-changed": "yellow",
@@ -369,7 +377,7 @@ export default function SystemLogsPage() {
               <DetailRow label={t("auditLog.detail.workspaceId")} value={selected.workspaceId ?? "—"} />
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                <MetadataKeyValue metadata={selected.metadata} search={filters.search} />
+                <MetadataKeyValue metadata={selected.metadata} action={selected.action} t={t} search={filters.search} />
               </div>
               <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
             </div>

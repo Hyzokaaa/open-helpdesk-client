@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,62 +11,65 @@ import useTheme from "@modules/app/hooks/useTheme";
 import useConfig from "@modules/app/hooks/useConfig";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
 import { UserProvider } from "@modules/user/context/UserProvider";
-import LoginPage from "@modules/user/pages/LoginPage";
-import SignupPage from "@modules/user/pages/SignupPage";
-import AuthCallbackPage from "@modules/user/pages/AuthCallbackPage";
-import VerifyEmailPage from "@modules/user/pages/VerifyEmailPage";
-import ForgotPasswordPage from "@modules/user/pages/ForgotPasswordPage";
-import ResetPasswordPage from "@modules/user/pages/ResetPasswordPage";
 import DashboardLayout from "@modules/app/components/DashboardLayout";
-import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
-import WorkspaceMembersPage from "@modules/workspace/pages/WorkspaceMembersPage";
-import WorkspaceContactsPage from "@modules/workspace/pages/WorkspaceContactsPage";
-import WorkspaceTagsPage from "@modules/tag/pages/WorkspaceTagsPage";
-import WorkspaceDepartmentsPage from "@modules/department/pages/WorkspaceDepartmentsPage";
-import WorkspaceOrganizationsPage from "@modules/organization/pages/WorkspaceOrganizationsPage";
-import WorkspaceProjectsPage from "@modules/project/pages/WorkspaceProjectsPage";
-import WorkspaceCategoriesPage from "@modules/project/pages/WorkspaceCategoriesPage";
-import TicketsPage from "@modules/ticket/pages/TicketsPage";
-import TicketCreatePage from "@modules/ticket/pages/TicketCreatePage";
-import TicketDetailPage from "@modules/ticket/pages/TicketDetailPage";
-import WorkspacesPage from "@modules/workspace/pages/WorkspacesPage";
-import InvitationPage from "@modules/workspace/pages/InvitationPage";
-import WorkspaceInvitationsPage from "@modules/workspace/pages/WorkspaceInvitationsPage";
-import WorkspaceCreatePage from "@modules/workspace/pages/WorkspaceCreatePage";
-import AdminUsersPage from "@modules/admin/pages/AdminUsersPage";
-import AdminWorkspacesPage from "@modules/admin/pages/AdminWorkspacesPage";
-import AccountSection from "@modules/user/components/AccountSection";
-import PasswordSection from "@modules/user/components/PasswordSection";
-import PreferencesSection from "@modules/user/components/PreferencesSection";
-import NotificationsSection from "@modules/user/components/NotificationsSection";
-import NotificationsPage from "@modules/notification/pages/NotificationsPage";
-import ChangelogPage from "@modules/app/pages/ChangelogPage";
-import OnboardingPage from "@modules/onboarding/pages/OnboardingPage";
-import WorkspaceAuditLogPage from "@modules/audit-log/pages/WorkspaceAuditLogPage";
-import SystemLogsPage from "@modules/audit-log/pages/SystemLogsPage";
-import WorkspaceCannedResponsesPage from "@modules/canned-response/pages/WorkspaceCannedResponsesPage";
-import WorkspaceEmailRulesPage from "@modules/email-rule/pages/WorkspaceEmailRulesPage";
-import WorkspaceCustomFieldsPage from "@modules/custom-field/pages/WorkspaceCustomFieldsPage";
-import WorkspaceReportsPage from "@modules/report/pages/WorkspaceReportsPage";
-import UserStatsPage from "@modules/report/pages/UserStatsPage";
 import ProtectedRoute from "@modules/app/components/ProtectedRoute";
 import AdminRoute from "@modules/app/components/AdminRoute";
-import AdminSettingsPage from "@modules/admin/pages/AdminSettingsPage";
-import AdminBrandingPage from "@modules/admin/pages/AdminBrandingPage";
-import AdminUpdatesPage from "@modules/admin/pages/AdminUpdatesPage";
-import PortalPage from "@modules/portal/pages/PortalPage";
-import PortalTicketPage from "@modules/portal/pages/PortalTicketPage";
-import PortalKbPage from "@modules/portal/pages/PortalKbPage";
-import PortalKbCategoryPage from "@modules/portal/pages/PortalKbCategoryPage";
-import PortalKbArticlePage from "@modules/portal/pages/PortalKbArticlePage";
-import WorkspaceKbPage from "@modules/knowledge-base/pages/WorkspaceKbPage";
 import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
 import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
-import PrivacyPage from "@modules/legal/pages/PrivacyPage";
-import TermsPage from "@modules/legal/pages/TermsPage";
 import CookieConsentBanner from "@modules/legal/components/CookieConsentBanner";
+
+// Route-level code splitting: every page is its own chunk, loaded on first visit.
+// Layouts, guards and providers stay eager because every route needs them.
+const LoginPage = lazy(() => import("@modules/user/pages/LoginPage"));
+const SignupPage = lazy(() => import("@modules/user/pages/SignupPage"));
+const AuthCallbackPage = lazy(() => import("@modules/user/pages/AuthCallbackPage"));
+const VerifyEmailPage = lazy(() => import("@modules/user/pages/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("@modules/user/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@modules/user/pages/ResetPasswordPage"));
+const WorkspaceSettingsPage = lazy(() => import("@modules/workspace/pages/WorkspaceSettingsPage"));
+const WorkspaceMembersPage = lazy(() => import("@modules/workspace/pages/WorkspaceMembersPage"));
+const WorkspaceContactsPage = lazy(() => import("@modules/workspace/pages/WorkspaceContactsPage"));
+const WorkspaceTagsPage = lazy(() => import("@modules/tag/pages/WorkspaceTagsPage"));
+const WorkspaceDepartmentsPage = lazy(() => import("@modules/department/pages/WorkspaceDepartmentsPage"));
+const WorkspaceOrganizationsPage = lazy(() => import("@modules/organization/pages/WorkspaceOrganizationsPage"));
+const WorkspaceProjectsPage = lazy(() => import("@modules/project/pages/WorkspaceProjectsPage"));
+const WorkspaceCategoriesPage = lazy(() => import("@modules/project/pages/WorkspaceCategoriesPage"));
+const TicketsPage = lazy(() => import("@modules/ticket/pages/TicketsPage"));
+const TicketCreatePage = lazy(() => import("@modules/ticket/pages/TicketCreatePage"));
+const TicketDetailPage = lazy(() => import("@modules/ticket/pages/TicketDetailPage"));
+const WorkspacesPage = lazy(() => import("@modules/workspace/pages/WorkspacesPage"));
+const InvitationPage = lazy(() => import("@modules/workspace/pages/InvitationPage"));
+const WorkspaceInvitationsPage = lazy(() => import("@modules/workspace/pages/WorkspaceInvitationsPage"));
+const WorkspaceCreatePage = lazy(() => import("@modules/workspace/pages/WorkspaceCreatePage"));
+const AdminUsersPage = lazy(() => import("@modules/admin/pages/AdminUsersPage"));
+const AdminWorkspacesPage = lazy(() => import("@modules/admin/pages/AdminWorkspacesPage"));
+const AccountSection = lazy(() => import("@modules/user/components/AccountSection"));
+const PasswordSection = lazy(() => import("@modules/user/components/PasswordSection"));
+const PreferencesSection = lazy(() => import("@modules/user/components/PreferencesSection"));
+const NotificationsSection = lazy(() => import("@modules/user/components/NotificationsSection"));
+const NotificationsPage = lazy(() => import("@modules/notification/pages/NotificationsPage"));
+const ChangelogPage = lazy(() => import("@modules/app/pages/ChangelogPage"));
+const OnboardingPage = lazy(() => import("@modules/onboarding/pages/OnboardingPage"));
+const WorkspaceAuditLogPage = lazy(() => import("@modules/audit-log/pages/WorkspaceAuditLogPage"));
+const SystemLogsPage = lazy(() => import("@modules/audit-log/pages/SystemLogsPage"));
+const WorkspaceCannedResponsesPage = lazy(() => import("@modules/canned-response/pages/WorkspaceCannedResponsesPage"));
+const WorkspaceEmailRulesPage = lazy(() => import("@modules/email-rule/pages/WorkspaceEmailRulesPage"));
+const WorkspaceCustomFieldsPage = lazy(() => import("@modules/custom-field/pages/WorkspaceCustomFieldsPage"));
+const WorkspaceReportsPage = lazy(() => import("@modules/report/pages/WorkspaceReportsPage"));
+const UserStatsPage = lazy(() => import("@modules/report/pages/UserStatsPage"));
+const AdminSettingsPage = lazy(() => import("@modules/admin/pages/AdminSettingsPage"));
+const AdminBrandingPage = lazy(() => import("@modules/admin/pages/AdminBrandingPage"));
+const AdminUpdatesPage = lazy(() => import("@modules/admin/pages/AdminUpdatesPage"));
+const PortalPage = lazy(() => import("@modules/portal/pages/PortalPage"));
+const PortalTicketPage = lazy(() => import("@modules/portal/pages/PortalTicketPage"));
+const PortalKbPage = lazy(() => import("@modules/portal/pages/PortalKbPage"));
+const PortalKbCategoryPage = lazy(() => import("@modules/portal/pages/PortalKbCategoryPage"));
+const PortalKbArticlePage = lazy(() => import("@modules/portal/pages/PortalKbArticlePage"));
+const WorkspaceKbPage = lazy(() => import("@modules/knowledge-base/pages/WorkspaceKbPage"));
+const PrivacyPage = lazy(() => import("@modules/legal/pages/PrivacyPage"));
+const TermsPage = lazy(() => import("@modules/legal/pages/TermsPage"));
 
 function ThemedToast() {
   const { theme } = useTheme();
@@ -88,6 +92,7 @@ function AppRoutes() {
 
   return (
     <DomainGate>
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       {extraPublicRoutes}
       <Route path="/privacy" element={<PrivacyPage />} />
@@ -160,6 +165,7 @@ function AppRoutes() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </Suspense>
     </DomainGate>
   );
 }

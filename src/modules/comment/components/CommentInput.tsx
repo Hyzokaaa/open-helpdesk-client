@@ -20,11 +20,13 @@ interface Props {
   onSubmitAndResolve?: (content: string) => void;
   canResolve?: boolean;
   cannedResponses?: CannedResponse[];
+  /** Off for members who cannot list the workspace members: "@" is then plain text, no popup. */
+  allowMentions?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────
 
-export default function CommentInput({ members, loading, onSubmit, onSubmitAndResolve, canResolve = false, cannedResponses = [] }: Props) {
+export default function CommentInput({ members, loading, onSubmit, onSubmitAndResolve, canResolve = false, cannedResponses = [], allowMentions = true }: Props) {
   const { t } = useTranslation();
   const [showSendMenu, setShowSendMenu] = useState(false);
   const [showCanned, setShowCanned] = useState(false);
@@ -161,7 +163,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
       Placeholder.configure({
         placeholder: t("ticketDetail.commentPlaceholder"),
       }),
-      mentionExtension,
+      ...(allowMentions ? [mentionExtension] : []),
     ],
     immediatelyRender: false,
     editorProps: {
@@ -188,7 +190,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
     onUpdate: () => {
       checkCannedTrigger();
     },
-  }, [mentionExtension]);
+  }, [mentionExtension, allowMentions]);
 
   // ── Canned Response Logic ─────────────────────────────────
 

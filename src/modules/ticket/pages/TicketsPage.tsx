@@ -53,6 +53,7 @@ import useBulkOperations from "../hooks/useBulkOperations";
 import TicketFilterBar from "../components/TicketFilterBar";
 import TicketBulkActions from "../components/TicketBulkActions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
+import { canBeAssignee } from "../domain/can-be-assignee";
 
 interface Column {
   key: string;
@@ -185,7 +186,8 @@ export default function TicketsPage() {
       listTags(workspaceSlug).then(setTags);
       listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
-      listMembers(workspaceSlug).then(setMembers);
+      // Customers cannot list members (403); their ticket names come from the ticket itself
+      listMembers(workspaceSlug).then(setMembers).catch(() => {});
       listCategories(workspaceSlug).then(setCategories).catch(() => {});
       listProjects(workspaceSlug).then(setProjects).catch(() => {});
     }
@@ -646,7 +648,7 @@ export default function TicketsPage() {
           <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
           <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
           <Select
-            options={members.filter((m) => m.role !== "user")}
+            options={members.filter((m) => canBeAssignee(m.role))}
             value={(m) => m.userId === assignTarget}
             onChange={(m) => setAssignTarget(m.userId)}
             label={(m) => `${m.firstName} ${m.lastName}`}

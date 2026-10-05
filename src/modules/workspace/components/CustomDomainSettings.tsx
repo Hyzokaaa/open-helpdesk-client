@@ -17,11 +17,12 @@ interface Props {
   verified: boolean;
   verificationToken: string | null;
   cnameTarget: string;
-  saasMode: boolean;
+  /** System admins set domains already verified; everyone else proves control over DNS. */
+  canSkipVerification: boolean;
   onUpdate: (domain: string | null, verified: boolean, token: string | null, cnameTarget?: string) => void;
 }
 
-export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, cnameTarget, saasMode, onUpdate }: Props) {
+export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, cnameTarget, canSkipVerification, onUpdate }: Props) {
   const { t } = useTranslation();
   const [domain, setDomain] = useState(currentDomain ?? "");
   const [saving, setSaving] = useState(false);
@@ -35,7 +36,7 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await setCustomDomain(slug, domain.trim() || null, !saasMode);
+      const res = await setCustomDomain(slug, domain.trim() || null, canSkipVerification);
       if (res.cnameTarget) setActiveCnameTarget(res.cnameTarget);
       onUpdate(res.customDomain, res.customDomainVerified, res.domainVerificationToken);
       setResult(null);
@@ -82,7 +83,7 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted">
-        {saasMode ? t("customDomain.descSaas") : t("customDomain.descSelfhosted")}
+        {canSkipVerification ? t("customDomain.descDirect") : t("customDomain.descWithDns")}
       </p>
 
       <div className="flex items-end gap-2">
@@ -102,14 +103,12 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
       {hasDomain && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            {saasMode && (
-              <StatusBadge
-                label={verified ? t("customDomain.verified") : t("customDomain.pending")}
-                color={verified ? "green" : "yellow"}
-                size="xs"
-              />
-            )}
-            {saasMode && !verified && (
+            <StatusBadge
+              label={verified ? t("customDomain.verified") : t("customDomain.pending")}
+              color={verified ? "green" : "yellow"}
+              size="xs"
+            />
+            {!verified && (
               <Button size="xs" color="light" onClick={handleVerify} loading={verifying}>
                 {t("customDomain.verify")}
               </Button>
@@ -119,8 +118,8 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </Button>
           </div>
 
-          {/* SaaS: DNS verification instructions */}
-          {saasMode && !verified && verificationToken && (
+          {/* DNS verification instructions, for domains not verified yet */}
+          {!verified && verificationToken && (
             <div className="bg-surface-hover rounded-lg p-3 space-y-2">
               <p className="text-xs font-body-medium text-heading">{t("customDomain.dnsInstructions")}</p>
               <div className="space-y-1.5">
@@ -148,15 +147,15 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </div>
           )}
 
-          {/* Selfhosted: simple reminder */}
-          {!saasMode && (
+          {/* The admin who skipped DNS still has to route the hostname */}
+          {canSkipVerification && (
             <div className="bg-surface-hover rounded-lg p-3">
               <p className="text-xs text-muted">{t("customDomain.proxyReminder")}</p>
             </div>
           )}
 
           {/* Routing info */}
-          {(verified || !saasMode) && (
+          {verified && (
             <div className="bg-surface-hover rounded-lg p-3 space-y-1.5">
               <p className="text-exs font-body-semibold text-subtle uppercase tracking-wider">{t("customDomain.routing")}</p>
               <div className="flex items-center gap-2 text-xs">

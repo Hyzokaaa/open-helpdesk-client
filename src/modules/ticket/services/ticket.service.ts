@@ -1,5 +1,6 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
+import type { PersonSummary } from "@modules/shared/domain/person-summary";
 
 export interface TicketListItem {
   id: string;
@@ -49,6 +50,10 @@ export interface TicketDetail {
   descriptionEditedAt: string | null;
   accessLevel?: 'full' | 'readonly';
   aiCache?: Record<string, { source: string; result: string }>;
+  reporter?: PersonSummary | null;
+  assignee?: PersonSummary | null;
+  registeredBy?: PersonSummary | null;
+  resolvedBy?: PersonSummary | null;
 }
 
 export interface DescriptionEditItem {
@@ -65,7 +70,6 @@ export interface TicketFilters {
   priority?: string;
   assigneeId?: string;
   reporterId?: string;
-  registeredById?: string;
   tagIds?: string[];
   departmentId?: string;
   organizationId?: string;
@@ -242,7 +246,8 @@ export async function getPendingTransfer(
   ticketId: string,
 ): Promise<PendingTransfer | null> {
   const res = await http.get<PendingTransfer | null>(`/workspaces/${workspaceSlug}/tickets/${ticketId}/transfer-requests/pending`);
-  return res.data;
+  // A null from the backend arrives as an empty body, i.e. ""
+  return res.data || null;
 }
 
 export async function acceptTransfer(

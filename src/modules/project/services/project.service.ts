@@ -22,8 +22,8 @@ export interface TicketCategoryDto {
   inProject?: boolean | null;
 }
 
-export async function listProjects(slug: string): Promise<Project[]> {
-  const res = await http.get<Project[]>(`/workspaces/${slug}/projects`);
+export async function listProjects(slug: string, options?: { silent?: boolean }): Promise<Project[]> {
+  const res = await http.get<Project[]>(`/workspaces/${slug}/projects`, options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined);
   return res.data;
 }
 
@@ -60,9 +60,9 @@ export async function listProjectCategories(slug: string, projectId: string): Pr
 }
 
 // Workspace-level categories
-export async function listCategories(slug: string, projectId?: string): Promise<TicketCategoryDto[]> {
+export async function listCategories(slug: string, projectId?: string, options?: { silent?: boolean }): Promise<TicketCategoryDto[]> {
   const params = projectId ? `?projectId=${projectId}` : "";
-  const res = await http.get<TicketCategoryDto[]>(`/workspaces/${slug}/categories${params}`);
+  const res = await http.get<TicketCategoryDto[]>(`/workspaces/${slug}/categories${params}`, options?.silent ? { headers: { 'X-Silent-Errors': 'true' } } : undefined);
   return res.data;
 }
 

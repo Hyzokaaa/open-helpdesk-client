@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import { completeExistingParam, filenameFromDisposition, ImportPreview, ImportSetting, overwriteParam } from "../domain/workspace-import";
 
 export interface Workspace {
   id: string;
@@ -70,8 +71,11 @@ export async function listWorkspaces(sort?: {
   return res.data;
 }
 
-export async function getWorkspace(slug: string): Promise<WorkspaceDetail> {
-  const res = await http.get<WorkspaceDetail>(`/workspaces/${slug}`);
+export async function getWorkspace(slug: string, options?: { silent?: boolean }): Promise<WorkspaceDetail> {
+  const res = await http.get<WorkspaceDetail>(
+    `/workspaces/${slug}`,
+    options?.silent ? { headers: { "X-Silent-Errors": "true" } } : undefined,
+  );
   return res.data;
 }
 
@@ -268,8 +272,54 @@ export async function toggleSystemMailbox(slug: string, enabled: boolean): Promi
   return res.data;
 }
 
-export async function exportWorkspace(slug: string): Promise<Blob> {
-  const res = await http.get(`/workspaces/${slug}/export`, { responseType: 'blob' });
+/** Bytes moved so far, and the total when the other side announced it. */
+export type TransferProgress = (loaded: number, total: number | undefined) => void;
+
+/**
+ * The workspace as a file encrypted with `password`, and the name the server gave it. Large
+ * workspaces carry their files too, so this may take minutes; `onProgress` follows the download.
+ * With `includeCredentials` the file also carries mailbox and sender passwords and webhook
+ * secrets; API keys are never exported.
+ */
+export async function exportWorkspace(
+  slug: string,
+  password: string,
+  onProgress?: TransferProgress,
+  includeCredentials = false,
+): Promise<{ blob: Blob; filename: string }> {
+  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password, includeCredentials }, {
+    responseType: "blob",
+    onDownloadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
+  });
+  const disposition = res.headers["content-disposition"] as string | undefined;
+  return { blob: res.data, filename: filenameFromDisposition(disposition, `${slug}.ohd`) };
+}
+
+/** An export is read from an uploaded file or fetched by the server from an export link. */
+export type ImportSource = { kind: "file"; file: File } | { kind: "url"; url: string };
+
+function importForm(source: ImportSource, password: string): FormData {
+  const form = new FormData();
+  if (source.kind === "file") form.append("file", source.file, source.file.name);
+  else form.append("url", source.url);
+  if (password) form.append("password", password);
+  return form;
+}
+
+/**
+ * What an export brings, read by the server without importing anything. The file is uploaded
+ * here and again by importWorkspace; `onProgress` follows each upload.
+ */
+export async function previewWorkspaceImport(
+  slug: string,
+  source: ImportSource,
+  password: string,
+  onProgress?: TransferProgress,
+): Promise<ImportPreview> {
+  // No Content-Type: the browser sets multipart/form-data with its boundary
+  const res = await http.post<ImportPreview>(`/workspaces/${slug}/import/preview`, importForm(source, password), {
+    onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
+  });
   return res.data;
 }
 
@@ -277,28 +327,74 @@ export interface ImportResult {
   usersCreated: number;
   membersAdded: number;
   tagsImported: number;
+  categoriesImported: number;
+  organizationsImported: number;
+  departmentsImported: number;
+  projectsImported: number;
   ticketsImported: number;
+  /** Tickets the workspace already had, left as they were (not completed, or lacking nothing); reported as a notice */
+  ticketsAlreadyPresent?: number;
+  /** Tickets the workspace already had that the import completed (completeExisting); reported as a notice */
+  ticketsCompleted?: number;
   commentsImported: number;
+  /** Comments the import could not place; reported as a warning */
+  commentsSkipped: number;
+  descriptionEditsImported: number;
+  commentEditsImported: number;
   attachmentsImported: number;
+  /** Attachments whose file the export did not carry (older exports); reported as a warning */
+  attachmentsSkipped: number;
+  /** Attachments of tickets the workspace already had and did not complete, so not imported again */
+  attachmentsOfExistingTickets?: number;
   participantsImported: number;
   cannedResponsesImported: number;
   customFieldsImported: number;
   csatResponsesImported: number;
+  kbCategoriesImported: number;
+  kbArticlesImported: number;
   auditLogImported: number;
+  /** Mailboxes arrive paused, so they do not read the same inbox as the source */
+  mailboxesImported: number;
+  emailRulesImported: number;
+  /** Webhooks arrive disabled */
+  webhooksImported: number;
+  /** Target settings the import overwrote, among those asked for; a custom domain arrives unverified */
+  settingsApplied: ImportSetting[];
+  /** Why the custom domain asked for was not set, or null */
+  customDomainSkipped: string | null;
+  /** Whether the export carried passwords and secrets; without them they must be entered again */
+  credentialsIncluded: boolean;
 }
 
-export async function importWorkspace(slug: string, data: any): Promise<ImportResult> {
-  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, data);
+/**
+ * Without `overwrite` the import changes none of the target's settings. With `completeExisting`
+ * the tickets the workspace already has get what they lack (empty fields, missing comments,
+ * attachments...) instead of being left alone; nothing already there is changed or removed.
+ */
+export async function importWorkspace(
+  slug: string,
+  source: ImportSource,
+  password: string,
+  overwrite: ImportSetting[] = [],
+  onProgress?: TransferProgress,
+  completeExisting = false,
+): Promise<ImportResult> {
+  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, importForm(source, password), {
+    params: { overwrite: overwriteParam(overwrite), completeExisting: completeExistingParam(completeExisting) },
+    onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
+  });
   return res.data;
 }
 
-export async function importWorkspaceFromUrl(slug: string, url: string): Promise<ImportResult> {
-  const res = await http.post<ImportResult>(`/workspaces/${slug}/import`, { url });
-  return res.data;
-}
-
-export async function createExportToken(slug: string): Promise<{ url: string; expiresAt: string }> {
-  const res = await http.post<{ url: string; expiresAt: string }>(`/workspaces/${slug}/export/token`);
+/** A single-use link to an export encrypted with `password`; the importer needs both. */
+export async function createExportToken(
+  slug: string,
+  password: string,
+  includeCredentials = false,
+): Promise<{ url: string; expiresAt: string }> {
+  const res = await http.post<{ url: string; expiresAt: string }>(
+    `/workspaces/${slug}/export/token`, { password, includeCredentials },
+  );
   return res.data;
 }
 

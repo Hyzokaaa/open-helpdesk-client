@@ -18,22 +18,10 @@ function GoogleIcon() {
   );
 }
 
-function MicrosoftIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-      <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-      <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-      <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-    </svg>
-  );
-}
-
 export default function OAuthButtons({ providers, rememberMe = false, onSuccess }: Props & { rememberMe?: boolean; onSuccess?: () => void }) {
   const { t } = useTranslation();
 
-  const hasAny = providers.google || providers.microsoft;
-  if (!hasAny) return null;
+  if (!providers.google) return null;
 
   const openPopup = (provider: string) => {
     const width = 500;
@@ -69,16 +57,6 @@ export default function OAuthButtons({ providers, rememberMe = false, onSuccess 
           >
             <GoogleIcon />
             {t("login.withGoogle")}
-          </button>
-        )}
-        {providers.microsoft && (
-          <button
-            type="button"
-            onClick={() => openPopup("microsoft")}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-card rounded-lg text-sm text-heading bg-surface hover:bg-page transition-colors cursor-pointer"
-          >
-            <MicrosoftIcon />
-            {t("login.withMicrosoft")}
           </button>
         )}
       </div>

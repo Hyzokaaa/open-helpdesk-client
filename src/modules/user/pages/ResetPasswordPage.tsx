@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { resetPassword } from "../services/auth.service";
+import { isPasswordAcceptable } from "../domain/password-policy";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 
@@ -18,7 +19,8 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  const passwordValid = newPassword.length >= 6 && newPassword === confirmPassword;
+  const passwordValid = isPasswordAcceptable(newPassword) && newPassword === confirmPassword;
+  const passwordTooWeak = newPassword.length > 0 && !isPasswordAcceptable(newPassword);
   const passwordMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +88,9 @@ export default function ResetPasswordPage() {
                 />
               </FormInput>
 
+              {passwordTooWeak && (
+                <p className="text-xs text-red-500 mb-2">{t("settings.passwordPolicy")}</p>
+              )}
               {passwordMismatch && (
                 <p className="text-xs text-red-500 mb-2">{t("settings.passwordMismatch")}</p>
               )}

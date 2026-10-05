@@ -1,0 +1,183 @@
+import { formatInlineValue, isStructuredValue } from "./audit-metadata";
+
+/**
+ * Pure helpers that turn stored audit metadata into text people can read: comment HTML into a
+ * plain preview, ticket field keys into translated names and reference ids into the names they
+ * stood for. Older entries hold raw HTML and bare ids; newer ones carry plain text and labels.
+ */
+
+type Translate = (key: string) => string;
+
+/** The markup mentions are stored in: `@[Display Name](userId)`. */
+const MENTION_MARKUP = /@\[([^\]]+)\]\([^)]+\)/g;
+
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'" };
+
+/** Decodes the named entities rich text commonly holds and any numeric one. */
+function decodeEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+    const lower = code.toLowerCase();
+    if (lower in ENTITIES) return ENTITIES[lower];
+    if (lower.startsWith("#x")) return safeFromCodePoint(parseInt(lower.slice(2), 16), match);
+    if (lower.startsWith("#")) return safeFromCodePoint(parseInt(lower.slice(1), 10), match);
+    return match;
+  });
+}
+
+function safeFromCodePoint(code: number, fallback: string): string {
+  try {
+    return Number.isFinite(code) ? String.fromCodePoint(code) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Reduces rich text to one readable line: mentions read as `@Name`, block boundaries and line
+ * breaks become spaces, every tag is removed, entities are decoded and whitespace collapses.
+ */
+export function htmlToText(input: string): string {
+  return decodeEntities(
+    input
+      .replace(MENTION_MARKUP, "@$1")
+      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<\/?(p|div|li|ul|ol|h[1-6]|blockquote|pre|tr|td|th|table)\b[^>]*>/gi, " ")
+      .replace(/<[a-z/!][^>]*>?/gi, ""),
+  )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** A comment's preview for the audit log, from plain text (new entries) or raw HTML (old ones). */
+export function commentPreview(content: unknown, maxLength = 50): string {
+  if (typeof content !== "string") return "";
+  const text = htmlToText(content);
+  return text.length > maxLength ? text.slice(0, maxLength).trimEnd() + "..." : text;
+}
+
+/** Whether a value looks like a ULID, which must never be shown to people as a value. */
+export function isUlid(value: unknown): boolean {
+  return typeof value === "string" && /^[0-9A-HJKMNP-TV-Z]{26}$/i.test(value);
+}
+
+/** Ticket fields that point at another record, resolved through workspace data. */
+export const REFERENCE_FIELDS = ["categoryId", "departmentId", "organizationId", "projectId", "tagIds"] as const;
+export type ReferenceField = (typeof REFERENCE_FIELDS)[number];
+
+/** Names by id for each kind of reference; a field left out was not loaded (no access, or no workspace). */
+export type ReferenceNames = Partial<Record<ReferenceField, Map<string, string>>>;
+
+const FIELD_KEYS: Record<string, string> = {
+  name: "auditLog.field.name",
+  priority: "auditLog.field.priority",
+  categoryId: "auditLog.field.categoryId",
+  departmentId: "auditLog.field.departmentId",
+  organizationId: "auditLog.field.organizationId",
+  projectId: "auditLog.field.projectId",
+  tagIds: "auditLog.field.tagIds",
+};
+
+/** The translated name of a changed field; fields without a translation keep their key. */
+export function fieldLabel(field: string, t: Translate): string {
+  const key = FIELD_KEYS[field];
+  return key ? t(key) : field;
+}
+
+function isReferenceField(field: string): field is ReferenceField {
+  return (REFERENCE_FIELDS as readonly string[]).includes(field);
+}
+
+function isEmpty(value: unknown): boolean {
+  return value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
+/** One referenced id as a name: from the loaded data, else deleted when the data was loaded, else unavailable. */
+export function resolveReference(field: ReferenceField, id: string, names: ReferenceNames, t: Translate): string {
+  const map = names[field];
+  if (!map) return t("auditLog.value.unavailable");
+  return map.get(id) ?? t("auditLog.value.deleted");
+}
+
+/**
+ * A changed field's value for display. A label captured at write time wins; then priorities
+ * are translated, reference ids are resolved through workspace data, and any other id-looking
+ * value is hidden. Empty values read as "—".
+ */
+export function formatChangeValue(
+  field: string,
+  value: unknown,
+  label: unknown,
+  names: ReferenceNames,
+  t: Translate,
+): string {
+  if (isEmpty(value)) return "—";
+  if (typeof label === "string" && label !== "") return label;
+  if (field === "priority" && typeof value === "string") {
+    const translated = t(`enum.priority.${value}`);
+    return translated === `enum.priority.${value}` ? value : translated;
+  }
+  if (isReferenceField(field)) {
+    const ids = Array.isArray(value) ? value : [value];
+    return ids.map((id) => resolveReference(field, String(id), names, t)).join(", ");
+  }
+  if (isUlid(value)) return t("auditLog.value.unavailable");
+  return formatInlineValue(value);
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && [...a].map(String).sort().join("\u0000") === [...b].map(String).sort().join("\u0000");
+  }
+  return formatInlineValue(a ?? null) === formatInlineValue(b ?? null);
+}
+
+export interface FieldChange {
+  field: string;
+  label: string;
+  from: string;
+  to: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return isStructuredValue(value) && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+/**
+ * The fields a before/after pair changed, readable: translated field names and values from
+ * the stored labels, the workspace data or a deleted/unavailable placeholder. A pair of plain
+ * values (a single setting) yields one change with an empty field name.
+ */
+export function describeChanges(metadata: Record<string, unknown>, names: ReferenceNames, t: Translate): FieldChange[] {
+  const { before, after } = metadata;
+  if (before === undefined && after === undefined) return [];
+
+  if (!isStructuredValue(before) && !isStructuredValue(after)) {
+    if (sameValue(before, after)) return [];
+    return [{ field: "", label: "", from: formatChangeValue("", before, undefined, names, t), to: formatChangeValue("", after, undefined, names, t) }];
+  }
+
+  const b = asRecord(before);
+  const a = asRecord(after);
+  const beforeLabels = asRecord(metadata.beforeLabels);
+  const afterLabels = asRecord(metadata.afterLabels);
+  return Object.keys(a)
+    .filter((field) => !sameValue(b[field], a[field]))
+    .map((field) => ({
+      field,
+      label: fieldLabel(field, t),
+      from: formatChangeValue(field, b[field], beforeLabels[field], names, t),
+      to: formatChangeValue(field, a[field], afterLabels[field], names, t),
+    }));
+}
+
+/** A change on one line: "Department: — → Support", or "en → es" for a single setting. */
+export function formatChange(change: FieldChange): string {
+  const values = `${change.from} → ${change.to}`;
+  return change.label ? `${change.label}: ${values}` : values;
+}
+
+/** Actions whose metadata `content` is a comment. */
+export function isCommentAction(action: string): boolean {
+  return action === "comment-created" || action === "comment-edited" || action === "portal-comment-created";
+}
