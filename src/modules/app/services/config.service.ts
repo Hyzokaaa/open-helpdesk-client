@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import type { AnalyticsConfig } from "@modules/analytics/domain/analytics-config";
 
 export interface PublicConfig {
   saasMode: boolean;
@@ -14,6 +15,8 @@ export interface PublicConfig {
   brandingLogo: string | null;
   brandingIcon: string | null;
   upgradeNotificationsEnabled: boolean;
+  /** Web analytics for this installation, or null when it is off. */
+  analytics: AnalyticsConfig | null;
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {
@@ -21,7 +24,7 @@ export async function getPublicConfig(): Promise<PublicConfig> {
     const res = await http.get<PublicConfig>("/config/public");
     return res.data;
   } catch {
-    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null, brandingAppName: null, brandingAppSubtitle: null, brandingLogo: null, brandingIcon: null, upgradeNotificationsEnabled: true };
+    return { saasMode: false, paymentGateways: [], defaultGateway: "", paddleClientToken: null, paddleEnvironment: "sandbox", aiEnabled: false, emailConfigured: false, systemEmailFrom: null, brandingAppName: null, brandingAppSubtitle: null, brandingLogo: null, brandingIcon: null, upgradeNotificationsEnabled: true, analytics: null };
   }
 }
 

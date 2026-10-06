@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConfigContext, type DomainWorkspace } from "./config-context";
-import { getPublicConfig, resolveDomain, type PublicConfig } from "../services/config.service";
+import { getPublicConfig, resolveDomain } from "../services/config.service";
+import { parseAnalyticsConfig, type AnalyticsConfig } from "@modules/analytics/domain/analytics-config";
 import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
 
 function applyNameSplit(fullName: string): { name: string; subtitle: string } {
@@ -23,6 +24,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
   const [upgradeNotificationsEnabled, setUpgradeNotificationsEnabled] = useState(true);
+  const [analytics, setAnalytics] = useState<AnalyticsConfig | null>(null);
   const [systemBranding, setSystemBranding] = useState<{ appName: string | null; appSubtitle: string | null; logo: string | null; icon: string | null }>({ appName: null, appSubtitle: null, logo: null, icon: null });
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setEmailConfigured(config.emailConfigured ?? false);
       setSystemEmailFrom(config.systemEmailFrom ?? null);
       setUpgradeNotificationsEnabled(config.upgradeNotificationsEnabled ?? true);
+      setAnalytics(parseAnalyticsConfig(config.analytics));
       setSystemBranding({
         appName: config.brandingAppName ?? null,
         appSubtitle: config.brandingAppSubtitle ?? null,
@@ -98,7 +101,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandIcon]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon }}>
       {children}
     </ConfigContext.Provider>
   );

@@ -18,7 +18,8 @@ import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
 import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
-import CookieConsentBanner from "@modules/legal/components/CookieConsentBanner";
+import CookieConsentBanner from "@modules/analytics/components/CookieConsentBanner";
+import AnalyticsTracker from "@modules/analytics/components/AnalyticsTracker";
 
 // Route-level code splitting: every page is its own chunk, loaded on first visit.
 // Layouts, guards and providers stay eager because every route needs them.
@@ -187,6 +188,7 @@ export default function App({ extensions }: AppProps) {
       <UserProvider>
         <ProseStyles />
         <ThemedToast />
+        <AnalyticsTracker />
         <CookieConsentBanner />
         <AppRoutes />
       </UserProvider>

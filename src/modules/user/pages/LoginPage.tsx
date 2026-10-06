@@ -12,6 +12,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
 import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
+import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -135,6 +136,7 @@ export default function LoginPage() {
               <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
               <span>·</span>
               <a href="/privacy" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+              <CookiePreferencesLink separator />
               {saasMode && (
                 <>
                   <span>·</span>

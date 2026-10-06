@@ -7,6 +7,7 @@ import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 import StepAccount from "../components/StepAccount";
 import StepVerifyEmail from "../components/StepVerifyEmail";
 import StepWorkspace from "../components/StepWorkspace";
+import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
 
 const CORE_STEPS = ["account", "verify", "workspace"];
 
@@ -106,6 +107,7 @@ export default function OnboardingPage() {
           <a href="/terms" className="hover:text-heading transition-colors">{t("legal.terms")}</a>
           <span>·</span>
           <a href="/privacy" className="hover:text-heading transition-colors">{t("legal.privacy")}</a>
+          <CookiePreferencesLink separator />
           <span>·</span>
           <a href="/refund" className="hover:text-heading transition-colors">{t("legal.refund")}</a>
         </div>
