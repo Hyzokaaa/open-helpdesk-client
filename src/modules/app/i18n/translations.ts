@@ -1796,6 +1796,8 @@ const translations = {
   "adminSettings.title": { en: "System Settings", es: "Configuración del Sistema" },
   "adminSettings.version": { en: "Version", es: "Versión" },
   "admin.versionInstalled": { en: "Installed version:", es: "Versión instalada:" },
+  "admin.versionBasedOn": { en: "Based on:", es: "Basado en:" },
+  "admin.versionRedeployHint": { en: "— redeploy to pick it up.", es: "— redespliega para usarla." },
   "admin.versionDevelopmentBuild": { en: "development build (components do not match a release)", es: "versión de desarrollo (los componentes no coinciden con ninguna release)" },
   "admin.versionComponent": { en: "Component", es: "Componente" },
   "admin.versionCurrent": { en: "Current", es: "Actual" },

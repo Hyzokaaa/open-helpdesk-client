@@ -32,7 +32,15 @@ function StatusIcon({ status }: { status: Status }) {
 
 type OverallStatus = "up-to-date" | "behind" | "pre-release";
 
-export default function SystemVersionInfo() {
+interface Props {
+  /**
+   * The core is the base of another product (the cloud), whose own versions are shown above:
+   * label it as such, and say a newer core arrives by redeploying that product.
+   */
+  basedOn?: boolean;
+}
+
+export default function SystemVersionInfo({ basedOn = false }: Props) {
   const { t } = useTranslation();
   const [info, setInfo] = useState<VersionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,14 +78,15 @@ export default function SystemVersionInfo() {
     <div>
       <p className="text-sm text-body mb-4">
         {info.currentProduct
-          ? <>{t("admin.versionInstalled")} <span className="font-body-bold">Open Helpdesk v{info.currentProduct}</span></>
-          : <>{t("admin.versionInstalled")} <span className="font-body-bold">{t("admin.versionDevelopmentBuild")}</span></>}
+          ? <>{t(basedOn ? "admin.versionBasedOn" : "admin.versionInstalled")} <span className="font-body-bold">Open Helpdesk v{info.currentProduct}</span></>
+          : <>{t(basedOn ? "admin.versionBasedOn" : "admin.versionInstalled")} <span className="font-body-bold">{t("admin.versionDevelopmentBuild")}</span></>}
       </p>
 
       {overall === "behind" && info.latestRelease && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
           <p className="text-sm text-amber-800">
             Open Helpdesk <span className="font-body-bold">v{releaseVersion}</span> {t("admin.versionAvailable")}
+            {basedOn && <> {t("admin.versionRedeployHint")}</>}
           </p>
           <a
             href={info.latestRelease.url}

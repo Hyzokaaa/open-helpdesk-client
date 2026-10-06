@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import clsx from "clsx";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useExtensions from "@modules/app/extensions/useExtensions";
 import SystemVersionInfo from "../components/SystemVersionInfo";
 import {
   getNotificationSettings,
@@ -29,6 +30,7 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
 
 export default function AdminUpdatesPage() {
   const { t } = useTranslation();
+  const { UpdatesHeader } = useExtensions();
   const [settings, setSettings] = useState<SystemNotificationSettings | null>(null);
 
   useEffect(() => {
@@ -53,7 +55,9 @@ export default function AdminUpdatesPage() {
         {t("sidebar.adminUpdates")}
       </h2>
 
-      <SystemVersionInfo />
+      {UpdatesHeader && <UpdatesHeader />}
+
+      <SystemVersionInfo basedOn={!!UpdatesHeader} />
 
       {settings && (
         <Card className="p-5 mt-6">
