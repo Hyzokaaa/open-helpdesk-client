@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface ApiKeyDto {
   id: string;
@@ -50,6 +51,7 @@ export async function listApiKeys(slug: string): Promise<ApiKeyDto[]> {
 
 export async function createApiKey(slug: string, payload: CreateApiKeyPayload): Promise<CreateApiKeyResponse> {
   const res = await http.post<CreateApiKeyResponse>(`/workspaces/${slug}/api-keys`, payload);
+  trackEvent("api-key-created");
   return res.data;
 }
 

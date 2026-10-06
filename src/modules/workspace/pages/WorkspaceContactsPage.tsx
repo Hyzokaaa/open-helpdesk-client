@@ -64,15 +64,19 @@ export default function WorkspaceContactsPage() {
   const handleSaveContactName = async () => {
     if (!workspaceSlug || !editingContact) return;
     try {
-      await updateContactName(workspaceSlug, editingContact.userId, editFirstName, editLastName);
+      if (editFirstName !== editingContact.firstName || editLastName !== editingContact.lastName) {
+        await updateContactName(workspaceSlug, editingContact.userId, editFirstName, editLastName);
+      }
       if (editOrgId !== editingContact.organizationId) {
         await updateMemberOrganization(workspaceSlug, editingContact.userId, editOrgId);
       }
       setEditingContact(null);
       fetchContacts();
       toast.success(t("members.nameUpdated"));
-    } catch {
-      toast.error(t("contacts.updateError"));
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
+      const shared = typeof message === "string" && message.includes("another workspace");
+      toast.error(t(shared ? "contacts.sharedContactError" : "contacts.updateError"));
     }
   };
 

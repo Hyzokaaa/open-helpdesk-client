@@ -41,19 +41,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <script>
-      (function() {
-        var src = '%VITE_UMAMI_URL%';
-        var id = '%VITE_UMAMI_WEBSITE_ID%';
-        if (src && id && !src.includes('VITE_')) {
-          var s = document.createElement('script');
-          s.defer = true;
-          s.src = src;
-          s.dataset.websiteId = id;
-          document.head.appendChild(s);
-        }
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -76,6 +76,11 @@ const FIELD_KEYS: Record<string, string> = {
   organizationId: "auditLog.field.organizationId",
   projectId: "auditLog.field.projectId",
   tagIds: "auditLog.field.tagIds",
+  provider: "auditLog.field.provider",
+  serverUrl: "auditLog.field.serverUrl",
+  siteId: "auditLog.field.siteId",
+  useCookies: "auditLog.field.useCookies",
+  trackEvents: "auditLog.field.trackEvents",
 };
 
 /** The translated name of a changed field; fields without a translation keep their key. */
@@ -113,6 +118,7 @@ export function formatChangeValue(
 ): string {
   if (isEmpty(value)) return "—";
   if (typeof label === "string" && label !== "") return label;
+  if (typeof value === "boolean") return t(value ? "auditLog.value.yes" : "auditLog.value.no");
   if (field === "priority" && typeof value === "string") {
     const translated = t(`enum.priority.${value}`);
     return translated === `enum.priority.${value}` ? value : translated;

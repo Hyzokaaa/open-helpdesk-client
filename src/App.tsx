@@ -18,7 +18,8 @@ import ProseStyles from "@modules/app/components/ProseStyles";
 import WorkspaceGuard from "@modules/app/components/WorkspaceGuard";
 import PortalGuard from "@modules/app/components/PortalGuard";
 import RootRedirect from "@modules/app/components/RootRedirect";
-import CookieConsentBanner from "@modules/legal/components/CookieConsentBanner";
+import CookieConsentBanner from "@modules/analytics/components/CookieConsentBanner";
+import AnalyticsTracker from "@modules/analytics/components/AnalyticsTracker";
 
 // Route-level code splitting: every page is its own chunk, loaded on first visit.
 // Layouts, guards and providers stay eager because every route needs them.
@@ -61,6 +62,7 @@ const WorkspaceReportsPage = lazy(() => import("@modules/report/pages/WorkspaceR
 const UserStatsPage = lazy(() => import("@modules/report/pages/UserStatsPage"));
 const AdminSettingsPage = lazy(() => import("@modules/admin/pages/AdminSettingsPage"));
 const AdminBrandingPage = lazy(() => import("@modules/admin/pages/AdminBrandingPage"));
+const AdminAnalyticsPage = lazy(() => import("@modules/admin/pages/AdminAnalyticsPage"));
 const AdminUpdatesPage = lazy(() => import("@modules/admin/pages/AdminUpdatesPage"));
 const PortalPage = lazy(() => import("@modules/portal/pages/PortalPage"));
 const PortalTicketPage = lazy(() => import("@modules/portal/pages/PortalTicketPage"));
@@ -161,6 +163,7 @@ function AppRoutes() {
             <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
             <Route path="admin/logs" element={<SystemLogsPage />} />
             <Route path="admin/branding" element={<AdminBrandingPage />} />
+            <Route path="admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="admin/settings" element={<AdminSettingsPage />} />
             <Route path="admin/updates" element={<AdminUpdatesPage />} />
           </Route>
@@ -187,6 +190,7 @@ export default function App({ extensions }: AppProps) {
       <UserProvider>
         <ProseStyles />
         <ThemedToast />
+        <AnalyticsTracker />
         <CookieConsentBanner />
         <AppRoutes />
       </UserProvider>

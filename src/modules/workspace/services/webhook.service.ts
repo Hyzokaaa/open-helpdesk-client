@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface WebhookDto {
   id: string;
@@ -27,6 +28,7 @@ export async function createWebhook(
   data: { url: string; events: string[]; secret?: string },
 ): Promise<WebhookDto> {
   const res = await http.post<WebhookDto>(`/workspaces/${slug}/webhooks`, data);
+  trackEvent("webhook-created");
   return res.data;
 }
 

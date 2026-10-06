@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
+import type { AnalyticsConfig } from "@modules/analytics/domain/analytics-config";
 
 export interface DomainWorkspace {
   slug: string;
@@ -21,6 +22,8 @@ export interface ConfigContextProps {
   emailConfigured: boolean;
   systemEmailFrom: string | null;
   upgradeNotificationsEnabled: boolean;
+  /** Web analytics for this installation, or null when it is off. */
+  analytics: AnalyticsConfig | null;
   loading: boolean;
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
@@ -40,6 +43,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   emailConfigured: false,
   systemEmailFrom: null,
   upgradeNotificationsEnabled: true,
+  analytics: null,
   loading: true,
   domainWorkspaces: null,
   brandName: APP_NAME,
