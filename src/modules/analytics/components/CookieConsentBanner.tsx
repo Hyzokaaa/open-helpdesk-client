@@ -8,15 +8,22 @@ const CHOICE_CLASS =
   "shrink-0 px-4 py-1.5 border border-border-card bg-surface text-heading text-xs font-body-medium rounded-lg hover:bg-surface-hover transition-colors cursor-pointer";
 
 /**
- * Asks about analytics cookies. Shown only when the installation runs Matomo with cookies and
- * the visitor has not answered yet, or reopened it from "Cookie preferences". Until an answer,
- * Matomo measures without cookies.
+ * Asks about analytics cookies: one banner and one decision for the page, applied to every
+ * tracker that uses cookies. Shown only when a tracker measuring the current page (the
+ * installation's or the workspace's own) uses cookies and the visitor has not answered yet, or
+ * reopened it from "Cookie preferences". Until an answer, Matomo measures without cookies.
  */
 export default function CookieConsentBanner() {
   const { t } = useTranslation();
-  const { applies, consent, preferencesOpen } = useCookieConsent();
+  const { applies, installation, workspace, consent, preferencesOpen } = useCookieConsent();
 
   if (!applies || (consent !== null && !preferencesOpen)) return null;
+
+  // Says who measures this page: the installation, the workspace with its own Matomo, or both.
+  const workspaceName = workspace ? workspace.name || t("cookie.thisOrganisation") : "";
+  const message = !workspace
+    ? t("cookie.message")
+    : t(installation ? "cookie.messageBoth" : "cookie.messageWorkspace").replace("{workspace}", workspaceName);
 
   return (
     <div
@@ -27,7 +34,7 @@ export default function CookieConsentBanner() {
     >
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs text-secondary-text">
-          {t("cookie.message")}{" "}
+          {message}{" "}
           {consent && <>{t(consent === "accepted" ? "cookie.currentAccepted" : "cookie.currentRejected")}{" "}</>}
           <Link to="/privacy" className="text-primary hover:underline">{t("cookie.learnMore")}</Link>
         </p>
