@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_URL } from "@modules/app/domain/constants/env";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 const portalHttp = axios.create({ baseURL: API_URL });
 
@@ -101,6 +102,7 @@ export async function createPortalTicket(
     `/portal/${slug}/tickets`,
     data,
   );
+  trackEvent("ticket-created", { channel: "portal" });
   return res.data;
 }
 
@@ -111,6 +113,7 @@ export async function getPortalTicket(portalToken: string): Promise<PortalTicket
 
 export async function addPortalComment(portalToken: string, content: string): Promise<void> {
   await portalHttp.post(`/portal/tickets/${portalToken}/comments`, { content });
+  trackEvent("comment-created", { visibility: "public" });
 }
 
 // Knowledge Base (public)

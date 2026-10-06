@@ -13,6 +13,7 @@ import RichTextEditor, { RichTextEditorRef } from "../components/RichTextEditor"
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 import {
   KbCategory, KbArticleListItem, KbArticle,
   listCategories, createCategory, updateCategory, deleteCategory,
@@ -44,6 +45,8 @@ export default function WorkspaceKbPage() {
   const [savingArticle, setSavingArticle] = useState(false);
   const [deleteArticleId, setDeleteArticleId] = useState<string | null>(null);
   const editorRef = useRef<RichTextEditorRef>(null);
+  /** The edited article's status when it was opened, to tell a publish from a re-save. */
+  const savedArticleStatus = useRef<string | null>(null);
 
   const fetchData = async () => {
     if (!workspaceSlug) return;
@@ -95,6 +98,7 @@ export default function WorkspaceKbPage() {
   // Article handlers
   const openNewArticle = () => {
     setEditArticleId(null);
+    savedArticleStatus.current = null;
     setArticleTitle("");
     setArticleContent("");
     setArticleStatus("draft");
@@ -107,6 +111,7 @@ export default function WorkspaceKbPage() {
     try {
       const article = await getArticle(workspaceSlug, id);
       setEditArticleId(id);
+      savedArticleStatus.current = article.status;
       setArticleTitle(article.title);
       setArticleContent(article.content);
       setArticleStatus(article.status);
@@ -128,6 +133,9 @@ export default function WorkspaceKbPage() {
         await createArticle(workspaceSlug, {
           title: articleTitle.trim(), content, categoryId: articleCategoryId, status: articleStatus,
         });
+      }
+      if (articleStatus === "published" && savedArticleStatus.current !== "published") {
+        trackEvent("kb-article-published");
       }
       await fetchData();
       setShowArticleSheet(false);

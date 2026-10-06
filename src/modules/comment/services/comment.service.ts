@@ -1,6 +1,7 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import type { PersonSummary } from "@modules/shared/domain/person-summary";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface CommentItem {
   id: string;
@@ -64,5 +65,7 @@ export async function createComment(
     `/workspaces/${workspaceId}/tickets/${ticketId}/comments`,
     { content },
   );
+  // The client has no internal notes: every comment is visible to the reporter.
+  trackEvent("comment-created", { visibility: "public" });
   return res.data;
 }

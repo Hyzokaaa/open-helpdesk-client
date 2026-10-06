@@ -1,5 +1,6 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { completeExistingParam, filenameFromDisposition, ImportPreview, ImportSetting, overwriteParam } from "../domain/workspace-import";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface Workspace {
   id: string;
@@ -89,6 +90,7 @@ export async function createWorkspace(data: {
   description: string;
 }): Promise<{ id: string; name: string; slug: string; supportEmail: string | null }> {
   const res = await http.post("/workspaces", data);
+  trackEvent("workspace-created");
   return res.data;
 }
 
@@ -292,6 +294,7 @@ export async function exportWorkspace(
     onDownloadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });
   const disposition = res.headers["content-disposition"] as string | undefined;
+  trackEvent("workspace-exported");
   return { blob: res.data, filename: filenameFromDisposition(disposition, `${slug}.ohd`) };
 }
 
@@ -383,6 +386,7 @@ export async function importWorkspace(
     params: { overwrite: overwriteParam(overwrite), completeExisting: completeExistingParam(completeExisting) },
     onUploadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });
+  trackEvent("workspace-imported");
   return res.data;
 }
 
@@ -395,6 +399,7 @@ export async function createExportToken(
   const res = await http.post<{ url: string; expiresAt: string }>(
     `/workspaces/${slug}/export/token`, { password, includeCredentials },
   );
+  trackEvent("workspace-exported");
   return res.data;
 }
 

@@ -1,5 +1,6 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { AuthUser } from "../domain/auth-user";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 interface SignupRequest {
   email: string;
@@ -88,11 +89,13 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function signup(data: SignupRequest): Promise<SignupResponse> {
   const res = await http.post<SignupResponse>("/auth/signup", data);
+  trackEvent("signup-completed");
   return res.data;
 }
 
 export async function verifyEmail(token: string): Promise<void> {
   await http.post("/auth/verify-email", { token });
+  trackEvent("email-verified");
 }
 
 export async function resendVerification(): Promise<void> {

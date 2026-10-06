@@ -1,4 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface InvitationItem {
   id: string;
@@ -33,6 +34,7 @@ export async function createInvitation(
     `/workspaces/${slug}/invitations`,
     data,
   );
+  trackEvent("member-invited", { role: data.role });
   return res.data;
 }
 
@@ -44,6 +46,11 @@ export async function createInvitationBatch(
     `/workspaces/${slug}/invitations/batch`,
     { invitations },
   );
+  // One event per invitation actually sent, with the role it was sent for.
+  res.data.forEach((result, i) => {
+    const role = invitations[i]?.role;
+    if (result.status === "sent" && role) trackEvent("member-invited", { role });
+  });
   return res.data;
 }
 
@@ -93,6 +100,7 @@ export async function acceptInvitation(token: string): Promise<{ workspaceId: st
     `/invitations/accept`,
     { token },
   );
+  trackEvent("invitation-accepted");
   return res.data;
 }
 

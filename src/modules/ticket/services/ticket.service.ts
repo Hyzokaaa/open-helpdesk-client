@@ -1,6 +1,7 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
 import type { PersonSummary } from "@modules/shared/domain/person-summary";
+import { trackEvent } from "@modules/analytics/domain/analytics";
 
 export interface TicketListItem {
   id: string;
@@ -161,6 +162,7 @@ export async function createTicket(
   },
 ): Promise<{ id: string }> {
   const res = await http.post(`/workspaces/${workspaceId}/tickets`, data);
+  trackEvent("ticket-created", { channel: "dashboard" });
   return res.data;
 }
 
@@ -192,6 +194,7 @@ export async function changeTicketStatus(
     status,
     ...(discardReason ? { discardReason } : {}),
   });
+  trackEvent("ticket-status-changed", { status });
 }
 
 export async function assignTicket(
@@ -202,6 +205,7 @@ export async function assignTicket(
   await http.patch(`/workspaces/${workspaceId}/tickets/${ticketId}/assign`, {
     assigneeId,
   });
+  if (assigneeId) trackEvent("ticket-assigned");
 }
 
 export async function pickupTicket(
@@ -308,6 +312,8 @@ export async function bulkChangeStatus(
     status,
     ...(discardReason ? { discardReason } : {}),
   });
+  // One bulk action is one event, whatever the number of tickets it changed.
+  if (res.data.some((r) => r.success)) trackEvent("ticket-status-changed", { status });
   return res.data;
 }
 
