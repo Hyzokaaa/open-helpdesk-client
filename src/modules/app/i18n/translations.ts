@@ -1935,6 +1935,7 @@ const translations = {
   // Contacts errors
   "contacts.loadError": { en: "Failed to load contacts", es: "Error al cargar contactos" },
   "contacts.updateError": { en: "Failed to update name", es: "Error al actualizar nombre" },
+  "contacts.sharedContactError": { en: "This contact also belongs to another workspace, so its name cannot be changed from here", es: "Este contacto también pertenece a otro workspace, así que su nombre no se puede cambiar desde aquí" },
 
   // Workspace settings extras
   "workspaceSettings.exportError": { en: "Export failed", es: "Error en la exportación" },
