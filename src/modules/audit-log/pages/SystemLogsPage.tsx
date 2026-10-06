@@ -37,6 +37,7 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "email-received", group: "Email" }, { value: "email-sent", group: "Email" },
   { value: "email-send-failed", group: "Email" },
   { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
+  { value: "system-analytics-updated", group: "System" },
 ];
 
 const CATEGORIES = [
@@ -99,6 +100,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "mailbox-created": "green",
   "mailbox-updated": "blue",
   "mailbox-deleted": "red",
+  "system-analytics-updated": "blue",
 };
 
 const LEVEL_COLORS: Record<string, string> = {

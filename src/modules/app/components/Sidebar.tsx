@@ -121,6 +121,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
     { label: t("sidebar.adminUsers"), path: "/dashboard/admin/users" },
     { label: t("sidebar.adminWorkspaces"), path: "/dashboard/admin/workspaces" },
     { label: t("sidebar.adminBranding"), path: "/dashboard/admin/branding" },
+    { label: t("sidebar.adminAnalytics"), path: "/dashboard/admin/analytics" },
     { label: t("sidebar.adminSettings"), path: "/dashboard/admin/settings" },
     { label: t("sidebar.adminUpdates"), path: "/dashboard/admin/updates" },
     { label: t("sidebar.adminLogs"), path: "/dashboard/admin/logs" },

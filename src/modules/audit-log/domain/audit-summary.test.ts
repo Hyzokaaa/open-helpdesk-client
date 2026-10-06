@@ -110,4 +110,17 @@ describe("ticket update changes", () => {
   it("describes a single changed setting stored as plain values", () => {
     expect(describeChanges({ before: "en", after: "es" }, {}, en).map(formatChange)).toEqual(["en → es"]);
   });
+
+  it("describes an analytics settings change with field names and yes/no", () => {
+    const metadata = {
+      before: { provider: null, serverUrl: null, siteId: null, useCookies: false, trackEvents: true },
+      after: { provider: "matomo", serverUrl: "https://stats.example.org/", siteId: "3", useCookies: true, trackEvents: true },
+    };
+    expect(describeChanges(metadata, {}, es).map(formatChange)).toEqual([
+      "Proveedor: — → matomo",
+      "URL del servidor: — → https://stats.example.org/",
+      "ID del sitio: — → 3",
+      "Cookies: No → Sí",
+    ]);
+  });
 });
