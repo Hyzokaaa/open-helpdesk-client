@@ -123,4 +123,17 @@ describe("ticket update changes", () => {
       "Cookies: No → Sí",
     ]);
   });
+
+  it("describes a workspace analytics change, including the share toggle", () => {
+    const metadata = {
+      before: { provider: null, serverUrl: null, siteId: null, useCookies: false, trackEvents: true, shareWithInstallation: true },
+      after: { provider: "matomo", serverUrl: "https://matomo.acme.test/", siteId: "7", useCookies: false, trackEvents: true, shareWithInstallation: false },
+    };
+    expect(describeChanges(metadata, {}, en).map(formatChange)).toEqual([
+      "Provider: — → matomo",
+      "Server URL: — → https://matomo.acme.test/",
+      "Site ID: — → 7",
+      "Share usage: Yes → No",
+    ]);
+  });
 });
