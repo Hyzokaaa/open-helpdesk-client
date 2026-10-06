@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
 import useCookieConsent from "../hooks/useCookieConsent";
 import { decideCookieConsent } from "../domain/analytics";
 
@@ -16,14 +17,15 @@ const CHOICE_CLASS =
 export default function CookieConsentBanner() {
   const { t } = useTranslation();
   const { applies, installation, workspace, consent, preferencesOpen } = useCookieConsent();
+  const { installationName } = useConfig();
 
   if (!applies || (consent !== null && !preferencesOpen)) return null;
 
   // Says who measures this page: the installation, the workspace with its own Matomo, or both.
   const workspaceName = workspace ? workspace.name || t("cookie.thisOrganisation") : "";
-  const message = !workspace
-    ? t("cookie.message")
-    : t(installation ? "cookie.messageBoth" : "cookie.messageWorkspace").replace("{workspace}", workspaceName);
+  const message = (!workspace ? t("cookie.message") : t(installation ? "cookie.messageBoth" : "cookie.messageWorkspace"))
+    .replace("{installation}", installationName)
+    .replace("{workspace}", workspaceName);
 
   return (
     <div

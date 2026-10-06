@@ -33,15 +33,21 @@ describe("workspace context of a page", () => {
     expect(workspaceSlugFor("/portal/globex/kb", TWO)).toBe("globex");
   });
 
-  it("attributes the ticket tracking page only when the domain serves exactly one workspace", () => {
+  it("attributes the ticket tracking page to the custom domain's workspace", () => {
     expect(workspaceSlugFor("/portal/tickets/token", ONE)).toBe("acme");
-    expect(workspaceSlugFor("/portal/tickets/token", TWO)).toBeNull();
+    expect(workspaceSlugFor("/portal/tickets/token", TWO)).toBe("acme");
   });
 
-  it("keeps login, legal and account pages outside the workspace even on its custom domain", () => {
-    expect(workspaceSlugFor("/login", ONE)).toBeNull();
-    expect(workspaceSlugFor("/privacy", ONE)).toBeNull();
-    expect(workspaceSlugFor("/dashboard/settings/account", ONE)).toBeNull();
+  it("puts every page of a custom domain in its workspace, login and legal pages included", () => {
+    expect(workspaceSlugFor("/login", ONE)).toBe("acme");
+    expect(workspaceSlugFor("/forgot-password", ONE)).toBe("acme");
+    expect(workspaceSlugFor("/reset-password", ONE)).toBe("acme");
+    expect(workspaceSlugFor("/privacy", ONE)).toBe("acme");
+    expect(workspaceSlugFor("/dashboard/settings/account", ONE)).toBe("acme");
+  });
+
+  it("keeps an explicit dashboard slug even on a custom domain", () => {
+    expect(workspaceSlugFor("/dashboard/workspaces/globex/tickets", TWO)).toBe("globex");
   });
 });
 

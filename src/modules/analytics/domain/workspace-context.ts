@@ -16,15 +16,16 @@ function slugAt(pattern: string, pathname: string, reserved: Set<string>): strin
 }
 
 /**
- * The workspace a page belongs to for analytics, or null for pages outside any workspace
- * (landing, login, signup, account settings, system admin, docs, legal):
+ * The workspace a page belongs to for analytics, or null for pages outside any workspace:
  *
  * - `/dashboard/workspaces/:workspaceSlug/...`: that workspace's dashboard pages.
  * - `/portal/:workspaceSlug/...`: that workspace's portal and knowledge base.
- * - `/portal` and `/portal/kb/...` without a slug: the custom domain's workspace, the same one
- *   the portal pages show (`usePortalSlug`); outside a custom domain they belong to none.
- * - `/portal/tickets/:portalToken`: the custom domain's workspace when the domain serves exactly
- *   one; otherwise the ticket could belong to any of them, so none.
+ * - On a custom domain, every other page belongs to the domain's workspace: the slugless
+ *   portal, the ticket tracking page, login, password reset, legal pages, account settings.
+ *   With "Share usage with Open Helpdesk" off, the installation's tracker is then absent from
+ *   the whole domain.
+ * - Elsewhere (landing, login, signup, account settings, system admin, docs, legal on the
+ *   installation's own domain) the page belongs to none.
  *
  * Only the pathname is read, and the slug never reaches a tracker: it only picks which ones
  * receive the page.
@@ -35,16 +36,15 @@ export function workspaceSlugFor(path: string, domainWorkspaces: readonly Domain
   const dashboard = slugAt("/dashboard/workspaces/:workspaceSlug/*", pathname, DASHBOARD_RESERVED);
   if (dashboard) return dashboard;
 
-  if (matchPath("/portal/tickets/:portalToken", pathname)) {
-    return domainWorkspaces?.length === 1 ? domainWorkspaces[0].slug : null;
+  if (!matchPath("/portal/tickets/:portalToken", pathname)) {
+    const portal = slugAt("/portal/:workspaceSlug/*", pathname, PORTAL_RESERVED);
+    if (portal) return portal;
   }
 
-  const portal = slugAt("/portal/:workspaceSlug/*", pathname, PORTAL_RESERVED);
-  if (portal) return portal;
-
-  if (matchPath("/portal/*", pathname)) return domainWorkspaces?.[0]?.slug ?? null;
-
-  return null;
+  // On a custom domain every other page (login, password reset, privacy, the slugless portal…)
+  // is part of the customer's site: it belongs to the domain's workspace, the first one, as the
+  // portal pages pick it (`usePortalSlug`).
+  return domainWorkspaces?.[0]?.slug ?? null;
 }
 
 /**
