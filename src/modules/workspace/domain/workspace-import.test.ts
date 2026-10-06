@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  analyticsText,
   brandingText,
   exportPasswordProblem,
   filenameFromDisposition,
@@ -371,5 +372,32 @@ describe("hasCustomDomainConflict", () => {
     expect(hasCustomDomainConflict({ ...base, customDomain: "help.acme.test" })).toBe(false);
     expect(hasCustomDomainConflict({ ...base, customDomain: " ", customDomainConflict: true })).toBe(false);
     expect(hasCustomDomainConflict(null)).toBe(false);
+  });
+});
+
+describe("analytics settings in an import", () => {
+  const base = preview().settings;
+  const labels = { off: "Off", site: "site", shared: "shared", notShared: "not shared" };
+
+  it("offers them last, also when the source had no tracker but a share choice, and not from older exports", () => {
+    expect(offeredSettings({
+      ...base, palette: "blue",
+      analytics: { provider: "matomo", serverUrl: "https://stats.acme.test/", siteId: "7", shareWithInstallation: true },
+    })).toEqual(["palette", "analytics"]);
+    expect(offeredSettings({ ...base, analytics: { provider: null, serverUrl: null, siteId: null, shareWithInstallation: false } }))
+      .toEqual(["analytics"]);
+    expect(offeredSettings({ ...base, analytics: null })).toEqual([]);
+    expect(offeredSettings({ ...base })).toEqual([]);
+  });
+
+  it("puts analytics after every other overwrite key", () => {
+    expect(overwriteParam(["analytics", "customDomain", "palette"])).toBe("palette,customDomain,analytics");
+  });
+
+  it("previews provider, host, site and the share choice on one line", () => {
+    expect(analyticsText({ provider: "matomo", serverUrl: "https://stats.acme.test/m/", siteId: "7", shareWithInstallation: false }, labels))
+      .toBe("Matomo · stats.acme.test · site 7 · not shared");
+    expect(analyticsText({ provider: null, serverUrl: null, siteId: null, shareWithInstallation: true }, labels)).toBe("Off · shared");
+    expect(analyticsText(null, labels)).toBe("");
   });
 });

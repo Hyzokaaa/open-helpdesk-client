@@ -3,7 +3,7 @@
  * order is the order of the `overwrite` param.
  */
 export const IMPORT_SETTINGS = [
-  "palette", "sla", "description", "branding", "name", "emailSender", "customDomain",
+  "palette", "sla", "description", "branding", "name", "emailSender", "customDomain", "analytics",
 ] as const;
 export type ImportSetting = (typeof IMPORT_SETTINGS)[number];
 
@@ -46,6 +46,17 @@ export interface ImportEmailSender {
   hasCredentials: boolean;
 }
 
+/**
+ * Incoming workspace analytics (exports since format 1.19). provider null: the source had no
+ * tracker of its own, but its share choice still applies.
+ */
+export interface ImportAnalytics {
+  provider: string | null;
+  serverUrl: string | null;
+  siteId: string | null;
+  shareWithInstallation: boolean;
+}
+
 /** What the server read from an export, before importing it. */
 export interface ImportPreview {
   version: number | string;
@@ -62,6 +73,8 @@ export interface ImportPreview {
     customDomain?: string | null;
     /** Whether another workspace of this installation already uses that custom domain (the import would skip it) */
     customDomainConflict?: boolean;
+    /** Absent in exports older than format 1.19 */
+    analytics?: ImportAnalytics | null;
   };
   /** Whether the export carries mailbox and sender passwords and webhook secrets */
   credentialsIncluded?: boolean;
@@ -123,9 +136,33 @@ export function offeredSettings(settings: ImportPreview["settings"] | undefined)
     if (key === "name") return nonEmpty(settings.name);
     if (key === "emailSender") return nonEmpty(settings.emailSender?.fromAddress);
     if (key === "customDomain") return nonEmpty(settings.customDomain);
+    if (key === "analytics") return !!settings.analytics;
     const b = settings.branding;
     return !!b && (nonEmpty(b.appName) || nonEmpty(b.appSubtitle) || b.logo === true || b.icon === true);
   });
+}
+
+/**
+ * One-line preview of incoming analytics: "Matomo · host · site 7 · shared", or "Off · not
+ * shared" when the source had no tracker of its own. `labels` are the translated words.
+ */
+export function analyticsText(
+  analytics: ImportAnalytics | null | undefined,
+  labels: { off: string; site: string; shared: string; notShared: string },
+): string {
+  if (!analytics) return "";
+  const share = analytics.shareWithInstallation ? labels.shared : labels.notShared;
+  if (!analytics.provider) return [labels.off, share].join(" · ");
+  let host = analytics.serverUrl ?? "";
+  try {
+    if (host) host = new URL(host).host;
+  } catch { /* shown as stored */ }
+  return [
+    analytics.provider === "matomo" ? "Matomo" : analytics.provider,
+    host || null,
+    analytics.siteId ? `${labels.site} ${analytics.siteId}` : null,
+    share,
+  ].filter(Boolean).join(" · ");
 }
 
 /**
