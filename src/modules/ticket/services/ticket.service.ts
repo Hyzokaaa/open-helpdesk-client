@@ -205,7 +205,7 @@ export async function assignTicket(
   await http.patch(`/workspaces/${workspaceId}/tickets/${ticketId}/assign`, {
     assigneeId,
   });
-  if (assigneeId) trackEvent("ticket-assigned");
+  if (assigneeId) trackEvent("ticket-assigned", { via: "assign" });
 }
 
 export async function pickupTicket(
@@ -217,6 +217,7 @@ export async function pickupTicket(
     `/workspaces/${workspaceSlug}/tickets/${ticketId}/pickup`,
     status ? { status } : {},
   );
+  trackEvent("ticket-assigned", { via: "pickup" });
   return res.data;
 }
 

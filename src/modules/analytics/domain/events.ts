@@ -28,6 +28,7 @@ export interface AnalyticsEventProps {
   "ticket-created": { channel: "dashboard" | "portal" };
   "comment-created": { visibility: "public" | "internal" };
   "ticket-status-changed": { status: string };
+  "ticket-assigned": { via: "assign" | "pickup" };
 }
 
 export type AnalyticsEventArgs<E extends AnalyticsEventName> = E extends keyof AnalyticsEventProps
