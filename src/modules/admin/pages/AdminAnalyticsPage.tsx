@@ -6,6 +6,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { getSystemAnalytics, updateSystemAnalytics, type SystemAnalytics } from "../services/system-analytics.service";
 
 interface Form {
@@ -34,12 +35,13 @@ function sameForm(a: Form, b: Form): boolean {
     && a.trackEvents === b.trackEvents;
 }
 
-/** The backend's validation message (one string or class-validator's list), if it sent one. */
+/**
+ * The backend's validation message, if it rejected the settings. The http client rejects with
+ * `{ message, status }`, class-validator's list already joined into one string.
+ */
 function errorMessage(err: unknown): string | null {
-  const message = (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
-  if (typeof message === "string" && message) return message;
-  if (Array.isArray(message) && message.length > 0) return message.map(String).join(". ");
-  return null;
+  const e = err as Partial<HttpResponseError> | undefined;
+  return e?.status === 400 && typeof e.message === "string" && e.message ? e.message : null;
 }
 
 export default function AdminAnalyticsPage() {
