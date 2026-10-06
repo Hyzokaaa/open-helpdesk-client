@@ -10,6 +10,7 @@ import { ImportResult, ImportSource, importWorkspace, previewWorkspaceImport } f
 import { getPalette, isCustomPalette } from "../domain/palettes";
 import {
   brandingText,
+  analyticsText,
   ImportFileSection,
   ImportPreview,
   ImportResultCounter,
@@ -116,6 +117,7 @@ const SETTING_LABELS: Record<ImportSetting, { overwrite: TranslationKey; applied
   name: { overwrite: "workspaceImport.overwrite.name", applied: "workspaceImport.applied.name" },
   emailSender: { overwrite: "workspaceImport.overwrite.emailSender", applied: "workspaceImport.applied.emailSender" },
   customDomain: { overwrite: "workspaceImport.overwrite.customDomain", applied: "workspaceImport.applied.customDomain" },
+  analytics: { overwrite: "workspaceImport.overwrite.analytics", applied: "workspaceImport.applied.analytics" },
 };
 
 export default function WorkspaceImportSheet({ slug, source, onClose, onImported }: Props) {
@@ -205,6 +207,14 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         ? "workspaceImport.preview.credentialsIncluded"
         : "workspaceImport.preview.passwordAgain");
       return `${settings.emailSender.fromAddress} · ${credentials}`;
+    }
+    if (key === "analytics" && settings.analytics) {
+      return analyticsText(settings.analytics, {
+        off: t("workspaceImport.preview.analyticsOff"),
+        site: t("workspaceImport.preview.analyticsSite"),
+        shared: t("workspaceImport.preview.analyticsShared"),
+        notShared: t("workspaceImport.preview.analyticsNotShared"),
+      });
     }
     if (key === "customDomain" && settings.customDomain) {
       return `${settings.customDomain} · ${t("workspaceImport.preview.verifyAgain")}`;

@@ -56,7 +56,7 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
   { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
   { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
-  { value: "workspace-import-failed", group: "Workspace" },
+  { value: "workspace-import-failed", group: "Workspace" }, { value: "workspace-analytics-updated", group: "Workspace" },
   { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
   { value: "member-role-changed", group: "Members" },
   { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
@@ -121,6 +121,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "workspace-export-link-downloaded": "blue",
   "workspace-import-completed": "green",
   "workspace-import-failed": "red",
+  "workspace-analytics-updated": "blue",
   // Members
   "member-added": "green",
   "member-removed": "red",

@@ -81,6 +81,7 @@ const FIELD_KEYS: Record<string, string> = {
   siteId: "auditLog.field.siteId",
   useCookies: "auditLog.field.useCookies",
   trackEvents: "auditLog.field.trackEvents",
+  shareWithInstallation: "auditLog.field.shareWithInstallation",
 };
 
 /** The translated name of a changed field; fields without a translation keep their key. */

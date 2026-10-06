@@ -8,7 +8,7 @@ interface Props {
   className?: string;
 }
 
-/** Reopens the cookie banner. Renders nothing when the installation does not ask for consent. */
+/** Reopens the cookie banner. Renders nothing when no tracker measuring the current page asks for consent. */
 export default function CookiePreferencesLink({ separator = false, className = "hover:text-heading transition-colors" }: Props) {
   const { t } = useTranslation();
   const { applies } = useCookieConsent();

@@ -28,6 +28,8 @@ export interface ConfigContextProps {
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
   brandName: string;
+  /** The installation's own name (system branding), never a workspace's: who runs its analytics. */
+  installationName: string;
   brandSubtitle: string;
   brandLogo: string | null;
   brandIcon: string | null;
@@ -47,6 +49,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   loading: true,
   domainWorkspaces: null,
   brandName: APP_NAME,
+  installationName: [APP_NAME, APP_SUBTITLE].filter(Boolean).join(" "),
   brandSubtitle: APP_SUBTITLE,
   brandLogo: null,
   brandIcon: null,

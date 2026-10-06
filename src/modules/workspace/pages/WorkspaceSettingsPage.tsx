@@ -32,6 +32,7 @@ import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
 import BrandingSettings from "../components/BrandingSettings";
+import WorkspaceAnalyticsSettings from "../components/WorkspaceAnalyticsSettings";
 import WorkspaceImportSheet from "../components/WorkspaceImportSheet";
 import WorkspaceExportSheet, { ExportMode } from "../components/WorkspaceExportSheet";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -86,6 +87,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
 
   const isSystemAdmin = user?.isSystemAdmin ?? false;
   const canManageSettings = can(P.WORKSPACE_SETTINGS_MANAGE);
+  const canManageAnalytics = can(P.WORKSPACE_ANALYTICS_MANAGE);
   const hasChanges = name !== workspace.name || description !== workspace.description;
   const nameValid = name.trim().length > 0;
 
@@ -194,7 +196,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 </div>
               )}
             </CollapsibleSection>
-          ) : !canManageSettings ? (
+          ) : !canManageSettings && !canManageAnalytics ? (
             <p className="text-sm text-muted text-center py-12">
               {t("workspaceSettings.noPermission")}
             </p>
@@ -241,6 +243,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 icon={workspace.icon}
                 onUpdate={(appName, appSubtitle, logo, icon) => setWorkspace({ ...workspace, appName, appSubtitle, logo, icon })}
               />
+            </CollapsibleSection>
+          )}
+
+          {canManageAnalytics && (
+            <CollapsibleSection title={t("workspaceAnalytics.title")}>
+              <WorkspaceAnalyticsSettings key={importRound} slug={workspaceSlug!} />
             </CollapsibleSection>
           )}
 
