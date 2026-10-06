@@ -48,6 +48,12 @@ export interface Extensions {
 
   /** Check if a feature is locked by plan (returns false in core = always available) */
   isFeatureLocked: (feature: string) => Promise<boolean>;
+
+  /**
+   * Shown at the top of the Updates page by a product built on the core (e.g. the cloud), which
+   * then presents the core versions below as the base it runs on.
+   */
+  UpdatesHeader?: ComponentType;
 }
 
 const noopAsync = () => Promise.resolve(null);
