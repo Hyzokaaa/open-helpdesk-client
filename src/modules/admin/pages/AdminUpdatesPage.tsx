@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import clsx from "clsx";
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import SystemVersionInfo from "../components/SystemVersionInfo";
@@ -10,23 +10,6 @@ import {
   updateNotificationSettings,
   type SystemNotificationSettings,
 } from "../services/notification-settings.service";
-
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-      className={clsx(
-        "w-8 h-[18px] rounded-full transition-colors cursor-pointer shrink-0 p-[2px] flex",
-        checked ? "bg-primary justify-end" : "bg-subtle justify-start",
-        disabled && "opacity-40 cursor-not-allowed",
-      )}
-    >
-      <span className="block w-[14px] h-[14px] rounded-full bg-white shadow-sm" />
-    </button>
-  );
-}
 
 export default function AdminUpdatesPage() {
   const { t } = useTranslation();
@@ -65,7 +48,7 @@ export default function AdminUpdatesPage() {
             <p className="text-sm font-body-semibold text-heading">
               {t("admin.upgradeNotifications")}
             </p>
-            <Toggle
+            <Switch
               checked={settings.upgradeEnabled}
               onChange={(v) => handleChange("upgradeEnabled", v)}
             />
@@ -75,14 +58,14 @@ export default function AdminUpdatesPage() {
             <div className="rounded-lg border border-border-card divide-y divide-border-card">
               <div className="flex items-center justify-between px-3 py-2.5">
                 <span className="text-xs text-body">{t("admin.upgradeEmail")}</span>
-                <Toggle
+                <Switch
                   checked={settings.upgradeEmail}
                   onChange={(v) => handleChange("upgradeEmail", v)}
                 />
               </div>
               <div className="flex items-center justify-between px-3 py-2.5">
                 <span className="text-xs text-body">{t("admin.upgradeInApp")}</span>
-                <Toggle
+                <Switch
                   checked={settings.upgradeInApp}
                   onChange={(v) => handleChange("upgradeInApp", v)}
                 />
