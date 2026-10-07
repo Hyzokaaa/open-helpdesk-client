@@ -12,47 +12,7 @@ import {
   listAllAuditLog,
 } from "../services/audit-log.service";
 import { MetadataSummary, MetadataKeyValue, HighlightText, SourceBadge } from "./WorkspaceAuditLogPage";
-
-const ACTION_GROUPS: { value: string; group: string }[] = [
-  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
-  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
-  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
-  { value: "ticket-deleted", group: "Ticket" }, { value: "comment-created", group: "Ticket" },
-  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
-  { value: "workspace-deleted", group: "Workspace" },
-  { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
-  { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
-  { value: "workspace-import-failed", group: "Workspace" },
-  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
-  { value: "member-role-changed", group: "Members" },
-  { value: "user-created", group: "User" }, { value: "user-activated", group: "User" },
-  { value: "user-deactivated", group: "User" }, { value: "user-admin-toggled", group: "User" },
-  { value: "user-signed-up", group: "User" }, { value: "user-logged-in", group: "User" },
-  { value: "user-forgot-password", group: "User" }, { value: "user-reset-password", group: "User" },
-  { value: "user-email-verified", group: "User" }, { value: "user-oauth-login", group: "User" },
-  { value: "user-email-changed", group: "User" },
-  { value: "user-login-failed", group: "Security" }, { value: "user-oauth-login-failed", group: "Security" },
-  { value: "user-password-change-failed", group: "Security" }, { value: "user-password-reset-failed", group: "Security" },
-  { value: "permission-denied", group: "Security" }, { value: "api-session-exchanged", group: "Security" },
-  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
-  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
-  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
-  { value: "mailbox-resumed", group: "Email" },
-  { value: "email-received", group: "Email" }, { value: "email-sent", group: "Email" },
-  { value: "email-send-failed", group: "Email" },
-  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
-  { value: "system-analytics-updated", group: "System" },
-  { value: "system-admin-email-sent", group: "System" }, { value: "system-notification-settings-updated", group: "System" },
-  { value: "workspace-creation-policy-updated", group: "System" },
-  { value: "subscription-created", group: "Billing" }, { value: "subscription-updated", group: "Billing" },
-  { value: "discount-created", group: "Billing" }, { value: "discount-updated", group: "Billing" },
-  { value: "subscription-cancelled", group: "Billing" }, { value: "subscription-reactivated", group: "Billing" },
-  { value: "subscription-seats-changed", group: "Billing" }, { value: "subscription-changed-by-admin", group: "Billing" },
-  { value: "subscription-downgraded", group: "Billing" }, { value: "subscription-plan-activated", group: "Billing" },
-  { value: "payment-received", group: "Billing" }, { value: "payment-webhook-rejected", group: "Billing" },
-  { value: "system-logo-updated", group: "System" }, { value: "system-logo-removed", group: "System" },
-  { value: "email-processing-failed", group: "Email" },
-];
+import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 
 const CATEGORIES = [
   "ticket",
@@ -159,7 +119,7 @@ export default function SystemLogsPage() {
   const [searchInput, setSearchInput] = useState("");
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: actionOptions("system", t as (k: string) => string) },
     { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: c })) },
     { key: "levels", label: t("auditLog.col.level"), type: "multi", options: LEVELS.map(l => ({ value: l, label: l })) },
     { key: "sources", label: t("auditLog.col.source"), type: "multi", options: SOURCES.map(s => ({ value: s, label: s })) },
@@ -334,7 +294,7 @@ export default function SystemLogsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs text-muted">{item.entityType}</span>
+                      <span className="text-xs text-muted">{entityTypeLabel(item.entityType, t as (k: string) => string)}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-body">
@@ -413,7 +373,7 @@ export default function SystemLogsPage() {
               <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
-              <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
+              <DetailRow label={t("auditLog.detail.entityType")} value={entityTypeLabel(selected.entityType, t as (k: string) => string)} />
               <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
               <DetailRow label={t("auditLog.detail.user")} value={selected.userName ?? selected.userId ?? t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}

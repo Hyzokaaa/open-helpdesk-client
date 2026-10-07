@@ -51,7 +51,7 @@ describe("field labels", () => {
   });
 
   it("keeps the key of a field without a translation", () => {
-    expect(fieldLabel("assignee", en)).toBe("assignee");
+    expect(fieldLabel("someNewField", en)).toBe("someNewField");
   });
 });
 

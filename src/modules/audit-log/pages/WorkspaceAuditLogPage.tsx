@@ -16,7 +16,8 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
-import { commentPreview, describeChanges, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { commentPreview, describeChanges, fieldLabel, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 import { listDepartments } from "@modules/department/services/department.service";
 import { listProjects, listCategories } from "@modules/project/services/project.service";
 import { listOrganizations } from "@modules/organization/services/organization.service";
@@ -42,62 +43,31 @@ async function loadReferenceNames(slug: string): Promise<ReferenceNames> {
   return names;
 }
 
-const ACTION_GROUPS: { value: string; group: string }[] = [
-  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
-  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
-  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
-  { value: "ticket-deleted", group: "Ticket" },
-  { value: "transfer-request-created", group: "Transfer" }, { value: "transfer-request-accepted", group: "Transfer" },
-  { value: "transfer-request-rejected", group: "Transfer" }, { value: "transfer-request-cancelled", group: "Transfer" },
-  { value: "transfer-request-expired", group: "Transfer" },
-  { value: "comment-created", group: "Ticket" },
-  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
-  { value: "workspace-deleted", group: "Workspace" }, { value: "workspace-palette-updated", group: "Workspace" },
-  { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
-  { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
-  { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
-  { value: "workspace-import-failed", group: "Workspace" }, { value: "workspace-analytics-updated", group: "Workspace" },
-  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
-  { value: "member-role-changed", group: "Members" },
-  { value: "permission-denied", group: "Security" }, { value: "api-session-exchanged", group: "Security" },
-  { value: "workspace-custom-domain-verification-failed", group: "Security" },
-  { value: "email-rule-created", group: "Config" }, { value: "email-rule-updated", group: "Config" },
-  { value: "email-rule-deleted", group: "Config" }, { value: "email-rule-reordered", group: "Config" },
-  { value: "organization-member-added", group: "Members" }, { value: "organization-member-removed", group: "Members" },
-  { value: "member-organization-changed", group: "Members" },
-  { value: "project-category-linked", group: "Config" }, { value: "project-category-unlinked", group: "Config" },
-  { value: "workspace-logo-updated", group: "Config" }, { value: "workspace-logo-removed", group: "Config" },
-  { value: "organization-logo-updated", group: "Config" }, { value: "organization-logo-removed", group: "Config" },
-  { value: "email-processing-failed", group: "Email" },
-  { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
-  { value: "invitation-cancelled", group: "Members" },
-  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
-  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
-  { value: "mailbox-resumed", group: "Email" }, { value: "mailbox-poll-triggered", group: "Email" },
-  { value: "mailbox-import-started", group: "Email" },
-  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
-  { value: "imap-poll-failed", group: "Email" }, { value: "email-received", group: "Email" },
-  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
-  { value: "custom-field-created", group: "Config" }, { value: "custom-field-updated", group: "Config" },
-  { value: "custom-field-deleted", group: "Config" }, { value: "custom-field-reordered", group: "Config" },
-  { value: "tag-created", group: "Config" }, { value: "tag-deleted", group: "Config" },
-  { value: "canned-response-created", group: "Config" }, { value: "canned-response-updated", group: "Config" },
-  { value: "canned-response-deleted", group: "Config" },
-  { value: "webhook-created", group: "Config" }, { value: "webhook-updated", group: "Config" },
-  { value: "webhook-deleted", group: "Config" },
-  { value: "api-key-created", group: "Config" }, { value: "api-key-deleted", group: "Config" },
-  { value: "kb-category-created", group: "Knowledge Base" }, { value: "kb-category-updated", group: "Knowledge Base" },
-  { value: "kb-category-deleted", group: "Knowledge Base" },
-  { value: "kb-article-created", group: "Knowledge Base" }, { value: "kb-article-updated", group: "Knowledge Base" },
-  { value: "kb-article-deleted", group: "Knowledge Base" },
-  { value: "sla-first-response-breached", group: "SLA" }, { value: "sla-resolution-breached", group: "SLA" },
-  { value: "portal-ticket-created", group: "Ticket" },
-];
-
 const ENTITY_TYPES = [
-  "ticket", "workspace", "workspace-member", "mailbox", "custom-field",
-  "tag", "canned-response", "webhook", "api-key", "kb-category", "kb-article",
-  "email", "email-sender", "invitation", "transfer-request",
+  "ticket",
+  "workspace",
+  "workspace-member",
+  "user",
+  "invitation",
+  "transfer-request",
+  "mailbox",
+  "email",
+  "email-sender",
+  "email-rule",
+  "organization",
+  "project",
+  "ticket-category",
+  "department",
+  "tag",
+  "canned-response",
+  "custom-field",
+  "webhook",
+  "api-key",
+  "kb-category",
+  "kb-article",
+  "attachment",
+  "csat",
+  "route",
 ];
 
 const CATEGORIES = ["ticket", "workspace", "user", "email", "config", "knowledge-base", "system", "billing"];
@@ -213,8 +183,8 @@ export default function WorkspaceAuditLogPage() {
   const canViewLog = can(P.AUDIT_LOG_VIEW);
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
-    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: actionOptions("workspace", t as (k: string) => string) },
+    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: entityTypeLabel(e, t as (k: string) => string) })) },
     { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
     { key: "userIds", label: t("auditLog.col.user"), type: "multi", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
   ], [t, members]);
@@ -287,6 +257,12 @@ export default function WorkspaceAuditLogPage() {
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.userId === userId);
     return m ? `${m.firstName} ${m.lastName}` : userId.slice(0, 8) + "...";
+  };
+
+  /** A member by the member list; someone no longer in the workspace by the name the server sent. */
+  const actorName = (userId: string, userName?: string | null) => {
+    if (members.some((m) => m.userId === userId)) return getMemberName(userId);
+    return userName ? `${userName} (${t("auditLog.formerMember")})` : getMemberName(userId);
   };
 
   const totalPages = Math.ceil(total / (filters.limit ?? 20));
@@ -394,11 +370,11 @@ export default function WorkspaceAuditLogPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs text-muted">{item.entityType}</span>
+                      <span className="text-xs text-muted">{entityTypeLabel(item.entityType, t as (k: string) => string)}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-body">
-                        {item.userId ? getMemberName(item.userId) : t("auditLog.system")}
+                        {item.userId ? actorName(item.userId, item.userName) : t("auditLog.system")}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -478,9 +454,9 @@ export default function WorkspaceAuditLogPage() {
               <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
-              <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
+              <DetailRow label={t("auditLog.detail.entityType")} value={entityTypeLabel(selected.entityType, t as (k: string) => string)} />
               <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
-              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? getMemberName(selected.userId) : t("auditLog.system")} />
+              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? actorName(selected.userId, selected.userName) : t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
@@ -543,8 +519,18 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   // Target (member actions)
   if (metadata.target && !metadata.from) parts.push(String(metadata.target));
 
-  // Role info
-  if (metadata.role) parts.push(`(${metadata.role})`);
+  // Role info, translated
+  if (metadata.role) {
+    const roleKey = `enum.role.${metadata.role}`;
+    const role = t(roleKey);
+    parts.push(`(${role && role !== roleKey ? role : String(metadata.role)})`);
+  }
+
+  // Single settings stored without a before/after pair
+  if (metadata.palette) parts.push(`${fieldLabel("palette", t)}: ${formatInlineValue(metadata.palette)}`);
+  if (typeof metadata.systemMailboxEnabled === "boolean") {
+    parts.push(`${fieldLabel("systemMailboxEnabled", t)}: ${t(metadata.systemMailboxEnabled ? "auditLog.value.yes" : "auditLog.value.no")}`);
+  }
 
   // Count (batch actions)
   if (metadata.count) parts.push(`×${metadata.count}`);
