@@ -83,6 +83,8 @@ interface RetentionLimits {
   defaults: RetentionDays;
   minDays: number;
   maxDays: number;
+  /** When expired entries are next deleted (ISO), whether or not deletion is on. */
+  nextRunAt: string;
 }
 
 export interface InstallationRetention extends RetentionLimits {

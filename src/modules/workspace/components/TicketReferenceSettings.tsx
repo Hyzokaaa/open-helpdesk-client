@@ -13,6 +13,9 @@ import {
 } from "../services/workspace.service";
 import DeleteWorkspaceModal from "./DeleteWorkspaceModal";
 
+const PREFIX_PATTERN = /^[A-Z0-9]{1,10}$/;
+const SAMPLE_RANDOM_CODE = "7QX4M2K";
+
 interface Props {
   slug: string;
   workspaceName: string;
@@ -45,7 +48,12 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
 
   if (!current) return null;
 
-  const changed = style !== current.style || prefix.trim().toUpperCase() !== current.prefix;
+  const changed = style !== current.style || prefix !== current.prefix;
+  const prefixValid = PREFIX_PATTERN.test(prefix);
+  // The random code needs the workspace secret, which only exists once random has been saved; until
+  // then a fixed sample shows the shape. Either way it is ticket 42, like the sequential example.
+  const savedCode = current.style === "random" ? current.example.split("-").pop() : null;
+  const preview = !prefixValid ? "—" : style === "sequential" ? `${prefix}-000042` : `${prefix}-${savedCode ?? SAMPLE_RANDOM_CODE}`;
 
   const save = async () => {
     setSaving(true);
@@ -76,37 +84,48 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
 
   return (
     <div>
-      <p className="text-xs text-muted mb-3">{t("ticketReference.intro")}</p>
+      <p className="text-xs text-muted mb-4">{t("ticketReference.intro")}</p>
+
+      <label className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.format")}</label>
       <Toggle
         left={t("ticketReference.sequential")}
         right={t("ticketReference.random")}
         active={style === "random" ? "right" : "left"}
         onChange={(value) => setStyle(value === "right" ? "random" : "sequential")}
       />
-      <p className="text-exs text-muted mt-2">
+      <p className="text-xs text-muted mt-2">
         {t(style === "random" ? "ticketReference.randomHint" : "ticketReference.sequentialHint")}
       </p>
 
-      <div className="mt-4 max-w-xs">
-        <label className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.prefix")}</label>
-        <Input value={prefix} onChange={(v) => setPrefix(v.toUpperCase())} />
-        <p className="text-exs text-muted mt-1">{t("ticketReference.prefixHint")}</p>
+      <div className="mt-5 flex flex-wrap items-start gap-x-6 gap-y-3">
+        <div className="w-full max-w-xs">
+          <label className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.prefix")}</label>
+          <Input value={prefix} onChange={(v) => setPrefix(v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))} />
+          <p className={prefixValid ? "text-xs text-muted mt-1" : "text-xs text-red-600 dark:text-red-400 mt-1"}>
+            {t(prefixValid ? "ticketReference.prefixHint" : "ticketReference.prefixInvalid")}
+          </p>
+        </div>
+        <div>
+          <span className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.example")}</span>
+          <span className="inline-block font-mono text-sm font-body-semibold text-heading bg-surface-hover rounded-md px-2.5 py-1.5">{preview}</span>
+        </div>
       </div>
 
-      <p className="text-sm text-body mt-4">
-        {t("ticketReference.example")} <span className="font-mono font-body-semibold">{current.example}</span>
-      </p>
-      {changed && <p className="text-exs text-amber-700 dark:text-amber-300 mt-1">{t("ticketReference.changeNote")}</p>}
-
+      {changed && (
+        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-200 mt-5">
+          {t("ticketReference.changeNote")}
+        </p>
+      )}
       <div className="flex justify-end mt-3">
-        <Button size="sm" loading={saving} disabled={!changed} onClick={save}>{t("ticketReference.save")}</Button>
+        <Button size="sm" loading={saving} disabled={!changed || !prefixValid} onClick={save}>{t("ticketReference.save")}</Button>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-default">
+      <div className="mt-6 rounded-lg border border-red-300 dark:border-red-900/50 p-4">
         <p className="text-sm font-body-semibold text-heading">{t("ticketReference.convertTitle")}</p>
         <p className="text-xs text-muted mt-1">{t("ticketReference.convertHint").replace("{example}", current.example)}</p>
-        <div className="flex justify-end mt-3">
-          <Button size="sm" color="danger" disabled={changed} onClick={() => setConfirmingConvert(true)}>
+        <div className="flex items-center justify-end gap-3 mt-3">
+          {changed && <p className="text-xs text-muted">{t("ticketReference.convertBlocked")}</p>}
+          <Button size="sm" color="danger-light" disabled={changed} onClick={() => setConfirmingConvert(true)}>
             {t("ticketReference.convert")}
           </Button>
         </div>

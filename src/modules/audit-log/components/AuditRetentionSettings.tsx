@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { InstallationRetention, getInstallationRetention, updateInstallationRetention } from "../services/audit-log.service";
-import RetentionRow from "./RetentionRow";
+import RetentionRow, { RetentionDraftRow, retentionRowValid } from "./RetentionRow";
 
-type Draft = Record<string, { value: string; forever: boolean }>;
+type Draft = Record<string, RetentionDraftRow>;
 
 function toDraft(days: Record<string, number | null>): Draft {
   return Object.fromEntries(Object.entries(days).map(([c, d]) => [c, { value: d === null ? "" : String(d), forever: d === null }]));
@@ -17,7 +18,7 @@ function toDraft(days: Record<string, number | null>): Draft {
  * deletes, the next night, every entry older than its category's days.
  */
 export default function AuditRetentionSettings() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [settings, setSettings] = useState<InstallationRetention | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [draft, setDraft] = useState<Draft>({});
@@ -34,6 +35,14 @@ export default function AuditRetentionSettings() {
   }, []);
 
   if (!settings) return null;
+
+  const initial = toDraft(settings.days);
+  const changed = enabled !== settings.enabled || settings.categories.some((c) =>
+    draft[c]?.forever !== initial[c]?.forever || (!draft[c]?.forever && draft[c]?.value !== initial[c]?.value));
+  const valid = settings.categories.every((c) => retentionRowValid(draft[c], settings.minDays, settings.maxDays));
+  const defaultOf = (c: string) => settings.defaults[c] ?? 365;
+  // The server runs it at a fixed hour of its own time zone; shown in the viewer's, with the zone named
+  const runTime = new Date(settings.nextRunAt).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZoneName: "short" });
 
   const save = async () => {
     const days: Record<string, number | null> = {};
@@ -56,32 +65,50 @@ export default function AuditRetentionSettings() {
   return (
     <div>
       <p className="text-xs text-muted mb-3">{t("auditRetention.intro")}</p>
-      <label className="flex items-start gap-2 cursor-pointer mb-2">
-        <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="w-4 h-4 mt-0.5 accent-primary" />
-        <span className="text-sm text-body">{t("auditRetention.enabled")}</span>
+      <label className="flex items-center justify-between gap-4 cursor-pointer">
+        <span className="min-w-0">
+          <span className="block text-sm text-body">{t("auditRetention.enabled")}</span>
+          <span className="block text-xs text-muted mt-0.5">
+            {enabled ? t("auditRetention.enabledOn").replace("{time}", runTime) : t("auditRetention.enabledOff")}
+          </span>
+        </span>
+        <Switch checked={enabled} onChange={setEnabled} label={t("auditRetention.enabled")} />
       </label>
-      {enabled && !settings.enabled && (
-        <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">{t("auditRetention.enableWarning")}</p>
-      )}
-      {!enabled && <p className="text-xs text-muted mb-2">{t("auditRetention.disabledNote")}</p>}
 
-      <div className="divide-y divide-border-row">
-        {settings.categories.map((category) => (
-          <RetentionRow
-            key={category}
-            category={category}
-            value={draft[category]?.value ?? ""}
-            forever={draft[category]?.forever ?? false}
-            onChange={(value) => setDraft({ ...draft, [category]: { value, forever: false } })}
-            onForeverChange={(forever) => setDraft({ ...draft, [category]: { value: draft[category]?.value || String(settings.defaults[category] ?? 365), forever } })}
-          />
-        ))}
+      <div className="flex items-baseline justify-between gap-4 mt-5">
+        <p className="text-sm font-body-semibold text-heading">{t("auditRetention.perCategory")}</p>
+        <p className="text-exs text-muted">
+          {t("auditRetention.bounds").replace("{min}", String(settings.minDays)).replace("{max}", String(settings.maxDays))}
+        </p>
       </div>
-      <p className="text-exs text-muted mt-2">
-        {t("auditRetention.bounds").replace("{min}", String(settings.minDays)).replace("{max}", String(settings.maxDays))}
-      </p>
+
+      <div className="divide-y divide-border-card mt-1">
+        {settings.categories.map((category) => {
+          const row = draft[category];
+          return (
+            <RetentionRow
+              key={category}
+              category={category}
+              value={row?.value ?? ""}
+              forever={row?.forever ?? false}
+              min={settings.minDays}
+              max={settings.maxDays}
+              fallback={defaultOf(category)}
+              hint={t("auditRetention.default").replace("{days}", String(defaultOf(category)))}
+              onChange={(value) => setDraft({ ...draft, [category]: { value, forever: false } })}
+              onForeverChange={(forever) => setDraft({ ...draft, [category]: { value: row?.value || String(defaultOf(category)), forever } })}
+            />
+          );
+        })}
+      </div>
+
+      {enabled && !settings.enabled && (
+        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-200 mt-3">
+          {t("auditRetention.enableWarning").replace("{time}", runTime)}
+        </p>
+      )}
       <div className="flex justify-end mt-3">
-        <Button size="sm" loading={saving} onClick={save}>{t("auditRetention.save")}</Button>
+        <Button size="sm" loading={saving} disabled={!changed || !valid} onClick={save}>{t("auditRetention.save")}</Button>
       </div>
     </div>
   );
