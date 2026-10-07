@@ -3,7 +3,7 @@
  * order is the order of the `overwrite` param.
  */
 export const IMPORT_SETTINGS = [
-  "palette", "sla", "description", "branding", "name", "emailSender", "customDomain", "analytics",
+  "palette", "sla", "description", "branding", "name", "emailSender", "customDomain", "analytics", "ticketReference",
 ] as const;
 export type ImportSetting = (typeof IMPORT_SETTINGS)[number];
 
@@ -75,6 +75,8 @@ export interface ImportPreview {
     customDomainConflict?: boolean;
     /** Absent in exports older than format 1.19 */
     analytics?: ImportAnalytics | null;
+    /** How the source shows its ticket references (files from 1.20). */
+    ticketReference?: { style: string; prefix: string } | null;
   };
   /** Whether the export carries mailbox and sender passwords and webhook secrets */
   credentialsIncluded?: boolean;
@@ -137,6 +139,7 @@ export function offeredSettings(settings: ImportPreview["settings"] | undefined)
     if (key === "emailSender") return nonEmpty(settings.emailSender?.fromAddress);
     if (key === "customDomain") return nonEmpty(settings.customDomain);
     if (key === "analytics") return !!settings.analytics;
+    if (key === "ticketReference") return !!settings.ticketReference;
     const b = settings.branding;
     return !!b && (nonEmpty(b.appName) || nonEmpty(b.appSubtitle) || b.logo === true || b.icon === true);
   });

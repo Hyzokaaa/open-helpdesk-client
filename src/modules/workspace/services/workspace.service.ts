@@ -470,3 +470,18 @@ export async function uploadIcon(slug: string, file: File): Promise<{ icon: stri
 export async function deleteIcon(slug: string): Promise<void> {
   await http.delete(`/workspaces/${slug}/branding/icon`);
 }
+
+/** How the workspace shows its ticket references, with a sample reference in that format. */
+export interface TicketReferenceSettings {
+  style: "sequential" | "random";
+  prefix: string;
+  example: string;
+}
+
+export async function getTicketReference(slug: string): Promise<TicketReferenceSettings> {
+  return (await http.get<TicketReferenceSettings>(`/workspaces/${slug}/ticket-reference`)).data;
+}
+
+export async function updateTicketReference(slug: string, body: { style?: string; prefix?: string }): Promise<TicketReferenceSettings> {
+  return (await http.patch<TicketReferenceSettings>(`/workspaces/${slug}/ticket-reference`, body)).data;
+}
