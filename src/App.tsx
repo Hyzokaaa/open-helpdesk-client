@@ -50,6 +50,7 @@ const AccountSection = lazy(() => import("@modules/user/components/AccountSectio
 const PasswordSection = lazy(() => import("@modules/user/components/PasswordSection"));
 const PreferencesSection = lazy(() => import("@modules/user/components/PreferencesSection"));
 const NotificationsSection = lazy(() => import("@modules/user/components/NotificationsSection"));
+const DeletedWorkspacesPage = lazy(() => import("@modules/workspace/pages/DeletedWorkspacesPage"));
 const NotificationsPage = lazy(() => import("@modules/notification/pages/NotificationsPage"));
 const ChangelogPage = lazy(() => import("@modules/app/pages/ChangelogPage"));
 const OnboardingPage = lazy(() => import("@modules/onboarding/pages/OnboardingPage"));
@@ -155,6 +156,7 @@ function AppRoutes() {
           <Route path="settings/security" element={<PasswordSection />} />
           <Route path="settings/preferences" element={<PreferencesSection />} />
           <Route path="settings/notifications" element={<NotificationsSection />} />
+          <Route path="deleted-workspaces" element={<DeletedWorkspacesPage />} />
           <Route path="changelog" element={<ChangelogPage />} />
           {extraDashboardRoutes}
           <Route element={<AdminRoute />}>

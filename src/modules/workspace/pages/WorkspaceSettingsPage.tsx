@@ -8,7 +8,7 @@ import Textarea from "@modules/app/modules/ui/components/Textarea/Textarea";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
-import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import DeleteWorkspaceModal from "../components/DeleteWorkspaceModal";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -60,6 +60,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customPaletteLocked, setCustomPaletteLocked] = useState(false);
   const [exportMode, setExportMode] = useState<ExportMode | null>(null);
@@ -135,16 +136,20 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
     } catch { /* the import succeeded; a reload shows the new settings */ }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (typedName: string) => {
     if (!workspaceSlug) return;
+    setDeleting(true);
     try {
-      await deleteWorkspace(workspaceSlug);
-      toast.success(t("workspaceSettings.deleted"));
+      await deleteWorkspace(workspaceSlug, typedName);
+      toast.success(t("workspaceDelete.deleted"));
       if (onClose) onClose();
-      else navigate("/dashboard/settings/account");
-    } catch {
-      toast.error(t("workspaceSettings.deleteError"));
+      // A full load, so the workspace leaves every list of the app
+      else window.location.assign("/dashboard/settings/account");
+    } catch (err) {
+      const e = err as { handled?: boolean; message?: string };
+      if (!e?.handled) toast.error(e?.message || t("workspaceSettings.deleteError"));
     } finally {
+      setDeleting(false);
       setConfirmDelete(false);
     }
   };
@@ -156,11 +161,9 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   return (
     <div className="w-full max-w-3xl">
       {confirmDelete && (
-        <ConfirmModal
-          title={t("workspaceSettings.deleteTitle")}
-          message={t("workspaceSettings.deleteMessage")}
-          confirmLabel={t("workspaceSettings.deleteConfirm")}
-          danger
+        <DeleteWorkspaceModal
+          workspaceName={workspace.name}
+          busy={deleting}
           onConfirm={handleDelete}
           onCancel={() => setConfirmDelete(false)}
         />
@@ -363,7 +366,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             </div>
           </Card>
 
-          {isSystemAdmin && (
+          {(isSystemAdmin || workspace.isOwner) && (
             <CollapsibleSection
               title={t("workspaceSettings.dangerZone")}
               className="border-red-300 dark:border-red-900/50"

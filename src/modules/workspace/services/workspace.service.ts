@@ -30,6 +30,8 @@ export interface WorkspaceDetail {
   appSubtitle: string | null;
   logo: string | null;
   icon: string | null;
+  /** Whether the current user owns it, and so may delete it. */
+  isOwner?: boolean;
 }
 
 export interface DomainVerificationResult {
@@ -124,8 +126,35 @@ export async function updateWorkspace(
   return res.data;
 }
 
-export async function deleteWorkspace(slug: string): Promise<void> {
-  await http.delete(`/workspaces/${slug}`);
+/** Deletes it recoverably: it can be restored until `purgeAt`, then it is erased for good. */
+export async function deleteWorkspace(slug: string, confirmName: string): Promise<{ id: string; purgeAt: string }> {
+  const res = await http.delete(`/workspaces/${slug}`, { data: { confirmName } });
+  return res.data;
+}
+
+export interface DeletedWorkspace {
+  id: string;
+  name: string;
+  slug: string;
+  deletedAt: string | null;
+  purgeAt: string | null;
+  deletedBy: string | null;
+}
+
+/** The caller's own deleted workspaces; `all` lists every one, for system admins. */
+export async function listDeletedWorkspaces(scope?: "all"): Promise<DeletedWorkspace[]> {
+  const res = await http.get<DeletedWorkspace[]>("/workspaces/deleted", { params: scope ? { scope } : undefined });
+  return res.data;
+}
+
+export async function restoreDeletedWorkspace(id: string): Promise<{ id: string; name: string; slug: string }> {
+  const res = await http.post(`/workspaces/deleted/${id}/restore`);
+  return res.data;
+}
+
+/** Erases a deleted workspace now instead of on its purge date (system admins). */
+export async function purgeDeletedWorkspace(id: string): Promise<void> {
+  await http.delete(`/workspaces/deleted/${id}`);
 }
 
 export async function changeMemberRole(
@@ -288,8 +317,10 @@ export async function exportWorkspace(
   password: string,
   onProgress?: TransferProgress,
   includeCredentials = false,
+  /** A deleted workspace, exported by a system admin before it is purged. */
+  deletedId?: string,
 ): Promise<{ blob: Blob; filename: string }> {
-  const res = await http.post<Blob>(`/workspaces/${slug}/export`, { password, includeCredentials }, {
+  const res = await http.post<Blob>(deletedId ? `/workspaces/deleted/${deletedId}/export` : `/workspaces/${slug}/export`, { password, includeCredentials }, {
     responseType: "blob",
     onDownloadProgress: onProgress ? (e) => onProgress(e.loaded, e.total) : undefined,
   });

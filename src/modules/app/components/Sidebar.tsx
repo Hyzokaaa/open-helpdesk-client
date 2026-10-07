@@ -114,6 +114,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
     { label: t("settings.security"), path: "/dashboard/settings/security" },
     { label: t("settings.preferences"), path: "/dashboard/settings/preferences" },
     { label: t("notifications.preferences"), path: "/dashboard/settings/notifications" },
+    { label: t("workspaceDelete.listTitle"), path: "/dashboard/deleted-workspaces" },
     ...extraSettingsNav.map((item) => ({ ...item, label: t(item.label as any) })),
   ];
 
