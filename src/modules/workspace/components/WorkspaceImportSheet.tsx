@@ -118,6 +118,7 @@ const SETTING_LABELS: Record<ImportSetting, { overwrite: TranslationKey; applied
   emailSender: { overwrite: "workspaceImport.overwrite.emailSender", applied: "workspaceImport.applied.emailSender" },
   customDomain: { overwrite: "workspaceImport.overwrite.customDomain", applied: "workspaceImport.applied.customDomain" },
   analytics: { overwrite: "workspaceImport.overwrite.analytics", applied: "workspaceImport.applied.analytics" },
+  ticketReference: { overwrite: "workspaceImport.overwrite.ticketReference", applied: "workspaceImport.applied.ticketReference" },
 };
 
 export default function WorkspaceImportSheet({ slug, source, onClose, onImported }: Props) {
@@ -215,6 +216,10 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         shared: t("workspaceImport.preview.analyticsShared"),
         notShared: t("workspaceImport.preview.analyticsNotShared"),
       });
+    }
+    if (key === "ticketReference" && settings.ticketReference) {
+      const style = t(settings.ticketReference.style === "random" ? "ticketReference.random" : "ticketReference.sequential");
+      return `${settings.ticketReference.prefix} · ${style}`;
     }
     if (key === "customDomain" && settings.customDomain) {
       return `${settings.customDomain} · ${t("workspaceImport.preview.verifyAgain")}`;

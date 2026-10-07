@@ -10,6 +10,7 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import DeleteWorkspaceModal from "../components/DeleteWorkspaceModal";
 import WorkspaceAuditRetentionSettings from "@modules/audit-log/components/WorkspaceAuditRetentionSettings";
+import TicketReferenceSettings from "../components/TicketReferenceSettings";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
@@ -215,6 +216,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           {canManageSettings && (
             <CollapsibleSection title={t("emailSender.title")}>
               <EmailSenderSettings slug={workspaceSlug!} />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && (
+            <CollapsibleSection title={t("ticketReference.title")}>
+              <TicketReferenceSettings slug={workspaceSlug!} />
             </CollapsibleSection>
           )}
 
