@@ -6,6 +6,8 @@ interface Props {
   extra?: string;
   full: boolean;
   disabled?: boolean;
+  /** Out of range or otherwise wrong: red border while it stays editable. */
+  invalid?: boolean;
 }
 
 export function inputClass({
@@ -13,6 +15,7 @@ export function inputClass({
   extra,
   full,
   disabled = false,
+  invalid = false,
 }: Props): string {
   return clsx(
     "h-max",
@@ -24,7 +27,8 @@ export function inputClass({
     "shadow-input",
     "text-body",
 
-    { "border-input-effect": !disabled },
+    { "border-input-effect": !disabled && !invalid },
+    { "!border-red-500 focus:ring-2 focus:ring-red-500/20": invalid },
 
     {
       "px-5 py-2": size === "lg" || size === "xl",

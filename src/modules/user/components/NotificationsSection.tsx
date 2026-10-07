@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import { toast } from "react-toastify";
 import clsx from "clsx";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -24,31 +25,6 @@ const EVENT_KEYS = [
 const EMAIL_ONLY_KEYS = [
   { key: "emailCsatSurvey", labelKey: "notifications.csatSurvey" },
 ] as const;
-
-function Toggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-      className={clsx(
-        "w-8 h-[18px] rounded-full transition-colors cursor-pointer shrink-0 p-[2px] flex",
-        checked ? "bg-primary justify-end" : "bg-subtle justify-start",
-        disabled && "opacity-40 cursor-not-allowed",
-      )}
-    >
-      <span className="block w-[14px] h-[14px] rounded-full bg-white shadow-sm" />
-    </button>
-  );
-}
 
 export default function NotificationsSection() {
   const { t } = useTranslation();
@@ -97,7 +73,7 @@ export default function NotificationsSection() {
             <span className="text-sm font-body-medium text-heading">
               {t("notifications.emailEnabled")}
             </span>
-            <Toggle
+            <Switch
               checked={prefs.emailEnabled}
               onChange={(v) => handleChange("emailEnabled", v)}
             />
@@ -121,7 +97,7 @@ export default function NotificationsSection() {
             <span className="text-sm font-body-medium text-heading">
               {t("notifications.inAppEnabled")}
             </span>
-            <Toggle
+            <Switch
               checked={prefs.inAppEnabled}
               onChange={(v) => handleChange("inAppEnabled", v)}
             />
@@ -137,7 +113,7 @@ export default function NotificationsSection() {
           <span className="text-xs text-body">
             {t("notifications.bellUnreadOnly")}
           </span>
-          <Toggle
+          <Switch
             checked={prefs.bellUnreadOnly}
             onChange={(v) => handleChange("bellUnreadOnly", v)}
           />
@@ -173,7 +149,7 @@ export default function NotificationsSection() {
                   <div className="w-14" />
                 ) : (
                   <div className="w-14 flex justify-center">
-                    <Toggle
+                    <Switch
                       checked={prefs[`email${key}` as keyof NotificationPreferences] as boolean}
                       onChange={(v) => handleChange(`email${key}`, v)}
                     />
@@ -181,7 +157,7 @@ export default function NotificationsSection() {
                 ))}
                 {prefs.inAppEnabled && (
                   <div className="w-14 flex justify-center">
-                    <Toggle
+                    <Switch
                       checked={prefs[`inApp${key}` as keyof NotificationPreferences] as boolean}
                       onChange={(v) => handleChange(`inApp${key}`, v)}
                     />
@@ -201,7 +177,7 @@ export default function NotificationsSection() {
                   <span className="flex-1 text-xs text-body">{t("notifications.upgradeAvailable")}</span>
                   {prefs.emailEnabled && (
                     <div className="w-14 flex justify-center">
-                      <Toggle
+                      <Switch
                         checked={prefs.emailUpgradeAvailable}
                         onChange={(v) => handleChange("emailUpgradeAvailable", v)}
                       />
@@ -209,7 +185,7 @@ export default function NotificationsSection() {
                   )}
                   {prefs.inAppEnabled && (
                     <div className="w-14 flex justify-center">
-                      <Toggle
+                      <Switch
                         checked={prefs.inAppUpgradeAvailable}
                         onChange={(v) => handleChange("inAppUpgradeAvailable", v)}
                       />
@@ -230,7 +206,7 @@ export default function NotificationsSection() {
                   <div key={key} className="flex items-center gap-2 px-3 py-2.5">
                     <span className="flex-1 text-xs text-body">{t(labelKey)}</span>
                     <div className="w-14 flex justify-center">
-                      <Toggle
+                      <Switch
                         checked={prefs[key as keyof NotificationPreferences] as boolean}
                         onChange={(v) => handleChange(key, v)}
                       />

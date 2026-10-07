@@ -8,7 +8,7 @@ interface Props {
   onClick?: () => void;
   type?: "button" | "submit";
   full?: boolean;
-  color?: "primary" | "light" | "danger" | "primary-light";
+  color?: "primary" | "light" | "danger" | "danger-light" | "primary-light";
   size?: Size;
   className?: string;
   disabled?: boolean;
@@ -42,6 +42,8 @@ function Button(
       "bg-surface hover:bg-surface-hover disabled:bg-surface-disabled border-button":
         color === "light",
       "bg-red-500 hover:bg-red-700 text-white": color === "danger",
+      "border border-red-300 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20":
+        color === "danger-light",
       "border border-primary/20 hover:border-primary/40 hover:bg-primary/10 text-primary":
         color === "primary-light",
     },
