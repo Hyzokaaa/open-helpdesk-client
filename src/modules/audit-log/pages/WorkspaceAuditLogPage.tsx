@@ -70,7 +70,7 @@ const ENTITY_TYPES = [
   "route",
 ];
 
-const CATEGORIES = ["ticket", "workspace", "user", "email", "config", "knowledge-base", "system", "billing"];
+const CATEGORIES = ["ticket", "workspace", "user", "security", "email", "config", "knowledge-base", "system", "billing"];
 
 const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gray" | "blue"> = {
   // Ticket

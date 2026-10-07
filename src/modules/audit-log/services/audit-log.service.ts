@@ -74,3 +74,41 @@ export async function listAllAuditLog(
   );
   return res.data;
 }
+
+/** Days per audit category; null keeps the category forever. */
+export type RetentionDays = Record<string, number | null>;
+
+interface RetentionLimits {
+  categories: string[];
+  defaults: RetentionDays;
+  minDays: number;
+  maxDays: number;
+}
+
+export interface InstallationRetention extends RetentionLimits {
+  enabled: boolean;
+  days: RetentionDays;
+}
+
+export interface WorkspaceRetention extends RetentionLimits {
+  installation: { enabled: boolean; days: RetentionDays };
+  /** What this workspace keeps longer than the installation. */
+  overrides: RetentionDays;
+  effective: RetentionDays;
+}
+
+export async function getInstallationRetention(): Promise<InstallationRetention> {
+  return (await http.get<InstallationRetention>("/admin/audit-retention")).data;
+}
+
+export async function updateInstallationRetention(body: { enabled: boolean; days: RetentionDays }): Promise<InstallationRetention> {
+  return (await http.put<InstallationRetention>("/admin/audit-retention", body)).data;
+}
+
+export async function getWorkspaceRetention(slug: string): Promise<WorkspaceRetention> {
+  return (await http.get<WorkspaceRetention>(`/workspaces/${slug}/audit-retention`)).data;
+}
+
+export async function updateWorkspaceRetention(slug: string, days: RetentionDays): Promise<WorkspaceRetention> {
+  return (await http.put<WorkspaceRetention>(`/workspaces/${slug}/audit-retention`, { days })).data;
+}

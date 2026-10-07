@@ -3,6 +3,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import SystemEmailPage from "@modules/settings/pages/SystemEmailPage";
 import PlatformMailboxSettings from "../components/PlatformMailboxSettings";
 import WorkspaceCreationSettings from "../components/WorkspaceCreationSettings";
+import AuditRetentionSettings from "@modules/audit-log/components/AuditRetentionSettings";
 
 export default function AdminSettingsPage() {
   const { t } = useTranslation();
@@ -24,6 +25,10 @@ export default function AdminSettingsPage() {
 
         <CollapsibleSection title={t("adminSettings.emailReceiving")}>
           <PlatformMailboxSettings />
+        </CollapsibleSection>
+
+        <CollapsibleSection title={t("auditRetention.title")}>
+          <AuditRetentionSettings />
         </CollapsibleSection>
       </div>
     </div>

@@ -23,6 +23,7 @@ const CATEGORIES = [
   "knowledge-base",
   "system",
   "billing",
+  "security",
 ];
 
 const LEVELS = ["info", "warning", "error"];
@@ -38,6 +39,7 @@ const CATEGORY_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "
   "knowledge-base": "primary",
   system: "red",
   billing: "green",
+  security: "red",
 };
 
 const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gray" | "blue"> = {
