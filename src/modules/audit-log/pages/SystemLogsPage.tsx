@@ -42,6 +42,10 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "email-send-failed", group: "Email" },
   { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
   { value: "system-analytics-updated", group: "System" },
+  { value: "system-admin-email-sent", group: "System" }, { value: "system-notification-settings-updated", group: "System" },
+  { value: "workspace-creation-policy-updated", group: "System" },
+  { value: "subscription-created", group: "Billing" }, { value: "subscription-updated", group: "Billing" },
+  { value: "discount-created", group: "Billing" }, { value: "discount-updated", group: "Billing" },
 ];
 
 const CATEGORIES = [
@@ -112,6 +116,14 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "mailbox-updated": "blue",
   "mailbox-deleted": "red",
   "system-analytics-updated": "blue",
+  "system-admin-email-sent": "blue",
+  "system-notification-settings-updated": "blue",
+  "workspace-creation-policy-updated": "yellow",
+  "workspace-custom-domain-verification-failed": "red",
+  "subscription-created": "green",
+  "subscription-updated": "blue",
+  "discount-created": "yellow",
+  "discount-updated": "yellow",
 };
 
 const LEVEL_COLORS: Record<string, string> = {

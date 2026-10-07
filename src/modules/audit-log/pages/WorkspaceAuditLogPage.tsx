@@ -60,6 +60,7 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
   { value: "member-role-changed", group: "Members" },
   { value: "permission-denied", group: "Security" }, { value: "api-session-exchanged", group: "Security" },
+  { value: "workspace-custom-domain-verification-failed", group: "Security" },
   { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
   { value: "invitation-cancelled", group: "Members" },
   { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
@@ -128,6 +129,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "member-removed": "red",
   "member-role-changed": "yellow",
   "permission-denied": "red",
+  "workspace-custom-domain-verification-failed": "red",
   "api-session-exchanged": "yellow",
   // Invitations
   "invitation-created": "green",
@@ -503,7 +505,7 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   const parts: string[] = [];
 
   // Primary identifier: name, title, address, email — whatever identifies the entity
-  const label = (metadata.name ?? metadata.title ?? metadata.address ?? metadata.ticketName ?? metadata.email) as string | undefined;
+  const label = (metadata.name ?? metadata.title ?? metadata.address ?? metadata.ticketName ?? metadata.email ?? metadata.domain ?? metadata.subject) as string | undefined;
   if (label) parts.push(label);
 
   // Before/after diffs (updates): translated field names, names instead of ids
