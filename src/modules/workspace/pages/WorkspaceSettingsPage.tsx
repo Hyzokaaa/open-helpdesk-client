@@ -221,7 +221,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
 
           {canManageSettings && (
             <CollapsibleSection title={t("ticketReference.title")}>
-              <TicketReferenceSettings slug={workspaceSlug!} />
+              <TicketReferenceSettings slug={workspaceSlug!} workspaceName={workspace.name} />
             </CollapsibleSection>
           )}
 

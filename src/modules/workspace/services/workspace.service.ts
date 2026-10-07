@@ -485,3 +485,8 @@ export async function getTicketReference(slug: string): Promise<TicketReferenceS
 export async function updateTicketReference(slug: string, body: { style?: string; prefix?: string }): Promise<TicketReferenceSettings> {
   return (await http.patch<TicketReferenceSettings>(`/workspaces/${slug}/ticket-reference`, body)).data;
 }
+
+/** Gives every existing ticket a reference in the current format; confirmed with the workspace name. */
+export async function convertTicketReferences(slug: string, confirmName: string): Promise<{ converted: number }> {
+  return (await http.post<{ converted: number }>(`/workspaces/${slug}/ticket-reference/convert`, { confirmName })).data;
+}
