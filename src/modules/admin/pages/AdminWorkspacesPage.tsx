@@ -11,7 +11,8 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
-import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import DeleteWorkspaceModal from "@modules/workspace/components/DeleteWorkspaceModal";
+import AdminDeletedWorkspaces from "../components/AdminDeletedWorkspaces";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import WorkspaceSettingsPage from "@modules/workspace/pages/WorkspaceSettingsPage";
 import useUser from "@modules/user/hooks/useUser";
@@ -36,7 +37,9 @@ export default function AdminWorkspacesPage() {
   const [wsName, setWsName] = useState("");
   const [wsDescription, setWsDescription] = useState("");
   const [creatingWs, setCreatingWs] = useState(false);
-  const [confirmDeleteWs, setConfirmDeleteWs] = useState<string | null>(null);
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState<Workspace | null>(null);
+  const [deletingWs, setDeletingWs] = useState(false);
+  const [deletedRefresh, setDeletedRefresh] = useState(0);
   const [editingWsSlug, setEditingWsSlug] = useState<string | null>(null);
 
   const columns = [
@@ -84,13 +87,20 @@ export default function AdminWorkspacesPage() {
     finally { setCreatingWs(false); }
   };
 
-  const handleDeleteWorkspace = async (slug: string) => {
+  const handleDeleteWorkspace = async (ws: Workspace, typedName: string) => {
+    setDeletingWs(true);
     try {
-      await deleteWorkspace(slug);
+      await deleteWorkspace(ws.slug, typedName);
       setConfirmDeleteWs(null);
       fetchData();
-      toast.success(t("workspaces.deleted"));
-    } catch { toast.error(t("workspaces.deleteError")); }
+      setDeletedRefresh((n) => n + 1);
+      toast.success(t("workspaceDelete.deleted"));
+    } catch (err) {
+      const e = err as { handled?: boolean; message?: string };
+      if (!e?.handled) toast.error(e?.message || t("workspaces.deleteError"));
+    } finally {
+      setDeletingWs(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
@@ -98,12 +108,10 @@ export default function AdminWorkspacesPage() {
   return (
     <div className="w-full">
       {confirmDeleteWs && (
-        <ConfirmModal
-          title={t("workspaceSettings.deleteTitle")}
-          message={t("workspaceSettings.deleteMessage")}
-          confirmLabel={t("workspaceSettings.deleteConfirm")}
-          danger
-          onConfirm={() => handleDeleteWorkspace(confirmDeleteWs)}
+        <DeleteWorkspaceModal
+          workspaceName={confirmDeleteWs.name}
+          busy={deletingWs}
+          onConfirm={(typedName) => handleDeleteWorkspace(confirmDeleteWs, typedName)}
           onCancel={() => setConfirmDeleteWs(null)}
         />
       )}
@@ -190,7 +198,7 @@ export default function AdminWorkspacesPage() {
                     },
                     {
                       label: t("workspaces.delete"),
-                      onClick: () => setConfirmDeleteWs(ws.slug),
+                      onClick: () => setConfirmDeleteWs(ws),
                       danger: true,
                     },
                   ]} />
@@ -204,6 +212,8 @@ export default function AdminWorkspacesPage() {
         </table>
       </div>
       </DndContext>
+
+      <AdminDeletedWorkspaces refreshKey={deletedRefresh} onRestored={fetchData} />
     </div>
   );
 }

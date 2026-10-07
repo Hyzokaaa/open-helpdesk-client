@@ -16,7 +16,8 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
-import { commentPreview, describeChanges, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { commentPreview, describeChanges, fieldLabel, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 import { listDepartments } from "@modules/department/services/department.service";
 import { listProjects, listCategories } from "@modules/project/services/project.service";
 import { listOrganizations } from "@modules/organization/services/organization.service";
@@ -42,55 +43,34 @@ async function loadReferenceNames(slug: string): Promise<ReferenceNames> {
   return names;
 }
 
-const ACTION_GROUPS: { value: string; group: string }[] = [
-  { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
-  { value: "ticket-status-changed", group: "Ticket" }, { value: "ticket-assigned", group: "Ticket" },
-  { value: "ticket-picked-up", group: "Ticket" }, { value: "ticket-transferred", group: "Ticket" },
-  { value: "ticket-deleted", group: "Ticket" },
-  { value: "transfer-request-created", group: "Transfer" }, { value: "transfer-request-accepted", group: "Transfer" },
-  { value: "transfer-request-rejected", group: "Transfer" }, { value: "transfer-request-cancelled", group: "Transfer" },
-  { value: "transfer-request-expired", group: "Transfer" },
-  { value: "comment-created", group: "Ticket" },
-  { value: "workspace-created", group: "Workspace" }, { value: "workspace-updated", group: "Workspace" },
-  { value: "workspace-deleted", group: "Workspace" }, { value: "workspace-palette-updated", group: "Workspace" },
-  { value: "workspace-sla-updated", group: "Workspace" }, { value: "workspace-import-started", group: "Workspace" },
-  { value: "workspace-exported", group: "Workspace" }, { value: "workspace-export-created", group: "Workspace" },
-  { value: "workspace-export-link-downloaded", group: "Workspace" }, { value: "workspace-import-completed", group: "Workspace" },
-  { value: "workspace-import-failed", group: "Workspace" }, { value: "workspace-analytics-updated", group: "Workspace" },
-  { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
-  { value: "member-role-changed", group: "Members" },
-  { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
-  { value: "invitation-cancelled", group: "Members" },
-  { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
-  { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
-  { value: "mailbox-resumed", group: "Email" }, { value: "mailbox-poll-triggered", group: "Email" },
-  { value: "mailbox-import-started", group: "Email" },
-  { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
-  { value: "imap-poll-failed", group: "Email" }, { value: "email-received", group: "Email" },
-  { value: "email-sender-configured", group: "Email" }, { value: "email-sender-deleted", group: "Email" },
-  { value: "custom-field-created", group: "Config" }, { value: "custom-field-updated", group: "Config" },
-  { value: "custom-field-deleted", group: "Config" }, { value: "custom-field-reordered", group: "Config" },
-  { value: "tag-created", group: "Config" }, { value: "tag-deleted", group: "Config" },
-  { value: "canned-response-created", group: "Config" }, { value: "canned-response-updated", group: "Config" },
-  { value: "canned-response-deleted", group: "Config" },
-  { value: "webhook-created", group: "Config" }, { value: "webhook-updated", group: "Config" },
-  { value: "webhook-deleted", group: "Config" },
-  { value: "api-key-created", group: "Config" }, { value: "api-key-deleted", group: "Config" },
-  { value: "kb-category-created", group: "Knowledge Base" }, { value: "kb-category-updated", group: "Knowledge Base" },
-  { value: "kb-category-deleted", group: "Knowledge Base" },
-  { value: "kb-article-created", group: "Knowledge Base" }, { value: "kb-article-updated", group: "Knowledge Base" },
-  { value: "kb-article-deleted", group: "Knowledge Base" },
-  { value: "sla-first-response-breached", group: "SLA" }, { value: "sla-resolution-breached", group: "SLA" },
-  { value: "portal-ticket-created", group: "Ticket" },
-];
-
 const ENTITY_TYPES = [
-  "ticket", "workspace", "workspace-member", "mailbox", "custom-field",
-  "tag", "canned-response", "webhook", "api-key", "kb-category", "kb-article",
-  "email", "email-sender", "invitation", "transfer-request",
+  "ticket",
+  "workspace",
+  "workspace-member",
+  "user",
+  "invitation",
+  "transfer-request",
+  "mailbox",
+  "email",
+  "email-sender",
+  "email-rule",
+  "organization",
+  "project",
+  "ticket-category",
+  "department",
+  "tag",
+  "canned-response",
+  "custom-field",
+  "webhook",
+  "api-key",
+  "kb-category",
+  "kb-article",
+  "attachment",
+  "csat",
+  "route",
 ];
 
-const CATEGORIES = ["ticket", "workspace", "user", "email", "config", "knowledge-base", "system", "billing"];
+const CATEGORIES = ["ticket", "workspace", "user", "security", "email", "config", "knowledge-base", "system", "billing"];
 
 const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gray" | "blue"> = {
   // Ticket
@@ -126,6 +106,17 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "member-added": "green",
   "member-removed": "red",
   "member-role-changed": "yellow",
+  "permission-denied": "red",
+  "workspace-custom-domain-verification-failed": "red",
+  "email-rule-created": "green",
+  "email-rule-updated": "blue",
+  "email-rule-deleted": "red",
+  "email-rule-reordered": "blue",
+  "organization-member-added": "green",
+  "organization-member-removed": "red",
+  "member-organization-changed": "yellow",
+  "email-processing-failed": "red",
+  "api-session-exchanged": "yellow",
   // Invitations
   "invitation-created": "green",
   "invitation-batch-created": "green",
@@ -192,8 +183,8 @@ export default function WorkspaceAuditLogPage() {
   const canViewLog = can(P.AUDIT_LOG_VIEW);
 
   const filterSections: FilterSection[] = useMemo(() => [
-    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: ACTION_GROUPS.map(a => ({ value: a.value, label: t(`auditLog.action.${a.value}` as any) || a.value, group: a.group })) },
-    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: t(`auditLog.entity.${e}` as any) || e })) },
+    { key: "actions", label: t("auditLog.col.action"), type: "multi", options: actionOptions("workspace", t as (k: string) => string) },
+    { key: "entityTypes", label: t("auditLog.col.entity"), type: "multi", options: ENTITY_TYPES.map(e => ({ value: e, label: entityTypeLabel(e, t as (k: string) => string) })) },
     { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: t(`auditLog.category.${c}` as any) || c })) },
     { key: "userIds", label: t("auditLog.col.user"), type: "multi", options: members.map(m => ({ value: m.userId, label: `${m.firstName} ${m.lastName}` })) },
   ], [t, members]);
@@ -266,6 +257,12 @@ export default function WorkspaceAuditLogPage() {
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.userId === userId);
     return m ? `${m.firstName} ${m.lastName}` : userId.slice(0, 8) + "...";
+  };
+
+  /** A member by the member list; someone no longer in the workspace by the name the server sent. */
+  const actorName = (userId: string, userName?: string | null) => {
+    if (members.some((m) => m.userId === userId)) return getMemberName(userId);
+    return userName ? `${userName} (${t("auditLog.formerMember")})` : getMemberName(userId);
   };
 
   const totalPages = Math.ceil(total / (filters.limit ?? 20));
@@ -363,18 +360,21 @@ export default function WorkspaceAuditLogPage() {
                 {items.map((item) => (
                   <tr key={item.id} className="border-b border-border-row">
                     <td className="px-4 py-3">
-                      <StatusBadge
-                        label={t(`auditLog.action.${item.action}` as any)}
-                        color={ACTION_COLORS[item.action] ?? "gray"}
-                        size="xs"
-                      />
+                      <div className="flex flex-wrap items-center gap-1">
+                        <StatusBadge
+                          label={t(`auditLog.action.${item.action}` as any)}
+                          color={ACTION_COLORS[item.action] ?? "gray"}
+                          size="xs"
+                        />
+                        <SourceBadge source={item.source} t={t} />
+                      </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs text-muted">{item.entityType}</span>
+                      <span className="text-xs text-muted">{entityTypeLabel(item.entityType, t as (k: string) => string)}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-body">
-                        {item.userId ? getMemberName(item.userId) : t("auditLog.system")}
+                        {item.userId ? actorName(item.userId, item.userName) : t("auditLog.system")}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -454,9 +454,9 @@ export default function WorkspaceAuditLogPage() {
               <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
               <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
               <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
-              <DetailRow label={t("auditLog.detail.entityType")} value={selected.entityType} />
+              <DetailRow label={t("auditLog.detail.entityType")} value={entityTypeLabel(selected.entityType, t as (k: string) => string)} />
               <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
-              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? getMemberName(selected.userId) : t("auditLog.system")} />
+              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? actorName(selected.userId, selected.userName) : t("auditLog.system")} />
               {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
               <div>
                 <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
@@ -497,7 +497,7 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   const parts: string[] = [];
 
   // Primary identifier: name, title, address, email — whatever identifies the entity
-  const label = (metadata.name ?? metadata.title ?? metadata.address ?? metadata.ticketName ?? metadata.email) as string | undefined;
+  const label = (metadata.name ?? metadata.title ?? metadata.address ?? metadata.ticketName ?? metadata.email ?? metadata.domain ?? metadata.subject) as string | undefined;
   if (label) parts.push(label);
 
   // Before/after diffs (updates): translated field names, names instead of ids
@@ -519,15 +519,29 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   // Target (member actions)
   if (metadata.target && !metadata.from) parts.push(String(metadata.target));
 
-  // Role info
-  if (metadata.role) parts.push(`(${metadata.role})`);
+  // Role info, translated
+  if (metadata.role) {
+    const roleKey = `enum.role.${metadata.role}`;
+    const role = t(roleKey);
+    parts.push(`(${role && role !== roleKey ? role : String(metadata.role)})`);
+  }
+
+  // Single settings stored without a before/after pair
+  if (metadata.palette) parts.push(`${fieldLabel("palette", t)}: ${formatInlineValue(metadata.palette)}`);
+  if (typeof metadata.systemMailboxEnabled === "boolean") {
+    parts.push(`${fieldLabel("systemMailboxEnabled", t)}: ${t(metadata.systemMailboxEnabled ? "auditLog.value.yes" : "auditLog.value.no")}`);
+  }
 
   // Count (batch actions)
   if (metadata.count) parts.push(`×${metadata.count}`);
 
   // Error info
   if (metadata.error) parts.push(`Error: ${formatInlineValue(metadata.error).slice(0, 80)}`);
-  if (metadata.reason) parts.push(formatInlineValue(metadata.reason).slice(0, 80));
+  if (metadata.reason) parts.push(reasonLabel(metadata.reason, t).slice(0, 80));
+
+  // Refused route, webhook host
+  if (metadata.route) parts.push(`${metadata.method ?? ""} ${metadata.route}`.trim());
+  if (metadata.host) parts.push(String(metadata.host));
 
   // Provider (OAuth)
   if (metadata.provider) parts.push(String(metadata.provider));
@@ -537,15 +551,60 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   return <span className="text-xs text-muted">{search ? <HighlightText text={joined} search={search} /> : joined}</span>;
 }
 
-const DIFF_KEYS = new Set(["before", "after", "beforeLabels", "afterLabels"]);
+const DIFF_KEYS = new Set(["before", "after", "beforeLabels", "afterLabels", "client", "imported"]);
+
+/** A failure reason stored as a code, translated when there is a translation. */
+function reasonLabel(reason: unknown, t: (k: any) => string): string {
+  const raw = formatInlineValue(reason);
+  const key = `auditLog.reason.${raw}`;
+  const translated = t(key);
+  return translated && translated !== key ? translated : raw;
+}
+
+function asObject(value: unknown): Record<string, unknown> | null {
+  return isStructuredValue(value) && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+/**
+ * Who sent the request (access events) and where an imported row came from, as labelled rows.
+ * The proxy's IP is what the X-Forwarded-For header said: informational, a direct caller can fake it.
+ */
+function contextRows(metadata: Record<string, unknown>, t: (k: any) => string): [string, unknown][] {
+  const rows: [string, unknown][] = [];
+  const client = asObject(metadata.client);
+  if (client) {
+    if (client.forwardedFor) rows.push([t("auditLog.detail.forwardedFor"), client.forwardedFor]);
+    if (client.ip) rows.push([t("auditLog.detail.ip"), client.ip]);
+    if (client.userAgent) rows.push([t("auditLog.detail.userAgent"), client.userAgent]);
+  }
+  const imported = asObject(metadata.imported);
+  if (imported) {
+    if (imported.at) rows.push([t("auditLog.detail.importedAt"), imported.at]);
+    if (imported.fromWorkspace) rows.push([t("auditLog.detail.importedFrom"), imported.fromWorkspace]);
+    if (imported.originalSource) rows.push([t("auditLog.detail.importedSource"), imported.originalSource]);
+  }
+  return rows;
+}
+
+/** Marks entries that did not come from someone using this installation's interface. */
+export function SourceBadge({ source, t }: { source: string | null; t: (k: any) => string }) {
+  if (source === "import") return <StatusBadge label={t("auditLog.source.import")} color="yellow" size="xs" />;
+  if (source === "api") return <StatusBadge label={t("auditLog.source.api")} color="blue" size="xs" />;
+  return null;
+}
 
 export function MetadataKeyValue({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const entries: [string, unknown][] = Object.entries(metadata)
     .filter(([key]) => !DIFF_KEYS.has(key))
-    // Comments as plain text, also for older entries that stored the HTML
-    .map(([key, val]) => (key === "content" && isCommentAction(action) ? [key, commentPreview(val, 300)] : [key, val]));
+    // Comments as plain text, also for older entries that stored the HTML; failure reasons translated
+    .map(([key, val]) => {
+      if (key === "content" && isCommentAction(action)) return [key, commentPreview(val, 300)];
+      if (key === "reason") return [key, reasonLabel(val, t)];
+      return [key, val];
+    });
+  entries.push(...contextRows(metadata, t));
 
   // Merge before/after into diff rows, by field name and with names instead of ids
   for (const change of describeChanges(metadata, names, t)) {

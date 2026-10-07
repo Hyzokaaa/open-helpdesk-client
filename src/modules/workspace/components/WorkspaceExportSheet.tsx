@@ -16,6 +16,8 @@ interface Props {
   slug: string;
   mode: ExportMode;
   onClose: () => void;
+  /** Export a deleted workspace by its id (system admins, file mode only). */
+  deletedId?: string;
 }
 
 const PROBLEM_LABELS: Record<ExportPasswordProblem, TranslationKey> = {
@@ -35,7 +37,7 @@ function download(blob: Blob, filename: string) {
   URL.revokeObjectURL(href);
 }
 
-export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
+export default function WorkspaceExportSheet({ slug, mode, onClose, deletedId }: Props) {
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -55,7 +57,7 @@ export default function WorkspaceExportSheet({ slug, mode, onClose }: Props) {
     setDownloaded(0);
     try {
       if (mode === "file") {
-        const { blob, filename } = await exportWorkspace(slug, password, (loaded) => setDownloaded(loaded), includeCredentials);
+        const { blob, filename } = await exportWorkspace(slug, password, (loaded) => setDownloaded(loaded), includeCredentials, deletedId);
         download(blob, filename);
         toast.success(t("workspaceSettings.exportSuccess"));
         onClose();
