@@ -110,7 +110,22 @@ function describeAction(
 
   switch (item.action) {
     case "ticket-created":
-      return t("auditLog.feed.created");
+      return item.source === "email" ? `${t("auditLog.feed.created")} ${t("auditLog.feed.viaEmail")}` : t("auditLog.feed.created");
+
+    case "portal-ticket-created":
+      return `${t("auditLog.feed.created")} ${t("auditLog.feed.viaPortal")}`;
+
+    case "portal-comment-created": {
+      const preview = commentPreview(meta.content, 60);
+      const label = `${t("auditLog.feed.commented")} ${t("auditLog.feed.viaPortal")}`;
+      return preview ? `${label}: "${preview}"` : label;
+    }
+
+    case "attachment-uploaded":
+      return meta.originalName ? `${t("auditLog.feed.attached")} ${meta.originalName}` : t("auditLog.feed.attached");
+
+    case "attachment-deleted":
+      return meta.originalName ? `${t("auditLog.feed.attachmentRemoved")} ${meta.originalName}` : t("auditLog.feed.attachmentRemoved");
 
     case "ticket-updated": {
       if (!before || !after) return t("auditLog.feed.updated");
@@ -137,12 +152,16 @@ function describeAction(
       return t("auditLog.feed.deleted");
 
     case "comment-created": {
+      if (item.source === "email") return `${t("auditLog.feed.commented")} ${t("auditLog.feed.viaEmail")}`;
       const preview = commentPreview(meta.content, 60);
       if (preview) return `${t("auditLog.feed.commented")}: "${preview}"`;
       return t("auditLog.feed.commented");
     }
 
-    default:
-      return item.action;
+    default: {
+      const key = `auditLog.action.${item.action}`;
+      const label = t(key);
+      return label && label !== key ? label : item.action;
+    }
   }
 }

@@ -46,6 +46,12 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "workspace-creation-policy-updated", group: "System" },
   { value: "subscription-created", group: "Billing" }, { value: "subscription-updated", group: "Billing" },
   { value: "discount-created", group: "Billing" }, { value: "discount-updated", group: "Billing" },
+  { value: "subscription-cancelled", group: "Billing" }, { value: "subscription-reactivated", group: "Billing" },
+  { value: "subscription-seats-changed", group: "Billing" }, { value: "subscription-changed-by-admin", group: "Billing" },
+  { value: "subscription-downgraded", group: "Billing" }, { value: "subscription-plan-activated", group: "Billing" },
+  { value: "payment-received", group: "Billing" }, { value: "payment-webhook-rejected", group: "Billing" },
+  { value: "system-logo-updated", group: "System" }, { value: "system-logo-removed", group: "System" },
+  { value: "email-processing-failed", group: "Email" },
 ];
 
 const CATEGORIES = [
@@ -124,6 +130,15 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "subscription-updated": "blue",
   "discount-created": "yellow",
   "discount-updated": "yellow",
+  "subscription-cancelled": "red",
+  "subscription-reactivated": "green",
+  "subscription-seats-changed": "blue",
+  "subscription-changed-by-admin": "yellow",
+  "subscription-downgraded": "red",
+  "subscription-plan-activated": "green",
+  "payment-received": "green",
+  "payment-webhook-rejected": "red",
+  "email-processing-failed": "red",
 };
 
 const LEVEL_COLORS: Record<string, string> = {
