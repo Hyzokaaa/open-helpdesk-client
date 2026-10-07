@@ -59,6 +59,7 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "workspace-import-failed", group: "Workspace" }, { value: "workspace-analytics-updated", group: "Workspace" },
   { value: "member-added", group: "Members" }, { value: "member-removed", group: "Members" },
   { value: "member-role-changed", group: "Members" },
+  { value: "permission-denied", group: "Security" }, { value: "api-session-exchanged", group: "Security" },
   { value: "invitation-created", group: "Members" }, { value: "invitation-batch-created", group: "Members" },
   { value: "invitation-cancelled", group: "Members" },
   { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
@@ -126,6 +127,8 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "member-added": "green",
   "member-removed": "red",
   "member-role-changed": "yellow",
+  "permission-denied": "red",
+  "api-session-exchanged": "yellow",
   // Invitations
   "invitation-created": "green",
   "invitation-batch-created": "green",
@@ -363,11 +366,14 @@ export default function WorkspaceAuditLogPage() {
                 {items.map((item) => (
                   <tr key={item.id} className="border-b border-border-row">
                     <td className="px-4 py-3">
-                      <StatusBadge
-                        label={t(`auditLog.action.${item.action}` as any)}
-                        color={ACTION_COLORS[item.action] ?? "gray"}
-                        size="xs"
-                      />
+                      <div className="flex flex-wrap items-center gap-1">
+                        <StatusBadge
+                          label={t(`auditLog.action.${item.action}` as any)}
+                          color={ACTION_COLORS[item.action] ?? "gray"}
+                          size="xs"
+                        />
+                        <SourceBadge source={item.source} t={t} />
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">{item.entityType}</span>
@@ -527,7 +533,11 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
 
   // Error info
   if (metadata.error) parts.push(`Error: ${formatInlineValue(metadata.error).slice(0, 80)}`);
-  if (metadata.reason) parts.push(formatInlineValue(metadata.reason).slice(0, 80));
+  if (metadata.reason) parts.push(reasonLabel(metadata.reason, t).slice(0, 80));
+
+  // Refused route, webhook host
+  if (metadata.route) parts.push(`${metadata.method ?? ""} ${metadata.route}`.trim());
+  if (metadata.host) parts.push(String(metadata.host));
 
   // Provider (OAuth)
   if (metadata.provider) parts.push(String(metadata.provider));
@@ -537,15 +547,60 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
   return <span className="text-xs text-muted">{search ? <HighlightText text={joined} search={search} /> : joined}</span>;
 }
 
-const DIFF_KEYS = new Set(["before", "after", "beforeLabels", "afterLabels"]);
+const DIFF_KEYS = new Set(["before", "after", "beforeLabels", "afterLabels", "client", "imported"]);
+
+/** A failure reason stored as a code, translated when there is a translation. */
+function reasonLabel(reason: unknown, t: (k: any) => string): string {
+  const raw = formatInlineValue(reason);
+  const key = `auditLog.reason.${raw}`;
+  const translated = t(key);
+  return translated && translated !== key ? translated : raw;
+}
+
+function asObject(value: unknown): Record<string, unknown> | null {
+  return isStructuredValue(value) && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+/**
+ * Who sent the request (access events) and where an imported row came from, as labelled rows.
+ * The proxy's IP is what the X-Forwarded-For header said: informational, a direct caller can fake it.
+ */
+function contextRows(metadata: Record<string, unknown>, t: (k: any) => string): [string, unknown][] {
+  const rows: [string, unknown][] = [];
+  const client = asObject(metadata.client);
+  if (client) {
+    if (client.forwardedFor) rows.push([t("auditLog.detail.forwardedFor"), client.forwardedFor]);
+    if (client.ip) rows.push([t("auditLog.detail.ip"), client.ip]);
+    if (client.userAgent) rows.push([t("auditLog.detail.userAgent"), client.userAgent]);
+  }
+  const imported = asObject(metadata.imported);
+  if (imported) {
+    if (imported.at) rows.push([t("auditLog.detail.importedAt"), imported.at]);
+    if (imported.fromWorkspace) rows.push([t("auditLog.detail.importedFrom"), imported.fromWorkspace]);
+    if (imported.originalSource) rows.push([t("auditLog.detail.importedSource"), imported.originalSource]);
+  }
+  return rows;
+}
+
+/** Marks entries that did not come from someone using this installation's interface. */
+export function SourceBadge({ source, t }: { source: string | null; t: (k: any) => string }) {
+  if (source === "import") return <StatusBadge label={t("auditLog.source.import")} color="yellow" size="xs" />;
+  if (source === "api") return <StatusBadge label={t("auditLog.source.api")} color="blue" size="xs" />;
+  return null;
+}
 
 export function MetadataKeyValue({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const entries: [string, unknown][] = Object.entries(metadata)
     .filter(([key]) => !DIFF_KEYS.has(key))
-    // Comments as plain text, also for older entries that stored the HTML
-    .map(([key, val]) => (key === "content" && isCommentAction(action) ? [key, commentPreview(val, 300)] : [key, val]));
+    // Comments as plain text, also for older entries that stored the HTML; failure reasons translated
+    .map(([key, val]) => {
+      if (key === "content" && isCommentAction(action)) return [key, commentPreview(val, 300)];
+      if (key === "reason") return [key, reasonLabel(val, t)];
+      return [key, val];
+    });
+  entries.push(...contextRows(metadata, t));
 
   // Merge before/after into diff rows, by field name and with names instead of ids
   for (const change of describeChanges(metadata, names, t)) {

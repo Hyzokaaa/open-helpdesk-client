@@ -11,7 +11,7 @@ import {
   AuditLogFilters,
   listAllAuditLog,
 } from "../services/audit-log.service";
-import { MetadataSummary, MetadataKeyValue, HighlightText } from "./WorkspaceAuditLogPage";
+import { MetadataSummary, MetadataKeyValue, HighlightText, SourceBadge } from "./WorkspaceAuditLogPage";
 
 const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "ticket-created", group: "Ticket" }, { value: "ticket-updated", group: "Ticket" },
@@ -30,6 +30,10 @@ const ACTION_GROUPS: { value: string; group: string }[] = [
   { value: "user-signed-up", group: "User" }, { value: "user-logged-in", group: "User" },
   { value: "user-forgot-password", group: "User" }, { value: "user-reset-password", group: "User" },
   { value: "user-email-verified", group: "User" }, { value: "user-oauth-login", group: "User" },
+  { value: "user-email-changed", group: "User" },
+  { value: "user-login-failed", group: "Security" }, { value: "user-oauth-login-failed", group: "Security" },
+  { value: "user-password-change-failed", group: "Security" }, { value: "user-password-reset-failed", group: "Security" },
+  { value: "permission-denied", group: "Security" }, { value: "api-session-exchanged", group: "Security" },
   { value: "imap-poll-started", group: "Email" }, { value: "imap-poll-completed", group: "Email" },
   { value: "mailbox-created", group: "Email" }, { value: "mailbox-updated", group: "Email" },
   { value: "mailbox-deleted", group: "Email" }, { value: "mailbox-paused", group: "Email" },
@@ -53,7 +57,7 @@ const CATEGORIES = [
 
 const LEVELS = ["info", "warning", "error"];
 
-const SOURCES = ["user", "system", "webhook", "email", "scheduler"];
+const SOURCES = ["ui", "api", "email", "portal", "import", "system", "webhook", "scheduler"];
 
 const CATEGORY_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gray" | "blue"> = {
   ticket: "blue",
@@ -92,6 +96,13 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "user-admin-toggled": "yellow",
   "user-signed-up": "green",
   "user-logged-in": "blue",
+  "user-email-changed": "yellow",
+  "user-login-failed": "red",
+  "user-oauth-login-failed": "red",
+  "user-password-change-failed": "red",
+  "user-password-reset-failed": "red",
+  "permission-denied": "red",
+  "api-session-exchanged": "yellow",
   "email-received": "blue",
   "email-sent": "green",
   "email-send-failed": "red",
@@ -286,11 +297,14 @@ export default function SystemLogsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge
-                        label={t(`auditLog.action.${item.action}` as any) ?? item.action}
-                        color={ACTION_COLORS[item.action] ?? "gray"}
-                        size="xs"
-                      />
+                      <div className="flex flex-wrap items-center gap-1">
+                        <StatusBadge
+                          label={t(`auditLog.action.${item.action}` as any) ?? item.action}
+                          color={ACTION_COLORS[item.action] ?? "gray"}
+                          size="xs"
+                        />
+                        <SourceBadge source={item.source} t={t} />
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted">{item.entityType}</span>
