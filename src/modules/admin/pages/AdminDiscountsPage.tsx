@@ -21,6 +21,7 @@ import {
   createDiscount,
   updateDiscount,
 } from "../services/discount.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 const TYPES = ["percentage", "flat"] as const;
 
@@ -229,15 +230,7 @@ export default function AdminDiscountsPage() {
             </FormInput>
 
             <FormInput label={t("discounts.recur")}>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={recur}
-                  onChange={(e) => setRecur(e.target.checked)}
-                  className="w-4 h-4 accent-primary"
-                />
-                <span className="text-sm text-body">{t("discounts.recurHint")}</span>
-              </label>
+              <Checkbox checked={recur} onChange={setRecur} label={t("discounts.recurHint")} />
             </FormInput>
 
             {recur && (

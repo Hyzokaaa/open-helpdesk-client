@@ -26,6 +26,7 @@ import {
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
 import { resolveMailServer } from "../services/email-sender.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
@@ -620,16 +621,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
         )}
 
         <div className="border-t border-border-card my-4" />
-        <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
-          <input
-            type="checkbox"
-            checked={autoReply}
-            onChange={(e) => setAutoReply(e.target.checked)}
-            className="w-4 h-4 accent-primary"
-          />
-          {t("mailbox.autoReply")}
-        </label>
-        <p className="text-exs text-muted mt-1 mb-4">{t("mailbox.autoReplyDesc")}</p>
+        <Checkbox checked={autoReply} onChange={setAutoReply} label={t("mailbox.autoReply")} hint={t("mailbox.autoReplyDesc")} className="mb-4" />
 
         <div className="border-t border-border-card my-4" />
         <FormInput label={t("mailbox.postProcess")} className="!mb-1">

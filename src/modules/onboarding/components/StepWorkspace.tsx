@@ -9,6 +9,7 @@ import useExtensions from "@modules/app/extensions/useExtensions";
 import { createWorkspace } from "@modules/workspace/services/workspace.service";
 import { createInvitationBatch } from "@modules/workspace/services/invitation.service";
 import { findInvalidEmails } from "@modules/shared/domain/is-valid-email";
+import Label from "@modules/app/modules/ui/components/Label/Label";
 
 interface Invite {
   email: string;
@@ -119,7 +120,7 @@ export default function StepWorkspace({ onDone, onSkip }: Props) {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-body-medium text-heading">{t("onboarding.inviteMembers")}</label>
+            <Label>{t("onboarding.inviteMembers")}</Label>
             {remainingSlots !== null && (
               <span className="text-xs text-muted">
                 {remainingSlots} {t("onboarding.slotsRemaining")}

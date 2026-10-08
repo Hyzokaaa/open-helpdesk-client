@@ -5,13 +5,8 @@ import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { InstallationRetention, getInstallationRetention, updateInstallationRetention } from "../services/audit-log.service";
-import RetentionRow, { RetentionDraftRow, retentionRowValid } from "./RetentionRow";
-
-type Draft = Record<string, RetentionDraftRow>;
-
-function toDraft(days: Record<string, number | null>): Draft {
-  return Object.fromEntries(Object.entries(days).map(([c, d]) => [c, { value: d === null ? "" : String(d), forever: d === null }]));
-}
+import RetentionRow, { retentionRowValid } from "./RetentionRow";
+import useRetentionDraft from "../hooks/useRetentionDraft";
 
 /**
  * The installation's audit retention (system admins). Off until turned on here: turning it on
@@ -21,13 +16,13 @@ export default function AuditRetentionSettings() {
   const { t, lang } = useTranslation();
   const [settings, setSettings] = useState<InstallationRetention | null>(null);
   const [enabled, setEnabled] = useState(false);
-  const [draft, setDraft] = useState<Draft>({});
+  const { draft, reset, isChanged, setValue, setForever, daysOf } = useRetentionDraft();
   const [saving, setSaving] = useState(false);
 
   const load = (s: InstallationRetention) => {
     setSettings(s);
     setEnabled(s.enabled);
-    setDraft(toDraft(s.days));
+    reset(s.days);
   };
 
   useEffect(() => {
@@ -36,9 +31,7 @@ export default function AuditRetentionSettings() {
 
   if (!settings) return null;
 
-  const initial = toDraft(settings.days);
-  const changed = enabled !== settings.enabled || settings.categories.some((c) =>
-    draft[c]?.forever !== initial[c]?.forever || (!draft[c]?.forever && draft[c]?.value !== initial[c]?.value));
+  const changed = enabled !== settings.enabled || settings.categories.some(isChanged);
   const valid = settings.categories.every((c) => retentionRowValid(draft[c], settings.minDays, settings.maxDays));
   const defaultOf = (c: string) => settings.defaults[c] ?? 365;
   // The server runs it at a fixed hour of its own time zone; shown in the viewer's, with the zone named
@@ -46,10 +39,7 @@ export default function AuditRetentionSettings() {
 
   const save = async () => {
     const days: Record<string, number | null> = {};
-    for (const category of settings.categories) {
-      const row = draft[category];
-      days[category] = row?.forever ? null : Number(row?.value);
-    }
+    for (const category of settings.categories) days[category] = daysOf(category);
     setSaving(true);
     try {
       load(await updateInstallationRetention({ enabled, days }));
@@ -95,8 +85,8 @@ export default function AuditRetentionSettings() {
               max={settings.maxDays}
               fallback={defaultOf(category)}
               hint={t("auditRetention.default").replace("{days}", String(defaultOf(category)))}
-              onChange={(value) => setDraft({ ...draft, [category]: { value, forever: false } })}
-              onForeverChange={(forever) => setDraft({ ...draft, [category]: { value: row?.value || String(defaultOf(category)), forever } })}
+              onChange={(value) => setValue(category, value)}
+              onForeverChange={(forever) => setForever(category, forever, defaultOf(category))}
             />
           );
         })}

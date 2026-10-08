@@ -1,6 +1,7 @@
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import { CustomFieldDefinition } from "../domain/custom-field-types";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Props {
   definition: CustomFieldDefinition;
@@ -96,16 +97,7 @@ export default function CustomFieldRenderer({
 
     case "checkbox":
       return (
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={!!value}
-            onChange={(e) => onChange(e.target.checked)}
-            disabled={disabled}
-            className="rounded border-border-input"
-          />
-          <span className="text-sm text-body">{definition.name}</span>
-        </label>
+        <Checkbox checked={!!value} onChange={onChange} disabled={disabled} label={definition.name} />
       );
 
     default:

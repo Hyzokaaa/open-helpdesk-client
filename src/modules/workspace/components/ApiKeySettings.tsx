@@ -18,6 +18,7 @@ import {
   createApiKey,
   deleteApiKey,
 } from "../services/api-key.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Props {
   slug: string;
@@ -281,15 +282,13 @@ function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: s
                   <p className="text-exs text-muted mb-1">{group.label}</p>
                   <div className="space-y-1">
                     {group.scopes.map((scope) => (
-                      <label key={scope.value} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={scopes.includes(scope.value)}
-                          onChange={() => toggleScope(scope.value)}
-                          className="rounded border-gray-300 text-primary focus:ring-primary/50"
-                        />
-                        <span className="text-xs text-body">{scope.label}</span>
-                      </label>
+                      <Checkbox
+                        key={scope.value}
+                        size="xs"
+                        checked={scopes.includes(scope.value)}
+                        onChange={() => toggleScope(scope.value)}
+                        label={scope.label}
+                      />
                     ))}
                   </div>
                 </div>
@@ -297,31 +296,22 @@ function CreateApiKeyForm({ slug, onCreated, onClose, onDirtyChange }: { slug: s
 
               <div>
                 <p className="text-exs text-muted mb-1">{t("apiKeys.scopeGroupAuth")}</p>
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasExchange}
-                    onChange={() => toggleScope("auth:exchange")}
-                    className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/50"
-                  />
-                  <span>
-                    <span className="block text-xs text-body">{t("apiKeys.scopeAuthExchange")}</span>
-                    <span className="block text-exs text-muted">{t("apiKeys.scopeAuthExchangeHint")}</span>
-                  </span>
-                </label>
-                <label className={`flex items-start gap-2 ml-6 mt-2 ${hasExchange ? "cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
-                  <input
-                    type="checkbox"
-                    checked={hasAdminExchange}
-                    disabled={!hasExchange}
-                    onChange={() => toggleScope(ADMIN_EXCHANGE_SCOPE)}
-                    className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/50"
-                  />
-                  <span>
-                    <span className="block text-xs text-body">{t("apiKeys.scopeAuthExchangeAdmin")}</span>
-                    <span className="block text-exs text-muted">{t("apiKeys.scopeAuthExchangeAdminHint")}</span>
-                  </span>
-                </label>
+                <Checkbox
+                  size="xs"
+                  checked={hasExchange}
+                  onChange={() => toggleScope("auth:exchange")}
+                  label={t("apiKeys.scopeAuthExchange")}
+                  hint={t("apiKeys.scopeAuthExchangeHint")}
+                />
+                <Checkbox
+                  size="xs"
+                  className="ml-6 mt-2"
+                  checked={hasAdminExchange}
+                  disabled={!hasExchange}
+                  onChange={() => toggleScope(ADMIN_EXCHANGE_SCOPE)}
+                  label={t("apiKeys.scopeAuthExchangeAdmin")}
+                  hint={t("apiKeys.scopeAuthExchangeAdminHint")}
+                />
                 {hasAdminExchange && (
                   <div className="ml-6 mt-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                     <p className="text-exs text-amber-800 dark:text-amber-300">{t("apiKeys.scopeAuthExchangeAdminWarning")}</p>

@@ -13,6 +13,7 @@ import LanguageToggle from "@modules/app/components/LanguageToggle";
 import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -109,10 +110,7 @@ export default function LoginPage() {
                 />
               </FormInput>
 
-              <label className="flex items-center gap-2 cursor-pointer mb-2">
-                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 accent-primary" />
-                <span className="text-sm text-secondary-text font-body-medium">{t("login.rememberMe")}</span>
-              </label>
+              <Checkbox checked={rememberMe} onChange={setRememberMe} label={t("login.rememberMe")} className="mb-2" />
 
               <Button type="submit" full loading={loading} className="mt-2">
                 {t("login.signIn")}
