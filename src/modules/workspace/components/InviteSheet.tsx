@@ -7,7 +7,8 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
-import { createInvitationBatch, InvitationItem, listInvitations, resendInvitation } from "../services/invitation.service";
+import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
+import { resendInvitationAndNotify } from "./resend-invitation";
 import { getEmailSender } from "../services/email-sender.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -96,10 +97,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
     if (!invitation) return;
     setResendingIndex(index);
     try {
-      const result = await resendInvitation(workspaceSlug, invitation.id);
-      if (result.emailSent) toast.success(`${t("invitations.resent")}: ${invitation.email}`);
-      else if (result.emailFailure) toast.warning(describeEmailFailures([result.emailFailure], t)[0], { autoClose: 12000 });
-      else toast.success(t("invitations.createdNotSent"));
+      await resendInvitationAndNotify(workspaceSlug, invitation, t);
       const remaining = rows.filter((_, i) => i !== index);
       if (remaining.some((r) => r.email.trim())) {
         setRows(remaining);

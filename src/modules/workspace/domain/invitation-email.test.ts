@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeEmailFailures } from "./invitation-email";
+import { describeEmailFailures, describeResendFailure } from "./invitation-email";
 
 const texts: Record<string, string> = {
   "invitations.emailFailure.noEmailService.one": "Created, not emailed: no mail server.",
@@ -12,6 +12,8 @@ const texts: Record<string, string> = {
   "invitations.emailReason.timeout": "it did not answer",
   "invitations.emailVia.workspace": "workspace server",
   "invitations.emailVia.global": "installation server",
+  "invitations.emailFailure.resendFailed": "Renewed, but the {via} could not send it: {reason}.",
+  "invitations.emailFailure.resentNoEmailService": "Renewed. No mail server.",
 };
 const t = (key: string) => texts[key] ?? key;
 
@@ -40,5 +42,11 @@ describe("describeEmailFailures", () => {
 
   it("still says something when the server gave no reason", () => {
     expect(describeEmailFailures([{ reason: "send-failed", via: "global" }], t)).toEqual(["Created, but the installation server could not send it: no reason given."]);
+  });
+
+  it("says a failed resend renewed the invitation and where its new link is", () => {
+    expect(describeResendFailure({ reason: "send-failed", via: "workspace", code: "timeout", detail: "Connection timeout" }, "Link copied.", t))
+      .toBe("Renewed, but the workspace server could not send it: it did not answer. Link copied. (Detail: Connection timeout)");
+    expect(describeResendFailure({ reason: "no-email-service" }, "Link copied.", t)).toBe("Renewed. No mail server. Link copied.");
   });
 });

@@ -1,4 +1,4 @@
-import { describeEmailFailures } from "../domain/invitation-email";
+import { resendInvitationAndNotify } from "../components/resend-invitation";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
@@ -12,7 +12,6 @@ import {
   InvitationItem,
   listInvitations,
   cancelInvitation,
-  resendInvitation,
   getInvitationLink,
 } from "../services/invitation.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -127,20 +126,18 @@ export default function WorkspaceInvitationsPage() {
                           }
                         },
                       },
-                      ...(canSendEmail ? [{
-                        label: t("invitations.resend"),
+                      {
+                        // Without a mail server, resending still renews the invitation: the new link is copied instead
+                        label: canSendEmail ? t("invitations.resend") : t("invitations.renewAndCopy"),
                         onClick: async () => {
                           try {
-                            const result = await resendInvitation(workspaceSlug!, inv.id);
-                            if (result.emailSent) toast.success(t("invitations.resent"));
-                            else if (result.emailFailure) toast.warning(describeEmailFailures([result.emailFailure], t)[0], { autoClose: 12000 });
-                            else toast.success(t("invitations.createdNotSent"));
+                            await resendInvitationAndNotify(workspaceSlug!, inv, t);
                             fetchInvitations();
-                          } catch {
-                            toast.error(t("invitations.sendError"));
+                          } catch (err: any) {
+                            if (!err?.handled) toast.error(err?.message || t("invitations.sendError"));
                           }
                         },
-                      }] : []),
+                      },
                       {
                         label: t("invitations.cancel"),
                         onClick: () => setCancelId(inv.id),

@@ -19,6 +19,18 @@ const EXPLAINED_CODES = new Set([
  * and the inviter learns what to fix instead of only that "the link must be shared manually".
  */
 export function describeEmailFailures(failures: InvitationEmailFailure[], t: Translate): string[] {
+  return group(failures).map(({ failure, count }) => describe(failure, count, t, "created"));
+}
+
+/**
+ * A resend that did not leave: the invitation was renewed rather than created, and `linkNote` says
+ * where its new link is, since the one shared before stopped working.
+ */
+export function describeResendFailure(failure: InvitationEmailFailure, linkNote: string, t: Translate): string {
+  return describe(failure, 1, t, "resent", linkNote);
+}
+
+function group(failures: InvitationEmailFailure[]) {
   const groups = new Map<string, { failure: InvitationEmailFailure; count: number }>();
   for (const failure of failures) {
     const key = `${failure.reason}|${failure.via ?? ""}|${failure.code ?? ""}|${failure.detail ?? ""}`;
@@ -26,23 +38,29 @@ export function describeEmailFailures(failures: InvitationEmailFailure[], t: Tra
     if (group) group.count++;
     else groups.set(key, { failure, count: 1 });
   }
+  return [...groups.values()];
+}
 
-  return [...groups.values()].map(({ failure, count }) => {
-    const plural = count === 1 ? "one" : "other";
-    if (failure.reason === "no-email-service") {
-      return t(`invitations.emailFailure.noEmailService.${plural}`).replace("{count}", String(count));
-    }
+function describe(failure: InvitationEmailFailure, count: number, t: Translate, mode: "created" | "resent", linkNote?: string): string {
+  const plural = count === 1 ? "one" : "other";
+  if (failure.reason === "no-email-service") {
+    return mode === "resent"
+      ? `${t("invitations.emailFailure.resentNoEmailService")} ${linkNote ?? ""}`.trim()
+      : t(`invitations.emailFailure.noEmailService.${plural}`).replace("{count}", String(count));
+  }
 
-    const explained = failure.code && EXPLAINED_CODES.has(failure.code);
-    const reason = explained
-      ? t(`invitations.emailReason.${failure.code}`)
-      : failure.detail || t("invitations.emailFailure.noDetail");
-    const line = t(`invitations.emailFailure.sendFailed.${plural}`)
+  const explained = failure.code && EXPLAINED_CODES.has(failure.code);
+  const reason = explained
+    ? t(`invitations.emailReason.${failure.code}`)
+    : failure.detail || t("invitations.emailFailure.noDetail");
+  const sentence = mode === "resent" ? "invitations.emailFailure.resendFailed" : `invitations.emailFailure.sendFailed.${plural}`;
+  const line = [
+    t(sentence)
       .replace("{count}", String(count))
       .replace("{via}", t(failure.via === "workspace" ? "invitations.emailVia.workspace" : "invitations.emailVia.global"))
-      .replace("{reason}", reason);
-    return explained && failure.detail
-      ? `${line} ${t("invitations.emailFailure.detail").replace("{detail}", failure.detail)}`
-      : line;
-  });
+      .replace("{reason}", reason),
+    linkNote,
+    explained && failure.detail ? t("invitations.emailFailure.detail").replace("{detail}", failure.detail) : null,
+  ];
+  return line.filter(Boolean).join(" ");
 }
