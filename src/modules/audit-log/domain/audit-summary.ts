@@ -222,3 +222,40 @@ export function formatChange(change: FieldChange): string {
 export function isCommentAction(action: string): boolean {
   return action === "comment-created" || action === "comment-edited" || action === "portal-comment-created";
 }
+
+const EMAIL_ACTIONS = new Set(["email-sent", "email-send-failed"]);
+
+/** Whether an entry records an email, sent or not */
+export function isEmailAction(action: string): boolean {
+  return EMAIL_ACTIONS.has(action);
+}
+
+function emailList(value: unknown, t: Translate, shown = 2): string {
+  const emails = (Array.isArray(value) ? value : [value]).filter((e): e is string => typeof e === "string" && !!e);
+  if (emails.length <= shown) return emails.join(", ");
+  return `${emails.slice(0, shown).join(", ")} ${t("invitations.andMore").replace("{count}", String(emails.length - shown))}`;
+}
+
+/**
+ * One line for an email entry: who it was for, what it was about and, when it did not leave, why.
+ * "To: a@x.com · TK-000003 Printer broken · No mail server configured"
+ */
+export function emailSummary(metadata: Record<string, unknown>, failed: boolean, t: Translate): string {
+  const parts: string[] = [];
+  const to = emailList(metadata.to, t);
+  if (to) parts.push(`${t("auditLog.summary.to")}: ${to}`);
+
+  const ticket = [metadata.ticketReference, metadata.ticketName].filter((v) => typeof v === "string" && v).join(" ");
+  if (ticket) parts.push(ticket);
+  else if (typeof metadata.subject === "string" && metadata.subject) parts.push(metadata.subject);
+
+  if (failed) {
+    const reasonKey = `auditLog.reason.${String(metadata.reason ?? "")}`;
+    const reason = metadata.reason && t(reasonKey) !== reasonKey ? t(reasonKey) : null;
+    const error = typeof metadata.error === "string" ? metadata.error.slice(0, 80) : null;
+    // The plain reason, then the server's words when there are any
+    const why = [reason, error].filter(Boolean).join(": ");
+    if (why) parts.push(why);
+  }
+  return parts.join(" · ");
+}

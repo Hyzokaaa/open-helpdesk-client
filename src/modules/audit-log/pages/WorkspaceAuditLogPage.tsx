@@ -17,7 +17,7 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
-import { commentPreview, describeChanges, fieldLabel, formatChange, isCommentAction, type ReferenceNames } from "../domain/audit-summary";
+import { commentPreview, describeChanges, emailSummary, fieldLabel, formatChange, isCommentAction, isEmailAction, type ReferenceNames } from "../domain/audit-summary";
 import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 import { listDepartments } from "@modules/department/services/department.service";
 import { listProjects, listCategories } from "@modules/project/services/project.service";
@@ -494,6 +494,12 @@ export function HighlightText({ text, search }: { text: string; search?: string 
 
 export function MetadataSummary({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
+
+  // Emails read as who and what, not as the record's internal fields
+  if (isEmailAction(action)) {
+    const line = emailSummary(metadata, action === "email-send-failed", t) || "—";
+    return <span className="text-xs text-muted">{search ? <HighlightText text={line} search={search} /> : line}</span>;
+  }
 
   const parts: string[] = [];
 
