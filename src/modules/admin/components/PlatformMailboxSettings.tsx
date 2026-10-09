@@ -1,3 +1,4 @@
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -174,7 +175,7 @@ function MailboxForm({
   const [pollInterval, setPollInterval] = useState(String(mailbox?.pollInterval ?? "30"));
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -192,7 +193,7 @@ function MailboxForm({
         imapPass: imapPass || "__keep__",
         encryption,
       });
-      setTestResult({ success: result.success, error: result.error });
+      setTestResult({ success: result.success, error: result.error, errorCode: result.errorCode });
       if (result.success && result.folders && result.folders.length > 0) {
         setFolders(result.folders);
         if (!result.folders.includes(imapFolder)) {
@@ -291,9 +292,7 @@ function MailboxForm({
           {t("mailbox.testConnection")}
         </Button>
         {testResult && (
-          <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-            {testResult.success ? t("mailbox.testSuccess") : testResult.error || t("mailbox.testFailed")}
-          </span>
+          <ConnectionTestResult result={testResult} protocol="imap" host={imapHost} port={imapPort} successText={t("mailbox.testSuccess")} failedText={t("mailbox.testFailed")} />
         )}
       </div>
 

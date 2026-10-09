@@ -1,3 +1,4 @@
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
@@ -371,7 +372,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   const [newAddress, setNewAddress] = useState('');
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -417,7 +418,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
         encryption,
         ...(isEdit && mailbox ? { mailboxId: mailbox.id } : {}),
       });
-      setTestResult({ success: result.success, error: result.error });
+      setTestResult({ success: result.success, error: result.error, errorCode: result.errorCode });
       if (result.success && result.folders.length > 0) {
         setFolders(result.folders);
         if (!result.folders.includes(imapFolder)) {
@@ -530,9 +531,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
             {t("mailbox.testConnection")}
           </Button>
           {testResult && (
-            <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-              {testResult.success ? t("mailbox.testSuccess") : testResult.error || t("mailbox.testFailed")}
-            </span>
+            <ConnectionTestResult result={testResult} protocol="imap" host={imapHost} port={imapPort} successText={t("mailbox.testSuccess")} failedText={t("mailbox.testFailed")} />
           )}
         </div>
 
