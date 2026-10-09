@@ -171,6 +171,9 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   const [password, setPassword] = useState("");
   const [smtpHost, setSmtpHost] = useState(sender?.smtpHost || "");
   const [smtpPort, setSmtpPort] = useState(String(sender?.smtpPort ?? "587"));
+  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
+  const smtpHostRef = useRef(smtpHost);
+  smtpHostRef.current = smtpHost;
   const [encryption, setEncryption] = useState(sender?.encryption ?? "tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -199,7 +202,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
     const timeout = setTimeout(() => {
       resolveMailServer(slug, domain)
         .then((res) => {
-          if (res.smtp && !smtpHost) {
+          if (res.smtp && !smtpHostRef.current) {
             setSmtpHost(res.smtp.host);
             setSrvHost(res.smtp.host);
           }

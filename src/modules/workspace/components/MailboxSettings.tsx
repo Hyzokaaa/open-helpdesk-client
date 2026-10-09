@@ -350,6 +350,9 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   const [address, setAddress] = useState(mailbox?.address ?? "");
   const [imapHost, setImapHost] = useState(mailbox?.imapHost ?? "");
   const [imapPort, setImapPort] = useState(String(mailbox?.imapPort ?? "993"));
+  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
+  const imapHostRef = useRef(imapHost);
+  imapHostRef.current = imapHost;
   const [imapUser, setImapUser] = useState(mailbox?.imapUser ?? "");
   const [imapPass, setImapPass] = useState("");
   const [imapFolder, setImapFolder] = useState(mailbox?.imapFolder ?? "INBOX");
@@ -387,7 +390,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     const timeout = setTimeout(() => {
       resolveMailServer(slug, domain)
         .then((res) => {
-          if (res.imap && !imapHost) {
+          if (res.imap && !imapHostRef.current) {
             setImapHost(res.imap.host);
             if (res.imap.port) setImapPort(String(res.imap.port));
           }
