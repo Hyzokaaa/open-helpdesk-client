@@ -1,3 +1,4 @@
+import { describeEmailFailures, InvitationEmailFailure } from "../domain/invitation-email";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -120,15 +121,14 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
         validRows.map((r) => ({ email: r.email.trim(), role: r.role })),
       );
       const created = results.filter((r) => r.status === "sent");
-      const emailed = created.filter((r) => (r as any).emailSent).length;
+      const emailed = created.filter((r) => r.emailSent).length;
       const errors = results.filter((r) => r.status === "error");
-      if (created.length > 0) {
-        if (emailed > 0) {
-          toast.success(`${emailed} ${t("invitations.sent")}`);
-        } else {
-          toast.success(`${created.length} ${t("invitations.createdNotSent")}`);
-        }
-      }
+      if (emailed > 0) toast.success(`${emailed} ${t("invitations.sent")}`);
+      // Created but not emailed: say why, so the inviter knows what to fix besides sharing the link
+      const notEmailed = created.filter((r) => !r.emailSent);
+      const failures = notEmailed.map((r) => r.emailFailure).filter((f): f is InvitationEmailFailure => !!f);
+      for (const line of describeEmailFailures(failures, t)) toast.warning(line, { autoClose: 12000 });
+      if (notEmailed.length > failures.length) toast.success(`${notEmailed.length - failures.length} ${t("invitations.createdNotSent")}`);
       for (const err of errors) {
         toast.error(`${err.email}: ${err.error}`);
       }

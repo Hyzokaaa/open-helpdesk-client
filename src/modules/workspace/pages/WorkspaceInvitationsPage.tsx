@@ -1,3 +1,4 @@
+import { describeEmailFailures } from "../domain/invitation-email";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
@@ -131,7 +132,9 @@ export default function WorkspaceInvitationsPage() {
                         onClick: async () => {
                           try {
                             const result = await resendInvitation(workspaceSlug!, inv.id);
-                            toast.success(result.emailSent ? t("invitations.resent") : t("invitations.createdNotSent"));
+                            if (result.emailSent) toast.success(t("invitations.resent"));
+                            else if (result.emailFailure) toast.warning(describeEmailFailures([result.emailFailure], t)[0], { autoClose: 12000 });
+                            else toast.success(t("invitations.createdNotSent"));
                             fetchInvitations();
                           } catch {
                             toast.error(t("invitations.sendError"));
