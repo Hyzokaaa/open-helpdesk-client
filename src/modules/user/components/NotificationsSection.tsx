@@ -20,6 +20,8 @@ const EVENT_KEYS = [
   { key: "TicketUnassigned", labelKey: "notifications.ticketUnassigned", inAppOnly: true },
   { key: "CommentCreated", labelKey: "notifications.commentCreated" },
   { key: "TransferRequest", labelKey: "notifications.transferRequest" },
+  // In-app only: tells whoever invited someone that the link stopped working
+  { key: "InvitationExpired", labelKey: "notifications.invitationExpired", inAppOnly: true },
 ] as const;
 
 const EMAIL_ONLY_KEYS = [

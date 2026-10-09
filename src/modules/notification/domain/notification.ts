@@ -25,5 +25,6 @@ export interface NotificationPreferences {
   inAppTransferRequest: boolean;
   emailUpgradeAvailable: boolean;
   inAppUpgradeAvailable: boolean;
+  inAppInvitationExpired: boolean;
   bellUnreadOnly: boolean;
 }
