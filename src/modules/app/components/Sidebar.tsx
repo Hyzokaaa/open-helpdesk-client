@@ -183,16 +183,14 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
           <Spinner width={16} />
         </div>
       ) : isLocked || isSingleWorkspace ? (
-        <div className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-card">
+        // Nothing to switch to: a single discreet line naming the workspace
+        <div className="w-full flex items-center gap-2 px-4 py-2 border-b border-border-card">
           {activeWs && (
-            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <span className="text-xs font-body-bold text-primary">{initials(activeWs.name)}</span>
+            <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="text-exs font-body-bold text-primary">{initials(activeWs.name)}</span>
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-body-bold text-heading truncate">{activeWs?.name}</p>
-            <p className="text-exs text-subtle font-body-medium truncate">{activeWs?.slug}</p>
-          </div>
+          <p className="flex-1 min-w-0 text-xs font-body-semibold text-heading truncate">{activeWs?.name}</p>
         </div>
       ) : (
       <div ref={wsSwitcherRef} className="relative">
@@ -211,7 +209,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
             {activeWs ? (
               <>
                 <p className="text-sm font-body-bold text-heading truncate">{activeWs.name}</p>
-                <p className="text-exs text-subtle font-body-medium truncate">{activeWs.slug}</p>
+                {/* The slug is an address, not a name; what this line needs to say is that it switches */}
+                <p className="text-exs text-subtle font-body-medium truncate">{t("sidebar.switchWorkspace")}</p>
               </>
             ) : (
               <p className="text-sm font-body-medium text-subtle">

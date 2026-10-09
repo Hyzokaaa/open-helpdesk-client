@@ -26,6 +26,7 @@ const translations = {
   "sidebar.system": { en: "System", es: "Sistema" },
   "sidebar.administration": { en: "Administration", es: "Administración" },
   "sidebar.selectWorkspace": { en: "Select workspace", es: "Seleccionar espacio" },
+  "sidebar.switchWorkspace": { en: "Switch workspace", es: "Cambiar de espacio" },
   "sidebar.createWorkspace": { en: "Create your workspace", es: "Crea tu espacio" },
   // Invitations
   "invitations.pageTitle": { en: "Invitations", es: "Invitaciones" },
