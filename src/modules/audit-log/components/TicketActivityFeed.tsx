@@ -4,7 +4,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { WorkspaceMember } from "@modules/workspace/services/workspace.service";
-import { AuditLogItem, listAuditLog } from "../services/audit-log.service";
+import { AuditLogItem, listTicketActivity } from "../services/audit-log.service";
 import { commentPreview, describeChanges, formatChange } from "../domain/audit-summary";
 
 const COLLAPSED_COUNT = 5;
@@ -26,13 +26,8 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    listAuditLog(workspaceSlug, {
-      entityTypes: ["ticket"],
-      entityId: ticketId,
-      sortOrder: "ASC",
-      limit: 100,
-    }, { silent: true })
-      .then((res) => { setItems(res.items); setLocked(false); })
+    listTicketActivity(workspaceSlug, ticketId)
+      .then((res) => { setItems(res); setLocked(false); })
       .catch((err) => { if (isPlanLimitError(err)) setLocked(true); })
       .finally(() => setLoading(false));
   }, [workspaceSlug, ticketId, refreshKey]);

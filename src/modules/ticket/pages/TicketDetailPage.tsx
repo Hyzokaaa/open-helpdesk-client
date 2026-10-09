@@ -472,12 +472,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             >
               {t("ticketDetail.tabDetails")}
             </button>
-            <button
-              className={`px-4 py-2 text-sm font-body-semibold cursor-pointer border-b-2 transition-colors ${detailTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted hover:text-heading"}`}
-              onClick={() => setDetailTab("activity")}
-            >
-              {t("ticketDetail.tabActivity")}
-            </button>
+            {can(P.TICKET_ACTIVITY_VIEW) && (
+              <button
+                className={`px-4 py-2 text-sm font-body-semibold cursor-pointer border-b-2 transition-colors ${detailTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted hover:text-heading"}`}
+                onClick={() => setDetailTab("activity")}
+              >
+                {t("ticketDetail.tabActivity")}
+              </button>
+            )}
           </div>
 
           {detailTab === "details" ? (

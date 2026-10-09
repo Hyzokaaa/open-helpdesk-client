@@ -63,6 +63,18 @@ export async function listAuditLog(
   return res.data;
 }
 
+/** The activity of one ticket, open to whoever can see the ticket, not only to audit log readers */
+export async function listTicketActivity(
+  workspaceSlug: string,
+  ticketId: string,
+): Promise<AuditLogItem[]> {
+  const res = await http.get<AuditLogItem[]>(
+    `/workspaces/${workspaceSlug}/tickets/${ticketId}/activity`,
+    { headers: { 'X-Silent-Errors': 'true' } },
+  );
+  return res.data;
+}
+
 export async function listAllAuditLog(
   filters: AuditLogFilters = {},
 ): Promise<PaginatedResult<AuditLogItem>> {
