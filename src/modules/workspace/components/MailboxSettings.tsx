@@ -108,11 +108,38 @@ export default function MailboxSettings({ slug }: Props) {
     }
   };
 
-  const handleSaved = async () => {
+  const handleSaved = async (created?: MailboxDto) => {
     const updated = await listMailboxes(slug);
     setMailboxes(updated);
     setShowSheet(false);
     setEditMailbox(null);
+    // New mailboxes start paused: say so, or it reads as a mailbox that silently fails to fetch mail
+    if (created && !created.isActive) notifyCreatedPaused(created);
+  };
+
+  const notifyCreatedPaused = (created: MailboxDto) => {
+    const toastId = toast.info(
+      <div>
+        <p>{t("mailbox.createdPaused").replace("{address}", created.address)}</p>
+        <button
+          type="button"
+          className="mt-2 text-xs font-body-semibold text-primary hover:underline cursor-pointer"
+          onClick={async () => {
+            toast.dismiss(toastId);
+            try {
+              await resumeMailbox(slug, created.id);
+              setMailboxes((prev) => prev.map((mb) => mb.id === created.id ? { ...mb, isActive: true, lastSyncAt: null } : mb));
+              toast.success(t("mailbox.activated").replace("{address}", created.address));
+            } catch (err: any) {
+              if (!err?.handled) toast.error(err?.message || t("mailbox.createError"));
+            }
+          }}
+        >
+          {t("mailbox.activateNow")}
+        </button>
+      </div>,
+      { autoClose: 20000, closeOnClick: false },
+    );
   };
 
   const handleDelete = async () => {
@@ -347,7 +374,7 @@ function AddressModePicker({ value, onChange, t }: {
   );
 }
 
-export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
+export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: (created?: MailboxDto) => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
@@ -446,6 +473,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     if (!canSave) return;
 
     setSaving(true);
+    let created: MailboxDto | undefined;
     try {
       if (isEdit) {
         await updateMailbox(slug, mailbox!.id, {
@@ -464,7 +492,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       } else {
-        await createMailbox(slug, {
+        created = await createMailbox(slug, {
           address: address.trim(),
           imapHost: imapHost.trim(),
           imapPort: parseInt(imapPort) || 993,
@@ -480,8 +508,10 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       }
-      toast.success(isEdit ? t("mailbox.updated") : t("mailbox.created"));
-      onSaved();
+      // A new mailbox gets its own notice from the list, which knows whether it starts paused
+      if (isEdit) toast.success(t("mailbox.updated"));
+      else if (created?.isActive) toast.success(t("mailbox.created"));
+      onSaved(created);
     } catch (err: unknown) {
       if (onPlanLimit(err)) return;
       const error = err as { message?: string };
