@@ -200,7 +200,8 @@ export default function WorkspaceContactsPage() {
           workspaceSlug={workspaceSlug}
           fixedRole="user"
           onClose={() => setShowInvite(false)}
-          onSent={fetchContacts}
+          // What was just invited shows on the invitations page, not here
+          onSent={() => navigate(`/dashboard/workspaces/${workspaceSlug}/invitations`)}
         />
       )}
 

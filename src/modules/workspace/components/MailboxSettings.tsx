@@ -1,3 +1,6 @@
+import { mailboxSaveBlocker } from "@modules/workspace/domain/mailbox-save";
+import { HttpResponseError } from "@modules/app/modules/http/domain/http";
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
@@ -26,6 +29,7 @@ import {
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
 import { resolveMailServer } from "../services/email-sender.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 function mailboxStatusColor(m: MailboxDto): string {
   if (m.type === "webhook") return "bg-green-500";
@@ -104,11 +108,38 @@ export default function MailboxSettings({ slug }: Props) {
     }
   };
 
-  const handleSaved = async () => {
+  const handleSaved = async (created?: MailboxDto) => {
     const updated = await listMailboxes(slug);
     setMailboxes(updated);
     setShowSheet(false);
     setEditMailbox(null);
+    // New mailboxes start paused: say so, or it reads as a mailbox that silently fails to fetch mail
+    if (created && !created.isActive) notifyCreatedPaused(created);
+  };
+
+  const notifyCreatedPaused = (created: MailboxDto) => {
+    const toastId = toast.info(
+      <div>
+        <p>{t("mailbox.createdPaused").replace("{address}", created.address)}</p>
+        <button
+          type="button"
+          className="mt-2 text-xs font-body-semibold text-primary hover:underline cursor-pointer"
+          onClick={async () => {
+            toast.dismiss(toastId);
+            try {
+              await resumeMailbox(slug, created.id);
+              setMailboxes((prev) => prev.map((mb) => mb.id === created.id ? { ...mb, isActive: true, lastSyncAt: null } : mb));
+              toast.success(t("mailbox.activated").replace("{address}", created.address));
+            } catch (err: any) {
+              if (!err?.handled) toast.error(err?.message || t("mailbox.createError"));
+            }
+          }}
+        >
+          {t("mailbox.activateNow")}
+        </button>
+      </div>,
+      { autoClose: 20000, closeOnClick: false },
+    );
   };
 
   const handleDelete = async () => {
@@ -343,12 +374,15 @@ function AddressModePicker({ value, onChange, t }: {
   );
 }
 
-export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: () => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
+export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: (created?: MailboxDto) => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
   const [imapHost, setImapHost] = useState(mailbox?.imapHost ?? "");
   const [imapPort, setImapPort] = useState(String(mailbox?.imapPort ?? "993"));
+  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
+  const imapHostRef = useRef(imapHost);
+  imapHostRef.current = imapHost;
   const [imapUser, setImapUser] = useState(mailbox?.imapUser ?? "");
   const [imapPass, setImapPass] = useState("");
   const [imapFolder, setImapFolder] = useState(mailbox?.imapFolder ?? "INBOX");
@@ -367,7 +401,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   const [newAddress, setNewAddress] = useState('');
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -386,7 +420,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     const timeout = setTimeout(() => {
       resolveMailServer(slug, domain)
         .then((res) => {
-          if (res.imap && !imapHost) {
+          if (res.imap && !imapHostRef.current) {
             setImapHost(res.imap.host);
             if (res.imap.port) setImapPort(String(res.imap.port));
           }
@@ -399,7 +433,13 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   // A port that is not a whole number in range is reported instead of silently replaced by 993
   const portValid = /^\d+$/.test(imapPort.trim()) && Number(imapPort) >= 1 && Number(imapPort) <= 65535;
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit) && portValid;
+  // A result describes the details it was run with: once they change it no longer applies, nor unlocks saving
+  useEffect(() => {
+    setTestResult(null);
+  }, [imapHost, imapPort, imapUser, imapPass, encryption]);
+
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
+  const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 
   const handleTest = async () => {
     setTesting(true);
@@ -413,15 +453,16 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
         encryption,
         ...(isEdit && mailbox ? { mailboxId: mailbox.id } : {}),
       });
-      setTestResult({ success: result.success, error: result.error });
+      setTestResult({ success: result.success, error: result.error, errorCode: result.errorCode });
       if (result.success && result.folders.length > 0) {
         setFolders(result.folders);
         if (!result.folders.includes(imapFolder)) {
           setImapFolder(result.folders[0]);
         }
       }
-    } catch {
-      setTestResult({ success: false, error: t("mailbox.testFailed") });
+    } catch (err) {
+      // A refused request (validation, permission, plan, server down) says why; that is what to show
+      setTestResult({ success: false, error: (err as HttpResponseError).message || t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -432,6 +473,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
     if (!canSave) return;
 
     setSaving(true);
+    let created: MailboxDto | undefined;
     try {
       if (isEdit) {
         await updateMailbox(slug, mailbox!.id, {
@@ -450,7 +492,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       } else {
-        await createMailbox(slug, {
+        created = await createMailbox(slug, {
           address: address.trim(),
           imapHost: imapHost.trim(),
           imapPort: parseInt(imapPort) || 993,
@@ -466,8 +508,10 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           postProcessFolder: postProcessAction === 'move' ? postProcessFolder.trim() || null : null,
         });
       }
-      toast.success(isEdit ? t("mailbox.updated") : t("mailbox.created"));
-      onSaved();
+      // A new mailbox gets its own notice from the list, which knows whether it starts paused
+      if (isEdit) toast.success(t("mailbox.updated"));
+      else if (created?.isActive) toast.success(t("mailbox.created"));
+      onSaved(created);
     } catch (err: unknown) {
       if (onPlanLimit(err)) return;
       const error = err as { message?: string };
@@ -526,9 +570,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
             {t("mailbox.testConnection")}
           </Button>
           {testResult && (
-            <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-              {testResult.success ? t("mailbox.testSuccess") : testResult.error || t("mailbox.testFailed")}
-            </span>
+            <ConnectionTestResult result={testResult} protocol="imap" host={imapHost} port={imapPort} successText={t("mailbox.testSuccess")} failedText={t("mailbox.testFailed")} />
           )}
         </div>
 
@@ -620,16 +662,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
         )}
 
         <div className="border-t border-border-card my-4" />
-        <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
-          <input
-            type="checkbox"
-            checked={autoReply}
-            onChange={(e) => setAutoReply(e.target.checked)}
-            className="w-4 h-4 accent-primary"
-          />
-          {t("mailbox.autoReply")}
-        </label>
-        <p className="text-exs text-muted mt-1 mb-4">{t("mailbox.autoReplyDesc")}</p>
+        <Checkbox checked={autoReply} onChange={setAutoReply} label={t("mailbox.autoReply")} hint={t("mailbox.autoReplyDesc")} className="mb-4" />
 
         <div className="border-t border-border-card my-4" />
         <FormInput label={t("mailbox.postProcess")} className="!mb-1">
@@ -653,6 +686,7 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
             {isEdit ? t("mailbox.save") : t("mailbox.add")}
           </Button>
+          {saveBlocker && <p className="text-exs text-muted text-center mt-2">{t(`mailbox.saveBlocked.${saveBlocker}` as any)}</p>}
         </div>
       </form>
     </div>

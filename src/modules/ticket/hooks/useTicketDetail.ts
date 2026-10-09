@@ -62,7 +62,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
   const [loading, setLoading] = useState(true);
   const [activityKey, setActivityKey] = useState(0);
 
-  const { can } = usePermissions(workspaceSlug);
+  const { can, loading: permLoading } = usePermissions(workspaceSlug);
 
   const fetchTicket = (refreshActivity = false) => {
     if (!workspaceSlug || !ticketId) return;
@@ -95,21 +95,26 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchTicket();
     fetchComments();
     fetchAttachments();
-    if (workspaceSlug) {
-      // Customers cannot list members (403); their ticket names come from the ticket itself
-      listMembers(workspaceSlug).then(setMembers).catch(() => {});
-      listTags(workspaceSlug).then(setWorkspaceTags);
-      listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
-      listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});
-      listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
-      listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
-      listProjects(workspaceSlug).then(setWsProjects).catch(() => {});
+    fetchParticipants();
+  }, [workspaceSlug, ticketId]);
+
+  // Only the lists this member may read: a refused request is recorded as a denied access.
+  // Customers get their ticket's names from the ticket itself.
+  useEffect(() => {
+    if (!workspaceSlug || permLoading) return;
+    if (can(P.WORKSPACE_MEMBERS_VIEW)) listMembers(workspaceSlug).then(setMembers).catch(() => {});
+    if (can(P.TAG_VIEW)) listTags(workspaceSlug).then(setWorkspaceTags).catch(() => {});
+    if (can(P.DEPARTMENT_VIEW)) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
+    if (can(P.ORGANIZATION_VIEW)) listOrganizations(workspaceSlug).then(setOrganizations).catch(() => {});
+    listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
+    listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
+    if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setWsProjects).catch(() => {});
+    if (can(P.WORKSPACE_SETTINGS_MANAGE)) {
       getSlaPolicy(workspaceSlug, { silent: true })
         .then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); })
         .catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });
     }
-    fetchParticipants();
-  }, [workspaceSlug, ticketId]);
+  }, [workspaceSlug, permLoading]);
 
   useEffect(() => {
     if (workspaceSlug && can(P.CANNED_RESPONSE_VIEW)) {

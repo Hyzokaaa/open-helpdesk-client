@@ -1,3 +1,5 @@
+import { HttpResponseError } from "@modules/app/modules/http/domain/http";
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -171,10 +173,13 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   const [password, setPassword] = useState("");
   const [smtpHost, setSmtpHost] = useState(sender?.smtpHost || "");
   const [smtpPort, setSmtpPort] = useState(String(sender?.smtpPort ?? "587"));
+  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
+  const smtpHostRef = useRef(smtpHost);
+  smtpHostRef.current = smtpHost;
   const [encryption, setEncryption] = useState(sender?.encryption ?? "tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
 
   const isDirty = isEdit
     ? fromName !== (sender?.fromName || "") || fromEmail !== (sender?.fromEmail || "") || smtpLogin !== (sender?.smtpUser || "") || password !== "" || smtpHost !== (sender?.smtpHost || "") || smtpPort !== String(sender?.smtpPort ?? "587") || encryption !== (sender?.encryption ?? "tls")
@@ -190,7 +195,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
 
   useEffect(() => {
     setTestResult(null);
-  }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
+  }, [smtpLogin, password, smtpHost, srvHost, smtpPort, encryption]);
 
   useEffect(() => {
     if (smtpHost || !smtpLogin.includes("@")) return;
@@ -199,7 +204,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
     const timeout = setTimeout(() => {
       resolveMailServer(slug, domain)
         .then((res) => {
-          if (res.smtp && !smtpHost) {
+          if (res.smtp && !smtpHostRef.current) {
             setSmtpHost(res.smtp.host);
             setSrvHost(res.smtp.host);
           }
@@ -224,8 +229,9 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
         encryption,
       });
       setTestResult(result);
-    } catch {
-      setTestResult({ success: false, error: t("emailSender.testFailed") });
+    } catch (err) {
+      // A refused request (validation, permission, plan, server down) says why; that is what to show
+      setTestResult({ success: false, error: (err as HttpResponseError).message || t("emailSender.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -317,9 +323,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
             {t("emailSender.test")}
           </Button>
           {testResult && (
-            <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-              {testResult.success ? t("emailSender.testSuccess") : testResult.error || t("emailSender.testFailed")}
-            </span>
+            <ConnectionTestResult result={testResult} protocol="smtp" host={resolvedHost} port={smtpPort} successText={t("emailSender.testSuccess")} failedText={t("emailSender.testFailed")} />
           )}
           {!testResult && !isEdit && (
             <span className="text-exs text-muted">{t("emailSender.testRequired")}</span>

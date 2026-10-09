@@ -1,3 +1,4 @@
+import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface MailboxDto {
@@ -81,6 +82,7 @@ export interface TestConnectionResult {
   success: boolean;
   folders: string[];
   error?: string;
+  errorCode?: ConnectionErrorCode;
 }
 
 export async function testMailboxConnection(

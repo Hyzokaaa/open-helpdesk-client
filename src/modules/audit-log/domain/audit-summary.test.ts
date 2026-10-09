@@ -3,6 +3,7 @@ import translations from "@modules/app/i18n/translations";
 import {
   commentPreview,
   describeChanges,
+  emailSummary,
   fieldLabel,
   formatChange,
   formatChangeValue,
@@ -135,5 +136,31 @@ describe("ticket update changes", () => {
       "Site ID: — → 7",
       "Share usage: Yes → No",
     ]);
+  });
+});
+
+describe("emailSummary", () => {
+  const texts: Record<string, string> = {
+    "auditLog.summary.to": "To",
+    "auditLog.reason.no-email-service": "Not sent: no mail server configured",
+    "auditLog.reason.send-failed": "The mail server refused or failed the send",
+    "invitations.andMore": "and {count} more",
+  };
+  const tr = (key: string) => texts[key] ?? key;
+
+  it("says who a sent email was for and which ticket it was about", () => {
+    expect(emailSummary({ to: ["a@x.com"], ticketReference: "TK-000003", ticketName: "Printer broken", subject: "New ticket" }, false, tr))
+      .toBe("To: a@x.com · TK-000003 Printer broken");
+  });
+
+  it("falls back to the subject when the email is not about a ticket", () => {
+    expect(emailSummary({ to: ["a@x.com"], subject: "You've been invited to a workspace" }, false, tr))
+      .toBe("To: a@x.com · You've been invited to a workspace");
+  });
+
+  it("adds why a failed email did not leave, with the server's words", () => {
+    expect(emailSummary({ to: ["a@x.com", "b@x.com", "c@x.com"], ticketName: "Printer", reason: "send-failed", error: "Invalid login: 535" }, true, tr))
+      .toBe("To: a@x.com, b@x.com and 1 more · Printer · The mail server refused or failed the send: Invalid login: 535");
+    expect(emailSummary({ to: "a@x.com", reason: "no-email-service" }, true, tr)).toBe("To: a@x.com · Not sent: no mail server configured");
   });
 });

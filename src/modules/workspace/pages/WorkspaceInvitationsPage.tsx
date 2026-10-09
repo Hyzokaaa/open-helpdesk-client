@@ -1,3 +1,4 @@
+import { resendInvitationAndNotify } from "../components/resend-invitation";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
@@ -11,7 +12,6 @@ import {
   InvitationItem,
   listInvitations,
   cancelInvitation,
-  resendInvitation,
   getInvitationLink,
 } from "../services/invitation.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -103,10 +103,14 @@ export default function WorkspaceInvitationsPage() {
                     <StatusBadge label={tEnum("role", inv.role)} color={roleColor(inv.role)} size="xs" />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-muted">{formatDate(inv.expiresAt)}</span>
+                    {new Date(inv.expiresAt).getTime() <= Date.now() ? (
+                      <span className="text-xs text-danger">{t("invitations.expired")} · {formatDate(inv.expiresAt)}</span>
+                    ) : (
+                      <span className="text-xs text-muted">{formatDate(inv.expiresAt)}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-muted">{formatDate(inv.createdAt)}</span>
+                    <span className="text-xs text-muted" title={`${t("invitations.createdOn")} ${formatDate(inv.createdAt)}`}>{formatDate(inv.lastSentAt ?? inv.createdAt)}</span>
                   </td>
                   <td className="px-2 py-3">
                     <ActionMenu items={[
@@ -122,18 +126,18 @@ export default function WorkspaceInvitationsPage() {
                           }
                         },
                       },
-                      ...(canSendEmail ? [{
-                        label: t("invitations.resend"),
+                      {
+                        // Without a mail server, resending still renews the invitation: the new link is copied instead
+                        label: canSendEmail ? t("invitations.resend") : t("invitations.renewAndCopy"),
                         onClick: async () => {
                           try {
-                            const result = await resendInvitation(workspaceSlug!, inv.id);
-                            toast.success(result.emailSent ? t("invitations.resent") : t("invitations.createdNotSent"));
+                            await resendInvitationAndNotify(workspaceSlug!, inv, t);
                             fetchInvitations();
-                          } catch {
-                            toast.error(t("invitations.sendError"));
+                          } catch (err: any) {
+                            if (!err?.handled) toast.error(err?.message || t("invitations.sendError"));
                           }
                         },
-                      }] : []),
+                      },
                       {
                         label: t("invitations.cancel"),
                         onClick: () => setCancelId(inv.id),

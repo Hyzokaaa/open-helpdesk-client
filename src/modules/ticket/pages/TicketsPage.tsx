@@ -181,17 +181,17 @@ export default function TicketsPage() {
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(COLUMNS.map((c) => c.key));
 
+  // Only the lists this member may read: a refused request is recorded as a denied access.
+  // Customers get their tickets' names from the tickets themselves.
   useEffect(() => {
-    if (workspaceSlug) {
-      listTags(workspaceSlug).then(setTags);
-      listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
-      listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
-      // Customers cannot list members (403); their ticket names come from the ticket itself
-      listMembers(workspaceSlug).then(setMembers).catch(() => {});
-      listCategories(workspaceSlug).then(setCategories).catch(() => {});
-      listProjects(workspaceSlug).then(setProjects).catch(() => {});
-    }
-  }, [workspaceSlug]);
+    if (!workspaceSlug || permLoading) return;
+    if (can(P.TAG_VIEW)) listTags(workspaceSlug).then(setTags).catch(() => {});
+    if (can(P.DEPARTMENT_VIEW)) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
+    if (can(P.ORGANIZATION_VIEW)) listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
+    if (can(P.WORKSPACE_MEMBERS_VIEW)) listMembers(workspaceSlug).then(setMembers).catch(() => {});
+    listCategories(workspaceSlug).then(setCategories).catch(() => {});
+    if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setProjects).catch(() => {});
+  }, [workspaceSlug, permLoading]);
 
   useEffect(() => {
     if (!permLoading) fetchTickets();

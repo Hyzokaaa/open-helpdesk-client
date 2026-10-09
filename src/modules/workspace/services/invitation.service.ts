@@ -1,3 +1,4 @@
+import type { InvitationEmailFailure } from "../domain/invitation-email";
 import { http } from "@modules/app/modules/http/domain/http";
 import { trackEvent } from "@modules/analytics/domain/analytics";
 
@@ -8,6 +9,8 @@ export interface InvitationItem {
   status: string;
   expiresAt: string;
   createdAt: string;
+  /** When the current link was issued: creation or the latest resend (missing on older servers) */
+  lastSentAt?: string;
 }
 
 export interface InvitationDetail {
@@ -24,6 +27,8 @@ export interface BatchInvitationResult {
   email: string;
   status: 'sent' | 'error';
   error?: string;
+  emailSent?: boolean;
+  emailFailure?: InvitationEmailFailure;
 }
 
 export async function createInvitation(
@@ -74,8 +79,8 @@ export async function getInvitationLink(
 export async function resendInvitation(
   slug: string,
   id: string,
-): Promise<{ emailSent: boolean }> {
-  const res = await http.post<{ emailSent: boolean }>(`/workspaces/${slug}/invitations/${id}/resend`);
+): Promise<{ emailSent: boolean; emailFailure?: InvitationEmailFailure }> {
+  const res = await http.post<{ emailSent: boolean; emailFailure?: InvitationEmailFailure }>(`/workspaces/${slug}/invitations/${id}/resend`);
   return res.data;
 }
 

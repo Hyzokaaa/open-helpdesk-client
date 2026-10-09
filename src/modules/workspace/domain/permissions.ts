@@ -28,6 +28,7 @@ export const P = {
   TICKET_DELETE: "ticket.delete",
   TICKET_EDIT_DISCARDED: "ticket.edit.discarded",
   TICKET_PARTICIPANTS_MANAGE: "ticket.participants.manage",
+  TICKET_ACTIVITY_VIEW: "ticket.activity.view",
 
   COMMENT_CREATE: "comment.create",
 

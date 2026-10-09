@@ -12,6 +12,7 @@ import {
   ImportPreviewRow,
   ImportPreviewError,
 } from "../services/workspace.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Props {
   workspaceSlug: string;
@@ -465,15 +466,7 @@ export default function ImportMembersSheet({ workspaceSlug, onClose, onImported 
               </div>
             )}
 
-            <label className="flex items-center gap-2 mt-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={skipVerification}
-                onChange={(e) => setSkipVerification(e.target.checked)}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="text-sm text-body">{t("import.skipVerification")}</span>
-            </label>
+            <Checkbox checked={skipVerification} onChange={setSkipVerification} label={t("import.skipVerification")} className="mt-4" />
 
             <div className="flex justify-between items-center mt-3">
               <button

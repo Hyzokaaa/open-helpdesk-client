@@ -12,6 +12,8 @@ import {
   updateTicketReference,
 } from "../services/workspace.service";
 import DeleteWorkspaceModal from "./DeleteWorkspaceModal";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
+import Label from "@modules/app/modules/ui/components/Label/Label";
 
 const PREFIX_PATTERN = /^[A-Z0-9]{1,10}$/;
 const SAMPLE_RANDOM_CODE = "7QX4M2K";
@@ -86,7 +88,7 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
     <div>
       <p className="text-xs text-muted mb-4">{t("ticketReference.intro")}</p>
 
-      <label className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.format")}</label>
+      <div className="mb-1.5"><Label>{t("ticketReference.format")}</Label></div>
       <Toggle
         left={t("ticketReference.sequential")}
         right={t("ticketReference.random")}
@@ -98,17 +100,15 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
       </p>
 
       <div className="mt-5 flex flex-wrap items-start gap-x-6 gap-y-3">
-        <div className="w-full max-w-xs">
-          <label className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.prefix")}</label>
+        <FormInput label={t("ticketReference.prefix")} className="!mb-0 max-w-xs">
           <Input value={prefix} onChange={(v) => setPrefix(v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))} />
           <p className={prefixValid ? "text-xs text-muted mt-1" : "text-xs text-red-600 dark:text-red-400 mt-1"}>
             {t(prefixValid ? "ticketReference.prefixHint" : "ticketReference.prefixInvalid")}
           </p>
-        </div>
-        <div>
-          <span className="block text-xs text-subtle font-body-medium mb-1">{t("ticketReference.example")}</span>
+        </FormInput>
+        <FormInput label={t("ticketReference.example")} className="!mb-0 !w-auto">
           <span className="inline-block font-mono text-sm font-body-semibold text-heading bg-surface-hover rounded-md px-2.5 py-1.5">{preview}</span>
-        </div>
+        </FormInput>
       </div>
 
       {changed && (

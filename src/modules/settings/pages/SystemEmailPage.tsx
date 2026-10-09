@@ -1,3 +1,5 @@
+import { HttpResponseError } from "@modules/app/modules/http/domain/http";
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -142,7 +144,7 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
   const [encryption, setEncryption] = useState(sender?.encryption ?? "tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
 
   const resolvedHost = smtpHost || deriveSmtpHost(smtpLogin);
   const resolvedPort = Number(smtpPort) || 587;
@@ -166,8 +168,9 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
         encryption,
       });
       setTestResult(result);
-    } catch {
-      setTestResult({ success: false, error: t("systemEmail.testFailed") });
+    } catch (err) {
+      // A refused request (validation, permission, plan, server down) says why; that is what to show
+      setTestResult({ success: false, error: (err as HttpResponseError).message || t("systemEmail.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -256,9 +259,7 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
             {t("emailSender.test")}
           </Button>
           {testResult && (
-            <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-              {testResult.success ? t("systemEmail.testSuccess") : testResult.error || t("systemEmail.testFailed")}
-            </span>
+            <ConnectionTestResult result={testResult} protocol="smtp" host={smtpHost} port={smtpPort} successText={t("systemEmail.testSuccess")} failedText={t("systemEmail.testFailed")} />
           )}
           {!testResult && !isEdit && (
             <span className="text-exs text-muted">{t("emailSender.testRequired")}</span>

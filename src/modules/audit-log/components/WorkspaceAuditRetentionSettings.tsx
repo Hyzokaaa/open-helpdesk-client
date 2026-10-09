@@ -4,35 +4,27 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { WorkspaceRetention, getWorkspaceRetention, updateWorkspaceRetention } from "../services/audit-log.service";
-import RetentionRow, { RetentionDraftRow, retentionRowValid } from "./RetentionRow";
+import RetentionRow, { retentionRowValid } from "./RetentionRow";
+import useRetentionDraft from "../hooks/useRetentionDraft";
 
 interface Props {
   slug: string;
 }
 
-type Draft = Record<string, RetentionDraftRow>;
-
-/** Each category shows what applies now; one at the installation's days just follows the installation. */
-function toDraft(d: WorkspaceRetention): Draft {
-  return Object.fromEntries(d.categories.map((c) => {
-    const days = d.effective[c];
-    return [c, { value: days === null ? "" : String(days), forever: days === null }];
-  }));
-}
-
 /**
- * How much longer than the installation this workspace keeps its audit history. It can only keep
- * more: the installation's days are the minimum, so nobody can erase the record of what they did.
+ * How long this workspace keeps its audit history. Never less than the installation, so nobody can
+ * erase the record of what they did. Each category shows what applies now; only the ones changed are
+ * saved, and a saved one keeps its days even if the installation is lowered later.
  */
 export default function WorkspaceAuditRetentionSettings({ slug }: Props) {
   const { t } = useTranslation();
   const [data, setData] = useState<WorkspaceRetention | null>(null);
-  const [draft, setDraft] = useState<Draft>({});
+  const { draft, reset, isChanged, setValue, setForever, daysOf } = useRetentionDraft();
   const [saving, setSaving] = useState(false);
 
   const load = (d: WorkspaceRetention) => {
     setData(d);
-    setDraft(toDraft(d));
+    reset(d.effective);
   };
 
   useEffect(() => {
@@ -44,17 +36,12 @@ export default function WorkspaceAuditRetentionSettings({ slug }: Props) {
   // Categories the installation already keeps forever have nothing to extend
   const categories = data.categories.filter((c) => data.installation.days[c] !== null);
   const floorOf = (c: string) => data.installation.days[c] as number;
-  const initial = toDraft(data);
-  const changed = categories.some((c) => draft[c]?.forever !== initial[c]?.forever || (!draft[c]?.forever && draft[c]?.value !== initial[c]?.value));
+  const changed = categories.filter(isChanged);
   const valid = categories.every((c) => retentionRowValid(draft[c], floorOf(c), data.maxDays));
 
   const save = async () => {
     const days: Record<string, number | null> = {};
-    for (const category of categories) {
-      const row = draft[category];
-      // A value equal to the installation's is dropped by the server: the category follows the installation
-      days[category] = row.forever ? null : Number(row.value);
-    }
+    for (const category of changed) days[category] = daysOf(category);
     setSaving(true);
     try {
       load(await updateWorkspaceRetention(slug, days));
@@ -91,14 +78,14 @@ export default function WorkspaceAuditRetentionSettings({ slug }: Props) {
                   max={data.maxDays}
                   fallback={floor}
                   hint={t("auditRetention.minimum").replace("{days}", String(floor))}
-                  onChange={(value) => setDraft({ ...draft, [category]: { value, forever: false } })}
-                  onForeverChange={(forever) => setDraft({ ...draft, [category]: { value: row?.value || String(floor), forever } })}
+                  onChange={(value) => setValue(category, value)}
+                  onForeverChange={(forever) => setForever(category, forever, floor)}
                 />
               );
             })}
           </div>
           <div className="flex justify-end mt-3">
-            <Button size="sm" loading={saving} disabled={!changed || !valid} onClick={save}>{t("auditRetention.save")}</Button>
+            <Button size="sm" loading={saving} disabled={changed.length === 0 || !valid} onClick={save}>{t("auditRetention.save")}</Button>
           </div>
         </>
       )}

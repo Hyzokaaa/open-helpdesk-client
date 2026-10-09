@@ -32,6 +32,8 @@ import {
   transferPercent,
   truncateText,
 } from "../domain/workspace-import";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 
 interface Props {
   slug: string;
@@ -289,9 +291,10 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
         <h3 className="text-base font-body-bold text-heading mb-1">{t("workspaceImport.confirmTitle")}</h3>
         <p className="text-sm text-muted mb-4 break-all">{sourceLabel}</p>
         <form onSubmit={(e) => { e.preventDefault(); void handlePreview(); }}>
-          <label className="block text-xs text-subtle font-body-medium mb-1">{t("workspaceImport.password")}</label>
-          <Input type="password" value={password} onChange={(v) => { setPassword(v); setPreviewError(null); }} disabled={previewing} autoFocus />
-          <p className="text-xs text-muted mt-1">{t("workspaceImport.passwordHint")}</p>
+          <FormInput label={t("workspaceImport.password")} className="!mb-0">
+            <Input type="password" value={password} onChange={(v) => { setPassword(v); setPreviewError(null); }} disabled={previewing} autoFocus />
+            <p className="text-xs text-muted mt-1">{t("workspaceImport.passwordHint")}</p>
+          </FormInput>
           {previewError && <p className="text-sm text-red-600 dark:text-red-400 mt-3" role="alert">{previewError}</p>}
           <div className="flex justify-end gap-2 mt-6">
             <Button size="sm" color="light" onClick={onClose} disabled={previewing}>{t("workspaceImport.cancel")}</Button>
@@ -356,41 +359,32 @@ export default function WorkspaceImportSheet({ slug, source, onClose, onImported
             {offered.map((key) => {
               const detail = renderPreview(key);
               return (
-                <label key={key} className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(key)}
-                    onChange={() => toggle(key)}
-                    disabled={importing}
-                    className="w-4 h-4 mt-0.5 accent-primary"
-                  />
-                  <span className="text-sm min-w-0">
-                    <span className="text-body">{t(SETTING_LABELS[key].overwrite)}</span>
-                    {detail && <span className="block text-xs text-muted break-words">{detail}</span>}
-                    {key === "customDomain" && hasCustomDomainConflict(preview?.settings) && (
-                      <span className="block text-xs text-yellow-700 dark:text-yellow-400 break-words">{t("workspaceImport.preview.customDomainConflict")}</span>
-                    )}
-                  </span>
-                </label>
+                <Checkbox
+                  key={key}
+                  checked={selected.has(key)}
+                  onChange={() => toggle(key)}
+                  disabled={importing}
+                  label={t(SETTING_LABELS[key].overwrite)}
+                  hint={detail || undefined}
+                >
+                  {key === "customDomain" && hasCustomDomainConflict(preview?.settings) && (
+                    <span className="block text-xs text-yellow-700 dark:text-yellow-400 break-words">{t("workspaceImport.preview.customDomainConflict")}</span>
+                  )}
+                </Checkbox>
               );
             })}
           </div>
         </>
       )}
 
-      <label className="flex items-start gap-2 cursor-pointer mt-4">
-        <input
-          type="checkbox"
-          checked={completeExisting}
-          onChange={() => setCompleteExisting(!completeExisting)}
-          disabled={importing}
-          className="w-4 h-4 mt-0.5 accent-primary"
-        />
-        <span className="text-sm min-w-0">
-          <span className="text-body">{t("workspaceImport.completeExisting")}</span>
-          <span className="block text-xs text-muted break-words">{t("workspaceImport.completeExistingHint")}</span>
-        </span>
-      </label>
+      <Checkbox
+        className="mt-4"
+        checked={completeExisting}
+        onChange={setCompleteExisting}
+        disabled={importing}
+        label={t("workspaceImport.completeExisting")}
+        hint={t("workspaceImport.completeExistingHint")}
+      />
 
       <div className="flex justify-end gap-2 mt-6">
         <Button size="sm" color="light" onClick={onClose} disabled={importing}>{t("workspaceImport.cancel")}</Button>

@@ -20,6 +20,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [paddleEnvironment, setPaddleEnvironment] = useState("sandbox");
   const [aiEnabled, setAiEnabled] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
+  const [sessionRememberDays, setSessionRememberDays] = useState<number | null>(null);
   const [systemEmailFrom, setSystemEmailFrom] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
@@ -37,6 +38,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setPaddleEnvironment(config.paddleEnvironment ?? "sandbox");
       setAiEnabled(config.aiEnabled ?? false);
       setEmailConfigured(config.emailConfigured ?? false);
+      setSessionRememberDays(config.sessionRememberDays ?? null);
       setSystemEmailFrom(config.systemEmailFrom ?? null);
       setUpgradeNotificationsEnabled(config.upgradeNotificationsEnabled ?? true);
       setAnalytics(parseAnalyticsConfig(config.analytics));
@@ -102,7 +104,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandIcon]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, sessionRememberDays, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
       {children}
     </ConfigContext.Provider>
   );

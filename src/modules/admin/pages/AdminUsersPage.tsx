@@ -24,6 +24,7 @@ import {
 } from "../services/admin.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 export default function AdminUsersPage() {
   const { user } = useUser();
@@ -198,14 +199,8 @@ export default function AdminUsersPage() {
               </FormInput>
             </div>
             <div className="flex gap-6 mb-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} className="w-4 h-4 accent-primary" />
-                <span className="text-sm text-secondary-text font-body-medium">{t("admin.systemAdmin")}</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={isEmailVerified} onChange={(e) => setIsEmailVerified(e.target.checked)} className="w-4 h-4 accent-primary" />
-                <span className="text-sm text-secondary-text font-body-medium">{t("admin.emailVerified")}</span>
-              </label>
+              <Checkbox checked={isAdmin} onChange={setIsAdmin} label={t("admin.systemAdmin")} />
+              <Checkbox checked={isEmailVerified} onChange={setIsEmailVerified} label={t("admin.emailVerified")} />
             </div>
             <Button type="submit" size="sm" loading={creatingUser}>{t("admin.createUser")}</Button>
           </form>

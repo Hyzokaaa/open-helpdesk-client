@@ -21,6 +21,7 @@ import {
   updateCustomField,
   deleteCustomField,
 } from "../services/custom-field.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 const FIELD_TYPES = ["text", "number", "select", "multi-select", "date", "checkbox"] as const;
 
@@ -279,14 +280,7 @@ export default function WorkspaceCustomFieldsPage() {
                 />
               </FormInput>
             )}
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={required}
-                onChange={(e) => setRequired(e.target.checked)}
-              />
-              <span className="text-sm text-body">{t("customFields.required")}</span>
-            </label>
+            <Checkbox checked={required} onChange={setRequired} label={t("customFields.required")} className="mb-4" />
             <div className="flex justify-end gap-3">
               <Button size="sm" color="light" onClick={handleClose}>
                 {t("customFields.cancel")}

@@ -1,3 +1,4 @@
+import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface SystemEmailDto {
@@ -42,8 +43,8 @@ export async function testSystemEmail(data: {
   smtpUser: string;
   smtpPass: string;
   encryption?: string;
-}): Promise<{ success: boolean; error?: string }> {
-  const res = await http.post<{ success: boolean; error?: string }>(
+}): Promise<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode }> {
+  const res = await http.post<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode }>(
     "/system/email-settings/test",
     data,
   );

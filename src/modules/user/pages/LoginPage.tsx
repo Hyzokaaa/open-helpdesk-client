@@ -13,13 +13,14 @@ import LanguageToggle from "@modules/app/components/LanguageToggle";
 import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
-  const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces } = useConfig();
+  const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces, sessionRememberDays } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
 
   const inviteEmail = searchParams.get("email") || "";
@@ -109,10 +110,13 @@ export default function LoginPage() {
                 />
               </FormInput>
 
-              <label className="flex items-center gap-2 cursor-pointer mb-2">
-                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 accent-primary" />
-                <span className="text-sm text-secondary-text font-body-medium">{t("login.rememberMe")}</span>
-              </label>
+              <Checkbox
+                checked={rememberMe}
+                onChange={setRememberMe}
+                // How long it lasts, so nobody has to ask (feedback 2026-10-08)
+                label={sessionRememberDays ? t("login.rememberMeFor").replace("{days}", String(sessionRememberDays)) : t("login.rememberMe")}
+                className="mb-2"
+              />
 
               <Button type="submit" full loading={loading} className="mt-2">
                 {t("login.signIn")}

@@ -1,3 +1,4 @@
+import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface EmailSenderDto {
@@ -43,8 +44,8 @@ export async function testEmailSender(slug: string, data: {
   smtpUser: string;
   smtpPass: string;
   encryption?: string;
-}): Promise<{ success: boolean; error?: string }> {
-  const res = await http.post<{ success: boolean; error?: string }>(`/workspaces/${slug}/email-sender/test`, data);
+}): Promise<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode }> {
+  const res = await http.post<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode }>(`/workspaces/${slug}/email-sender/test`, data);
   return res.data;
 }
 

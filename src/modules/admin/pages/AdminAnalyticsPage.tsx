@@ -8,6 +8,7 @@ import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { getSystemAnalytics, updateSystemAnalytics, type SystemAnalytics } from "../services/system-analytics.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Form {
   enabled: boolean;
@@ -129,31 +130,19 @@ export default function AdminAnalyticsPage() {
               <p className="text-exs text-muted mt-1">{t("adminAnalytics.siteIdHint")}</p>
             </FormInput>
 
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.useCookies}
-                onChange={(e) => change({ useCookies: e.target.checked })}
-                className="w-4 h-4 mt-0.5 accent-primary"
-              />
-              <span>
-                <span className="block text-sm text-secondary-text font-body-medium">{t("adminAnalytics.useCookies")}</span>
-                <span className="block text-exs text-muted">{t("adminAnalytics.useCookiesHint")}</span>
-              </span>
-            </label>
+            <Checkbox
+              checked={form.useCookies}
+              onChange={(useCookies) => change({ useCookies })}
+              label={t("adminAnalytics.useCookies")}
+              hint={t("adminAnalytics.useCookiesHint")}
+            />
 
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.trackEvents}
-                onChange={(e) => change({ trackEvents: e.target.checked })}
-                className="w-4 h-4 mt-0.5 accent-primary"
-              />
-              <span>
-                <span className="block text-sm text-secondary-text font-body-medium">{t("adminAnalytics.trackEvents")}</span>
-                <span className="block text-exs text-muted">{t("adminAnalytics.trackEventsHint")}</span>
-              </span>
-            </label>
+            <Checkbox
+              checked={form.trackEvents}
+              onChange={(trackEvents) => change({ trackEvents })}
+              label={t("adminAnalytics.trackEvents")}
+              hint={t("adminAnalytics.trackEventsHint")}
+            />
           </>
         )}
 

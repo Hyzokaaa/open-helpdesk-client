@@ -2,6 +2,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { inputClass } from "@modules/app/modules/ui/shared/domain/input-class";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 export interface RetentionDraftRow {
   value: string;
@@ -89,16 +90,14 @@ export default function RetentionRow({
             {t("auditRetention.days")}
           </span>
         </div>
-        <label className={clsx("flex items-center gap-1.5 text-xs text-body w-20", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
-          <input
-            type="checkbox"
-            checked={forever}
-            onChange={(e) => { setAdjusted(null); onForeverChange(e.target.checked); }}
-            disabled={disabled}
-            className="w-4 h-4 accent-primary"
-          />
-          {t("auditRetention.forever")}
-        </label>
+        <Checkbox
+          size="xs"
+          className="w-20"
+          checked={forever}
+          onChange={(checked) => { setAdjusted(null); onForeverChange(checked); }}
+          disabled={disabled}
+          label={t("auditRetention.forever")}
+        />
       </div>
     </div>
   );

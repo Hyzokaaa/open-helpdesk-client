@@ -1,3 +1,6 @@
+import { mailboxSaveBlocker } from "@modules/workspace/domain/mailbox-save";
+import { HttpResponseError } from "@modules/app/modules/http/domain/http";
+import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -174,12 +177,18 @@ function MailboxForm({
   const [pollInterval, setPollInterval] = useState(String(mailbox?.pollInterval ?? "30"));
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
+  // A result describes the details it was run with: once they change it no longer applies, nor unlocks saving
+  useEffect(() => {
+    setTestResult(null);
+  }, [imapHost, imapPort, imapUser, imapPass, encryption]);
+
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
+  const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 
   const handleTest = async () => {
     setTesting(true);
@@ -192,15 +201,16 @@ function MailboxForm({
         imapPass: imapPass || "__keep__",
         encryption,
       });
-      setTestResult({ success: result.success, error: result.error });
+      setTestResult({ success: result.success, error: result.error, errorCode: result.errorCode });
       if (result.success && result.folders && result.folders.length > 0) {
         setFolders(result.folders);
         if (!result.folders.includes(imapFolder)) {
           setImapFolder(result.folders[0]);
         }
       }
-    } catch {
-      setTestResult({ success: false, error: t("mailbox.testFailed") });
+    } catch (err) {
+      // A refused request (validation, permission, plan, server down) says why; that is what to show
+      setTestResult({ success: false, error: (err as HttpResponseError).message || t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
@@ -291,9 +301,7 @@ function MailboxForm({
           {t("mailbox.testConnection")}
         </Button>
         {testResult && (
-          <span className={`text-xs font-body-medium ${testResult.success ? "text-green-600" : "text-red-500"}`}>
-            {testResult.success ? t("mailbox.testSuccess") : testResult.error || t("mailbox.testFailed")}
-          </span>
+          <ConnectionTestResult result={testResult} protocol="imap" host={imapHost} port={imapPort} successText={t("mailbox.testSuccess")} failedText={t("mailbox.testFailed")} />
         )}
       </div>
 
@@ -326,6 +334,7 @@ function MailboxForm({
         <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
           {t("mailbox.save")}
         </Button>
+        {saveBlocker && <p className="text-exs text-muted text-center mt-2">{t(`mailbox.saveBlocked.${saveBlocker}` as any)}</p>}
       </div>
     </form>
   );

@@ -15,6 +15,7 @@ import {
   updateWebhook,
   deleteWebhook,
 } from "../services/webhook.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Props {
   slug: string;
@@ -206,15 +207,7 @@ function WebhookForm({ slug, webhook, onSaved, onDirtyChange }: { slug: string; 
           <p className="text-xs font-body-semibold text-heading mb-2">{t("webhooks.selectEvents")}</p>
           <div className="space-y-1.5">
             {WEBHOOK_EVENTS.map((event) => (
-              <label key={event} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={events.includes(event)}
-                  onChange={() => toggleEvent(event)}
-                  className="rounded border-gray-300 text-primary focus:ring-primary/50"
-                />
-                <span className="text-xs text-body">{event}</span>
-              </label>
+              <Checkbox key={event} size="xs" checked={events.includes(event)} onChange={() => toggleEvent(event)} label={event} />
             ))}
           </div>
         </div>

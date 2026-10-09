@@ -11,6 +11,7 @@ import {
   updateWorkspaceAnalyticsSettings,
   type WorkspaceAnalyticsSettings as Settings,
 } from "../services/workspace-analytics.service";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 interface Props {
   slug: string;
@@ -49,23 +50,6 @@ function sameForm(a: Form, b: Form): boolean {
 function validationMessage(err: unknown): string | null {
   const e = err as Partial<HttpResponseError> | undefined;
   return e?.status === 400 && typeof e.message === "string" && e.message ? e.message : null;
-}
-
-function Check({ checked, onChange, label, hint }: { checked: boolean; onChange: (value: boolean) => void; label: string; hint: string }) {
-  return (
-    <label className="flex items-start gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 mt-0.5 accent-primary"
-      />
-      <span>
-        <span className="block text-sm text-secondary-text font-body-medium">{label}</span>
-        <span className="block text-exs text-muted">{hint}</span>
-      </span>
-    </label>
-  );
 }
 
 /**
@@ -162,14 +146,14 @@ export default function WorkspaceAnalyticsSettings({ slug }: Props) {
             <p className="text-exs text-muted mt-1">{t("workspaceAnalytics.siteIdHint")}</p>
           </FormInput>
 
-          <Check
+          <Checkbox
             checked={form.useCookies}
             onChange={(useCookies) => change({ useCookies })}
             label={t("workspaceAnalytics.useCookies")}
             hint={t("workspaceAnalytics.useCookiesHint")}
           />
 
-          <Check
+          <Checkbox
             checked={form.trackEvents}
             onChange={(trackEvents) => change({ trackEvents })}
             label={t("workspaceAnalytics.trackEvents")}
@@ -180,11 +164,12 @@ export default function WorkspaceAnalyticsSettings({ slug }: Props) {
 
       <hr className="border-border-row" />
 
-      <Check
+      <Checkbox
         checked={form.shareWithInstallation}
         onChange={(shareWithInstallation) => change({ shareWithInstallation })}
         label={t("workspaceAnalytics.share")}
-        hint={t("workspaceAnalytics.shareHint")}
+        // What each state does, one per line (Stephen's wording, 2026-10-08)
+        hint={<>{t("workspaceAnalytics.shareHintOn")}<br />{t("workspaceAnalytics.shareHintOff")}</>}
       />
 
       {error && <p className="text-xs text-red-500" role="alert">{error}</p>}

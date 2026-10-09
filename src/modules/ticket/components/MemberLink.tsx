@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import useUser from "@modules/user/hooks/useUser";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 
 interface Props {
   userId: string;
@@ -19,6 +22,10 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const m = members.find((m) => m.userId === userId);
   const alignClass = align === "left" ? "text-left" : "text-right";
+  const { user } = useUser();
+  const { can } = usePermissions(workspaceSlug);
+  // Someone else's stats need the report permission; without it the name only shows the card
+  const canOpenStats = user?.id === userId || can(P.REPORT_VIEW);
 
   const handleEnter = () => {
     if (!ref.current || !m) return;
@@ -44,12 +51,12 @@ export default function MemberLink({ userId, members, getMemberName, navigate, w
       <button
         ref={ref}
         type="button"
-        onClick={() => workspaceSlug && navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${userId}`)}
+        onClick={() => workspaceSlug && canOpenStats && navigate(`/dashboard/workspaces/${workspaceSlug}/stats/${userId}`)}
         onMouseEnter={handleEnter}
         onMouseLeave={() => setShow(false)}
         onFocus={handleEnter}
         onBlur={() => setShow(false)}
-        className={`text-body font-body-medium cursor-pointer hover:text-primary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+        className={`text-body font-body-medium ${canOpenStats ? "cursor-pointer hover:text-primary" : "cursor-default"} transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
           inline ? "inline underline decoration-dotted underline-offset-2" : `block break-words leading-snug ${alignClass}`
         }`}
       >

@@ -8,6 +8,8 @@ import { TranslationKey } from "@modules/app/i18n/translations";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { createExportToken, exportWorkspace } from "../services/workspace.service";
 import { EXPORT_PASSWORD_MIN, ExportPasswordProblem, exportPasswordProblem, formatBytes } from "../domain/workspace-import";
+import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 
 /** A file downloaded now, or a single-use link another instance fetches later. */
 export type ExportMode = "file" | "url";
@@ -107,33 +109,22 @@ export default function WorkspaceExportSheet({ slug, mode, onClose, deletedId }:
       </h3>
       <p className="text-sm text-muted mb-4">{t("workspaceExport.intro")}</p>
       <form onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }} className="space-y-3">
-        <div>
-          <label className="block text-xs text-subtle font-body-medium mb-1">{t("workspaceExport.password")}</label>
+        <FormInput label={t("workspaceExport.password")} className="!mb-0">
           <Input type="password" value={password} onChange={setPassword} disabled={busy} autoFocus />
           <p className="text-xs text-muted mt-1">
             {t("workspaceExport.passwordRule").replace("{min}", String(EXPORT_PASSWORD_MIN))}
           </p>
-        </div>
-        <div>
-          <label className="block text-xs text-subtle font-body-medium mb-1">{t("workspaceExport.confirmPassword")}</label>
+        </FormInput>
+        <FormInput label={t("workspaceExport.confirmPassword")} className="!mb-0">
           <Input type="password" value={confirmation} onChange={setConfirmation} disabled={busy} />
-        </div>
+        </FormInput>
         {submitted && problem && (
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">
             {t(PROBLEM_LABELS[problem]).replace("{min}", String(EXPORT_PASSWORD_MIN))}
           </p>
         )}
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("workspaceExport.warning")}</p>
-        <label className="flex items-start gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={includeCredentials}
-            onChange={() => setIncludeCredentials(!includeCredentials)}
-            disabled={busy}
-            className="w-4 h-4 mt-0.5 accent-primary"
-          />
-          <span className="text-sm text-body">{t("workspaceExport.includeCredentials")}</span>
-        </label>
+        <Checkbox checked={includeCredentials} onChange={setIncludeCredentials} disabled={busy} label={t("workspaceExport.includeCredentials")} />
         {includeCredentials && (
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">{t("workspaceExport.includeCredentialsWarning")}</p>
         )}

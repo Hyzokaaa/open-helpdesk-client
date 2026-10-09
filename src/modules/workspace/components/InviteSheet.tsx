@@ -1,3 +1,4 @@
+import { describeEmailFailures } from "../domain/invitation-email";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -7,6 +8,7 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
+import { resendInvitationAndNotify } from "./resend-invitation";
 import { getEmailSender } from "../services/email-sender.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -50,13 +52,15 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
         getEmailSender(workspaceSlug).then((s) => setHasWorkspaceSender(!!s)).catch(() => {}).finally(() => setCheckingEmail(false)),
       ]);
       setMembers(m);
-      setPendingInvitations(inv);
+      // An expired invitation no longer holds the email: inviting it again replaces it
+      const now = Date.now();
+      setPendingInvitations(inv.filter((i) => new Date(i.expiresAt).getTime() > now));
 
       try {
         const limit = await getAgentLimit();
         if (limit !== null) {
           const agentMembers = m.filter((member) => isAgent(member.role)).length;
-          const pendingAgents = inv.filter((i) => isAgent(i.role)).length;
+          const pendingAgents = inv.filter((i) => isAgent(i.role) && new Date(i.expiresAt).getTime() > Date.now()).length;
           setAgentSlots(limit - agentMembers - pendingAgents);
         }
       } catch {}
@@ -84,6 +88,28 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
 
   const removeRow = (index: number) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // The email already holds a live invitation: sending it again is what the inviter wanted
+  const [resendingIndex, setResendingIndex] = useState<number | null>(null);
+  const resendPending = async (index: number) => {
+    const invitation = pendingInvitations.find((p) => p.email.toLowerCase() === rows[index].email.trim().toLowerCase());
+    if (!invitation) return;
+    setResendingIndex(index);
+    try {
+      await resendInvitationAndNotify(workspaceSlug, invitation, t);
+      const remaining = rows.filter((_, i) => i !== index);
+      if (remaining.some((r) => r.email.trim())) {
+        setRows(remaining);
+      } else {
+        onSent?.();
+        onClose();
+      }
+    } catch (err: any) {
+      if (!err?.handled) toast.error(err?.message || t("invitations.sendError"));
+    } finally {
+      setResendingIndex(null);
+    }
   };
 
   const addRow = () => {
@@ -118,15 +144,17 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
         validRows.map((r) => ({ email: r.email.trim(), role: r.role })),
       );
       const created = results.filter((r) => r.status === "sent");
-      const emailed = created.filter((r) => (r as any).emailSent).length;
+      const emailed = created.filter((r) => r.emailSent).map((r) => r.email);
       const errors = results.filter((r) => r.status === "error");
-      if (created.length > 0) {
-        if (emailed > 0) {
-          toast.success(`${emailed} ${t("invitations.sent")}`);
-        } else {
-          toast.success(`${created.length} ${t("invitations.createdNotSent")}`);
-        }
-      }
+      // A single invitation is named; several are counted, and the invitations page lists them
+      if (emailed.length === 1) toast.success(t("invitations.sentTo").replace("{email}", emailed[0]));
+      else if (emailed.length > 1) toast.success(t("invitations.sentMany").replace("{count}", String(emailed.length)));
+      // Created but not emailed: who, and why, so the inviter knows what to fix besides sharing the link
+      const notEmailed = created.filter((r) => !r.emailSent);
+      const failures = notEmailed.filter((r) => r.emailFailure).map((r) => ({ ...r.emailFailure!, email: r.email }));
+      for (const line of describeEmailFailures(failures, t)) toast.warning(line, { autoClose: 12000 });
+      const unexplained = notEmailed.filter((r) => !r.emailFailure).map((r) => r.email);
+      if (unexplained.length > 0) toast.success(t("invitations.createdNotSent"));
       for (const err of errors) {
         toast.error(`${err.email}: ${err.error}`);
       }
@@ -195,7 +223,22 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
                     )}
                   </div>
                   {error && (
-                    <p className="text-exs text-danger mt-1">{error}</p>
+                    <p className="text-exs text-danger mt-1">
+                      {error}
+                      {error === t("invitations.alreadyInvited") && (
+                        <>
+                          {" · "}
+                          <button
+                            type="button"
+                            onClick={() => resendPending(i)}
+                            disabled={resendingIndex !== null}
+                            className="text-primary font-body-semibold hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-default"
+                          >
+                            {resendingIndex === i ? t("invitations.resending") : t("invitations.resend")}
+                          </button>
+                        </>
+                      )}
+                    </p>
                   )}
                 </div>
               );
@@ -221,7 +264,9 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
               {t("members.cancel")}
             </Button>
             <Button type="submit" size="sm" loading={sending} disabled={!canSubmit}>
-              {canSendEmail ? t("invitations.send") : t("invitations.createInvitation")}
+              {validRows.length > 1
+                ? t(canSendEmail ? "invitations.sendMany" : "invitations.createMany").replace("{count}", String(validRows.length))
+                : t(canSendEmail ? "invitations.send" : "invitations.createInvitation")}
             </Button>
           </div>
         </form>

@@ -1,3 +1,4 @@
+import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface SystemMailboxDto {
@@ -69,8 +70,8 @@ export async function testSystemMailboxConnection(data: {
   imapUser: string;
   imapPass: string;
   encryption?: string;
-}): Promise<{ success: boolean; error?: string; folders?: string[] }> {
-  const res = await http.post<{ success: boolean; error?: string; folders?: string[] }>(
+}): Promise<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode; folders?: string[] }> {
+  const res = await http.post<{ success: boolean; error?: string; errorCode?: ConnectionErrorCode; folders?: string[] }>(
     "/admin/platform-mailbox/test-connection",
     data,
   );
