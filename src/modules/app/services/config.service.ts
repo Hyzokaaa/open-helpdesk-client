@@ -9,6 +9,8 @@ export interface PublicConfig {
   paddleEnvironment: string;
   aiEnabled: boolean;
   emailConfigured: boolean;
+  /** How long "keep me signed in" lasts; missing on older servers */
+  sessionRememberDays?: number | null;
   systemEmailFrom: string | null;
   brandingAppName: string | null;
   brandingAppSubtitle: string | null;

@@ -20,6 +20,7 @@ export interface ConfigContextProps {
   paddleEnvironment: string;
   aiEnabled: boolean;
   emailConfigured: boolean;
+  sessionRememberDays: number | null;
   systemEmailFrom: string | null;
   upgradeNotificationsEnabled: boolean;
   /** Web analytics for this installation, or null when it is off. */
@@ -43,6 +44,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   paddleEnvironment: "sandbox",
   aiEnabled: false,
   emailConfigured: false,
+  sessionRememberDays: null,
   systemEmailFrom: null,
   upgradeNotificationsEnabled: true,
   analytics: null,
