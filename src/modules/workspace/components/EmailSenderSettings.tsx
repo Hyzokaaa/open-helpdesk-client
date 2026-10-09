@@ -195,7 +195,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
 
   useEffect(() => {
     setTestResult(null);
-  }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
+  }, [smtpLogin, password, smtpHost, srvHost, smtpPort, encryption]);
 
   useEffect(() => {
     if (smtpHost || !smtpLogin.includes("@")) return;

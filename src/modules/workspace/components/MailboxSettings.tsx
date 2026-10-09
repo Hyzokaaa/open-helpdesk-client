@@ -406,6 +406,11 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   // A port that is not a whole number in range is reported instead of silently replaced by 993
   const portValid = /^\d+$/.test(imapPort.trim()) && Number(imapPort) >= 1 && Number(imapPort) <= 65535;
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit) && portValid;
+  // A result describes the details it was run with: once they change it no longer applies, nor unlocks saving
+  useEffect(() => {
+    setTestResult(null);
+  }, [imapHost, imapPort, imapUser, imapPass, encryption]);
+
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
   const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 

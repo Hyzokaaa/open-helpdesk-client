@@ -182,6 +182,11 @@ function MailboxForm({
   const [saving, setSaving] = useState(false);
 
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
+  // A result describes the details it was run with: once they change it no longer applies, nor unlocks saving
+  useEffect(() => {
+    setTestResult(null);
+  }, [imapHost, imapPort, imapUser, imapPass, encryption]);
+
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
   const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 
