@@ -168,7 +168,8 @@ export default function WorkspaceAnalyticsSettings({ slug }: Props) {
         checked={form.shareWithInstallation}
         onChange={(shareWithInstallation) => change({ shareWithInstallation })}
         label={t("workspaceAnalytics.share")}
-        hint={t("workspaceAnalytics.shareHint")}
+        // What each state does, one per line (Stephen's wording, 2026-10-08)
+        hint={<>{t("workspaceAnalytics.shareHintOn")}<br />{t("workspaceAnalytics.shareHintOff")}</>}
       />
 
       {error && <p className="text-xs text-red-500" role="alert">{error}</p>}
