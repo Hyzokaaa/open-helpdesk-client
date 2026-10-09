@@ -421,6 +421,7 @@ const translations = {
   "emailSender.senderIdentityDesc": { en: "How your emails appear to recipients", es: "Cómo se muestran tus emails a los destinatarios" },
   "emailSender.smtpAuth": { en: "Authentication", es: "Autenticación" },
   "emailSender.serverSettings": { en: "Server Settings", es: "Configuración del Servidor" },
+  "emailSender.plainPasswordWarning": { en: "The password will travel unencrypted. Use this only with a mail server on your own network.", es: "La contraseña viajará sin cifrar. Úsalo solo con un servidor de correo de tu propia red." },
   "emailSender.testRequired": { en: "Test connection before saving", es: "Prueba la conexión antes de guardar" },
   "emailSender.confirmDelete": { en: "Confirm?", es: "¿Confirmar?" },
   "emailSender.configure": { en: "Configure Email Sender", es: "Configurar Remitente de Email" },
