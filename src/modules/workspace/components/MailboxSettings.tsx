@@ -266,7 +266,7 @@ export default function MailboxSettings({ slug }: Props) {
 
       {showSheet && (
         <Sheet onClose={handleSheetClose}>
-          <MailboxForm slug={slug} mailbox={editMailbox} onSaved={handleSaved} onPlanLimit={handlePlanLimitError} onDirtyChange={(d) => { isDirtyRef.current = d; }} />
+          <MailboxForm slug={slug} mailbox={editMailbox} otherMailboxes={mailboxes.filter((m) => m.id !== editMailbox?.id)} onSaved={handleSaved} onPlanLimit={handlePlanLimitError} onDirtyChange={(d) => { isDirtyRef.current = d; }} />
         </Sheet>
       )}
 
@@ -374,7 +374,7 @@ function AddressModePicker({ value, onChange, t }: {
   );
 }
 
-export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; onSaved: (created?: MailboxDto) => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
+export function MailboxForm({ slug, mailbox, otherMailboxes = [], onSaved, onPlanLimit, onDirtyChange }: { slug: string; mailbox: MailboxDto | null; otherMailboxes?: MailboxDto[]; onSaved: (created?: MailboxDto) => void; onPlanLimit: (err: unknown) => boolean; onDirtyChange?: (dirty: boolean) => void }) {
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
@@ -439,6 +439,11 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
   }, [imapHost, imapPort, imapUser, imapPass, encryption]);
 
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
+  // Allowed on purpose (different filters or rules per mailbox), but never by accident
+  const sharedInbox = otherMailboxes.find((m) =>
+    (address.trim() && m.address?.toLowerCase() === address.trim().toLowerCase()) ||
+    (imapHost.trim() && imapUser.trim() && m.imapHost?.toLowerCase() === imapHost.trim().toLowerCase() && m.imapUser?.toLowerCase() === imapUser.trim().toLowerCase()),
+  );
   const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 
   const handleTest = async () => {
@@ -530,6 +535,11 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
         <FormInput label={t("mailbox.address")} required>
           <Input placeholder="support@example.com" value={address} onChange={setAddress} />
         </FormInput>
+        {sharedInbox && (
+          <p className="text-exs text-amber-700 dark:text-amber-300 -mt-2 mb-3">
+            {t("mailbox.sharedInboxWarning").replace("{address}", sharedInbox.address)}
+          </p>
+        )}
 
         <div className="border-t border-border-card my-4" />
 

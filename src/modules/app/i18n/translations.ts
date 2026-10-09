@@ -467,6 +467,7 @@ const translations = {
   "mailbox.testConnection": { en: "Test Connection", es: "Probar Conexión" },
   "mailbox.testSuccess": { en: "Connection successful", es: "Conexión exitosa" },
   "mailbox.testFailed": { en: "Connection failed", es: "Conexión fallida" },
+  "mailbox.sharedInboxWarning": { en: "Another mailbox in this workspace ({address}) already reads this inbox: each email will be handled by both, according to their filters. With both set to all addresses, every email opens two tickets.", es: "Otro buzón de este espacio ({address}) ya lee esta bandeja: cada correo lo procesarán los dos, según sus filtros. Si los dos aceptan todas las direcciones, cada correo abrirá dos tickets." },
   "mailbox.saveBlocked.address": { en: "Write the mailbox email address to be able to save", es: "Escribe la dirección del buzón para poder guardar" },
   "mailbox.saveBlocked.connection": { en: "Fill in server, port, username and password, then test the connection", es: "Completa servidor, puerto, usuario y contraseña, y prueba la conexión" },
   "mailbox.saveBlocked.test": { en: "Test the connection to be able to save", es: "Prueba la conexión para poder guardar" },
