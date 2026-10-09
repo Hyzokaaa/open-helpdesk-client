@@ -50,13 +50,15 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
         getEmailSender(workspaceSlug).then((s) => setHasWorkspaceSender(!!s)).catch(() => {}).finally(() => setCheckingEmail(false)),
       ]);
       setMembers(m);
-      setPendingInvitations(inv);
+      // An expired invitation no longer holds the email: inviting it again replaces it
+      const now = Date.now();
+      setPendingInvitations(inv.filter((i) => new Date(i.expiresAt).getTime() > now));
 
       try {
         const limit = await getAgentLimit();
         if (limit !== null) {
           const agentMembers = m.filter((member) => isAgent(member.role)).length;
-          const pendingAgents = inv.filter((i) => isAgent(i.role)).length;
+          const pendingAgents = inv.filter((i) => isAgent(i.role) && new Date(i.expiresAt).getTime() > Date.now()).length;
           setAgentSlots(limit - agentMembers - pendingAgents);
         }
       } catch {}

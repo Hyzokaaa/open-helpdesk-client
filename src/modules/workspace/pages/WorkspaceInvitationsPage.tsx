@@ -103,7 +103,11 @@ export default function WorkspaceInvitationsPage() {
                     <StatusBadge label={tEnum("role", inv.role)} color={roleColor(inv.role)} size="xs" />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-muted">{formatDate(inv.expiresAt)}</span>
+                    {new Date(inv.expiresAt).getTime() <= Date.now() ? (
+                      <span className="text-xs text-danger">{t("invitations.expired")} · {formatDate(inv.expiresAt)}</span>
+                    ) : (
+                      <span className="text-xs text-muted">{formatDate(inv.expiresAt)}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-xs text-muted">{formatDate(inv.createdAt)}</span>
