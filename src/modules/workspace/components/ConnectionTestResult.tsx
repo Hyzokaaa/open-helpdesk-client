@@ -21,7 +21,7 @@ export interface ConnectionTestOutcome {
 
 interface Props {
   result: ConnectionTestOutcome;
-  protocol: "imap";
+  protocol: "imap" | "smtp";
   host: string;
   port: string | number;
   successText: string;
