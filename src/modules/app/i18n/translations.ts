@@ -1434,6 +1434,7 @@ const translations = {
   "auditLog.action.user-resend-verification": { en: "Verification Resent", es: "Verificación Reenviada" },
   "auditLog.action.user-oauth-login": { en: "OAuth Login", es: "Inicio OAuth" },
   "auditLog.action.mailbox-created": { en: "Mailbox Created", es: "Buzón Creado" },
+  "auditLog.action.mailbox-create-failed": { en: "Mailbox Creation Failed", es: "Creación de Buzón Fallida" },
   "auditLog.action.mailbox-updated": { en: "Mailbox Updated", es: "Buzón Actualizado" },
   "auditLog.action.mailbox-deleted": { en: "Mailbox Deleted", es: "Buzón Eliminado" },
   "auditLog.action.mailbox-paused": { en: "Mailbox Paused", es: "Buzón Pausado" },

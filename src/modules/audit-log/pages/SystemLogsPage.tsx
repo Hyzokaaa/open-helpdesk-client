@@ -83,6 +83,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "email-sender-configured": "green",
   "email-sender-deleted": "red",
   "mailbox-created": "green",
+  "mailbox-create-failed": "red",
   "mailbox-updated": "blue",
   "mailbox-deleted": "red",
   "system-analytics-updated": "blue",

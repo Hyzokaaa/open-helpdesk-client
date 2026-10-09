@@ -128,6 +128,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "invitation-cancelled": "red",
   // Mailbox
   "mailbox-created": "green",
+  "mailbox-create-failed": "red",
   "mailbox-updated": "blue",
   "mailbox-deleted": "red",
   "mailbox-paused": "yellow",
