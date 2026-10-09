@@ -2,61 +2,69 @@ import { describe, expect, it } from "vitest";
 import { describeEmailFailures, describeResendFailure, listEmails } from "./invitation-email";
 
 const texts: Record<string, string> = {
-  "invitations.emailFailure.noEmailService.one": "Created, not emailed: no mail server.",
-  "invitations.emailFailure.noEmailService.other": "{count} created, not emailed: no mail server.",
-  "invitations.emailFailure.sendFailed.one": "Created, but the {via} could not send it: {reason}.",
-  "invitations.emailFailure.sendFailed.other": "{count} created, but the {via} could not send them: {reason}.",
-  "invitations.emailFailure.detail": "(Detail: {detail})",
+  "invitations.emailFailure.created.one": "The invitation to {email} was created, but the email could not be sent",
+  "invitations.emailFailure.created.other": "{count} invitations were created, but the emails could not be sent",
+  "invitations.emailFailure.renewed": "The invitation to {email} was renewed, but the email could not be sent",
+  "invitations.emailFailure.noService.one": "The invitation to {email} was created. No mail server.",
+  "invitations.emailFailure.noService.other": "{count} invitations were created. No mail server.",
+  "invitations.emailFailure.renewedNoService": "The invitation to {email} was renewed. No mail server.",
+  "invitations.emailFailure.action.one": "Copy the link.",
+  "invitations.emailFailure.action.other": "Copy the links.",
+  "invitations.emailFailure.because": "the {via} {reason}",
   "invitations.emailFailure.noDetail": "no reason given",
-  "invitations.emailReason.auth-failed": "it refused the username or password",
-  "invitations.emailReason.timeout": "it did not answer",
-  "invitations.emailVia.workspace": "workspace server",
-  "invitations.emailVia.global": "installation server",
-  "invitations.emailFailure.resendFailed": "Renewed, but the {via} could not send it: {reason}.",
-  "invitations.emailFailure.resentNoEmailService": "Renewed. No mail server.",
+  "invitations.emailReason.auth-failed": "rejected the username or password",
+  "invitations.emailReason.refused": "refused the connection",
+  "invitations.emailVia.workspace": "workspace mail server",
+  "invitations.emailVia.global": "installation mail server",
   "invitations.andMore": "and {count} more",
 };
 const t = (key: string) => texts[key] ?? key;
 
+const refused = { reason: "send-failed" as const, via: "workspace" as const, code: "refused", detail: "connect ECONNREFUSED ::1:1025" };
+
 describe("describeEmailFailures", () => {
-  it("says there is no mail server when the send was only simulated", () => {
-    expect(describeEmailFailures([{ reason: "no-email-service" }], t)).toEqual(["Created, not emailed: no mail server."]);
+  it("names a single invitation in the sentence and keeps the server's words apart", () => {
+    expect(describeEmailFailures([{ ...refused, email: "a@x.com" }], t)).toEqual([{
+      reason: "send-failed",
+      headline: "The invitation to a@x.com was created, but the email could not be sent: the workspace mail server refused the connection.",
+      action: "Copy the link.",
+      detail: "connect ECONNREFUSED ::1:1025",
+    }]);
   });
 
-  it("explains a known failure in plain words and keeps the server's answer as detail", () => {
-    expect(describeEmailFailures([{ reason: "send-failed", via: "workspace", code: "auth-failed", detail: "Invalid login: 535" }], t))
-      .toEqual(["Created, but the workspace server could not send it: it refused the username or password. (Detail: Invalid login: 535)"]);
+  it("counts several invitations that failed for the same reason", () => {
+    const [message] = describeEmailFailures([{ ...refused, email: "a@x.com" }, { ...refused, email: "b@x.com" }], t);
+    expect(message.headline).toBe("2 invitations were created, but the emails could not be sent: the workspace mail server refused the connection.");
+    expect(message.action).toBe("Copy the links.");
   });
 
-  it("shows the server's own words when the failure has no plain explanation", () => {
-    expect(describeEmailFailures([{ reason: "send-failed", via: "global", code: "unknown", detail: "Unexpected socket close" }], t))
-      .toEqual(["Created, but the installation server could not send it: Unexpected socket close."]);
+  it("says there is no mail server when the send was only simulated, with nothing technical to add", () => {
+    expect(describeEmailFailures([{ reason: "no-email-service", email: "a@x.com" }], t)).toEqual([{
+      reason: "no-email-service", headline: "The invitation to a@x.com was created. No mail server.", action: "Copy the link.", detail: null,
+    }]);
   });
 
-  it("joins invitations failing for the same reason into one plural line", () => {
-    const refused = { reason: "send-failed" as const, via: "global" as const, code: "timeout", detail: "Connection timeout" };
-    expect(describeEmailFailures([refused, refused, { reason: "no-email-service" }, { reason: "no-email-service" }], t)).toEqual([
-      "2 created, but the installation server could not send them: it did not answer. (Detail: Connection timeout)",
-      "2 created, not emailed: no mail server.",
-    ]);
+  it("leaves an unrecognised failure to the server's words", () => {
+    const [message] = describeEmailFailures([{ reason: "send-failed", via: "global", code: "unknown", detail: "Unexpected socket close", email: "a@x.com" }], t);
+    expect(message.headline).toBe("The invitation to a@x.com was created, but the email could not be sent.");
+    expect(message.detail).toBe("Unexpected socket close");
   });
 
   it("still says something when the server gave no reason", () => {
-    expect(describeEmailFailures([{ reason: "send-failed", via: "global" }], t)).toEqual(["Created, but the installation server could not send it: no reason given."]);
+    const [message] = describeEmailFailures([{ reason: "send-failed", via: "global", email: "a@x.com" }], t);
+    expect(message.detail).toBe("no reason given");
   });
+});
 
-  it("says a failed resend renewed the invitation and where its new link is", () => {
-    expect(describeResendFailure({ reason: "send-failed", via: "workspace", code: "timeout", detail: "Connection timeout" }, "Link copied.", t))
-      .toBe("Renewed, but the workspace server could not send it: it did not answer. Link copied. (Detail: Connection timeout)");
-    expect(describeResendFailure({ reason: "no-email-service" }, "Link copied.", t)).toBe("Renewed. No mail server. Link copied.");
-  });
-
-  it("names the address a failure affects when it is only one, and counts them otherwise", () => {
-    const refused = { reason: "send-failed" as const, via: "global" as const, code: "timeout", detail: "Connection timeout" };
-    expect(describeEmailFailures([{ ...refused, email: "a@x.com" }], t))
-      .toEqual(["a@x.com: Created, but the installation server could not send it: it did not answer. (Detail: Connection timeout)"]);
-    expect(describeEmailFailures([{ ...refused, email: "a@x.com" }, { ...refused, email: "b@x.com" }], t))
-      .toEqual(["2 created, but the installation server could not send them: it did not answer. (Detail: Connection timeout)"]);
+describe("describeResendFailure", () => {
+  it("says the invitation was renewed and where its new link is", () => {
+    expect(describeResendFailure(refused, "a@x.com", "Link copied.", t)).toEqual({
+      reason: "send-failed",
+      headline: "The invitation to a@x.com was renewed, but the email could not be sent: the workspace mail server refused the connection.",
+      action: "Link copied.",
+      detail: "connect ECONNREFUSED ::1:1025",
+    });
+    expect(describeResendFailure({ reason: "no-email-service" }, "a@x.com", "Link copied.", t).headline).toBe("The invitation to a@x.com was renewed. No mail server.");
   });
 });
 

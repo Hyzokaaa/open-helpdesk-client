@@ -1,4 +1,5 @@
 import { describeEmailFailures } from "../domain/invitation-email";
+import { showEmailFailure } from "./EmailFailureNotice";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -152,7 +153,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
       // Created but not emailed: who, and why, so the inviter knows what to fix besides sharing the link
       const notEmailed = created.filter((r) => !r.emailSent);
       const failures = notEmailed.filter((r) => r.emailFailure).map((r) => ({ ...r.emailFailure!, email: r.email }));
-      for (const line of describeEmailFailures(failures, t)) toast.warning(line, { autoClose: 12000 });
+      for (const message of describeEmailFailures(failures, t)) showEmailFailure(message, t);
       const unexplained = notEmailed.filter((r) => !r.emailFailure).map((r) => r.email);
       if (unexplained.length > 0) toast.success(t("invitations.createdNotSent"));
       for (const err of errors) {
