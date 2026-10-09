@@ -64,7 +64,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [onBehalfOf, setOnBehalfOf] = useState("");
   const [allMembers, setAllMembers] = useState<WorkspaceMember[]>([]);
-  const { can } = usePermissions(workspaceSlug);
+  const { can, loading: permLoading } = usePermissions(workspaceSlug);
   // Users may only open tickets for themselves; the backend rejects onBehalfOf without this permission
   const canCreateOnBehalf = can(P.TICKET_CREATE_ON_BEHALF);
   const [loading, setLoading] = useState(false);
@@ -81,13 +81,14 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
     else navigate(`/dashboard/workspaces/${workspaceSlug}/tickets`);
   };
 
+  // Only the lists this member may read: a refused request is recorded as a denied access
   useEffect(() => {
-    if (workspaceSlug) {
-      listTags(workspaceSlug).then(setTags);
-      listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
+    if (workspaceSlug && !permLoading) {
+      if (can(P.TAG_VIEW)) listTags(workspaceSlug).then(setTags).catch(() => {});
+      if (can(P.DEPARTMENT_VIEW)) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
       listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
-      listMembers(workspaceSlug).then(setAllMembers).catch(() => {});
-      listProjects(workspaceSlug).then(setProjects).catch(() => {});
+      if (can(P.WORKSPACE_MEMBERS_VIEW)) listMembers(workspaceSlug).then(setAllMembers).catch(() => {});
+      if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setProjects).catch(() => {});
       listCategories(workspaceSlug).then((cats) => {
         setAllCategories(cats);
         setCategoriesLoaded(true);
@@ -106,7 +107,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         }
       }).catch(() => {});
     }
-  }, [workspaceSlug]);
+  }, [workspaceSlug, permLoading]);
 
   const handleProjectChange = (newProjectId: string | undefined) => {
     setProjectId(newProjectId);
