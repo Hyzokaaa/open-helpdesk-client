@@ -1,3 +1,4 @@
+import { mailboxSaveBlocker } from "@modules/workspace/domain/mailbox-save";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useState } from "react";
@@ -182,6 +183,7 @@ function MailboxForm({
 
   const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
   const canSave = address.trim() && canTest && (testResult?.success || isEdit);
+  const saveBlocker = mailboxSaveBlocker({ hasAddress: !!address.trim(), canTest: !!canTest, testResult, isEdit });
 
   const handleTest = async () => {
     setTesting(true);
@@ -327,6 +329,7 @@ function MailboxForm({
         <Button size="sm" type="submit" full loading={saving} disabled={!canSave}>
           {t("mailbox.save")}
         </Button>
+        {saveBlocker && <p className="text-exs text-muted text-center mt-2">{t(`mailbox.saveBlocked.${saveBlocker}` as any)}</p>}
       </div>
     </form>
   );
