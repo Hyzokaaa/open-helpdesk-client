@@ -189,7 +189,8 @@ export default function WorkspaceMembersPage() {
         <InviteSheet
           workspaceSlug={workspaceSlug}
           onClose={() => setShowInvite(false)}
-          onSent={fetchMembers}
+          // What was just invited shows on the invitations page, not here
+          onSent={() => navigate(`/dashboard/workspaces/${workspaceSlug}/invitations`)}
         />
       )}
       {showImport && workspaceSlug && (
