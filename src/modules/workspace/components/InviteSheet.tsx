@@ -7,7 +7,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
-import { createInvitationBatch, InvitationItem, listInvitations } from "../services/invitation.service";
+import { createInvitationBatch, InvitationItem, listInvitations, resendInvitation } from "../services/invitation.service";
 import { getEmailSender } from "../services/email-sender.service";
 import { listMembers, WorkspaceMember } from "../services/workspace.service";
 import useExtensions from "@modules/app/extensions/useExtensions";
@@ -87,6 +87,31 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
 
   const removeRow = (index: number) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // The email already holds a live invitation: sending it again is what the inviter wanted
+  const [resendingIndex, setResendingIndex] = useState<number | null>(null);
+  const resendPending = async (index: number) => {
+    const invitation = pendingInvitations.find((p) => p.email.toLowerCase() === rows[index].email.trim().toLowerCase());
+    if (!invitation) return;
+    setResendingIndex(index);
+    try {
+      const result = await resendInvitation(workspaceSlug, invitation.id);
+      if (result.emailSent) toast.success(`${t("invitations.resent")}: ${invitation.email}`);
+      else if (result.emailFailure) toast.warning(describeEmailFailures([result.emailFailure], t)[0], { autoClose: 12000 });
+      else toast.success(t("invitations.createdNotSent"));
+      const remaining = rows.filter((_, i) => i !== index);
+      if (remaining.some((r) => r.email.trim())) {
+        setRows(remaining);
+      } else {
+        onSent?.();
+        onClose();
+      }
+    } catch (err: any) {
+      if (!err?.handled) toast.error(err?.message || t("invitations.sendError"));
+    } finally {
+      setResendingIndex(null);
+    }
   };
 
   const addRow = () => {
@@ -197,7 +222,22 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
                     )}
                   </div>
                   {error && (
-                    <p className="text-exs text-danger mt-1">{error}</p>
+                    <p className="text-exs text-danger mt-1">
+                      {error}
+                      {error === t("invitations.alreadyInvited") && (
+                        <>
+                          {" · "}
+                          <button
+                            type="button"
+                            onClick={() => resendPending(i)}
+                            disabled={resendingIndex !== null}
+                            className="text-primary font-body-semibold hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-default"
+                          >
+                            {resendingIndex === i ? t("invitations.resending") : t("invitations.resend")}
+                          </button>
+                        </>
+                      )}
+                    </p>
                   )}
                 </div>
               );

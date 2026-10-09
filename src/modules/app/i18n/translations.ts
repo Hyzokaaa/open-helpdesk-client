@@ -49,6 +49,7 @@ const translations = {
   "invitations.cancelled": { en: "Invitation cancelled", es: "Invitación cancelada" },
   "invitations.resend": { en: "Resend", es: "Reenviar" },
   "invitations.resent": { en: "Invitation resent", es: "Invitación reenviada" },
+  "invitations.resending": { en: "Resending…", es: "Reenviando…" },
   "invitations.createdNotSent": { en: "Invitation created. Copy the link to share it manually.", es: "Invitación creada. Copia el enlace para compartirlo manualmente." },
   "invitations.emailFailure.noEmailService.one": { en: "The invitation was created, but no mail server is configured, so no email was sent. Copy the link from Invitations to share it.", es: "La invitación se creó, pero no hay servidor de correo configurado y no se envió ningún email. Copia el enlace desde Invitaciones para compartirla." },
   "invitations.emailFailure.noEmailService.other": { en: "{count} invitations were created, but no mail server is configured, so no emails were sent. Copy the links from Invitations to share them.", es: "Se crearon {count} invitaciones, pero no hay servidor de correo configurado y no se envió ningún email. Copia los enlaces desde Invitaciones para compartirlas." },
