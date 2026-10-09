@@ -1,3 +1,4 @@
+import { listEmails } from "@modules/workspace/domain/invitation-email";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -532,8 +533,12 @@ export function MetadataSummary({ metadata, action, t, search, names = {} }: { m
     parts.push(`${fieldLabel("systemMailboxEnabled", t)}: ${t(metadata.systemMailboxEnabled ? "auditLog.value.yes" : "auditLog.value.no")}`);
   }
 
-  // Count (batch actions)
-  if (metadata.count) parts.push(`×${metadata.count}`);
+  // Batch actions: who they were for, falling back to the count when the entry has no list
+  const batchEmails = Array.isArray(metadata.invitations)
+    ? (metadata.invitations as { email?: unknown }[]).map((i) => i?.email).filter((e): e is string => typeof e === "string")
+    : [];
+  if (batchEmails.length > 0) parts.push(listEmails(batchEmails, t));
+  else if (metadata.count) parts.push(`×${metadata.count}`);
 
   // Error info
   if (metadata.error) parts.push(`Error: ${formatInlineValue(metadata.error).slice(0, 80)}`);

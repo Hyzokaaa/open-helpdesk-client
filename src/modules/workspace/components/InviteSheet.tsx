@@ -1,4 +1,4 @@
-import { describeEmailFailures, InvitationEmailFailure } from "../domain/invitation-email";
+import { describeEmailFailures } from "../domain/invitation-email";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -144,14 +144,17 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
         validRows.map((r) => ({ email: r.email.trim(), role: r.role })),
       );
       const created = results.filter((r) => r.status === "sent");
-      const emailed = created.filter((r) => r.emailSent).length;
+      const emailed = created.filter((r) => r.emailSent).map((r) => r.email);
       const errors = results.filter((r) => r.status === "error");
-      if (emailed > 0) toast.success(`${emailed} ${t("invitations.sent")}`);
-      // Created but not emailed: say why, so the inviter knows what to fix besides sharing the link
+      // A single invitation is named; several are counted, and the invitations page lists them
+      if (emailed.length === 1) toast.success(t("invitations.sentTo").replace("{email}", emailed[0]));
+      else if (emailed.length > 1) toast.success(t("invitations.sentMany").replace("{count}", String(emailed.length)));
+      // Created but not emailed: who, and why, so the inviter knows what to fix besides sharing the link
       const notEmailed = created.filter((r) => !r.emailSent);
-      const failures = notEmailed.map((r) => r.emailFailure).filter((f): f is InvitationEmailFailure => !!f);
+      const failures = notEmailed.filter((r) => r.emailFailure).map((r) => ({ ...r.emailFailure!, email: r.email }));
       for (const line of describeEmailFailures(failures, t)) toast.warning(line, { autoClose: 12000 });
-      if (notEmailed.length > failures.length) toast.success(`${notEmailed.length - failures.length} ${t("invitations.createdNotSent")}`);
+      const unexplained = notEmailed.filter((r) => !r.emailFailure).map((r) => r.email);
+      if (unexplained.length > 0) toast.success(t("invitations.createdNotSent"));
       for (const err of errors) {
         toast.error(`${err.email}: ${err.error}`);
       }
@@ -261,7 +264,9 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
               {t("members.cancel")}
             </Button>
             <Button type="submit" size="sm" loading={sending} disabled={!canSubmit}>
-              {canSendEmail ? t("invitations.send") : t("invitations.createInvitation")}
+              {validRows.length > 1
+                ? t(canSendEmail ? "invitations.sendMany" : "invitations.createMany").replace("{count}", String(validRows.length))
+                : t(canSendEmail ? "invitations.send" : "invitations.createInvitation")}
             </Button>
           </div>
         </form>

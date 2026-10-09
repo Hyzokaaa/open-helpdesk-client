@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeEmailFailures, describeResendFailure } from "./invitation-email";
+import { describeEmailFailures, describeResendFailure, listEmails } from "./invitation-email";
 
 const texts: Record<string, string> = {
   "invitations.emailFailure.noEmailService.one": "Created, not emailed: no mail server.",
@@ -14,6 +14,7 @@ const texts: Record<string, string> = {
   "invitations.emailVia.global": "installation server",
   "invitations.emailFailure.resendFailed": "Renewed, but the {via} could not send it: {reason}.",
   "invitations.emailFailure.resentNoEmailService": "Renewed. No mail server.",
+  "invitations.andMore": "and {count} more",
 };
 const t = (key: string) => texts[key] ?? key;
 
@@ -48,5 +49,23 @@ describe("describeEmailFailures", () => {
     expect(describeResendFailure({ reason: "send-failed", via: "workspace", code: "timeout", detail: "Connection timeout" }, "Link copied.", t))
       .toBe("Renewed, but the workspace server could not send it: it did not answer. Link copied. (Detail: Connection timeout)");
     expect(describeResendFailure({ reason: "no-email-service" }, "Link copied.", t)).toBe("Renewed. No mail server. Link copied.");
+  });
+
+  it("names the address a failure affects when it is only one, and counts them otherwise", () => {
+    const refused = { reason: "send-failed" as const, via: "global" as const, code: "timeout", detail: "Connection timeout" };
+    expect(describeEmailFailures([{ ...refused, email: "a@x.com" }], t))
+      .toEqual(["a@x.com: Created, but the installation server could not send it: it did not answer. (Detail: Connection timeout)"]);
+    expect(describeEmailFailures([{ ...refused, email: "a@x.com" }, { ...refused, email: "b@x.com" }], t))
+      .toEqual(["2 created, but the installation server could not send them: it did not answer. (Detail: Connection timeout)"]);
+  });
+});
+
+describe("listEmails", () => {
+  it("lists a few addresses in full", () => {
+    expect(listEmails(["a@x.com", "b@x.com", "c@x.com"], t)).toBe("a@x.com, b@x.com, c@x.com");
+  });
+
+  it("shortens a long list to the first three and how many more", () => {
+    expect(listEmails(["p1@x", "p2@x", "p3@x", "p4@x", "p5@x"], t)).toBe("p1@x, p2@x, p3@x and 2 more");
   });
 });

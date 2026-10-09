@@ -18,8 +18,18 @@ const EXPLAINED_CODES = new Set([
  * One line per distinct reason, so ten invitations refused by the same server read as one message
  * and the inviter learns what to fix instead of only that "the link must be shared manually".
  */
-export function describeEmailFailures(failures: InvitationEmailFailure[], t: Translate): string[] {
-  return group(failures).map(({ failure, count }) => describe(failure, count, t, "created"));
+export function describeEmailFailures(failures: (InvitationEmailFailure & { email?: string })[], t: Translate): string[] {
+  return group(failures).map(({ failure, count, emails }) => {
+    const line = describe(failure, count, t, "created");
+    // One address is named; several are only counted, the invitations page lists them
+    return emails.length === 1 ? `${emails[0]}: ${line}` : line;
+  });
+}
+
+/** "a@x.com, b@x.com, c@x.com and 2 more": enough to recognise who without a wall of addresses */
+export function listEmails(emails: string[], t: Translate, shown = 3): string {
+  if (emails.length <= shown) return emails.join(", ");
+  return `${emails.slice(0, shown).join(", ")} ${t("invitations.andMore").replace("{count}", String(emails.length - shown))}`;
 }
 
 /**
@@ -30,13 +40,14 @@ export function describeResendFailure(failure: InvitationEmailFailure, linkNote:
   return describe(failure, 1, t, "resent", linkNote);
 }
 
-function group(failures: InvitationEmailFailure[]) {
-  const groups = new Map<string, { failure: InvitationEmailFailure; count: number }>();
+function group(failures: (InvitationEmailFailure & { email?: string })[]) {
+  const groups = new Map<string, { failure: InvitationEmailFailure; count: number; emails: string[] }>();
   for (const failure of failures) {
     const key = `${failure.reason}|${failure.via ?? ""}|${failure.code ?? ""}|${failure.detail ?? ""}`;
-    const group = groups.get(key);
-    if (group) group.count++;
-    else groups.set(key, { failure, count: 1 });
+    const group = groups.get(key) ?? { failure, count: 0, emails: [] };
+    group.count++;
+    if (failure.email) group.emails.push(failure.email);
+    groups.set(key, group);
   }
   return [...groups.values()];
 }
