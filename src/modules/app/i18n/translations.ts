@@ -1544,6 +1544,8 @@ const translations = {
   "auditLog.source.api": { en: "API", es: "API" },
   "auditLog.reason.unknown-email": { en: "no account with this email", es: "no hay cuenta con este email" },
   "auditLog.reason.wrong-password": { en: "wrong password", es: "contraseña incorrecta" },
+  "auditLog.reason.no-email-service": { en: "Not sent: no mail server configured", es: "No enviado: no hay servidor de correo configurado" },
+  "auditLog.reason.notification": { en: "The mail server refused or failed the send", es: "El servidor de correo rechazó o falló el envío" },
   "auditLog.reason.inactive": { en: "account deactivated", es: "cuenta desactivada" },
   "auditLog.reason.invalid-token": { en: "invalid or expired link", es: "enlace inválido o caducado" },
   "auditLog.reason.invalid-state": { en: "sign-in not started in this browser", es: "inicio no iniciado en este navegador" },
