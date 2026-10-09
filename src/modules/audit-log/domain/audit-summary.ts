@@ -292,5 +292,6 @@ export function metadataValueLabel(key: string, value: unknown, t: (key: any) =>
   if (typeof value !== "string") return value;
   if (key === "type") return codeLabel("auditLog.emailType", value, t);
   if (key === "via") return codeLabel("auditLog.emailVia", value, t);
+  if (key === "priority" || key === "status" || key === "role") return codeLabel(`enum.${key}`, value, t);
   return value;
 }
