@@ -182,7 +182,10 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         <div className="w-full flex items-center justify-center px-4 py-5 border-b border-border-card">
           <Spinner width={16} />
         </div>
-      ) : isLocked || isSingleWorkspace ? (
+      ) : isLocked ? (
+        // A custom domain pinned to one workspace: the brand above already says where you are
+        null
+      ) : isSingleWorkspace ? (
         // Nothing to switch to: a single discreet line naming the workspace
         <div className="w-full flex items-center gap-2 px-4 py-2 border-b border-border-card">
           {activeWs && (
