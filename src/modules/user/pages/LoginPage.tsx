@@ -1,3 +1,4 @@
+import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
@@ -27,7 +28,8 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  // Offered as last chosen, so whoever always keeps it checked does not have to check it again
+  const [rememberMe, setRememberMe] = useState(() => LocalStorage.get(LOCAL_STORAGE_KEY.LOGIN_REMEMBER_CHOICE) === "1");
   const [loading, setLoading] = useState(false);
   const [providers, setProviders] = useState<AuthProviders>({ google: false });
 
@@ -50,7 +52,8 @@ export default function LoginPage() {
 
     try {
       const res = await login({ email, password, rememberMe });
-      saveSession(res);
+      LocalStorage.set(LOCAL_STORAGE_KEY.LOGIN_REMEMBER_CHOICE, rememberMe ? "1" : "0");
+      saveSession(res, { remember: rememberMe });
 
       const profile = await getProfile();
       setUser(profile);
