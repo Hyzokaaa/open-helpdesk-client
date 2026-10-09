@@ -32,9 +32,13 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
       .finally(() => setLoading(false));
   }, [workspaceSlug, ticketId, refreshKey]);
 
+  // Someone who has left the workspace is named from the entry itself rather than shown as an id
+  const knownNames = new Map(items.filter((i) => i.userId && i.userName).map((i) => [i.userId as string, i.userName as string]));
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.userId === userId);
-    return m ? `${m.firstName} ${m.lastName}` : userId.slice(0, 8) + "...";
+    if (m) return `${m.firstName} ${m.lastName}`;
+    const name = knownNames.get(userId);
+    return name ? `${name} (${t("auditLog.formerMember")})` : userId.slice(0, 8) + "...";
   };
 
   if (loading) return null;
@@ -79,7 +83,7 @@ export default function TicketActivityFeed({ workspaceSlug, ticketId, members, r
             <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-border-card border-2 border-surface" />
             <div>
               <p className="text-xs text-body">
-                <span className="font-body-semibold">{item.userId ? getMemberName(item.userId) : "System"}</span>
+                <span className="font-body-semibold">{item.userId ? getMemberName(item.userId) : t("auditLog.system")}</span>
                 {" "}
                 <span className="text-muted">{describeAction(item, t as any, getMemberName)}</span>
               </p>
