@@ -130,6 +130,7 @@ const FIELD_KEYS: Record<string, string> = {
   emailSent: "auditLog.field.emailSent",
   count: "auditLog.field.count",
   invitations: "auditLog.field.invitations",
+  defaultLanguage: "auditLog.field.defaultLanguage",
 };
 
 /** The translated name of a changed field; fields without a translation keep their key. */
