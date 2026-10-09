@@ -109,7 +109,7 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     listCustomFields(workspaceSlug).then(setCustomFieldDefs).catch(() => {});
     listCategories(workspaceSlug).then(setWsCategories).catch(() => {});
     if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setWsProjects).catch(() => {});
-    if (can(P.WORKSPACE_SETTINGS_MANAGE)) {
+    if (can(P.SLA_VIEW)) {
       getSlaPolicy(workspaceSlug, { silent: true })
         .then((r) => { setSlaPolicy(r.slaPolicy); setSlaLocked(false); })
         .catch((err) => { if (isPlanLimitError(err)) setSlaLocked(true); });

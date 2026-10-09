@@ -29,6 +29,7 @@ export const P = {
   TICKET_EDIT_DISCARDED: "ticket.edit.discarded",
   TICKET_PARTICIPANTS_MANAGE: "ticket.participants.manage",
   TICKET_ACTIVITY_VIEW: "ticket.activity.view",
+  SLA_VIEW: "sla.view",
 
   COMMENT_CREATE: "comment.create",
 
