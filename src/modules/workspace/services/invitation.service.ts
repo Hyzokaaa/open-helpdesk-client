@@ -9,6 +9,8 @@ export interface InvitationItem {
   status: string;
   expiresAt: string;
   createdAt: string;
+  /** When the current link was issued: creation or the latest resend (missing on older servers) */
+  lastSentAt?: string;
 }
 
 export interface InvitationDetail {

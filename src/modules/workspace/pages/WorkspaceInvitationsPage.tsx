@@ -110,7 +110,7 @@ export default function WorkspaceInvitationsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-muted">{formatDate(inv.createdAt)}</span>
+                    <span className="text-xs text-muted" title={`${t("invitations.createdOn")} ${formatDate(inv.createdAt)}`}>{formatDate(inv.lastSentAt ?? inv.createdAt)}</span>
                   </td>
                   <td className="px-2 py-3">
                     <ActionMenu items={[
