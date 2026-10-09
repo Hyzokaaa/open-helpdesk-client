@@ -2,6 +2,7 @@ import { Component, type ReactNode } from "react";
 // This boundary wraps the providers, so it cannot use the useTranslation hook;
 // the standalone t() reads the stored language from localStorage instead.
 import { t } from "@modules/app/i18n/translations";
+import { isChunkLoadError, reloadForNewBuild } from "@modules/app/domain/core/stale-build";
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    // A file of the previous build, gone after a deployment: reloading fixes it, no error screen needed
+    if (isChunkLoadError(error) && reloadForNewBuild()) return;
     console.error("ErrorBoundary caught:", error, info.componentStack);
   }
 
