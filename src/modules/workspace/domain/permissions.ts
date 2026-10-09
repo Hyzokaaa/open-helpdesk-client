@@ -66,4 +66,6 @@ export const P = {
 
   PROJECT_MANAGE: "project.manage",
   PROJECT_VIEW: "project.view",
+  CATEGORY_VIEW: "category.view",
+  CATEGORY_MANAGE: "category.manage",
 } as const;

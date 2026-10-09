@@ -95,7 +95,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
         ...(can(P.WORKSPACE_MEMBERS_VIEW) ? [{ label: t("sidebar.contacts"), path: `/dashboard/workspaces/${currentSlug}/contacts` }] : []),
         ...(can(P.WORKSPACE_INVITATIONS_MANAGE) ? [{ label: t("sidebar.invitations"), path: `/dashboard/workspaces/${currentSlug}/invitations` }] : []),
         ...(can(P.TAG_VIEW) ? [{ label: t("sidebar.tags"), path: `/dashboard/workspaces/${currentSlug}/tags` }] : []),
-        ...(can(P.PROJECT_MANAGE) ? [{ label: t("sidebar.categories"), path: `/dashboard/workspaces/${currentSlug}/categories` }] : []),
+        ...(can(P.CATEGORY_VIEW) ? [{ label: t("sidebar.categories"), path: `/dashboard/workspaces/${currentSlug}/categories` }] : []),
         ...(can(P.DEPARTMENT_VIEW) ? [{ label: t("sidebar.departments"), path: `/dashboard/workspaces/${currentSlug}/departments` }] : []),
         ...(can(P.ORGANIZATION_VIEW) ? [{ label: t("sidebar.organizations"), path: `/dashboard/workspaces/${currentSlug}/organizations` }] : []),
         ...(can(P.PROJECT_VIEW) ? [{ label: t("sidebar.projects"), path: `/dashboard/workspaces/${currentSlug}/projects` }] : []),

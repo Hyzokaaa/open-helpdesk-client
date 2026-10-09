@@ -1,3 +1,5 @@
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
@@ -67,6 +69,9 @@ export default function WorkspaceCategoriesPage() {
   const [slugManual, setSlugManual] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Agents see the categories; creating, editing and deleting them needs the manage permission
+  const { can } = usePermissions(workspaceSlug);
+  const canManage = can(P.CATEGORY_MANAGE);
 
   const fetchCategories = () => {
     if (!workspaceSlug) return;
@@ -145,7 +150,7 @@ export default function WorkspaceCategoriesPage() {
           </svg>
           <p className="text-sm text-heading font-body-semibold mb-1">{t("categories.emptyTitle")}</p>
           <p className="text-xs text-muted mb-4 max-w-xs text-center">{t("categories.emptyDescription")}</p>
-          <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>
+          {canManage && <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>}
         </div>
       ) : (
         <>
@@ -153,7 +158,7 @@ export default function WorkspaceCategoriesPage() {
             <h2 className="text-lg font-body-bold text-heading">
               {t("categories.title")} ({categories.length})
             </h2>
-            <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>
+            {canManage && <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>}
           </div>
           <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
             <table className="w-full">
@@ -178,10 +183,12 @@ export default function WorkspaceCategoriesPage() {
                       <span className="text-sm text-muted">{cat.slug}</span>
                     </td>
                     <td className="px-2 py-2.5 text-right">
-                      <ActionMenu items={[
-                        { label: t("common.edit"), onClick: () => openEdit(cat) },
-                        { label: t("common.delete"), onClick: () => setDeleteId(cat.id), danger: true },
-                      ]} />
+                      {canManage && (
+                        <ActionMenu items={[
+                          { label: t("common.edit"), onClick: () => openEdit(cat) },
+                          { label: t("common.delete"), onClick: () => setDeleteId(cat.id), danger: true },
+                        ]} />
+                      )}
                     </td>
                   </tr>
                 ))}
