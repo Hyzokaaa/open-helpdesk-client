@@ -1,3 +1,4 @@
+import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -425,8 +426,9 @@ export function MailboxForm({ slug, mailbox, onSaved, onPlanLimit, onDirtyChange
           setImapFolder(result.folders[0]);
         }
       }
-    } catch {
-      setTestResult({ success: false, error: t("mailbox.testFailed") });
+    } catch (err) {
+      // A refused request (validation, permission, plan, server down) says why; that is what to show
+      setTestResult({ success: false, error: (err as HttpResponseError).message || t("mailbox.testFailed") });
     } finally {
       setTesting(false);
     }
