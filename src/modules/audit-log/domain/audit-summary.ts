@@ -116,6 +116,20 @@ const FIELD_KEYS: Record<string, string> = {
   assignee: "auditLog.field.assignee",
   palette: "auditLog.field.palette",
   systemMailboxEnabled: "auditLog.field.systemMailboxEnabled",
+  to: "auditLog.field.to",
+  subject: "auditLog.field.subject",
+  type: "auditLog.field.type",
+  via: "auditLog.field.via",
+  reason: "auditLog.field.reason",
+  error: "auditLog.field.error",
+  errorCode: "auditLog.field.errorCode",
+  ticketId: "auditLog.field.ticketId",
+  ticketReference: "auditLog.field.ticketReference",
+  ticketName: "auditLog.field.ticketName",
+  email: "auditLog.field.email",
+  emailSent: "auditLog.field.emailSent",
+  count: "auditLog.field.count",
+  invitations: "auditLog.field.invitations",
 };
 
 /** The translated name of a changed field; fields without a translation keep their key. */
@@ -258,4 +272,25 @@ export function emailSummary(metadata: Record<string, unknown>, failed: boolean,
     if (why) parts.push(why);
   }
   return parts.join(" · ");
+}
+
+/** A stored code (category, level, source, reason) in the reader's language, or as stored when untranslated */
+export function codeLabel(prefix: string, code: string | null | undefined, t: (key: any) => string): string {
+  if (!code) return "—";
+  const key = `${prefix}.${code}`;
+  const translated = t(key);
+  return translated && translated !== key ? translated : code;
+}
+
+/** Fields only someone tracing a problem needs: ids and internal codes, shown folded */
+export function isTechnicalField(key: string, value: unknown): boolean {
+  return key === "errorCode" || key.endsWith("Id") || isUlid(value);
+}
+
+/** Stored codes shown in the reader's language: email kind and the server that sent it */
+export function metadataValueLabel(key: string, value: unknown, t: (key: any) => string): unknown {
+  if (typeof value !== "string") return value;
+  if (key === "type") return codeLabel("auditLog.emailType", value, t);
+  if (key === "via") return codeLabel("auditLog.emailVia", value, t);
+  return value;
 }

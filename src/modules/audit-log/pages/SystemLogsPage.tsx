@@ -1,3 +1,5 @@
+import LogEntryPanel from "../components/LogEntryPanel";
+import { codeLabel } from "../domain/audit-summary";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -11,7 +13,7 @@ import {
   AuditLogFilters,
   listAllAuditLog,
 } from "../services/audit-log.service";
-import { MetadataSummary, MetadataKeyValue, HighlightText, SourceBadge } from "./WorkspaceAuditLogPage";
+import { MetadataSummary, SourceBadge } from "./WorkspaceAuditLogPage";
 import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 
 const CATEGORIES = [
@@ -123,8 +125,8 @@ export default function SystemLogsPage() {
   const filterSections: FilterSection[] = useMemo(() => [
     { key: "actions", label: t("auditLog.col.action"), type: "multi", options: actionOptions("system", t as (k: string) => string) },
     { key: "categories", label: t("auditLog.col.category"), type: "multi", options: CATEGORIES.map(c => ({ value: c, label: c })) },
-    { key: "levels", label: t("auditLog.col.level"), type: "multi", options: LEVELS.map(l => ({ value: l, label: l })) },
-    { key: "sources", label: t("auditLog.col.source"), type: "multi", options: SOURCES.map(s => ({ value: s, label: s })) },
+    { key: "levels", label: t("auditLog.col.level"), type: "multi", options: LEVELS.map(l => ({ value: l, label: codeLabel("auditLog.level", l, t) })) },
+    { key: "sources", label: t("auditLog.col.source"), type: "multi", options: SOURCES.map(s => ({ value: s, label: codeLabel("auditLog.source", s, t) })) },
   ], [t]);
 
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialState(filterSections));
@@ -359,45 +361,16 @@ export default function SystemLogsPage() {
 
       {/* Detail panel */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
-          <div className="absolute inset-0 bg-black/30" />
-          <div
-            className="relative w-full max-w-md bg-surface border-l border-border-card h-full overflow-y-auto shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border-card">
-              <h3 className="text-sm font-body-bold text-heading">{t("auditLog.logEntry")}</h3>
-              <button onClick={() => setSelected(null)} className="text-muted hover:text-body cursor-pointer text-lg">✕</button>
-            </div>
-            <div className="px-5 py-4 space-y-4">
-              <DetailRow label={t("auditLog.detail.date")} value={formatDate(selected.createdAt)} />
-              <DetailRow label={t("auditLog.detail.action")} value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
-              <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
-              <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
-              <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
-              <DetailRow label={t("auditLog.detail.entityType")} value={entityTypeLabel(selected.entityType, t as (k: string) => string)} />
-              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
-              <DetailRow label={t("auditLog.detail.user")} value={selected.userName ?? selected.userId ?? t("auditLog.system")} />
-              {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
-              <DetailRow label={t("auditLog.detail.workspaceId")} value={selected.workspaceId ?? "—"} />
-              <div>
-                <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                <MetadataKeyValue metadata={selected.metadata} action={selected.action} t={t} search={filters.search} />
-              </div>
-              <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
-            </div>
-          </div>
-        </div>
+        <LogEntryPanel
+          entry={selected}
+          actor={selected.userName ?? (selected.userId ? selected.userId.slice(0, 8) + "..." : t("auditLog.system"))}
+          actionColor={ACTION_COLORS[selected.action] ?? "gray"}
+          entityTypeLabel={entityTypeLabel(selected.entityType, t as (k: string) => string)}
+          onClose={() => setSelected(null)}
+          search={filters.search}
+          technicalRows={[[t("auditLog.detail.workspaceId"), selected.workspaceId ?? "—"]]}
+        />
       )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value, search }: { label: string; value: string; search?: string }) {
-  return (
-    <div>
-      <p className="text-xs font-body-semibold text-subtle uppercase mb-0.5">{label}</p>
-      <p className="text-sm text-body break-all">{search ? <HighlightText text={value} search={search} /> : value}</p>
     </div>
   );
 }

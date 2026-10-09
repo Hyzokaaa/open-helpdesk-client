@@ -17,7 +17,8 @@ import {
   listAuditLog,
 } from "../services/audit-log.service";
 import { formatDetailValue, formatInlineValue, isStructuredValue } from "../domain/audit-metadata";
-import { commentPreview, describeChanges, emailSummary, fieldLabel, formatChange, isCommentAction, isEmailAction, type ReferenceNames } from "../domain/audit-summary";
+import { commentPreview, describeChanges, emailSummary, fieldLabel, formatChange, isCommentAction, isEmailAction, isTechnicalField, metadataValueLabel, type ReferenceNames } from "../domain/audit-summary";
+import LogEntryPanel from "../components/LogEntryPanel";
 import { actionOptions, entityTypeLabel } from "../domain/audit-actions";
 import { listDepartments } from "@modules/department/services/department.service";
 import { listProjects, listCategories } from "@modules/project/services/project.service";
@@ -74,6 +75,9 @@ const ENTITY_TYPES = [
 const CATEGORIES = ["ticket", "workspace", "user", "security", "email", "config", "knowledge-base", "system", "billing"];
 
 const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gray" | "blue"> = {
+  // Email: a failed send stands out from the sent ones
+  "email-sent": "green",
+  "email-send-failed": "red",
   // Ticket
   "ticket-created": "green",
   "ticket-updated": "blue",
@@ -439,44 +443,16 @@ export default function WorkspaceAuditLogPage() {
 
       {/* Detail panel */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
-          <div className="absolute inset-0 bg-black/30" />
-          <div
-            className="relative w-full max-w-md bg-surface border-l border-border-card h-full overflow-y-auto shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border-card">
-              <h3 className="text-sm font-body-bold text-heading">{t("auditLog.logEntry")}</h3>
-              <button onClick={() => setSelected(null)} className="text-muted hover:text-body cursor-pointer text-lg">✕</button>
-            </div>
-            <div className="px-5 py-4 space-y-4">
-              <DetailRow label={t("auditLog.detail.date")} value={formatDate(selected.createdAt)} />
-              <DetailRow label={t("auditLog.detail.action")} value={t(`auditLog.action.${selected.action}` as any) || selected.action} />
-              <DetailRow label={t("auditLog.detail.category")} value={selected.category} />
-              <DetailRow label={t("auditLog.detail.level")} value={selected.level} />
-              <DetailRow label={t("auditLog.detail.source")} value={selected.source ?? "—"} />
-              <DetailRow label={t("auditLog.detail.entityType")} value={entityTypeLabel(selected.entityType, t as (k: string) => string)} />
-              <DetailRow label={t("auditLog.detail.entityId")} value={selected.entityId} search={filters.search} />
-              <DetailRow label={t("auditLog.detail.user")} value={selected.userId ? actorName(selected.userId, selected.userName) : t("auditLog.system")} />
-              {selected.userId && <DetailRow label={t("auditLog.detail.userId")} value={selected.userId} />}
-              <div>
-                <p className="text-xs font-body-semibold text-subtle uppercase mb-1">{t("auditLog.detail.metadata")}</p>
-                <MetadataKeyValue metadata={selected.metadata} action={selected.action} t={t} search={filters.search} names={referenceNames} />
-              </div>
-              <DetailRow label={t("auditLog.detail.logId")} value={selected.id} />
-            </div>
-          </div>
-        </div>
+        <LogEntryPanel
+          entry={selected}
+          actor={selected.userId ? actorName(selected.userId, selected.userName) : t("auditLog.system")}
+          actionColor={ACTION_COLORS[selected.action] ?? "gray"}
+          entityTypeLabel={entityTypeLabel(selected.entityType, t as (k: string) => string)}
+          onClose={() => setSelected(null)}
+          search={filters.search}
+          names={referenceNames}
+        />
       )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value, search }: { label: string; value: string; search?: string }) {
-  return (
-    <div>
-      <p className="text-xs font-body-semibold text-subtle uppercase mb-0.5">{label}</p>
-      <p className="text-sm text-body break-all">{search ? <HighlightText text={value} search={search} /> : value}</p>
     </div>
   );
 }
@@ -604,17 +580,21 @@ export function SourceBadge({ source, t }: { source: string | null; t: (k: any) 
   return null;
 }
 
-export function MetadataKeyValue({ metadata, action, t, search, names = {} }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames }) {
+export function MetadataKeyValue({ metadata, action, t, search, names = {}, hideTechnical = false }: { metadata: Record<string, unknown> | null; action: string; t: (k: any) => string; search?: string; names?: ReferenceNames; hideTechnical?: boolean }) {
   if (!metadata) return <span className="text-xs text-muted">—</span>;
 
   const entries: [string, unknown][] = Object.entries(metadata)
-    .filter(([key]) => !DIFF_KEYS.has(key))
+    .filter(([key, val]) => !DIFF_KEYS.has(key) && !(hideTechnical && isTechnicalField(key, val)))
     // Comments as plain text, also for older entries that stored the HTML; failure reasons translated
-    .map(([key, val]) => {
+    .map(([key, val]): [string, unknown] => {
       if (key === "content" && isCommentAction(action)) return [key, commentPreview(val, 300)];
       if (key === "reason") return [key, reasonLabel(val, t)];
-      return [key, val];
-    });
+      // A list of addresses or names reads as a list, not as JSON
+      if (Array.isArray(val) && val.every((v) => typeof v !== "object" || v === null)) return [key, val.join(", ")];
+      if (typeof val === "boolean") return [key, t(val ? "auditLog.value.yes" : "auditLog.value.no")];
+      return [key, metadataValueLabel(key, val, t)];
+    })
+    .map(([key, val]): [string, unknown] => [fieldLabel(key, t), val]);
   entries.push(...contextRows(metadata, t));
 
   // Merge before/after into diff rows, by field name and with names instead of ids
