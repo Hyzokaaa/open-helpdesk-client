@@ -1,3 +1,4 @@
+import { notificationLabelKey, notificationTarget } from "../domain/notification-display";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
@@ -79,9 +80,8 @@ export default function NotificationBell() {
       );
     }
     setOpen(false);
-    if (n.ticketId) {
-      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets?open=${n.ticketId}`);
-    }
+    const target = notificationTarget(n);
+    if (target) navigate(target);
   };
 
   const handleMarkAllRead = async () => {
@@ -150,14 +150,7 @@ export default function NotificationBell() {
                   <NotificationIcon type={n.type} />
                   <div className="flex-1 min-w-0">
                     <p className="text-exs text-subtle">
-                      {({
-                        "ticket-created": t("notifications.ticketCreated"),
-                        "ticket-assigned": t("notifications.ticketAssigned"),
-                        "status-changed": t("notifications.statusChanged"),
-                        "ticket-unassigned": t("notifications.ticketUnassigned"),
-                        "comment-created": t("notifications.commentCreated"),
-                        "transfer-request": t("notifications.transferRequest"),
-                      } as Record<string, string>)[n.type] ?? t("notifications.ticketCreated")}
+                      {t(notificationLabelKey(n.type) as any)}
                     </p>
                     <p
                       className={clsx(

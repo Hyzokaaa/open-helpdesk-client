@@ -1,3 +1,4 @@
+import { notificationLabelKey, notificationTarget } from "../domain/notification-display";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
@@ -38,9 +39,8 @@ export default function NotificationsPage() {
         prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)),
       );
     }
-    if (n.ticketId) {
-      navigate(`/dashboard/workspaces/${n.workspaceSlug}/tickets?open=${n.ticketId}`);
-    }
+    const target = notificationTarget(n);
+    if (target) navigate(target);
   };
 
   const handleMarkAllRead = async () => {
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
                     {n.title}
                   </p>
                   <p className="text-exs text-subtle mt-1">
-                    {n.createdAt ? formatDate(n.createdAt) : ""}
+                    {t(notificationLabelKey(n.type) as any)}{n.createdAt ? ` · ${formatDate(n.createdAt)}` : ""}
                   </p>
                 </div>
                 {!n.isRead && (

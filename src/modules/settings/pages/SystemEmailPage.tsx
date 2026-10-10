@@ -253,6 +253,10 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
             onChange={setEncryption}
           />
         </FormInput>
+        {/* A password sent in plain text can be read by anyone on the way: allowed for a server on your own network, never silently */}
+        {encryption === "none" && (password || isEdit) && (
+          <p className="text-exs text-amber-700 dark:text-amber-300 -mt-2 mb-3">{t("emailSender.plainPasswordWarning")}</p>
+        )}
 
         <div className="flex items-center gap-3 mb-4">
           <Button size="xs" type="button" color="light" onClick={handleTest} loading={testing} disabled={!canTest}>

@@ -4,6 +4,10 @@ export enum LOCAL_STORAGE_KEY {
   /** "Keep me signed in" chosen before an OAuth popup, read back by the callback page. */
   OAUTH_REMEMBER_ME = "oauth_remember_me",
   LANGUAGE = "language",
+  /** "0" when this session should end with the browser; absent or "1" when it is remembered. */
+  SESSION_REMEMBER = "session_remember",
+  /** The last "Keep me signed in" choice, so the sign-in page offers it again. */
+  LOGIN_REMEMBER_CHOICE = "login_remember_choice",
 }
 
 export class LocalStorage {

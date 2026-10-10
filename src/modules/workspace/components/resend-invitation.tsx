@@ -1,5 +1,6 @@
 import { toast } from "react-toastify";
 import { describeResendFailure } from "../domain/invitation-email";
+import { showEmailFailure } from "./EmailFailureNotice";
 import { getInvitationLink, resendInvitation } from "../services/invitation.service";
 
 type Translate = (key: any) => string;
@@ -23,8 +24,5 @@ export async function resendInvitationAndNotify(slug: string, invitation: { id: 
   }
   const linkNote = t(copied ? "invitations.newLinkCopied" : "invitations.newLinkInMenu");
   const failure = result.emailFailure ?? { reason: "no-email-service" as const };
-  const text = `${invitation.email}: ${describeResendFailure(failure, linkNote, t)}`;
-  // Nothing went wrong when there is simply no mail server: the link is the way to share it
-  if (failure.reason === "no-email-service") toast.success(text, { autoClose: 9000 });
-  else toast.warning(text, { autoClose: 12000 });
+  showEmailFailure(describeResendFailure(failure, invitation.email, linkNote, t), t);
 }

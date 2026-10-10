@@ -20,6 +20,8 @@ export interface WorkspaceDetail {
   slug: string;
   description: string;
   palette: string | null;
+  /** Language of emails to people without an account yet; null falls back to the inviter's */
+  defaultLanguage?: string | null;
   supportEmail: string | null;
   systemMailboxEnabled: boolean;
   customDomain: string | null;
@@ -187,6 +189,10 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   await http.delete(`/workspaces/${slug}/members/${userId}`);
+}
+
+export async function updateWorkspaceDefaultLanguage(slug: string, language: string): Promise<void> {
+  await http.patch(`/workspaces/${slug}/default-language`, { language });
 }
 
 export async function updateWorkspacePalette(

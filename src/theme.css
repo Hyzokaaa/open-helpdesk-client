@@ -175,7 +175,8 @@
   --radius-input: var(--radius-lg);
   --radius-button: var(--radius-lg);
 
-  --text-exs: 0.65rem;
+  /* Help text, badges and small labels: 12px, readable without zooming (was 0.65rem, ~10px) */
+  --text-exs: 0.75rem;
 }
 
 /* ── Base utilities ── */

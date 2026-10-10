@@ -1,4 +1,6 @@
 import Card from "@modules/app/modules/ui/components/Card/Card";
+import UserAvatar from "@modules/user/components/UserAvatar";
+import MemberLink from "./MemberLink";
 import { removeParticipant } from "../services/ticket.service";
 import type { TicketParticipant } from "../services/ticket.service";
 import { canRemoveFollower } from "../domain/can-remove-follower";
@@ -12,6 +14,10 @@ interface TicketFollowersCardProps {
   ticketId: string | undefined;
   fetchParticipants: () => void;
   t: (key: any) => string;
+  /** For the same hover card and stats link as the assignee and the reporter */
+  members?: { userId: string; firstName: string; lastName: string; email: string; role: string; avatarUrl?: string | null }[];
+  getPerson?: (id: string) => { avatarUrl?: string | null } | undefined;
+  navigate?: (path: string) => void;
 }
 
 export default function TicketFollowersCard({
@@ -22,6 +28,9 @@ export default function TicketFollowersCard({
   ticketId,
   fetchParticipants,
   t,
+  members = [],
+  getPerson,
+  navigate = () => {},
 }: TicketFollowersCardProps) {
   return (
     <Card className="p-4">
@@ -32,13 +41,18 @@ export default function TicketFollowersCard({
         <div className="space-y-1.5">
           {participants.map((p) => (
             <div key={p.id} className="flex items-center justify-between group">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-exs font-body-bold text-primary">
-                    {p.firstName[0]}{p.lastName[0]}
-                  </span>
-                </div>
-                <span className="text-xs text-body">{p.firstName} {p.lastName}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <UserAvatar avatarUrl={getPerson?.(p.userId)?.avatarUrl} firstName={p.firstName} lastName={p.lastName} size="xs" />
+                <span className="text-xs min-w-0">
+                  <MemberLink
+                    userId={p.userId}
+                    members={members}
+                    getMemberName={(id) => (id === p.userId ? `${p.firstName} ${p.lastName}` : id)}
+                    navigate={navigate}
+                    workspaceSlug={workspaceSlug}
+                    align="left"
+                  />
+                </span>
               </div>
               {canRemoveFollower(p.userId, currentUserId, canManageFollowers) && (
                 <button

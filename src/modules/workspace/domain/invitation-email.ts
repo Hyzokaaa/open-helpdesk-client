@@ -7,22 +7,46 @@ export interface InvitationEmailFailure {
   via?: "workspace" | "global";
 }
 
+/** A failure notice in three parts: what happened, what to do, and the server's words for whoever digs further */
+export interface EmailFailureMessage {
+  reason: InvitationEmailFailure["reason"];
+  headline: string;
+  action: string;
+  detail: string | null;
+}
+
 type Translate = (key: any) => string;
 
-/** Failure kinds with a plain explanation; anything else shows the server's own words */
+/** Failure kinds with a plain explanation; anything else shows only the server's own words as detail */
 const EXPLAINED_CODES = new Set([
   "auth-failed", "tls-mismatch", "tls-required", "wrong-port", "host-not-found", "refused", "timeout", "certificate",
 ]);
 
 /**
- * One line per distinct reason, so ten invitations refused by the same server read as one message
+ * One notice per distinct reason, so ten invitations refused by the same server read as one message
  * and the inviter learns what to fix instead of only that "the link must be shared manually".
+ * A single invitation is named in the sentence; several are only counted, the invitations page lists them.
  */
-export function describeEmailFailures(failures: (InvitationEmailFailure & { email?: string })[], t: Translate): string[] {
+export function describeEmailFailures(failures: (InvitationEmailFailure & { email?: string })[], t: Translate): EmailFailureMessage[] {
   return group(failures).map(({ failure, count, emails }) => {
-    const line = describe(failure, count, t, "created");
-    // One address is named; several are only counted, the invitations page lists them
-    return emails.length === 1 ? `${emails[0]}: ${line}` : line;
+    const plural = count === 1 ? "one" : "other";
+    return describe(failure, t, {
+      created: t(`invitations.emailFailure.created.${plural}`).replace("{count}", String(count)).replace("{email}", emails[0] ?? ""),
+      noService: t(`invitations.emailFailure.noService.${plural}`).replace("{count}", String(count)).replace("{email}", emails[0] ?? ""),
+      action: t(`invitations.emailFailure.action.${plural}`),
+    });
+  });
+}
+
+/**
+ * A resend that did not leave: the invitation was renewed rather than created, and `linkNote` says
+ * where its new link is, since the one shared before stopped working.
+ */
+export function describeResendFailure(failure: InvitationEmailFailure, email: string, linkNote: string, t: Translate): EmailFailureMessage {
+  return describe(failure, t, {
+    created: t("invitations.emailFailure.renewed").replace("{email}", email),
+    noService: t("invitations.emailFailure.renewedNoService").replace("{email}", email),
+    action: linkNote,
   });
 }
 
@@ -30,14 +54,6 @@ export function describeEmailFailures(failures: (InvitationEmailFailure & { emai
 export function listEmails(emails: string[], t: Translate, shown = 3): string {
   if (emails.length <= shown) return emails.join(", ");
   return `${emails.slice(0, shown).join(", ")} ${t("invitations.andMore").replace("{count}", String(emails.length - shown))}`;
-}
-
-/**
- * A resend that did not leave: the invitation was renewed rather than created, and `linkNote` says
- * where its new link is, since the one shared before stopped working.
- */
-export function describeResendFailure(failure: InvitationEmailFailure, linkNote: string, t: Translate): string {
-  return describe(failure, 1, t, "resent", linkNote);
 }
 
 function group(failures: (InvitationEmailFailure & { email?: string })[]) {
@@ -52,26 +68,26 @@ function group(failures: (InvitationEmailFailure & { email?: string })[]) {
   return [...groups.values()];
 }
 
-function describe(failure: InvitationEmailFailure, count: number, t: Translate, mode: "created" | "resent", linkNote?: string): string {
-  const plural = count === 1 ? "one" : "other";
+function describe(
+  failure: InvitationEmailFailure,
+  t: Translate,
+  texts: { created: string; noService: string; action: string },
+): EmailFailureMessage {
   if (failure.reason === "no-email-service") {
-    return mode === "resent"
-      ? `${t("invitations.emailFailure.resentNoEmailService")} ${linkNote ?? ""}`.trim()
-      : t(`invitations.emailFailure.noEmailService.${plural}`).replace("{count}", String(count));
+    return { reason: failure.reason, headline: texts.noService, action: texts.action, detail: null };
   }
 
-  const explained = failure.code && EXPLAINED_CODES.has(failure.code);
-  const reason = explained
-    ? t(`invitations.emailReason.${failure.code}`)
-    : failure.detail || t("invitations.emailFailure.noDetail");
-  const sentence = mode === "resent" ? "invitations.emailFailure.resendFailed" : `invitations.emailFailure.sendFailed.${plural}`;
-  const line = [
-    t(sentence)
-      .replace("{count}", String(count))
-      .replace("{via}", t(failure.via === "workspace" ? "invitations.emailVia.workspace" : "invitations.emailVia.global"))
-      .replace("{reason}", reason),
-    linkNote,
-    explained && failure.detail ? t("invitations.emailFailure.detail").replace("{detail}", failure.detail) : null,
-  ];
-  return line.filter(Boolean).join(" ");
+  // "…could not be sent: the workspace mail server refused the connection."
+  const explained = !!failure.code && EXPLAINED_CODES.has(failure.code);
+  const because = explained
+    ? t("invitations.emailFailure.because")
+        .replace("{via}", t(failure.via === "workspace" ? "invitations.emailVia.workspace" : "invitations.emailVia.global"))
+        .replace("{reason}", t(`invitations.emailReason.${failure.code}`))
+    : null;
+  return {
+    reason: failure.reason,
+    headline: because ? `${texts.created}: ${because}.` : `${texts.created}.`,
+    action: texts.action,
+    detail: failure.detail || (explained ? null : t("invitations.emailFailure.noDetail")),
+  };
 }

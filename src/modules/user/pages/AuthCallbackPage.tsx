@@ -47,7 +47,8 @@ export default function AuthCallbackPage() {
 
     exchangeOAuthCode(code, rememberMe)
       .then((tokens) => {
-        saveSession(tokens);
+        LocalStorage.set(LOCAL_STORAGE_KEY.LOGIN_REMEMBER_CHOICE, rememberMe ? "1" : "0");
+        saveSession(tokens, { remember: rememberMe });
 
         if (window.opener) {
           window.opener.postMessage("oauth:success", window.location.origin);

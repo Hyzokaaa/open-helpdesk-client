@@ -28,6 +28,7 @@ import {
 import { PaletteContext } from "../context/PaletteProvider";
 import PalettePicker from "../components/PalettePicker";
 import MailboxSettings from "../components/MailboxSettings";
+import WorkspaceEmailLanguageSettings from "../components/WorkspaceEmailLanguageSettings";
 import EmailSenderSettings from "../components/EmailSenderSettings";
 import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
@@ -206,6 +207,12 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
               {t("workspaceSettings.noPermission")}
             </p>
           ) : null}
+
+          {canManageSettings && (
+            <CollapsibleSection title={t("workspaceEmailLanguage.title")}>
+              <WorkspaceEmailLanguageSettings slug={workspaceSlug!} initial={workspace.defaultLanguage ?? null} />
+            </CollapsibleSection>
+          )}
 
           {canManageSettings && (
             <CollapsibleSection title={t("mailbox.title")}>

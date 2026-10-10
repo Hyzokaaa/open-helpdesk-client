@@ -29,6 +29,7 @@ export const P = {
   TICKET_EDIT_DISCARDED: "ticket.edit.discarded",
   TICKET_PARTICIPANTS_MANAGE: "ticket.participants.manage",
   TICKET_ACTIVITY_VIEW: "ticket.activity.view",
+  SLA_VIEW: "sla.view",
 
   COMMENT_CREATE: "comment.create",
 
@@ -65,4 +66,6 @@ export const P = {
 
   PROJECT_MANAGE: "project.manage",
   PROJECT_VIEW: "project.view",
+  CATEGORY_VIEW: "category.view",
+  CATEGORY_MANAGE: "category.manage",
 } as const;

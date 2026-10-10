@@ -4,6 +4,7 @@ import {
   commentPreview,
   describeChanges,
   emailSummary,
+  metadataValueLabel,
   fieldLabel,
   formatChange,
   formatChangeValue,
@@ -162,5 +163,16 @@ describe("emailSummary", () => {
     expect(emailSummary({ to: ["a@x.com", "b@x.com", "c@x.com"], ticketName: "Printer", reason: "send-failed", error: "Invalid login: 535" }, true, tr))
       .toBe("To: a@x.com, b@x.com and 1 more · Printer · The mail server refused or failed the send: Invalid login: 535");
     expect(emailSummary({ to: "a@x.com", reason: "no-email-service" }, true, tr)).toBe("To: a@x.com · Not sent: no mail server configured");
+  });
+});
+
+describe("metadataValueLabel", () => {
+  const tr = (key: string) => (({ "enum.priority.medium": "Media", "enum.status.open": "Abierto", "enum.role.agent": "Agente" }) as Record<string, string>)[key] ?? key;
+
+  it("shows priority, status and role in the reader's language, and other values as stored", () => {
+    expect(metadataValueLabel("priority", "medium", tr)).toBe("Media");
+    expect(metadataValueLabel("status", "open", tr)).toBe("Abierto");
+    expect(metadataValueLabel("role", "agent", tr)).toBe("Agente");
+    expect(metadataValueLabel("name", "medium", tr)).toBe("medium");
   });
 });
