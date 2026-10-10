@@ -3,9 +3,27 @@ import { http } from "@modules/app/modules/http/domain/http";
 import useUser from "@modules/user/hooks/useUser";
 
 const cache = new Map<string, string[]>();
+// Requests in flight, so components mounting together (sidebar, page, panels) share one call
+const pending = new Map<string, Promise<string[]>>();
 
 export function clearPermissionsCache() {
   cache.clear();
+  pending.clear();
+}
+
+function fetchPermissions(cacheKey: string, workspaceSlug: string): Promise<string[]> {
+  let request = pending.get(cacheKey);
+  if (!request) {
+    request = http
+      .get<{ permissions: string[] }>(`/workspaces/${workspaceSlug}/permissions`)
+      .then((res) => {
+        cache.set(cacheKey, res.data.permissions);
+        return res.data.permissions;
+      })
+      .finally(() => pending.delete(cacheKey));
+    pending.set(cacheKey, request);
+  }
+  return request;
 }
 
 export default function usePermissions(workspaceSlug: string | undefined) {
@@ -27,14 +45,8 @@ export default function usePermissions(workspaceSlug: string | undefined) {
       return;
     }
 
-    http
-      .get<{ permissions: string[] }>(
-        `/workspaces/${workspaceSlug}/permissions`,
-      )
-      .then((res) => {
-        cache.set(cacheKey, res.data.permissions);
-        setPermissions(res.data.permissions);
-      })
+    fetchPermissions(cacheKey, workspaceSlug)
+      .then(setPermissions)
       .catch(() => setPermissions([]))
       .finally(() => setLoading(false));
   }, [workspaceSlug, user?.id]);
