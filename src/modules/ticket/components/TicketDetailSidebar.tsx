@@ -260,7 +260,11 @@ export default function TicketDetailSidebar({
         />
       </Card>
 
-      {customFieldDefs.length > 0 && (
+      {/* Without any value there is nothing to show: an empty box only while not editing */}
+      {customFieldDefs.length > 0 && (editing && canEditCustomFields || customFieldDefs.some((d) => {
+        const val = (v.customFields ?? {})[d.id];
+        return val !== undefined && val !== null && val !== "";
+      })) && (
         <Card className="p-4">
           {editing && canEditCustomFields ? (
             <CustomFieldsForm
@@ -282,6 +286,9 @@ export default function TicketDetailSidebar({
         ticketId={ticketId}
         fetchParticipants={fetchParticipants}
         t={t}
+        members={members}
+        getPerson={getPerson}
+        navigate={navigate}
       />
 
       {slaPolicy && (
