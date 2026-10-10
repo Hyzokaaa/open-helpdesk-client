@@ -4,15 +4,17 @@
  * Opening such a ticket and saving turns `Prueba` into `<p>Prueba</p>`, which is not
  * an edit the user made.
  *
- * Wrapping bare text in a paragraph mirrors what the editor does on load, so both
- * sides compare equal. Anything that already contains markup is left untouched, so
+ * Wrapping bare text in a paragraph the way the editor does on load makes both sides
+ * compare equal. Anything that already contains markup is left untouched, so
  * real formatting changes are still detected.
  */
 export function normalizeRichText(value: string | null | undefined): string {
   const text = (value ?? "").trim();
   if (!text) return "";
   if (/<[a-z][^>]*>/i.test(text)) return text;
-  return `<p>${text}</p>`;
+  // The editor collapses whitespace runs, line breaks included, and escapes `&` and `>`.
+  const escaped = text.replace(/\s+/g, " ").replace(/&/g, "&amp;").replace(/>/g, "&gt;");
+  return `<p>${escaped}</p>`;
 }
 
 export function isSameRichText(a: string | null | undefined, b: string | null | undefined): boolean {
