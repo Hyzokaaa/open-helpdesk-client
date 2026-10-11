@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -42,10 +42,8 @@ import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import TicketBoard from "../components/TicketBoard";
-import TicketDetailPage from "./TicketDetailPage";
 import TicketStatusModal from "../components/TicketStatusModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
-import TicketCreatePage from "./TicketCreatePage";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import useTicketFilters from "../hooks/useTicketFilters";
 import useTicketSelection from "../hooks/useTicketSelection";
@@ -54,6 +52,11 @@ import TicketFilterBar from "../components/TicketFilterBar";
 import TicketBulkActions from "../components/TicketBulkActions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { canBeAssignee } from "../domain/can-be-assignee";
+import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
+
+// Loaded when a ticket is opened or created: they bring the rich text editor, which the list does not need
+const TicketDetailPage = lazy(() => import("./TicketDetailPage"));
+const TicketCreatePage = lazy(() => import("./TicketCreatePage"));
 
 interface Column {
   key: string;
@@ -677,25 +680,29 @@ export default function TicketsPage() {
 
       {showCreate && workspaceSlug && (
         <Sheet onClose={handleCreateClose}>
-          <TicketCreatePage
-            workspaceSlugProp={workspaceSlug}
-            initialProjectId={filterProjectId}
-            onCreated={(id) => { setShowCreate(false); setCreateDirty(false); if (id) setSelectedTicketId(id); fetchTickets(); setBoardKey((k) => k + 1); }}
-            onClose={handleCreateClose}
-            onDirtyChange={setCreateDirty}
-          />
+          <Suspense fallback={<PageLoader fullScreen={false} />}>
+            <TicketCreatePage
+              workspaceSlugProp={workspaceSlug}
+              initialProjectId={filterProjectId}
+              onCreated={(id) => { setShowCreate(false); setCreateDirty(false); if (id) setSelectedTicketId(id); fetchTickets(); setBoardKey((k) => k + 1); }}
+              onClose={handleCreateClose}
+              onDirtyChange={setCreateDirty}
+            />
+          </Suspense>
         </Sheet>
       )}
 
       {selectedTicketId && workspaceSlug && (
         <Sheet hideClose onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}>
-          <TicketDetailPage
-            workspaceSlugProp={workspaceSlug}
-            ticketIdProp={selectedTicketId}
-            onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}
-            onDirtyChange={setTicketDirty}
-            initialMode={ticketMode}
-          />
+          <Suspense fallback={<PageLoader fullScreen={false} />}>
+            <TicketDetailPage
+              workspaceSlugProp={workspaceSlug}
+              ticketIdProp={selectedTicketId}
+              onClose={() => { if (ticketDirty) { fetchTickets(); setBoardKey((k) => k + 1); } setSelectedTicketId(null); setTicketDirty(false); }}
+              onDirtyChange={setTicketDirty}
+              initialMode={ticketMode}
+            />
+          </Suspense>
         </Sheet>
       )}
     </div>

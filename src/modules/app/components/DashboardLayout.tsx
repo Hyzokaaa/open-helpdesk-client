@@ -9,6 +9,7 @@ import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
 import { listWorkspaces } from "@modules/workspace/services/workspace.service";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import RouteSuspense from "./RouteSuspense";
 import BrandLogo from "./BrandLogo";
 import useExtensions from "@modules/app/extensions/useExtensions";
 
@@ -73,7 +74,9 @@ export default function DashboardLayout() {
               className="flex flex-col grow w-full items-center py-6 min-h-0"
               style={{ maxWidth: "1200px" }}
             >
-              <Outlet />
+              <RouteSuspense>
+                <Outlet />
+              </RouteSuspense>
             </main>
           </div>
         </div>
