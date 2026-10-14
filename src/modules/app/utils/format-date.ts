@@ -27,3 +27,16 @@ export function formatDate(date: string | Date, format: DateFormatOption = 'DD/M
     default: return `${day}/${month}/${year} ${time}`;
   }
 }
+
+/** A calendar day stored as YYYY-MM-DD (a date custom field), in the user's order; no time zone shifts it. */
+export function formatCalendarDate(value: string, format: DateFormatOption = 'DD/MM/YYYY'): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return value;
+  const [, year, month, day] = match;
+  switch (format) {
+    case 'MM/DD/YYYY': return `${month}/${day}/${year}`;
+    case 'YYYY-MM-DD': return `${year}-${month}-${day}`;
+    case 'DD/MM/YYYY':
+    default: return `${day}/${month}/${year}`;
+  }
+}

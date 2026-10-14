@@ -29,6 +29,7 @@ import {
 } from "../services/mailbox.service";
 import { getWorkspace, toggleSystemMailbox } from "../services/workspace.service";
 import { resolveMailServer } from "../services/email-sender.service";
+import useMailServerField from "@modules/shared/hooks/useMailServerField";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 
 function mailboxStatusColor(m: MailboxDto): string {
@@ -378,11 +379,14 @@ export function MailboxForm({ slug, mailbox, otherMailboxes = [], onSaved, onPla
   const isEdit = !!mailbox;
   const { t } = useTranslation();
   const [address, setAddress] = useState(mailbox?.address ?? "");
-  const [imapHost, setImapHost] = useState(mailbox?.imapHost ?? "");
-  const [imapPort, setImapPort] = useState(String(mailbox?.imapPort ?? "993"));
-  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
-  const imapHostRef = useRef(imapHost);
-  imapHostRef.current = imapHost;
+  // Host and port follow the address's domain unless typed (see useMailServerField)
+  const server = useMailServerField({
+    address,
+    kind: "imap",
+    resolve: (domain) => resolveMailServer(slug, domain),
+    saved: mailbox ? { address: mailbox.address, host: mailbox.imapHost, port: mailbox.imapPort } : undefined,
+  });
+  const { host: imapHost, setHost: setImapHost, port: imapPort, setPort: setImapPort } = server;
   const [imapUser, setImapUser] = useState(mailbox?.imapUser ?? "");
   const [imapPass, setImapPass] = useState("");
   const [imapFolder, setImapFolder] = useState(mailbox?.imapFolder ?? "INBOX");
@@ -412,23 +416,6 @@ export function MailboxForm({ slug, mailbox, otherMailboxes = [], onSaved, onPla
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty]);
-
-  useEffect(() => {
-    if (imapHost || !address.includes("@")) return;
-    const domain = address.split("@")[1];
-    if (!domain) return;
-    const timeout = setTimeout(() => {
-      resolveMailServer(slug, domain)
-        .then((res) => {
-          if (res.imap && !imapHostRef.current) {
-            setImapHost(res.imap.host);
-            if (res.imap.port) setImapPort(String(res.imap.port));
-          }
-        })
-        .catch(() => {});
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [address]);
 
   // A port that is not a whole number in range is reported instead of silently replaced by 993
   const portValid = /^\d+$/.test(imapPort.trim()) && Number(imapPort) >= 1 && Number(imapPort) <= 65535;
@@ -549,6 +536,7 @@ export function MailboxForm({ slug, mailbox, otherMailboxes = [], onSaved, onPla
           <div className="col-span-2">
             <FormInput label={t("mailbox.imapHost")} required>
               <Input placeholder="imap.example.com" value={imapHost} onChange={setImapHost} />
+              {server.note && <p className="text-exs text-subtle mt-1">{server.note}</p>}
             </FormInput>
           </div>
           <FormInput label={t("mailbox.imapPort")}>

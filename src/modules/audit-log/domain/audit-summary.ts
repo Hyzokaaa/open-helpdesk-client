@@ -1,4 +1,5 @@
 import { formatInlineValue, isStructuredValue } from "./audit-metadata";
+import { htmlToText } from "@modules/shared/domain/rich-text";
 
 /**
  * Pure helpers that turn stored audit metadata into text people can read: comment HTML into a
@@ -7,47 +8,6 @@ import { formatInlineValue, isStructuredValue } from "./audit-metadata";
  */
 
 type Translate = (key: string) => string;
-
-/** The markup mentions are stored in: `@[Display Name](userId)`. */
-const MENTION_MARKUP = /@\[([^\]]+)\]\([^)]+\)/g;
-
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'" };
-
-/** Decodes the named entities rich text commonly holds and any numeric one. */
-function decodeEntities(text: string): string {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
-    const lower = code.toLowerCase();
-    if (lower in ENTITIES) return ENTITIES[lower];
-    if (lower.startsWith("#x")) return safeFromCodePoint(parseInt(lower.slice(2), 16), match);
-    if (lower.startsWith("#")) return safeFromCodePoint(parseInt(lower.slice(1), 10), match);
-    return match;
-  });
-}
-
-function safeFromCodePoint(code: number, fallback: string): string {
-  try {
-    return Number.isFinite(code) ? String.fromCodePoint(code) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-/**
- * Reduces rich text to one readable line: mentions read as `@Name`, block boundaries and line
- * breaks become spaces, every tag is removed, entities are decoded and whitespace collapses.
- */
-export function htmlToText(input: string): string {
-  return decodeEntities(
-    input
-      .replace(MENTION_MARKUP, "@$1")
-      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
-      .replace(/<br\s*\/?>/gi, " ")
-      .replace(/<\/?(p|div|li|ul|ol|h[1-6]|blockquote|pre|tr|td|th|table)\b[^>]*>/gi, " ")
-      .replace(/<[a-z/!][^>]*>?/gi, ""),
-  )
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 /** A comment's preview for the audit log, from plain text (new entries) or raw HTML (old ones). */
 export function commentPreview(content: unknown, maxLength = 50): string {

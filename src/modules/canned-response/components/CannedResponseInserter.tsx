@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { CannedResponse } from "../services/canned-response.service";
+import { htmlToText } from "@modules/shared/domain/rich-text";
 
 interface Props {
   responses: CannedResponse[];
@@ -38,7 +39,7 @@ export default function CannedResponseInserter({
           )}
         >
           <span className="text-sm font-body-semibold block">{r.title}</span>
-          <span className="text-xs text-subtle block truncate">{r.content}</span>
+          <span className="text-xs text-subtle block truncate">{htmlToText(r.content)}</span>
         </button>
       ))}
     </div>

@@ -4,10 +4,7 @@ import { getPortalKbCategories, searchPortalKb, PortalKbCategory, PortalKbArticl
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import PortalKbLayout from "../components/PortalKbLayout";
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-}
+import { htmlToText } from "@modules/shared/domain/rich-text";
 
 export default function PortalKbPage() {
   const { t } = useTranslation();
@@ -67,7 +64,7 @@ export default function PortalKbPage() {
                   {results.map((a) => (
                     <Link key={a.id} to={`${basePath}/kb/article/${a.slug}`} className="block p-4 border border-border-card rounded-lg hover:bg-surface-hover transition-colors">
                       <p className="text-sm font-semibold text-heading">{a.title}</p>
-                      <p className="text-xs text-muted mt-1 line-clamp-2">{stripHtml(a.content)}</p>
+                      <p className="text-xs text-muted mt-1 line-clamp-2">{htmlToText(a.content)}</p>
                     </Link>
                   ))}
                 </div>

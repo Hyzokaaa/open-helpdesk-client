@@ -1,7 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import Button from "@modules/app/modules/ui/components/Button/Button";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/MiniEditor/MiniEditor";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -25,14 +24,18 @@ import {
 } from "@modules/comment/services/comment.service";
 import VersionHistoryModal from "@modules/shared/components/VersionHistoryModal";
 import {
-  uploadToTicket,
   deleteAttachment,
+  stageUpload,
+  type TicketAttachment,
 } from "@modules/attachment/services/attachment.service";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
+import CollapsibleSection from "@modules/app/modules/ui/components/CollapsibleSection/CollapsibleSection";
+import AttachmentList, { isImage, isVideo } from "@modules/attachment/components/AttachmentList";
+import { groupAttachments, isAddedLater } from "@modules/attachment/domain/group-attachments";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache, AI_TEXT_MAX_LENGTH } from "@modules/ai/services/ai.service";
-import TicketActivityFeed from "@modules/audit-log/components/TicketActivityFeed";
+import TicketTimeline from "../components/TicketTimeline";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
 import TicketStatusModal from "../components/TicketStatusModal";
@@ -136,6 +139,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     title: string;
     message: string;
     onConfirm: () => void;
+    confirmLabel?: string;
+    danger?: boolean;
   } | null>(null);
 
   const isCreator = ticket?.reporterId === user?.id;
@@ -148,7 +153,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canEditFields = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_DESCRIPTION));
   const canEditName = isEditing && !isReadonly && can(P.TICKET_EDIT_NAME);
   const canAssign = isEditing && !isReadonly && can(P.TICKET_ASSIGN);
-  const canManageFollowers = isEditing && !isReadonly && can(P.TICKET_PARTICIPANTS_MANAGE);
+  // Followers change at once, like the menu actions, so they do not wait for edit mode
+  const canManageFollowers = !isReadonly && can(P.TICKET_PARTICIPANTS_MANAGE);
   const canEditTags = isEditing && !isReadonly && (isTerminal ? can(P.TICKET_EDIT_DISCARDED) : can(P.TICKET_EDIT_TAGS));
   const canEditCustomFields = isEditing && !isReadonly && can(P.TICKET_EDIT_DESCRIPTION);
 
@@ -156,6 +162,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const canTransfer = !isReadonly && can(P.TICKET_TRANSFER) && !can(P.TICKET_ASSIGN) && ticket && (ticket.assigneeId === user?.id || ticket.reporterId === user?.id);
   const canDelete = !isReadonly && can(P.TICKET_DELETE);
   const canAssignAction = !isReadonly && can(P.TICKET_ASSIGN) && !isTerminal;
+  // Who cannot assign may still let go of their own ticket, back to the queue
+  const canRelease = !isReadonly && !can(P.TICKET_ASSIGN) && !isTerminal && !!ticket && !!user && ticket.assigneeId === user.id;
   const canPickup = !isReadonly && can(P.TICKET_PICKUP) && ticket?.status === "open";
   const canDiscard = !isReadonly && !!ticket && canDiscardFromQueue(ticket, user?.id, can);
   const canChangeStatusAction = !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
@@ -185,36 +193,57 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     });
   };
 
-  const handleAddComment = async (content: string) => {
-    if (!workspaceSlug || !ticketId) return;
+  // Resolves to false when the comment was not saved, so the box keeps the text and the files
+  const handleAddComment = async (content: string, uploadTokens: string[]): Promise<boolean> => {
+    if (!workspaceSlug || !ticketId) return false;
     setSendingComment(true);
     try {
-      await createComment(workspaceSlug, ticketId, content);
+      await createComment(workspaceSlug, ticketId, content, uploadTokens);
       fetchComments();
       fetchParticipants();
+      if (uploadTokens.length > 0) fetchAttachments();
       setActivityKey((k) => k + 1);
+      return true;
     } catch (err) {
       handlePlanLimitError(err, t("ticketDetail.commentError"));
+      return false;
     } finally {
       setSendingComment(false);
     }
   };
 
-  const handleAddCommentAndResolve = async (content: string) => {
-    if (!workspaceSlug || !ticketId) return;
+  const handleAddCommentAndResolve = async (content: string, uploadTokens: string[]): Promise<boolean> => {
+    if (!workspaceSlug || !ticketId) return false;
     setSendingComment(true);
     try {
-      await createComment(workspaceSlug, ticketId, content);
+      await createComment(workspaceSlug, ticketId, content, uploadTokens);
+    } catch (err) {
+      handlePlanLimitError(err, t("ticketDetail.commentError"));
+      setSendingComment(false);
+      return false;
+    }
+    // The comment is saved from here on, so the box is cleared even if resolving fails
+    try {
       await changeTicketStatus(workspaceSlug, ticketId, "resolved");
-      fetchTicket();
-      fetchComments();
-      fetchParticipants();
-      setActivityKey((k) => k + 1);
       toast.success(t("ticketDetail.resolvedSuccess"));
     } catch (err) {
       handlePlanLimitError(err, t("ticketDetail.resolveError"));
     } finally {
+      fetchTicket();
+      fetchComments();
+      fetchParticipants();
+      if (uploadTokens.length > 0) fetchAttachments();
+      setActivityKey((k) => k + 1);
       setSendingComment(false);
+    }
+    return true;
+  };
+
+  const openAttachment = (a: TicketAttachment) => {
+    if (isImage(a.mimeType) || isVideo(a.mimeType)) {
+      setLightbox({ src: a.downloadUrl, type: isImage(a.mimeType) ? "image" : "video" });
+    } else {
+      window.open(a.downloadUrl, "_blank", "noopener");
     }
   };
 
@@ -236,20 +265,17 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     });
   };
 
+  // A file added to the ticket itself, for instance one forgotten when it was created
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!workspaceSlug || !ticketId || !e.target.files?.[0]) return;
-    try {
-      await uploadToTicket(workspaceSlug, ticketId, e.target.files[0]);
-      toast.success(t("ticketDetail.fileUploaded"));
-      fetchAttachments();
-    } catch {
-      toast.error(t("ticketDetail.uploadFailed"));
-    }
+    const files = Array.from(e.target.files ?? []);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (files.length > 0) handleDroppedFiles(files);
   };
 
-  const isImage = (mimeType: string) => mimeType.startsWith("image/");
-  const isVideo = (mimeType: string) => mimeType.startsWith("video/");
+  const groupedAttachments = useMemo(
+    () => groupAttachments(attachments, comments.map((c) => c.id)),
+    [attachments, comments],
+  );
 
   const handleEditComment = async (commentId: string) => {
     if (!workspaceSlug || !ticketId) return;
@@ -303,8 +329,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         <ConfirmModal
           title={confirmAction.title}
           message={confirmAction.message}
-          confirmLabel={t("ticketDetail.deleteConfirm")}
-          danger
+          confirmLabel={confirmAction.confirmLabel ?? t("ticketDetail.deleteConfirm")}
+          danger={confirmAction.danger ?? true}
           onConfirm={confirmAction.onConfirm}
           onCancel={() => setConfirmAction(null)}
         />
@@ -330,6 +356,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           onClose={() => setShowTransferModal(false)}
           onSubmit={async (targetUserId) => {
             try {
+              if (!targetUserId) return;
               await transferTicket(workspaceSlug, ticketId, targetUserId);
               toast.success(t("tickets.transferred"));
               fetchTicket(true);
@@ -345,12 +372,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           assignableMembers={assignableMembers}
           currentUserId={user?.id ?? ""}
           initialTarget={ticket.assigneeId}
+          allowUnassign={!!ticket.assigneeId}
           t={t}
           onClose={() => setShowAssignModal(false)}
           onSubmit={async (targetUserId) => {
             try {
               await assignTicket(workspaceSlug, ticketId, targetUserId);
-              toast.success(t("tickets.assigned"));
+              toast.success(t(targetUserId ? "tickets.assigned" : "ticketDetail.released"));
               fetchTicket(true);
             } catch { toast.error(t("ticketDetail.actionError")); }
             setShowAssignModal(false);
@@ -466,6 +494,22 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         onPickup={() => setPickupStatus(PICKUP_STATUSES[0])}
         onDiscard={() => setAskDiscardReason(true)}
         onTransfer={() => setShowTransferModal(true)}
+        canRelease={canRelease}
+        onRelease={() => setConfirmAction({
+          title: t("ticketDetail.releaseTitle"),
+          message: t("ticketDetail.releaseMessage"),
+          confirmLabel: t("ticketDetail.release"),
+          danger: false,
+          onConfirm: async () => {
+            setConfirmAction(null);
+            if (!workspaceSlug || !ticketId) return;
+            try {
+              await assignTicket(workspaceSlug, ticketId, null);
+              toast.success(t("ticketDetail.released"));
+              fetchTicket(true);
+            } catch { toast.error(t("ticketDetail.actionError")); }
+          },
+        })}
         onDelete={handleDelete}
         onClose={onClose}
         t={t}
@@ -520,6 +564,37 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                     {t("ticketDetail.edited")} {formatDate(ticket.descriptionEditedAt)}
                   </button>
                 )}
+                {/* Files of the ticket itself: those it came with, and those added later (marked with who and when) */}
+                {(() => {
+                  const files = (
+                    <>
+                      <AttachmentList
+                        attachments={groupedAttachments.ticket}
+                        onOpen={openAttachment}
+                        onDelete={(a) => handleDeleteAttachment(a.id)}
+                        showUploader={(a) => isAddedLater(a, ticket.createdAt)}
+                      />
+                      {can(P.ATTACHMENT_UPLOAD) && (
+                        <>
+                          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUpload} />
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="mt-2 inline-flex items-center gap-1 text-exs text-muted hover:text-primary cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                            </svg>
+                            {t("attachments.addFile")}
+                          </button>
+                        </>
+                      )}
+                    </>
+                  );
+                  return can(P.ATTACHMENT_UPLOAD) ? (
+                    <DropZone bare capturePaste={false} onFiles={handleDroppedFiles} dropHint={t("drop.hint")}>{files}</DropZone>
+                  ) : files;
+                })()}
                 {aiEnabled && !isReadonly && (() => {
                   const targetLang = user?.language === "es" ? "Spanish" : "English";
                   const slug = workspaceSlug ?? "";
@@ -661,6 +736,11 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderMentions(c.content, members)) }}
                     />
                   )}
+                  <AttachmentList
+                    attachments={groupedAttachments.byComment.get(c.id) ?? []}
+                    onOpen={openAttachment}
+                    onDelete={(a) => handleDeleteAttachment(a.id)}
+                  />
                 </Card>
               ))}
             </div>
@@ -672,101 +752,38 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               loading={sendingComment}
               onSubmit={handleAddComment}
               onSubmitAndResolve={handleAddCommentAndResolve}
+              onStageFile={can(P.ATTACHMENT_UPLOAD) ? stageUpload : undefined}
               canResolve={!isReadonly && !isTerminal && canMoveStatus && can(P.TICKET_CHANGE_STATUS)}
               cannedResponses={cannedResponses}
             />
           </div>
 
-          {/* Attachments */}
-          <Card className="p-5">
-            <p className="text-xs font-body-medium text-subtle uppercase mb-3">
-              {t("ticketDetail.attachments")} ({attachments.length})
-            </p>
-            {can(P.ATTACHMENT_UPLOAD) && (
-              <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-exs text-subtle">
-                    {t("ticketCreate.pasteOrDrag")}
-                  </span>
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      className="hidden"
-                      onChange={handleUpload}
-                    />
-                    <Button
-                      size="xs"
-                      color="light"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      {t("ticketDetail.addFile")}
-                    </Button>
-                  </div>
-                </div>
-              </DropZone>
-            )}
-            {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-3">
-                {attachments.map((a) => (
-                  <div key={a.id} className="relative group">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        isImage(a.mimeType) || isVideo(a.mimeType)
-                          ? setLightbox({
-                              src: a.downloadUrl,
-                              type: isImage(a.mimeType) ? "image" : "video",
-                            })
-                          : window.open(a.downloadUrl, "_blank")
-                      }
-                      className="block border border-border-input rounded-lg overflow-hidden hover:border-primary-300 transition-colors cursor-pointer"
-                    >
-                      {isImage(a.mimeType) ? (
-                        <img
-                          src={a.downloadUrl}
-                          alt={a.originalName}
-                          className="w-32 h-32 object-cover"
-                        />
-                      ) : isVideo(a.mimeType) ? (
-                        <video
-                          src={a.downloadUrl}
-                          className="w-32 h-32 object-cover"
-                        />
-                      ) : (
-                        <div className="w-32 h-32 flex items-center justify-center bg-surface-hover">
-                          <span className="text-exs text-muted text-center px-2 break-all">
-                            {a.originalName}
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                    {a.canDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAttachment(a.id);
-                        }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          {/* Every file of the ticket in one place, folded: each one also shows where it belongs */}
+          {attachments.length > 0 && (
+            <CollapsibleSection title={`${t("attachments.allFiles")} (${attachments.length})`}>
+              <AttachmentList
+                attachments={attachments}
+                onOpen={openAttachment}
+                onDelete={(a) => handleDeleteAttachment(a.id)}
+                showUploader
+                variant="rows"
+              />
+            </CollapsibleSection>
+          )}
 
           </>
           ) : (
           <>
-            {workspaceSlug && ticketId && (
-              <TicketActivityFeed
+            {workspaceSlug && (
+              <TicketTimeline
                 workspaceSlug={workspaceSlug}
-                ticketId={ticketId}
+                ticket={ticket}
+                comments={comments}
+                attachments={attachments}
                 members={members}
+                getPerson={getPerson}
+                onOpenAttachment={openAttachment}
+                onGoToDetails={() => setDetailTab("details")}
                 refreshKey={activityKey}
               />
             )}

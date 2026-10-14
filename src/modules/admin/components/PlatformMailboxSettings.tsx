@@ -22,6 +22,8 @@ import {
   pauseSystemMailbox,
   resumeSystemMailbox,
 } from "../services/system-mailbox.service";
+import useMailServerField from "@modules/shared/hooks/useMailServerField";
+import { resolveSystemMailServer } from "@modules/settings/services/system-email.service";
 
 function statusColor(mailbox: SystemMailboxDto): string {
   if (!mailbox.isActive) return "bg-gray-400";
@@ -168,8 +170,14 @@ function MailboxForm({
   const { t } = useTranslation();
 
   const [address, setAddress] = useState(mailbox?.address ?? "");
-  const [imapHost, setImapHost] = useState(mailbox?.imapHost ?? "");
-  const [imapPort, setImapPort] = useState(String(mailbox?.imapPort ?? "993"));
+  // Host and port follow the address's domain unless typed (see useMailServerField)
+  const server = useMailServerField({
+    address,
+    kind: "imap",
+    resolve: resolveSystemMailServer,
+    saved: mailbox ? { address: mailbox.address, host: mailbox.imapHost, port: mailbox.imapPort } : undefined,
+  });
+  const { host: imapHost, setHost: setImapHost, port: imapPort, setPort: setImapPort } = server;
   const [imapUser, setImapUser] = useState(mailbox?.imapUser ?? "");
   const [imapPass, setImapPass] = useState("");
   const [imapFolder, setImapFolder] = useState(mailbox?.imapFolder ?? "INBOX");
@@ -271,6 +279,7 @@ function MailboxForm({
         <div className="col-span-2">
           <FormInput label={t("mailbox.imapHost")} required>
             <Input placeholder="imap.example.com" value={imapHost} onChange={setImapHost} />
+            {server.note && <p className="text-exs text-subtle mt-1">{server.note}</p>}
           </FormInput>
         </div>
         <FormInput label={t("mailbox.imapPort")}>

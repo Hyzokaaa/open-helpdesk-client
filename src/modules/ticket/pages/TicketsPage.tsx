@@ -10,7 +10,6 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
-import Select from "@modules/app/modules/ui/components/Select/Select";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
@@ -40,6 +39,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
 import { listMembers, type WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import TicketBoard from "../components/TicketBoard";
 import TicketStatusModal from "../components/TicketStatusModal";
@@ -64,6 +64,7 @@ interface Column {
   sortable: boolean;
 }
 
+/** Tags a row shows before folding the rest into "+N" */const VISIBLE_ROW_TAGS = 2;
 const BASE_COLUMNS: Column[] = [
   { key: "ticketNumber", labelKey: "tickets.col.number", sortable: true },
   { key: "name", labelKey: "tickets.col.name", sortable: true },
@@ -129,6 +130,7 @@ export default function TicketsPage() {
   // Discarding straight from the queue has its own state, apart from the change-status flow, so
   // backing out of it closes it instead of falling back to the status picker.
   const [discardTarget, setDiscardTarget] = useState<TicketListItem | null>(null);
+  const [releaseTarget, setReleaseTarget] = useState<TicketListItem | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -409,7 +411,7 @@ export default function TicketsPage() {
                     )}
                     {reorder(COLUMNS).map((col) => (
                       <td key={col.key} className="px-4 py-3">
-                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium">{ticket.ticketNumber}</span>}
+                        {col.key === "ticketNumber" && <span className="text-sm text-muted font-body-medium whitespace-nowrap">{ticket.ticketNumber}</span>}
                         {col.key === "name" && (
                           <div className="flex items-center gap-1.5 max-w-xs">
                             {(ticket.firstResponseBreached || ticket.resolutionBreached) && ticket.status !== "resolved" && ticket.status !== "discarded" && (
@@ -422,10 +424,10 @@ export default function TicketsPage() {
                           </div>
                         )}
                         {col.key === "organization" && (
-                          <span className="text-xs text-muted">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
+                          <span className="text-xs text-muted whitespace-nowrap">{ticket.organizationId ? orgMap.get(ticket.organizationId)?.name ?? "—" : "—"}</span>
                         )}
                         {col.key === "department" && (
-                          <span className="text-xs text-muted">{ticket.departmentId ? deptMap.get(ticket.departmentId)?.name ?? "—" : "—"}</span>
+                          <span className="text-xs text-muted whitespace-nowrap">{ticket.departmentId ? deptMap.get(ticket.departmentId)?.name ?? "—" : "—"}</span>
                         )}
                         {col.key === "category" && (() => {
                           const cat = categories.find((c) => c.id === ticket.categoryId);
@@ -433,20 +435,27 @@ export default function TicketsPage() {
                         })()}
                         {col.key === "priority" && <StatusBadge label={tEnum("priority", ticket.priority)} color={PRIORITY_COLORS[ticket.priority] || "gray"} size="xs" />}
                         {col.key === "status" && <StatusBadge label={tEnum("status", ticket.status)} color={STATUS_COLORS[ticket.status] || "gray"} size="xs" />}
-                        {col.key === "tags" && (
-                          <div className="flex flex-wrap gap-1">
-                            {ticket.tagIds.map((tagId) => {
-                              const tag = tagMap.get(tagId);
-                              if (!tag) return null;
-                              return (
-                                <span key={tagId} className="px-1.5 py-0.5 rounded text-exs font-body-medium text-white" style={{ backgroundColor: tag.color || "#6366f1" }}>
+                        {col.key === "tags" && (() => {
+                          // One line, so every row keeps the same height: the first few, then "+N" with the rest on hover
+                          const rowTags = ticket.tagIds.map((id) => tagMap.get(id)).filter((tag): tag is Tag => !!tag);
+                          const shown = rowTags.slice(0, VISIBLE_ROW_TAGS);
+                          const rest = rowTags.slice(VISIBLE_ROW_TAGS);
+                          return (
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              {shown.map((tag) => (
+                                <span key={tag.id} className="px-1.5 py-0.5 rounded text-exs font-body-medium text-white" style={{ backgroundColor: tag.color || "#6366f1" }}>
                                   {tag.name}
                                 </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {col.key === "createdAt" && <span className="text-xs text-muted">{ticket.createdAt ? formatDate(ticket.createdAt) : "-"}</span>}
+                              ))}
+                              {rest.length > 0 && (
+                                <span title={rest.map((tag) => tag.name).join(", ")} className="px-1.5 py-0.5 rounded text-exs font-body-medium bg-surface-hover text-muted cursor-default">
+                                  +{rest.length}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                        {col.key === "createdAt" && <span className="text-xs text-muted whitespace-nowrap">{ticket.createdAt ? formatDate(ticket.createdAt) : "-"}</span>}
                       </td>
                     ))}
                     <td className="px-2 py-3 sticky right-0 bg-surface">
@@ -468,6 +477,8 @@ export default function TicketsPage() {
                           ...(canDiscardFromQueue(ticket, user?.id, can) ? [{ label: t("tickets.discard"), danger: true, onClick: () => setDiscardTarget(ticket) }] : []),
                           // Agent: Transfer (only if assignee or creator, not closed)
                           ...(!can(P.TICKET_ASSIGN) && can(P.TICKET_TRANSFER) && isAssigneeOrCreator && !isClosed ? [{ label: t("tickets.transfer"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("transfer"); } }] : []),
+                          // Agent: let go of their own ticket, back to the queue
+                          ...(!can(P.TICKET_ASSIGN) && ticket.assigneeId === user?.id && !isClosed ? [{ label: t("ticketDetail.release"), onClick: () => setReleaseTarget(ticket) }] : []),
                           ...(can(P.TICKET_DELETE) && hasDirectAccess ? [{ label: t("tickets.delete"), onClick: () => bulk.setDeleteTicketId(ticket.id), danger: true }] : []),
                         ];
                         return items;
@@ -647,31 +658,47 @@ export default function TicketsPage() {
       )}
 
       {assignTicketId && workspaceSlug && (
-        <Sheet size="sm" onClose={() => { setAssignTicketId(null); setAssignTarget(null); }}>
-          <h3 className="text-base font-body-bold text-heading mb-1">{t(assignMode === "transfer" ? "tickets.transferTitle" : "tickets.assignTitle")}</h3>
-          <p className="text-sm text-muted mb-4">{t(assignMode === "transfer" ? "tickets.transferMessage" : "tickets.assignMessage")}</p>
-          <Select
-            options={members.filter((m) => canBeAssignee(m.role))}
-            value={(m) => m.userId === assignTarget}
-            onChange={(m) => setAssignTarget(m.userId)}
-            label={(m) => `${m.firstName} ${m.lastName}`}
-            placeholder={t("ticketDetail.selectAssignee")}
-          />
-          <div className="flex gap-2 mt-4 justify-end">
-            <Button size="sm" color="light" onClick={() => { setAssignTicketId(null); setAssignTarget(null); }}>{t("ticketDetail.cancel")}</Button>
-            <Button size="sm" color="primary" disabled={!assignTarget} onClick={() => {
-              const action = assignMode === "transfer"
-                ? transferTicket(workspaceSlug, assignTicketId, assignTarget!)
-                : assignTicket(workspaceSlug, assignTicketId, assignTarget);
-              const successMsg = assignMode === "transfer" ? t("tickets.transferred") : t("tickets.assigned");
-              action
-                .then(() => { toast.success(successMsg); fetchTickets(); setBoardKey((k) => k + 1); })
-                .catch(() => toast.error(t("tickets.assignError")));
-              setAssignTicketId(null);
-              setAssignTarget(null);
-            }}>{t(assignMode === "transfer" ? "tickets.transfer" : "tickets.assign")}</Button>
-          </div>
-        </Sheet>
+        <TicketMemberPickerModal
+          mode={assignMode}
+          assignableMembers={members.filter((m) => canBeAssignee(m.role))}
+          currentUserId={user?.id ?? ""}
+          initialTarget={assignTarget}
+          allowUnassign={!!assignTarget}
+          t={t}
+          onClose={() => { setAssignTicketId(null); setAssignTarget(null); }}
+          onSubmit={async (target) => {
+            try {
+              if (assignMode === "transfer") {
+                if (!target) return;
+                await transferTicket(workspaceSlug, assignTicketId, target);
+                toast.success(t("tickets.transferred"));
+              } else {
+                await assignTicket(workspaceSlug, assignTicketId, target);
+                toast.success(t(target ? "tickets.assigned" : "ticketDetail.released"));
+              }
+              fetchTickets();
+              setBoardKey((k) => k + 1);
+            } catch { toast.error(t("tickets.assignError")); }
+            setAssignTicketId(null);
+            setAssignTarget(null);
+          }}
+        />
+      )}
+
+      {releaseTarget && workspaceSlug && (
+        <ConfirmModal
+          title={t("ticketDetail.releaseTitle")}
+          message={t("ticketDetail.releaseMessage")}
+          confirmLabel={t("ticketDetail.release")}
+          onConfirm={() => {
+            const id = releaseTarget.id;
+            setReleaseTarget(null);
+            assignTicket(workspaceSlug, id, null)
+              .then(() => { toast.success(t("ticketDetail.released")); fetchTickets(); setBoardKey((k) => k + 1); })
+              .catch(() => toast.error(t("tickets.assignError")));
+          }}
+          onCancel={() => setReleaseTarget(null)}
+        />
       )}
 
       {showDiscard && (

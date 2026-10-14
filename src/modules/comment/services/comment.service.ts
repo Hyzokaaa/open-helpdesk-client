@@ -60,10 +60,12 @@ export async function createComment(
   workspaceId: string,
   ticketId: string,
   content: string,
+  /** Files uploaded beforehand with stageUpload, attached to the new comment. */
+  uploadTokens: string[] = [],
 ): Promise<CommentItem> {
   const res = await http.post<CommentItem>(
     `/workspaces/${workspaceId}/tickets/${ticketId}/comments`,
-    { content },
+    uploadTokens.length > 0 ? { content, uploadTokens } : { content },
   );
   // The client has no internal notes: every comment is visible to the reporter.
   trackEvent("comment-created", { visibility: "public" });

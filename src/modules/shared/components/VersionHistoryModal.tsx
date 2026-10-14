@@ -2,7 +2,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet, { SheetCloseButton } from "@modules/app/modules/ui/components/Sheet/Sheet";
-import { sanitizeHtml } from "@modules/app/security/sanitize-html";
+import RichContent from "./RichContent";
 
 interface VersionItem {
   id: string;
@@ -40,10 +40,7 @@ export default function VersionHistoryModal({ title, items, onClose }: Props) {
                 <span className="text-xs font-body-medium text-heading">{item.editorName}</span>
                 <span className="text-exs text-muted">{formatDate(item.createdAt)}</span>
               </div>
-              <div
-                className="text-sm text-muted tiptap"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.content) }}
-              />
+              <RichContent content={item.content} className="text-sm text-muted" />
             </div>
           ))}
         </div>

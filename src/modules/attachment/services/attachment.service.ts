@@ -11,9 +11,20 @@ export interface AttachmentDetail extends AttachmentInfo {
   downloadUrl: string;
 }
 
+export interface AttachmentUploader {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface TicketAttachment extends AttachmentDetail {
   /** Decided by the backend: admins and supervisors delete any attachment, everyone else only their own. */
   canDelete: boolean;
+  /** The comment it came with, or null when it belongs to the ticket itself. */
+  commentId: string | null;
+  createdAt: string | null;
+  /** Null for files that came by email without a known sender, or whose uploader no longer exists. */
+  uploadedBy: AttachmentUploader | null;
 }
 
 export interface StagedUpload {

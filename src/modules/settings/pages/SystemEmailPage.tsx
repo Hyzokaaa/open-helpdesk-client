@@ -9,27 +9,15 @@ import Select from "@modules/app/modules/ui/components/Select/Select";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { isValidEmail } from "@modules/shared/domain/is-valid-email";
+import useMailServerField from "@modules/shared/hooks/useMailServerField";
 import {
   SystemEmailDto,
   getSystemEmail,
   saveSystemEmail,
   deleteSystemEmail,
   testSystemEmail,
+  resolveSystemMailServer,
 } from "../services/system-email.service";
-
-function deriveSmtpHost(email: string): string {
-  const domain = email.split("@")[1];
-  if (!domain) return "";
-  const known: Record<string, string> = {
-    "gmail.com": "smtp.gmail.com",
-    "outlook.com": "smtp.office365.com",
-    "hotmail.com": "smtp.office365.com",
-    "live.com": "smtp.office365.com",
-    "yahoo.com": "smtp.mail.yahoo.com",
-    "zoho.com": "smtp.zoho.com",
-  };
-  return known[domain] || `smtp.${domain}`;
-}
 
 interface SystemEmailPageProps {
   embedded?: boolean;
@@ -139,14 +127,20 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
   const [smtpLogin, setSmtpLogin] = useState(sender?.smtpUser || "");
   const [smtpFrom, setSmtpFrom] = useState(sender?.smtpFrom || "");
   const [password, setPassword] = useState("");
-  const [smtpHost, setSmtpHost] = useState(sender?.smtpHost || "");
-  const [smtpPort, setSmtpPort] = useState(String(sender?.smtpPort ?? "587"));
+  // Host and port follow the login's domain unless typed (see useMailServerField)
+  const server = useMailServerField({
+    address: smtpLogin,
+    kind: "smtp",
+    resolve: resolveSystemMailServer,
+    saved: sender ? { address: sender.smtpUser, host: sender.smtpHost, port: sender.smtpPort } : undefined,
+  });
+  const { host: smtpHost, setHost: setSmtpHost, port: smtpPort, setPort: setSmtpPort } = server;
   const [encryption, setEncryption] = useState(sender?.encryption ?? "tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestOutcome | null>(null);
 
-  const resolvedHost = smtpHost || deriveSmtpHost(smtpLogin);
+  const resolvedHost = smtpHost.trim();
   const resolvedPort = Number(smtpPort) || 587;
 
   useEffect(() => {
@@ -238,7 +232,8 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <FormInput label={t("emailSender.smtpHost")}>
-              <Input value={smtpHost} onChange={setSmtpHost} placeholder={deriveSmtpHost(smtpLogin) || "smtp.example.com"} />
+              <Input value={smtpHost} onChange={setSmtpHost} placeholder="smtp.example.com" />
+              {server.note && <p className="text-exs text-subtle mt-1">{server.note}</p>}
             </FormInput>
           </div>
           <FormInput label={t("emailSender.smtpPort")}>
@@ -263,7 +258,7 @@ function SystemEmailForm({ sender, onSaved, onCancel }: {
             {t("emailSender.test")}
           </Button>
           {testResult && (
-            <ConnectionTestResult result={testResult} protocol="smtp" host={smtpHost} port={smtpPort} successText={t("systemEmail.testSuccess")} failedText={t("systemEmail.testFailed")} />
+            <ConnectionTestResult result={testResult} protocol="smtp" host={resolvedHost} port={smtpPort} successText={t("systemEmail.testSuccess")} failedText={t("systemEmail.testFailed")} />
           )}
           {!testResult && !isEdit && (
             <span className="text-exs text-muted">{t("emailSender.testRequired")}</span>

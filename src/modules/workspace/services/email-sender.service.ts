@@ -1,4 +1,5 @@
 import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
+import type { ResolvedServers } from "@modules/shared/domain/mail-server-suggestion";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface EmailSenderDto {
@@ -49,11 +50,8 @@ export async function testEmailSender(slug: string, data: {
   return res.data;
 }
 
-export async function resolveMailServer(slug: string, domain: string): Promise<{
-  smtp?: { host: string; port: number };
-  imap?: { host: string; port: number };
-}> {
-  const res = await http.post<{ smtp?: { host: string; port: number }; imap?: { host: string; port: number } }>(
+export async function resolveMailServer(slug: string, domain: string): Promise<ResolvedServers> {
+  const res = await http.post<ResolvedServers>(
     `/workspaces/${slug}/resolve-mail-server`,
     { domain },
   );

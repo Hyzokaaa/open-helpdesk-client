@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { getDateRange } from "../domain/get-date-range";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
@@ -26,6 +26,12 @@ import DateRangeSelector from "../components/DateRangeSelector";
 import UserAvatar from "@modules/user/components/UserAvatar";
 import { UserStatsData, getUserStats } from "../services/user-stats.service";
 import { listTickets, type TicketListItem } from "@modules/ticket/services/ticket.service";
+import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
+import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
+import useUser from "@modules/user/hooks/useUser";
+
+// Opened in a sheet over the stats, as from the ticket list
+const TicketDetailPage = lazy(() => import("@modules/ticket/pages/TicketDetailPage"));
 
 const STATUS_COLORS: Record<string, string> = {
   open: "#eab308",
@@ -46,7 +52,18 @@ const CARD_BORDERS = [
 
 export default function UserStatsPage() {
   const { workspaceSlug, userId } = useParams();
-  const navigate = useNavigate();
+  const { user } = useUser();
+  // My own stats have no id in the address; the table lists my tickets all the same
+  const listUserId = userId ?? user?.id;
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
+  const [ticketDirty, setTicketDirty] = useState(false);
+  const [ticketsKey, setTicketsKey] = useState(0);
+  // A ticket changed in the sheet reloads the table, so its status reads right
+  const closeTicket = () => {
+    if (ticketDirty) setTicketsKey((k) => k + 1);
+    setOpenTicketId(null);
+    setTicketDirty(false);
+  };
   const { t, tEnum } = useTranslation();
   const formatDate = useFormatDate();
   const [preset, setPreset] = useState("30d");
@@ -91,18 +108,18 @@ export default function UserStatsPage() {
   }, [workspaceSlug, preset, userId, dateField]);
 
   useEffect(() => {
-    if (!workspaceSlug || !userId || !data) return;
+    if (!workspaceSlug || !listUserId || !data) return;
     const filter = data.isReporter
-      ? { reporterId: userId }
+      ? { reporterId: listUserId }
       : ticketView === "reported"
-        ? { reporterId: userId }
-        : { assigneeId: userId };
+        ? { reporterId: listUserId }
+        : { assigneeId: listUserId };
     listTickets(workspaceSlug, {
       ...filter,
       ...(ticketStatus ? { status: ticketStatus } : {}),
       page: ticketPage, limit: 10, sortBy: ticketSortBy, sortOrder: ticketSortOrder,
     }).then((res) => { setTickets(res.items); setTicketTotal(res.total); });
-  }, [workspaceSlug, userId, data?.isReporter, ticketPage, ticketSortBy, ticketSortOrder, ticketStatus, ticketView]);
+  }, [workspaceSlug, listUserId, data?.isReporter, ticketPage, ticketSortBy, ticketSortOrder, ticketStatus, ticketView, ticketsKey]);
 
   const formatHours = (hours: number | null) => {
     if (hours === null) return "N/A";
@@ -289,7 +306,7 @@ export default function UserStatsPage() {
           </div>
 
           {/* Tickets Table */}
-          {userId && (
+          {listUserId && (
             <div className="bg-surface border border-border-card rounded-xl shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-border-card flex items-center justify-between">
                 <p className="text-sm font-semibold text-heading">
@@ -340,13 +357,13 @@ export default function UserStatsPage() {
                 </thead>
                 <tbody>
                   {tickets.length === 0 && (
-                    <tr><td colSpan={TICKET_COLUMNS.length} className="px-4 py-8 text-center text-sm text-muted">{t("reports.noData")}</td></tr>
+                    <tr><td colSpan={TICKET_COLUMNS.length} className="px-4 py-8 text-center text-sm text-muted">{t("stats.noTickets")}</td></tr>
                   )}
                   {tickets.map((tk) => (
                     <tr
                       key={tk.id}
                       className="border-b border-border-row hover:bg-surface-hover cursor-pointer transition-colors"
-                      onClick={() => navigate(`/dashboard/workspaces/${workspaceSlug}/tickets/${tk.id}`)}
+                      onClick={() => setOpenTicketId(tk.id)}
                     >
                       {reorder(TICKET_COLUMNS).map((col) => (
                         <td key={col.key} className="px-4 py-2">
@@ -388,6 +405,19 @@ export default function UserStatsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {openTicketId && workspaceSlug && (
+        <Sheet hideClose onClose={closeTicket}>
+          <Suspense fallback={<PageLoader fullScreen={false} />}>
+            <TicketDetailPage
+              workspaceSlugProp={workspaceSlug}
+              ticketIdProp={openTicketId}
+              onClose={closeTicket}
+              onDirtyChange={setTicketDirty}
+            />
+          </Suspense>
+        </Sheet>
       )}
     </div>
   );

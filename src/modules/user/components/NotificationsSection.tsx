@@ -18,6 +18,8 @@ const EVENT_KEYS = [
   { key: "StatusChanged", labelKey: "notifications.statusChanged" },
   // In-app only: a call to action for admins and supervisors, there is no email for it
   { key: "TicketUnassigned", labelKey: "notifications.ticketUnassigned", inAppOnly: true },
+  // For admins and supervisors: a customer answered a ticket nobody on the team owns or follows
+  { key: "UnattendedReply", labelKey: "notifications.unattendedReply" },
   { key: "CommentCreated", labelKey: "notifications.commentCreated" },
   { key: "TransferRequest", labelKey: "notifications.transferRequest" },
   // In-app only: tells whoever invited someone that the link stopped working

@@ -11,6 +11,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import useMailServerField from "@modules/shared/hooks/useMailServerField";
 import {
   EmailSenderDto,
   getEmailSender,
@@ -22,20 +23,6 @@ import {
 
 interface Props {
   slug: string;
-}
-
-function deriveSmtpHost(email: string): string {
-  const domain = email.split("@")[1];
-  if (!domain) return "";
-  const known: Record<string, string> = {
-    "gmail.com": "smtp.gmail.com",
-    "outlook.com": "smtp.office365.com",
-    "hotmail.com": "smtp.office365.com",
-    "live.com": "smtp.office365.com",
-    "yahoo.com": "smtp.mail.yahoo.com",
-    "zoho.com": "smtp.zoho.com",
-  };
-  return known[domain] || `smtp.${domain}`;
 }
 
 export default function EmailSenderSettings({ slug }: Props) {
@@ -171,11 +158,14 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   const [fromEmail, setFromEmail] = useState(sender?.fromEmail || "");
   const [smtpLogin, setSmtpLogin] = useState(sender?.smtpUser || "");
   const [password, setPassword] = useState("");
-  const [smtpHost, setSmtpHost] = useState(sender?.smtpHost || "");
-  const [smtpPort, setSmtpPort] = useState(String(sender?.smtpPort ?? "587"));
-  // The detected server arrives later: whatever was typed meanwhile is read here, not from a stale closure
-  const smtpHostRef = useRef(smtpHost);
-  smtpHostRef.current = smtpHost;
+  // Host and port follow the login's domain unless typed (see useMailServerField)
+  const server = useMailServerField({
+    address: smtpLogin,
+    kind: "smtp",
+    resolve: (domain) => resolveMailServer(slug, domain),
+    saved: sender ? { address: sender.smtpUser, host: sender.smtpHost, port: sender.smtpPort } : undefined,
+  });
+  const { host: smtpHost, setHost: setSmtpHost, port: smtpPort, setPort: setSmtpPort } = server;
   const [encryption, setEncryption] = useState(sender?.encryption ?? "tls");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -189,30 +179,12 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
     onDirtyChange?.(isDirty);
   }, [isDirty]);
 
-  const [srvHost, setSrvHost] = useState("");
-  const resolvedHost = smtpHost || srvHost || deriveSmtpHost(smtpLogin);
+  const resolvedHost = smtpHost.trim();
   const resolvedPort = Number(smtpPort) || 587;
 
   useEffect(() => {
     setTestResult(null);
-  }, [smtpLogin, password, smtpHost, srvHost, smtpPort, encryption]);
-
-  useEffect(() => {
-    if (smtpHost || !smtpLogin.includes("@")) return;
-    const domain = smtpLogin.split("@")[1];
-    if (!domain) return;
-    const timeout = setTimeout(() => {
-      resolveMailServer(slug, domain)
-        .then((res) => {
-          if (res.smtp && !smtpHostRef.current) {
-            setSmtpHost(res.smtp.host);
-            setSrvHost(res.smtp.host);
-          }
-        })
-        .catch(() => {});
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [smtpLogin]);
+  }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
 
   const canTest = smtpLogin.trim() && resolvedHost && (password || isEdit);
   const canSave = canTest && (testResult?.success || isEdit);
@@ -302,7 +274,8 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <FormInput label={t("emailSender.smtpHost")}>
-              <Input value={smtpHost} onChange={setSmtpHost} placeholder={srvHost || deriveSmtpHost(smtpLogin) || "smtp.example.com"} />
+              <Input value={smtpHost} onChange={setSmtpHost} placeholder="smtp.example.com" />
+              {server.note && <p className="text-exs text-subtle mt-1">{server.note}</p>}
             </FormInput>
           </div>
           <FormInput label={t("emailSender.smtpPort")}>

@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
+import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import {
   getPortalTicket,
   addPortalComment,
+  portalStageUpload,
   PortalTicketDetail,
+  PortalTicketAttachment,
 } from "../services/portal.service";
+import useStagedUploads from "@modules/attachment/hooks/useStagedUploads";
+import StagedFileList from "@modules/attachment/components/StagedFileList";
+import { groupAttachments } from "@modules/attachment/domain/group-attachments";
+import RichContent from "@modules/shared/components/RichContent";
+import { formatCustomFieldValue } from "@modules/custom-field/domain/format-custom-field-value";
 import {
   getPalette,
   DEFAULT_PALETTE,
@@ -67,6 +75,50 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 const CATEGORY_BG = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
 
+const isImage = (mimeType: string) => mimeType.startsWith("image/");
+const isVideo = (mimeType: string) => mimeType.startsWith("video/");
+
+/** Files of the ticket or of one reply: thumbnails for images and videos, a card for anything else. */
+function PortalFiles({ files, small = false, onOpen }: {
+  files: PortalTicketAttachment[];
+  small?: boolean;
+  onOpen: (file: PortalTicketAttachment) => void;
+}) {
+  if (files.length === 0) return null;
+  const size = small ? "w-24 h-24" : "w-32 h-32";
+  return (
+    <div className={`flex flex-wrap ${small ? "gap-2 mt-2" : "gap-3"}`}>
+      {files.map((att) => (
+        <button
+          key={att.id}
+          type="button"
+          onClick={() => onOpen(att)}
+          title={att.originalName}
+          className="block border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary-300 dark:hover:border-primary-700 transition-colors cursor-pointer"
+        >
+          {isImage(att.mimeType) ? (
+            <img src={att.downloadUrl} alt={att.originalName} className={`${size} object-cover`} />
+          ) : isVideo(att.mimeType) ? (
+            <video src={att.downloadUrl} className={`${size} object-cover`} />
+          ) : (
+            <div className={`${size} flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 gap-1`}>
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center px-2 break-all line-clamp-2">
+                {att.originalName}
+              </span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                {formatFileSize(att.size)}
+              </span>
+            </div>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function PortalTicketPage() {
   const { portalToken } = useParams();
   const [ticket, setTicket] = useState<PortalTicketDetail | null>(null);
@@ -75,6 +127,26 @@ export default function PortalTicketPage() {
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; type: "image" | "video" } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Files of the reply being written, uploaded to this portal as they are added
+  const workspaceSlug = ticket?.workspaceSlug ?? "";
+  const stageFile = useCallback((file: File) => portalStageUpload(workspaceSlug, file), [workspaceSlug]);
+  const staged = useStagedUploads(stageFile);
+
+  // Each file with the reply it came with; the rest belong to the ticket itself
+  const files = useMemo(
+    () => groupAttachments(ticket?.attachments ?? [], ticket?.comments.map((c) => c.id) ?? []),
+    [ticket],
+  );
+
+  const openFile = (att: PortalTicketAttachment) => {
+    if (isImage(att.mimeType) || isVideo(att.mimeType)) {
+      setLightbox({ src: att.downloadUrl, type: isImage(att.mimeType) ? "image" : "video" });
+    } else {
+      window.open(att.downloadUrl, "_blank", "noopener");
+    }
+  };
 
   const fetchTicket = async () => {
     if (!portalToken) return;
@@ -108,11 +180,12 @@ export default function PortalTicketPage() {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!portalToken || !comment.trim()) return;
+    if (!portalToken || !comment.trim() || staged.uploading) return;
     setSending(true);
     try {
-      await addPortalComment(portalToken, comment.trim());
+      await addPortalComment(portalToken, comment.trim(), staged.tokens);
       setComment("");
+      staged.clear();
       await fetchTicket();
     } catch {
       toast.error(t("portalTicket.commentError"));
@@ -140,9 +213,8 @@ export default function PortalTicketPage() {
     );
   }
 
-  const customFieldEntries = Object.entries(ticket.customFields || {});
-  const isImage = (mimeType: string) => mimeType.startsWith("image/");
-  const isVideo = (mimeType: string) => mimeType.startsWith("video/");
+  // By the name of their field, as the customer cannot read the definitions
+  const customFieldValues = ticket.customFieldValues ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4 sm:py-12">
@@ -196,22 +268,23 @@ export default function PortalTicketPage() {
           <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("portalTicket.description")}
           </h2>
-          <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            {ticket.description}
-          </div>
+          <RichContent
+            content={ticket.description}
+            className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
+          />
 
           {/* Custom fields */}
-          {customFieldEntries.length > 0 && (
+          {customFieldValues.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
               <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t("portalTicket.customFields")}
               </h2>
               <div className="grid grid-cols-2 gap-2">
-                {customFieldEntries.map(([key, value]) => (
-                  <div key={key} className="text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">{key}: </span>
+                {customFieldValues.map((field) => (
+                  <div key={field.name} className="text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">{field.name}: </span>
                     <span className="text-gray-900 dark:text-gray-100">
-                      {Array.isArray(value) ? value.join(", ") : String(value ?? "")}
+                      {formatCustomFieldValue(field.type, field.value, t)}
                     </span>
                   </div>
                 ))}
@@ -219,54 +292,13 @@ export default function PortalTicketPage() {
             </div>
           )}
 
-          {/* Attachments */}
-          {ticket.attachments && ticket.attachments.length > 0 && (
+          {/* Files of the ticket itself; those of each reply show with the reply */}
+          {files.ticket.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
               <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("portalTicket.attachments")} ({ticket.attachments.length})
+                {t("portalTicket.attachments")} ({files.ticket.length})
               </h2>
-              <div className="flex flex-wrap gap-3">
-                {ticket.attachments.map((att) => (
-                  <button
-                    key={att.id}
-                    type="button"
-                    onClick={() =>
-                      isImage(att.mimeType) || isVideo(att.mimeType)
-                        ? setLightbox({
-                            src: att.downloadUrl,
-                            type: isImage(att.mimeType) ? "image" : "video",
-                          })
-                        : window.open(att.downloadUrl, "_blank")
-                    }
-                    className="block border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary-300 dark:hover:border-primary-700 transition-colors cursor-pointer"
-                  >
-                    {isImage(att.mimeType) ? (
-                      <img
-                        src={att.downloadUrl}
-                        alt={att.originalName}
-                        className="w-32 h-32 object-cover"
-                      />
-                    ) : isVideo(att.mimeType) ? (
-                      <video
-                        src={att.downloadUrl}
-                        className="w-32 h-32 object-cover"
-                      />
-                    ) : (
-                      <div className="w-32 h-32 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 gap-1">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center px-2 break-all">
-                          {att.originalName}
-                        </span>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {formatFileSize(att.size)}
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
+              <PortalFiles files={files.ticket} onOpen={openFile} />
             </div>
           )}
         </div>
@@ -309,9 +341,8 @@ export default function PortalTicketPage() {
                       {formatDate(c.createdAt)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-                    {c.content}
-                  </p>
+                  <RichContent content={c.content} className="text-sm text-gray-700 dark:text-gray-300" />
+                  <PortalFiles files={files.byComment.get(c.id) ?? []} small onOpen={openFile} />
                 </div>
               </div>
             ))}
@@ -319,16 +350,50 @@ export default function PortalTicketPage() {
 
           {/* Add comment */}
           <form onSubmit={handleSubmitComment}>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder={t("portalTicket.commentPlaceholder")}
-              rows={3}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition resize-y mb-3"
-            />
+            <DropZone bare capturePaste={false} onFiles={staged.add} dropHint={t("drop.hint")}>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onPaste={(e) => {
+                  const pasted = Array.from(e.clipboardData?.files ?? []);
+                  if (pasted.length === 0) return;
+                  e.preventDefault();
+                  staged.add(pasted);
+                }}
+                placeholder={t("portalTicket.commentPlaceholder")}
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition resize-y"
+              />
+            </DropZone>
+            <div className="mt-2 -mx-3">
+              <StagedFileList files={staged.files} onRemove={staged.remove} onRetry={staged.retry} />
+            </div>
+            <div className="flex items-center gap-3 mt-1 mb-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) staged.add(Array.from(e.target.files));
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-primary-600 dark:text-gray-400 cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                </svg>
+                {t("attachments.attach")}
+              </button>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 hidden sm:inline">{t("attachments.dropOrPaste")}</span>
+            </div>
             <button
               type="submit"
-              disabled={!comment.trim() || sending}
+              disabled={!comment.trim() || sending || staged.uploading}
               className="px-4 py-2 text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {sending ? (

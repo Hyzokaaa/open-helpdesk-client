@@ -236,7 +236,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
   const hasFilesErrored = files.some((f) => f.status === "error");
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full">
 
       <h2 className="text-lg font-body-bold text-heading mb-6">
         {t("ticketCreate.title")}
@@ -250,193 +250,212 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
         />
       )}
 
-      <Card className="p-6">
-        <form onSubmit={handleSubmit}>
-          <FormInput label={t("ticketCreate.name")} required>
-            <Input
-              placeholder={t("ticketCreate.namePlaceholder")}
-              value={name}
-              onChange={setName}
-            />
-          </FormInput>
-
-          <FormInput label={t("ticketCreate.description")} required>
-            <MiniEditor
-              ref={editorRef}
-              initialValue=""
-              placeholder={t("ticketCreate.descriptionPlaceholder")}
-              ariaLabel={t("ticketCreate.description")}
-            />
-          </FormInput>
-
-          <div className="flex gap-4">
-            <FormInput label={t("ticketCreate.priority")} required className="flex-1">
-              <Select
-                options={[...PRIORITIES]}
-                label={(p) => tEnum("priority", p)}
-                value={(p) => p === priority}
-                onChange={setPriority}
+      {/* Laid out like the ticket it creates: what is written on the left, what is chosen on the right */}
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <Card className="p-6 lg:col-span-2">
+            <FormInput label={t("ticketCreate.name")} required>
+              <Input
+                placeholder={t("ticketCreate.namePlaceholder")}
+                value={name}
+                onChange={setName}
               />
             </FormInput>
 
-            <FormInput label={t("ticketCreate.category")} required className="flex-1">
-              <Select
-                options={visibleCategories}
-                label={(c) => c.name}
-                value={(c) => c.id === categoryId}
-                onChange={(c) => setCategoryId(c.id)}
-              />
-              {categoriesLoaded && allCategories.length === 0 && (
-                <p className="text-exs text-amber-600 mt-1">{t("ticketCreate.noCategories")}</p>
-              )}
-            </FormInput>
-          </div>
-
-          {departments.length > 0 && (
-            <FormInput label={t("ticketCreate.department")}>
-              <Select
-                options={[{ id: "", name: "—" } as Department, ...departments]}
-                label={(d) => d.name}
-                value={(d) => d.id === (departmentId ?? "")}
-                onChange={(d) => setDepartmentId(d.id || undefined)}
+            <FormInput label={t("ticketCreate.description")} required>
+              <MiniEditor
+                ref={editorRef}
+                initialValue=""
+                placeholder={t("ticketCreate.descriptionPlaceholder")}
+                ariaLabel={t("ticketCreate.description")}
+                minHeight={220}
               />
             </FormInput>
-          )}
 
-          {projects.length > 0 && (
-            <FormInput label={t("ticketCreate.project")}>
-              <Select
-                options={[{ id: "", name: "—", description: null } as Project, ...projects]}
-                label={(p) => p.name}
-                value={(p) => p.id === (projectId ?? "")}
-                onChange={(p) => handleProjectChange(p.id || undefined)}
-              />
-            </FormInput>
-          )}
+            <FormInput label={t("ticketCreate.attachments")}>
+              <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
+                <div>
+                  <input
+                    id="ticket-files"
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={handleFilesChange}
+                  />
+                  <label
+                    htmlFor="ticket-files"
+                    className="inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-body-semibold rounded-button border border-border-input bg-surface text-secondary-text hover:bg-surface-hover cursor-pointer transition-all"
+                  >
+                    {t("ticketCreate.addFiles")}
+                  </label>
+                  <span className="text-exs text-subtle ml-2">
+                    {t("ticketCreate.pasteOrDrag")}
+                  </span>
+                </div>
 
-          <FormInput label={t("ticketCreate.tags")}>
-            <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
-          </FormInput>
-
-          {canCreateOnBehalf && (
-          <FormInput label={t("ticketCreate.onBehalfOf")}>
-            <Input
-              placeholder={t("ticketCreate.onBehalfOfPlaceholder")}
-              value={onBehalfOf}
-              onChange={setOnBehalfOf}
-              type="email"
-            />
-            {matchedMember && (
-              <p className="text-exs text-green-600 mt-1">
-                ✓ {matchedMember.firstName} {matchedMember.lastName}
-              </p>
-            )}
-            {isNewContact && (
-              <p className="text-exs text-amber-600 mt-1">
-                {t("ticketCreate.newContactWillBeCreated")}
-              </p>
-            )}
-          </FormInput>
-          )}
-
-          <CustomFieldsForm
-            definitions={customFieldDefs}
-            values={customFields}
-            onChange={setCustomFields}
-          />
-
-          <FormInput label={t("ticketCreate.attachments")}>
-            <DropZone onFiles={handleDroppedFiles} accept={["image/*", "video/*"]} dropHint={t("drop.hint")}>
-              <div>
-                <input
-                  id="ticket-files"
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  className="hidden"
-                  onChange={handleFilesChange}
-                />
-                <label
-                  htmlFor="ticket-files"
-                  className="inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-body-semibold rounded-button border border-border-input bg-surface text-secondary-text hover:bg-surface-hover cursor-pointer transition-all"
-                >
-                  {t("ticketCreate.addFiles")}
-                </label>
-                <span className="text-exs text-subtle ml-2">
-                  {t("ticketCreate.pasteOrDrag")}
-                </span>
-              </div>
-
-              {files.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-3">
-                  {files.map((entry, i) => (
-                    <div
-                      key={i}
-                      className={`relative group border-2 rounded-lg ${entry.status === "error" ? "border-red-400" : "overflow-hidden border-border-input"}`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          entry.status === "error"
-                            ? retryFile(i)
-                            : setLightbox({
-                                src: URL.createObjectURL(entry.file),
-                                type: isImage(entry.file) ? "image" : "video",
-                              })
-                        }
-                        className="cursor-pointer"
-                        title={undefined}
+                {files.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-3">
+                    {files.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={`relative group border-2 rounded-lg ${entry.status === "error" ? "border-red-400" : "overflow-hidden border-border-input"}`}
                       >
-                        {isImage(entry.file) ? (
-                          <img
-                            src={URL.createObjectURL(entry.file)}
-                            alt={entry.file.name}
-                            className={`w-24 h-24 object-cover ${entry.status !== "done" ? "opacity-50" : ""}`}
-                          />
-                        ) : (
-                          <div className="w-24 h-24 flex items-center justify-center bg-surface-hover">
-                            <span className={`text-exs text-center px-1 break-all ${entry.status === "error" ? "text-red-500" : "text-muted"}`}>
-                              {entry.file.name}
-                            </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            entry.status === "error"
+                              ? retryFile(i)
+                              : setLightbox({
+                                  src: URL.createObjectURL(entry.file),
+                                  type: isImage(entry.file) ? "image" : "video",
+                                })
+                          }
+                          className="cursor-pointer"
+                          title={undefined}
+                        >
+                          {isImage(entry.file) ? (
+                            <img
+                              src={URL.createObjectURL(entry.file)}
+                              alt={entry.file.name}
+                              className={`w-24 h-24 object-cover ${entry.status !== "done" ? "opacity-50" : ""}`}
+                            />
+                          ) : (
+                            <div className="w-24 h-24 flex items-center justify-center bg-surface-hover">
+                              <span className={`text-exs text-center px-1 break-all ${entry.status === "error" ? "text-red-500" : "text-muted"}`}>
+                                {entry.file.name}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                        {(entry.status === "pending" || entry.status === "uploading") && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           </div>
                         )}
-                      </button>
-                      {(entry.status === "pending" || entry.status === "uploading") && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      )}
-                      {entry.status === "error" && (
-                        <>
-                          <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 pointer-events-none">
-                            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          </div>
-                          <span className="absolute bottom-1 left-1 group/tip z-10">
-                            <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center cursor-help">!</span>
-                            <span className="hidden group-hover/tip:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">
-                              {t("ticketCreate.uploadFailed")}
+                        {entry.status === "error" && (
+                          <>
+                            <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 pointer-events-none">
+                              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            </div>
+                            <span className="absolute bottom-1 left-1 group/tip z-10">
+                              <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center cursor-help">!</span>
+                              <span className="hidden group-hover/tip:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">
+                                {t("ticketCreate.uploadFailed")}
+                              </span>
                             </span>
-                          </span>
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => removeFile(i)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </DropZone>
-          </FormInput>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </DropZone>
+            </FormInput>
+          </Card>
 
-          <div className="flex justify-end gap-3 mt-2">
+          <div className="space-y-4">
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-semibold mb-3">{t("ticketDetail.properties")}</p>
+              {canCreateOnBehalf && (
+              <FormInput label={t("ticketCreate.onBehalfOf")}>
+                <Input
+                  placeholder={t("ticketCreate.onBehalfOfPlaceholder")}
+                  value={onBehalfOf}
+                  onChange={setOnBehalfOf}
+                  type="email"
+                />
+                {!matchedMember && !isNewContact && (
+                  <p className="text-exs text-subtle mt-1">{t("ticketCreate.onBehalfOfHint")}</p>
+                )}
+                {matchedMember && (
+                  <p className="text-exs text-green-600 mt-1">
+                    ✓ {matchedMember.firstName} {matchedMember.lastName}
+                  </p>
+                )}
+                {isNewContact && (
+                  <p className="text-exs text-amber-600 mt-1">
+                    {t("ticketCreate.newContactWillBeCreated")}
+                  </p>
+                )}
+              </FormInput>
+              )}
+
+              <div className="flex gap-4">
+                <FormInput label={t("ticketCreate.priority")} required className="flex-1">
+                  <Select
+                    options={[...PRIORITIES]}
+                    label={(p) => tEnum("priority", p)}
+                    value={(p) => p === priority}
+                    onChange={setPriority}
+                  />
+                </FormInput>
+
+                <FormInput label={t("ticketCreate.category")} required className="flex-1">
+                  <Select
+                    options={visibleCategories}
+                    label={(c) => c.name}
+                    value={(c) => c.id === categoryId}
+                    onChange={(c) => setCategoryId(c.id)}
+                  />
+                  {categoriesLoaded && allCategories.length === 0 && (
+                    <p className="text-exs text-amber-600 mt-1">{t("ticketCreate.noCategories")}</p>
+                  )}
+                </FormInput>
+              </div>
+
+              {projects.length > 0 && (
+                <FormInput label={t("ticketCreate.project")}>
+                  <Select
+                    options={[{ id: "", name: "—", description: null } as Project, ...projects]}
+                    label={(p) => p.name}
+                    value={(p) => p.id === (projectId ?? "")}
+                    onChange={(p) => handleProjectChange(p.id || undefined)}
+                  />
+                </FormInput>
+              )}
+
+              {departments.length > 0 && (
+                <FormInput label={t("ticketCreate.department")}>
+                  <Select
+                    options={[{ id: "", name: "—" } as Department, ...departments]}
+                    label={(d) => d.name}
+                    value={(d) => d.id === (departmentId ?? "")}
+                    onChange={(d) => setDepartmentId(d.id || undefined)}
+                  />
+                </FormInput>
+              )}
+            </Card>
+
+            <Card className="p-4">
+              <p className="text-xs text-subtle font-body-semibold mb-3">{t("ticketDetail.tags")}</p>
+                <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
+            </Card>
+
+            {customFieldDefs.length > 0 && (
+              <Card className="p-4">
+                <p className="text-xs text-subtle font-body-semibold mb-3">{t("customFields.title")}</p>
+                <CustomFieldsForm
+                  definitions={customFieldDefs}
+                  values={customFields}
+                  onChange={setCustomFields}
+                />
+              </Card>
+            )}
+          </div>
+        </div>
+
+          <div className="flex justify-end gap-3 mt-6">
             <Button
               color="light"
               onClick={handleCancel}
@@ -447,8 +466,7 @@ export default function TicketCreatePage({ workspaceSlugProp, initialProjectId, 
               {t("ticketCreate.submit")}
             </Button>
           </div>
-        </form>
-      </Card>
+      </form>
     </div>
   );
 }

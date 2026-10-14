@@ -26,5 +26,7 @@ export interface NotificationPreferences {
   emailUpgradeAvailable: boolean;
   inAppUpgradeAvailable: boolean;
   inAppInvitationExpired: boolean;
+  inAppUnattendedReply: boolean;
+  emailUnattendedReply: boolean;
   bellUnreadOnly: boolean;
 }

@@ -8,6 +8,7 @@ const LABEL_KEYS: Record<string, string> = {
   "transfer-request": "notifications.transferRequest",
   "upgrade-available": "notifications.upgradeAvailable",
   "invitation-expired": "notifications.invitationExpired",
+  "unattended-reply": "notifications.unattendedReply",
 };
 
 export function notificationLabelKey(type: string): string {

@@ -54,6 +54,9 @@ export interface PortalTicketAttachment {
   mimeType: string;
   size: number;
   downloadUrl: string;
+  /** The reply it came with, or null when it belongs to the ticket itself. */
+  commentId: string | null;
+  createdAt: string | null;
 }
 
 export interface PortalTicketDetail {
@@ -64,9 +67,12 @@ export interface PortalTicketDetail {
   priority: string;
   categoryName: string | null;
   customFields: Record<string, unknown>;
+  /** The values with the name and type of their field, in the workspace's order */
+  customFieldValues?: { name: string; type: string; value: unknown }[];
   createdAt: string;
   reporterName: string;
   workspaceName: string;
+  workspaceSlug: string;
   workspacePalette: string | null;
   attachments: PortalTicketAttachment[];
   comments: PortalTicketComment[];
@@ -111,8 +117,11 @@ export async function getPortalTicket(portalToken: string): Promise<PortalTicket
   return res.data;
 }
 
-export async function addPortalComment(portalToken: string, content: string): Promise<void> {
-  await portalHttp.post(`/portal/tickets/${portalToken}/comments`, { content });
+export async function addPortalComment(portalToken: string, content: string, uploadTokens: string[] = []): Promise<void> {
+  await portalHttp.post(
+    `/portal/tickets/${portalToken}/comments`,
+    uploadTokens.length > 0 ? { content, uploadTokens } : { content },
+  );
   trackEvent("comment-created", { visibility: "public" });
 }
 

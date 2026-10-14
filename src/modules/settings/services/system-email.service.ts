@@ -1,5 +1,6 @@
 import type { ConnectionErrorCode } from "@modules/workspace/components/ConnectionTestResult";
 import { http } from "@modules/app/modules/http/domain/http";
+import type { ResolvedServers } from "@modules/shared/domain/mail-server-suggestion";
 
 export interface SystemEmailDto {
   smtpHost: string;
@@ -48,5 +49,11 @@ export async function testSystemEmail(data: {
     "/system/email-settings/test",
     data,
   );
+  return res.data;
+}
+
+/** The mail servers of a domain, for the installation's email and platform mailbox forms */
+export async function resolveSystemMailServer(domain: string): Promise<ResolvedServers> {
+  const res = await http.post<ResolvedServers>("/system/resolve-mail-server", { domain });
   return res.data;
 }

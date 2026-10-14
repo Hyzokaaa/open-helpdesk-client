@@ -13,8 +13,9 @@ export default function StatusBadge({
 }: Props) {
   return (
     <span
+      // Never wider than its place: a long name wraps inside the badge instead of spilling out
       className={clsx(
-        "flex items-center rounded w-max font-body-medium",
+        "flex items-center rounded w-max max-w-full font-body-medium",
         {
           "bg-badge-primary-bg text-badge-primary-text": color === "primary",
           "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400": color === "yellow",
@@ -29,7 +30,7 @@ export default function StatusBadge({
         },
       )}
     >
-      {label}
+      <span className="break-words">{label}</span>
     </span>
   );
 }

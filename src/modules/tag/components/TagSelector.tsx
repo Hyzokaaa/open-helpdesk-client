@@ -25,6 +25,26 @@ export default function TagSelector({
     }
   };
 
+  // Read only: just the chosen tags, as plain pills; the rest of the workspace's tags are noise here
+  if (disabled) {
+    const chosen = tags.filter((tag) => selectedIds.includes(tag.id));
+    return chosen.length > 0 ? (
+      <div className="flex flex-wrap gap-1.5">
+        {chosen.map((tag) => (
+          <span
+            key={tag.id}
+            className="px-2.5 py-1 rounded-full text-xs font-body-medium text-white"
+            style={{ backgroundColor: tag.color || "#6366f1" }}
+          >
+            {tag.name}
+          </span>
+        ))}
+      </div>
+    ) : (
+      <span className="text-xs text-subtle">{t("common.noTags")}</span>
+    );
+  }
+
   return (
     <div className="flex flex-wrap gap-1.5">
       {tags.map((tag) => {
@@ -40,7 +60,7 @@ export default function TagSelector({
               selected
                 ? "ring-2 ring-offset-1 ring-primary text-white"
                 : "bg-surface border border-border-input text-secondary-text hover:border-border-hover",
-              disabled ? "opacity-50" : "cursor-pointer",
+              "cursor-pointer",
             )}
             style={
               selected

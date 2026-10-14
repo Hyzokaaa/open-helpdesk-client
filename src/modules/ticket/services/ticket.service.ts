@@ -49,6 +49,8 @@ export interface TicketDetail {
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
   descriptionEditedAt: string | null;
+  /** When a person last did anything to the ticket */
+  lastActivityAt?: string | null;
   accessLevel?: 'full' | 'readonly';
   aiCache?: Record<string, { source: string; result: string }>;
   reporter?: PersonSummary | null;
@@ -351,4 +353,12 @@ export async function removeParticipant(
   userId: string,
 ): Promise<void> {
   await http.delete(`/workspaces/${workspaceSlug}/tickets/${ticketId}/participants/${userId}`);
+}
+
+export async function addParticipant(
+  workspaceSlug: string,
+  ticketId: string,
+  userId: string,
+): Promise<void> {
+  await http.post(`/workspaces/${workspaceSlug}/tickets/${ticketId}/participants`, { userId });
 }

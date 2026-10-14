@@ -6,7 +6,6 @@ import MemberLink from "./MemberLink";
 import PropertyRow from "./PropertyRow";
 import TagSelector from "@modules/tag/components/TagSelector";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
-import SlaStatusCard from "./SlaStatusCard";
 import PendingTransferCard from "./PendingTransferCard";
 import TicketFollowersCard from "./TicketFollowersCard";
 import TicketDetailsCard from "./TicketDetailsCard";
@@ -205,6 +204,7 @@ export default function TicketDetailSidebar({
             [t("ticketDetail.assignee"), v.assigneeId],
             [t("ticketDetail.reportedBy"), ticket.reporterId],
             ...(ticket.registeredById ? [[t("ticketDetail.registeredBy"), ticket.registeredById] as const] : []),
+            ...(ticket.resolvedById && ticket.resolvedAt ? [[t("ticketDetail.resolvedBy"), ticket.resolvedById] as const] : []),
           ] as const).map(([label, personId]) => {
             const person = personId ? (getPerson ? getPerson(personId) : members.find((m) => m.userId === personId)) : undefined;
             return (
@@ -228,17 +228,6 @@ export default function TicketDetailSidebar({
         </div>
       </Card>
 
-      <TicketDetailsCard
-        ticket={ticket}
-        members={members}
-        getMemberName={getMemberName}
-        navigate={navigate}
-        workspaceSlug={workspaceSlug}
-        isTerminal={isTerminal}
-        formatDate={formatDate}
-        t={t}
-      />
-
       {pendingTransfer && workspaceSlug && ticketId && (
         <PendingTransferCard
           pendingTransfer={pendingTransfer}
@@ -250,15 +239,29 @@ export default function TicketDetailSidebar({
         />
       )}
 
-      <Card className="p-4">
-        <p className="text-xs text-subtle font-body-semibold mb-2">{t("ticketDetail.tags")}</p>
-        <TagSelector
-          tags={workspaceTags}
-          selectedIds={v.tagIds}
-          onChange={(ids) => setDraft((d) => d ? { ...d, tagIds: ids } : d)}
-          disabled={!editing || !canEditTags}
-        />
-      </Card>
+      <TicketFollowersCard
+        participants={participants}
+        canManageFollowers={canManageFollowers}
+        currentUserId={userId}
+        reporterId={ticket.reporterId}
+        assigneeId={ticket.assigneeId}
+        workspaceSlug={workspaceSlug}
+        ticketId={ticketId}
+        fetchParticipants={fetchParticipants}
+        t={t}
+        members={members}
+        getPerson={getPerson}
+        navigate={navigate}
+      />
+
+      <TicketDetailsCard
+        ticket={ticket}
+        isTerminal={isTerminal}
+        slaPolicy={slaPolicy}
+        slaLocked={slaLocked}
+        formatDate={formatDate}
+        t={t}
+      />
 
       {/* Without any value there is nothing to show: an empty box only while not editing */}
       {customFieldDefs.length > 0 && (editing && canEditCustomFields || customFieldDefs.some((d) => {
@@ -266,6 +269,7 @@ export default function TicketDetailSidebar({
         return val !== undefined && val !== null && val !== "";
       })) && (
         <Card className="p-4">
+          <p className="text-xs text-subtle font-body-semibold mb-1">{t("customFields.title")}</p>
           {editing && canEditCustomFields ? (
             <CustomFieldsForm
               definitions={customFieldDefs}
@@ -278,39 +282,15 @@ export default function TicketDetailSidebar({
         </Card>
       )}
 
-      <TicketFollowersCard
-        participants={participants}
-        canManageFollowers={canManageFollowers}
-        currentUserId={userId}
-        workspaceSlug={workspaceSlug}
-        ticketId={ticketId}
-        fetchParticipants={fetchParticipants}
-        t={t}
-        members={members}
-        getPerson={getPerson}
-        navigate={navigate}
-      />
-
-      {slaPolicy && (
-        <SlaStatusCard ticket={ticket} slaPolicy={slaPolicy} t={t} isTerminal={isTerminal} />
-      )}
-
-      {slaLocked && (
-        <Card>
-          <div className="flex items-center gap-3 p-4">
-            <svg className="w-5 h-5 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            <div>
-              <p className="text-xs font-body-semibold text-heading">{t("ticketDetail.slaLocked")}</p>
-              <a href="/dashboard/settings/billing" className="text-xs text-primary hover:underline">
-                {t("planLimit.upgradeToUnlock")}
-              </a>
-            </div>
-          </div>
-        </Card>
-      )}
-
+      <Card className="p-4">
+        <p className="text-xs text-subtle font-body-semibold mb-2">{t("ticketDetail.tags")}</p>
+        <TagSelector
+          tags={workspaceTags}
+          selectedIds={v.tagIds}
+          onChange={(ids) => setDraft((d) => d ? { ...d, tagIds: ids } : d)}
+          disabled={!editing || !canEditTags}
+        />
+      </Card>
     </div>
   );
 }

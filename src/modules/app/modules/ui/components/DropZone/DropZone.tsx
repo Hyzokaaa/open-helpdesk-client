@@ -5,6 +5,10 @@ interface DropZoneProps {
   accept?: string[];
   dropHint?: string;
   children?: React.ReactNode;
+  /** Takes images pasted anywhere on the page. Off when the content handles its own pastes. */
+  capturePaste?: boolean;
+  /** No dashed box: only a highlight while dragging, for wrapping a control that has its own frame. */
+  bare?: boolean;
 }
 
 function filterFiles(files: File[], accept?: string[]): File[] {
@@ -19,7 +23,7 @@ function filterFiles(files: File[], accept?: string[]): File[] {
   );
 }
 
-export default function DropZone({ onFiles, accept, dropHint, children }: DropZoneProps) {
+export default function DropZone({ onFiles, accept, dropHint, children, capturePaste = true, bare = false }: DropZoneProps) {
   const [dragging, setDragging] = useState(false);
   const dragCounter = useRef(0);
 
@@ -63,6 +67,7 @@ export default function DropZone({ onFiles, accept, dropHint, children }: DropZo
 
   // Paste handler stays on document level
   useEffect(() => {
+    if (!capturePaste) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -90,7 +95,7 @@ export default function DropZone({ onFiles, accept, dropHint, children }: DropZo
     return () => {
       document.removeEventListener("paste", handlePaste);
     };
-  }, [onFiles, accept]);
+  }, [onFiles, accept, capturePaste]);
 
   // Prevent browser default drop behavior on document
   useEffect(() => {
@@ -111,11 +116,15 @@ export default function DropZone({ onFiles, accept, dropHint, children }: DropZo
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
-        dragging
-          ? "border-primary-400 bg-primary-50 dark:bg-primary-900/10"
-          : "border-gray-300 dark:border-gray-700"
-      }`}
+      className={
+        bare
+          ? `rounded-lg transition-shadow ${dragging ? "ring-2 ring-primary-400" : ""}`
+          : `border-2 border-dashed rounded-lg p-4 transition-colors ${
+              dragging
+                ? "border-primary-400 bg-primary-50 dark:bg-primary-900/10"
+                : "border-gray-300 dark:border-gray-700"
+            }`
+      }
     >
       {children}
       {dragging && dropHint && (

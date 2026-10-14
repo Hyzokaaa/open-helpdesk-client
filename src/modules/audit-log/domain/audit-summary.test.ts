@@ -8,7 +8,6 @@ import {
   fieldLabel,
   formatChange,
   formatChangeValue,
-  htmlToText,
   isUlid,
   resolveReference,
   type ReferenceNames,
@@ -25,16 +24,7 @@ const DEP = "01M441QPHCT65PYMK5315F05A2";
 const ORG = "01M441QPHCT65PYMK5315F05A3";
 const PROJ = "01M441QPHCT65PYMK5315F05A4";
 
-describe("HTML to text", () => {
-  it("turns block tags into spaces, removes tags and decodes entities", () => {
-    expect(htmlToText("<p>Primera versión</p><p>Tom &amp; Jerry &lt;3&gt; &#39;ok&#39;</p>")).toBe("Primera versión Tom & Jerry <3> 'ok'");
-    expect(htmlToText("line<br/>break<ul><li>one</li><li>two</li></ul>")).toBe("line break one two");
-  });
-
-  it("keeps mentions as @Name", () => {
-    expect(htmlToText("<p>Hola @[Ana Pérez](01HZX5C3V9J8Q2W4E6R8T0Y1U3)</p>")).toBe("Hola @Ana Pérez");
-  });
-
+describe("Comment preview", () => {
   it("previews old HTML entries and new plain-text ones the same way, truncated", () => {
     expect(commentPreview('<p>Primera versión</p>')).toBe("Primera versión");
     expect(commentPreview("Primera versión")).toBe("Primera versión");

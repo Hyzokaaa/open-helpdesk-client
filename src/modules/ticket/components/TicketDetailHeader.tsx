@@ -19,6 +19,8 @@ interface TicketDetailHeaderProps {
   canPickup: boolean;
   canDiscard: boolean;
   canTransfer: boolean | null;
+  /** The assignee may let go of their own ticket even without ticket.assign */
+  canRelease: boolean;
   canDelete: boolean;
   enterEdit: () => void;
   cancelEdit: () => void;
@@ -28,6 +30,7 @@ interface TicketDetailHeaderProps {
   onPickup: () => void;
   onDiscard: () => void;
   onTransfer: () => void;
+  onRelease: () => void;
   onDelete: () => void;
   onClose?: () => void;
   t: (key: any) => string;
@@ -37,9 +40,9 @@ export default function TicketDetailHeader({
   ticket, draft, setDraft,
   isEditing, canSwitchToEdit, canEditName,
   saving, embedded,
-  canChangeStatusAction, canAssignAction, canPickup, canDiscard, canTransfer, canDelete,
+  canChangeStatusAction, canAssignAction, canPickup, canDiscard, canTransfer, canRelease, canDelete,
   enterEdit, cancelEdit, requestSave,
-  onChangeStatus, onAssign, onPickup, onDiscard, onTransfer, onDelete, onClose,
+  onChangeStatus, onAssign, onPickup, onDiscard, onTransfer, onRelease, onDelete, onClose,
   t,
 }: TicketDetailHeaderProps) {
   // Mirrors the ticket list action menu: operations with side effects beyond the record
@@ -50,6 +53,7 @@ export default function TicketDetailHeader({
     ...(canPickup ? [{ label: t("tickets.pickup"), onClick: onPickup }] : []),
     ...(canDiscard ? [{ label: t("tickets.discard"), onClick: onDiscard, danger: true }] : []),
     ...(canTransfer ? [{ label: t("tickets.transfer"), onClick: onTransfer }] : []),
+    ...(canRelease ? [{ label: t("ticketDetail.release"), onClick: onRelease }] : []),
     ...(canDelete ? [{ label: t("ticketDetail.deleteTicket"), onClick: onDelete, danger: true }] : []),
   ];
 
