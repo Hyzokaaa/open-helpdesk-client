@@ -34,6 +34,7 @@ import { listCustomFields } from "@modules/custom-field/services/custom-field.se
 import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import useWebSocket from "@modules/shared/hooks/useWebSocket";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { useMembershipChanged } from "@modules/workspace/domain/membership-events";
 import { P } from "@modules/workspace/domain/permissions";
 
 interface UseTicketDetailOptions {
@@ -97,6 +98,11 @@ export default function useTicketDetail({ workspaceSlug, ticketId, isPlanLimitEr
     fetchAttachments();
     fetchParticipants();
   }, [workspaceSlug, ticketId]);
+
+  // A system admin joining the workspace now shows up as an assignee, follower and mention
+  useMembershipChanged(workspaceSlug, () => {
+    if (workspaceSlug) listMembers(workspaceSlug).then(setMembers).catch(() => {});
+  });
 
   // Only the lists this member may read: a refused request is recorded as a denied access.
   // Customers get their ticket's names from the ticket itself.

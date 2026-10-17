@@ -54,7 +54,7 @@ export default function PortalSelector({ workspaces }: Props) {
         </div>
 
         <div className="mt-6 text-center">
-          <Link to="/login" className="text-xs text-subtle hover:text-primary transition-colors">
+          <Link to="/login?from=portal" className="text-xs text-subtle hover:text-primary transition-colors">
             {t("portal.agentLogin")}
           </Link>
         </div>

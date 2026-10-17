@@ -12,6 +12,7 @@ import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { useMembershipChanged } from "@modules/workspace/domain/membership-events";
 import { P } from "@modules/workspace/domain/permissions";
 import {
   TicketListItem,
@@ -197,6 +198,10 @@ export default function TicketsPage() {
     listCategories(workspaceSlug).then(setCategories).catch(() => {});
     if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setProjects).catch(() => {});
   }, [workspaceSlug, permLoading]);
+  // A system admin joining the workspace now shows up as an assignee
+  useMembershipChanged(workspaceSlug, () => {
+    if (workspaceSlug) listMembers(workspaceSlug).then(setMembers).catch(() => {});
+  });
 
   useEffect(() => {
     if (!permLoading) fetchTickets();

@@ -12,6 +12,7 @@ import useConfig from "@modules/app/hooks/useConfig";
 import { APP_FULL_NAME } from "@modules/app/domain/constants/env";
 import OAuthButtons from "../components/OAuthButtons";
 import { isPasswordAcceptable } from "../domain/password-policy";
+import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ export default function SignupPage() {
           {!isInviteFlow && <OAuthButtons providers={providers} onSuccess={async () => {
             const profile = await getProfile();
             setUser(profile);
-            navigate("/onboarding?step=3", { replace: true });
+            navigate(await pathAfterSignIn(), { replace: true });
           }} />}
 
           <form onSubmit={handleSubmit}>

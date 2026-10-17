@@ -5,7 +5,16 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
-import { login, getProfile, getAuthProviders, type AuthProviders } from "../services/auth.service";
+import { login, getProfile, getAuthProviders, issueHandoffCode, type AuthProviders } from "../services/auth.service";
+import {
+  canReceiveHandoff,
+  goStoreOnInstallation,
+  handoffAlreadyTried,
+  installationOrigin,
+  safeRedirect,
+  startReceive,
+  takeHubOffer,
+} from "../domain/session-handoff";
 import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -15,14 +24,23 @@ import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setUser } = useUser();
   const { t } = useTranslation();
-  const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces, sessionRememberDays } = useConfig();
+  const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces, sessionRememberDays, appUrl } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
+  // On a custom domain, first try the session of the installation's own address (#37). Not for
+  // people coming from the customer portal, who must only ever see this domain, nor after an
+  // expiry, which ended that session too.
+  const [checkingSession] = useState(() =>
+    canReceiveHandoff(appUrl, isCustomDomain)
+    && !handoffAlreadyTried()
+    && searchParams.get("from") !== "portal"
+    && searchParams.get("expired") !== "1");
 
   const inviteEmail = searchParams.get("email") || "";
 
@@ -34,8 +52,32 @@ export default function LoginPage() {
   const [providers, setProviders] = useState<AuthProviders>({ google: false });
 
   useEffect(() => {
+    if (checkingSession && appUrl) void startReceive(appUrl, safeRedirect(searchParams.get("redirect")));
+    // Once, on arrival
+  }, []);
+
+  useEffect(() => {
     getAuthProviders().then(setProviders).catch(() => {});
   }, []);
+
+  /**
+   * Where to go once signed in. On a custom domain, a session kept signed in is first copied to
+   * the installation's address, if it offered to keep one, so the next domain finds it.
+   */
+  const finishSignIn = async (remember: boolean) => {
+    const path = await pathAfterSignIn(searchParams.get("redirect"));
+    const offer = remember && canReceiveHandoff(appUrl, isCustomDomain) ? takeHubOffer() : null;
+    if (offer && appUrl) {
+      try {
+        const code = await issueHandoffCode(installationOrigin(appUrl)!, offer.challenge);
+        goStoreOnInstallation(appUrl, code, offer, path);
+        return;
+      } catch {
+        // Not kept: the next domain asks for the password, as before
+      }
+    }
+    navigate(path, { replace: true });
+  };
 
   useEffect(() => {
     if (searchParams.get("error") === "oauth_failed") {
@@ -58,7 +100,7 @@ export default function LoginPage() {
       const profile = await getProfile();
       setUser(profile);
 
-      navigate(searchParams.get("redirect") || "/dashboard");
+      await finishSignIn(rememberMe);
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || t("login.failed"));
@@ -66,6 +108,9 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Leaving for the installation's address and back: nothing to show meanwhile
+  if (checkingSession) return <div className="min-h-dvh bg-page" />;
 
   return (
     <div className="min-h-dvh flex flex-col bg-page">
@@ -89,9 +134,7 @@ export default function LoginPage() {
             <OAuthButtons providers={providers} rememberMe={rememberMe} onSuccess={async () => {
               const profile = await getProfile();
               setUser(profile);
-              const { listWorkspaces } = await import("@modules/workspace/services/workspace.service");
-              const workspaces = await listWorkspaces();
-              navigate(workspaces.length === 0 ? "/onboarding?step=3" : "/dashboard", { replace: true });
+              await finishSignIn(rememberMe);
             }} />
 
             <form onSubmit={handleSubmit}>

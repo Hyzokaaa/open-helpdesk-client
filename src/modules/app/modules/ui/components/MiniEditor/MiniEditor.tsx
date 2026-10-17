@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
+import { forwardRef, useImperativeHandle, useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -8,6 +8,12 @@ import { useFormInputId } from "../FormInput/form-input-context";
 export interface MiniEditorRef {
   getHTML: () => string;
   isEmpty: () => boolean;
+  /**
+   * Whether the person changed the content. The editor rewrites the HTML it is given (links get
+   * `target` and `rel`, `<br />` becomes `<br>`), so comparing its output with the stored value
+   * reports edits nobody made; this compares with its own rendering of the initial value instead.
+   */
+  isModified: () => boolean;
 }
 
 interface Props {
@@ -23,6 +29,8 @@ export default forwardRef<MiniEditorRef, Props>(function MiniEditor(
 ) {
   const formId = useFormInputId();
   const [active, setActive] = useState({ bold: false, italic: false, strike: false, code: false, codeBlock: false, bulletList: false, orderedList: false });
+  // The initial value as the editor itself writes it, the baseline for isModified
+  const initialHtml = useRef<string | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -37,6 +45,9 @@ export default forwardRef<MiniEditorRef, Props>(function MiniEditor(
     ],
     immediatelyRender: false,
     content: initialValue || "",
+    onCreate: ({ editor: created }) => {
+      initialHtml.current = created.getHTML();
+    },
     editorProps: {
       attributes: {
         class: "comment-editor px-3 py-2 text-sm text-body outline-none overflow-auto",
@@ -50,6 +61,7 @@ export default forwardRef<MiniEditorRef, Props>(function MiniEditor(
   useImperativeHandle(ref, () => ({
     getHTML: () => editor?.getHTML() || "",
     isEmpty: () => editor?.isEmpty ?? true,
+    isModified: () => !!editor && initialHtml.current !== null && editor.getHTML() !== initialHtml.current,
   }));
 
   useEffect(() => {

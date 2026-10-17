@@ -8,9 +8,16 @@ describe("formatResponseTime", () => {
     expect(formatResponseTime(created, response)).toBe("35m");
   });
 
-  it("returns 0m for instant response", () => {
+  it("returns <1m for an answer within the first minute", () => {
     const t = "2026-08-01T10:00:00Z";
-    expect(formatResponseTime(t, t)).toBe("0m");
+    expect(formatResponseTime(t, t)).toBe("<1m");
+    expect(formatResponseTime(t, "2026-08-01T10:00:59Z")).toBe("<1m");
+  });
+
+  it("returns <1m when the server clocks put the answer a moment before the creation", () => {
+    const created = "2026-08-01T10:00:01.100Z";
+    const response = "2026-08-01T10:00:00.500Z";
+    expect(formatResponseTime(created, response)).toBe("<1m");
   });
 
   it("returns hours and minutes when less than 1 day", () => {
@@ -25,7 +32,7 @@ describe("formatResponseTime", () => {
     expect(formatResponseTime(created, response)).toBe("2d 4h");
   });
 
-  it("returns dash when response is before creation", () => {
+  it("returns dash when the response is clearly before the creation", () => {
     const created = "2026-08-01T10:00:00Z";
     const response = "2026-08-01T09:00:00Z";
     expect(formatResponseTime(created, response)).toBe("—");

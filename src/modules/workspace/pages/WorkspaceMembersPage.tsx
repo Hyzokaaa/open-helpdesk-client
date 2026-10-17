@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -9,6 +9,8 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import InviteSheet from "../components/InviteSheet";
 import AddMemberSheet from "../components/AddMemberSheet";
 import ImportMembersSheet from "../components/ImportMembersSheet";
+import NotMemberCard from "../components/NotMemberCard";
+import { notifyMembershipChanged, useMembershipChanged } from "../domain/membership-events";
 import {
   WorkspaceMember,
   listMembers,
@@ -34,6 +36,7 @@ export default function WorkspaceMembersPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   const fetchMembers = () => {
     if (!workspaceSlug) return;
@@ -45,6 +48,7 @@ export default function WorkspaceMembersPage() {
   };
 
   useEffect(() => { fetchMembers(); }, [workspaceSlug]);
+  useMembershipChanged(workspaceSlug, fetchMembers);
 
   const canManageMembers = can(P.WORKSPACE_MEMBERS_MANAGE);
 
@@ -53,7 +57,9 @@ export default function WorkspaceMembersPage() {
     try {
       await removeMember(workspaceSlug, removeMemberId);
       setRemoveMemberId(null);
-      fetchMembers();
+      // Leaving yourself changes your permissions and brings back the not-a-member notices
+      if (removeMemberId === user?.id) notifyMembershipChanged(workspaceSlug);
+      else fetchMembers();
       toast.success(t("members.removed"));
     } catch {
       toast.error(t("members.removeError"));
@@ -64,7 +70,9 @@ export default function WorkspaceMembersPage() {
     if (!workspaceSlug) return;
     try {
       await changeMemberRole(workspaceSlug, memberUserId, newRole);
-      fetchMembers();
+      // Your own role decides your permissions and the not-a-member notices
+      if (memberUserId === user?.id) notifyMembershipChanged(workspaceSlug);
+      else fetchMembers();
       toast.success(t("members.roleUpdated"));
     } catch (err: any) {
       if (!err?.handled) toast.error(t("members.roleError"));
@@ -91,7 +99,7 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-body-bold text-heading">{t("sidebar.members")}</h2>
+        <h2 ref={titleRef} tabIndex={-1} className="text-lg font-body-bold text-heading outline-none">{t("sidebar.members")}</h2>
         <div className="flex gap-2">
           {canManageMembers && (
             <Button size="sm" color="light" onClick={() => setShowImport(true)}>
@@ -110,6 +118,8 @@ export default function WorkspaceMembersPage() {
           )}
         </div>
       </div>
+
+      <NotMemberCard workspaceSlug={workspaceSlug} onJoined={() => titleRef.current?.focus()} />
 
       {showAdd && workspaceSlug && (
         <AddMemberSheet

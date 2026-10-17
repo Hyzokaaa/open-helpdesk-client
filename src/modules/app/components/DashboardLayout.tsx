@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
 import useConfig from "@modules/app/hooks/useConfig";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
-import EmailVerificationBanner from "@modules/user/components/EmailVerificationBanner";
+import { getOnboarding } from "@modules/onboarding/services/onboarding.service";
 import { PaletteProvider } from "@modules/workspace/context/PaletteProvider";
 import { listWorkspaces } from "@modules/workspace/services/workspace.service";
 import Sidebar from "./Sidebar";
@@ -12,6 +12,7 @@ import Navbar from "./Navbar";
 import RouteSuspense from "./RouteSuspense";
 import BrandLogo from "./BrandLogo";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import NotMemberBar from "@modules/workspace/components/NotMemberBar";
 
 function NoAccessScreen() {
   const { t } = useTranslation();
@@ -42,6 +43,16 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
   const [hasAccess, setHasAccess] = useState(true);
+  // A step still pending (verify the email, choose a plan…) is done in the onboarding first
+  const [onboardingPending, setOnboardingPending] = useState<boolean | null>(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!user) return;
+    getOnboarding()
+      .then((state) => setOnboardingPending(state.nextStep !== null))
+      .catch(() => setOnboardingPending(false));
+  }, [user?.id, user?.isEmailVerified]);
 
   useEffect(() => {
     if (!user || !domainWorkspaces) {
@@ -55,9 +66,11 @@ export default function DashboardLayout() {
     }).catch(() => setHasAccess(false)).finally(() => setAccessChecked(true));
   }, [user?.id, domainWorkspaces]);
 
-  if (loading || configLoading || !accessChecked) return <PageLoader />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (!user.isEmailVerified) return <EmailVerificationBanner />;
+  if (!loading && !user) return <Navigate to="/login" replace />;
+  if (loading || configLoading || !accessChecked || onboardingPending === null) return <PageLoader />;
+  if (onboardingPending) {
+    return <Navigate to={`/onboarding?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  }
   if (domainWorkspaces && !hasAccess) return <NoAccessScreen />;
 
   return (
@@ -68,10 +81,12 @@ export default function DashboardLayout() {
         <div className="w-full flex flex-col grow lg:pl-[240px] overflow-hidden">
           <DashboardBanner />
           <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <NotMemberBar />
 
           <div className="flex flex-col items-center px-6 md:px-8 w-full flex-1 overflow-y-auto">
             <main
-              className="flex flex-col grow w-full items-center py-6 min-h-0"
+              tabIndex={-1}
+              className="flex flex-col grow w-full items-center py-6 min-h-0 outline-none"
               style={{ maxWidth: "1200px" }}
             >
               <RouteSuspense>

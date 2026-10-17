@@ -126,6 +126,14 @@ http.interceptors.response.use(
         handled = true;
       }
 
+      // The session token carries whether the email is verified: right after verifying it (in
+      // another tab or device) it still says no. A renewed session reads it again, so the
+      // request is retried once with it before telling the person to verify.
+      if (config && error.response.status === 403 && error.response.data?.message === "Email not verified" && !config._retried) {
+        config._retried = true;
+        if (await renewSession()) return http(config);
+      }
+
       if (!silent && error.response.status === 403) {
         if (error.response.data?.message === "Email not verified") {
           toast.warning(t("verification.banner"), {

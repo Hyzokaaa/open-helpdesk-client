@@ -117,6 +117,30 @@ export async function logout(refreshToken: string): Promise<void> {
   await http.post("/auth/logout", { refreshToken }, { headers: { "X-Silent-Errors": "true" } });
 }
 
+// Session handoff between addresses of the installation (see domain/session-handoff.ts).
+// Silent: a failed trip falls back to the sign-in page, never to an error toast.
+const SILENT = { headers: { "X-Silent-Errors": "true" } };
+
+/**
+ * On the installation's address: a code for `audience` from the session kept here, or
+ * `loginRequired` when there is none. Fails when `audience` is not an address of the installation.
+ */
+export async function startHandoff(audience: string, codeChallenge: string, refreshToken: string | null): Promise<{ code: string } | { loginRequired: true }> {
+  const res = await http.post<{ code: string } | { loginRequired: true }>("/auth/handoff/start", { audience, codeChallenge, refreshToken: refreshToken ?? undefined }, SILENT);
+  return res.data;
+}
+
+/** A single-use code that carries this session to `audience`, tradeable only with the receiver's secret. */
+export async function issueHandoffCode(audience: string, codeChallenge: string): Promise<string> {
+  const res = await http.post<{ code: string }>("/auth/handoff/codes", { audience, codeChallenge }, SILENT);
+  return res.data.code;
+}
+
+export async function exchangeHandoffCode(code: string, codeVerifier: string): Promise<LoginResponse> {
+  const res = await http.post<LoginResponse>("/auth/handoff/exchange", { code, codeVerifier }, SILENT);
+  return res.data;
+}
+
 export async function getProfile(): Promise<AuthUser> {
   const res = await http.get<ProfileResponse>("/users/me");
   return res.data;

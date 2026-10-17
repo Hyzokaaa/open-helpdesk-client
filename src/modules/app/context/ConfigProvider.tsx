@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConfigContext, type DomainWorkspace } from "./config-context";
-import { getPublicConfig, resolveDomain } from "../services/config.service";
+import { getPublicConfig, isInstallationAddress, resolveDomain } from "../services/config.service";
 import { parseAnalyticsConfig, type AnalyticsConfig } from "@modules/analytics/domain/analytics-config";
 import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
 
@@ -21,6 +21,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
   const [sessionRememberDays, setSessionRememberDays] = useState<number | null>(null);
+  const [appUrl, setAppUrl] = useState<string | null>(null);
   const [systemEmailFrom, setSystemEmailFrom] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [domainWorkspaces, setDomainWorkspaces] = useState<DomainWorkspace[] | null>(null);
@@ -39,6 +40,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setAiEnabled(config.aiEnabled ?? false);
       setEmailConfigured(config.emailConfigured ?? false);
       setSessionRememberDays(config.sessionRememberDays ?? null);
+      setAppUrl(config.appUrl ?? null);
       setSystemEmailFrom(config.systemEmailFrom ?? null);
       setUpgradeNotificationsEnabled(config.upgradeNotificationsEnabled ?? true);
       setAnalytics(parseAnalyticsConfig(config.analytics));
@@ -49,8 +51,12 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         icon: config.brandingIcon ?? null,
       });
 
-      const resolved = await resolveDomain(window.location.hostname);
-      if (resolved) setDomainWorkspaces(resolved);
+      // Only another address can be a workspace's custom domain: on the installation's own one
+      // (FRONTEND_URL) the answer is always "none", so it is not asked
+      if (!isInstallationAddress(config.appUrl)) {
+        const resolved = await resolveDomain(window.location.hostname);
+        if (resolved) setDomainWorkspaces(resolved);
+      }
     };
     init().finally(() => setLoading(false));
   }, []);
@@ -104,7 +110,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandIcon]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, sessionRememberDays, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, sessionRememberDays, appUrl, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
       {children}
     </ConfigContext.Provider>
   );

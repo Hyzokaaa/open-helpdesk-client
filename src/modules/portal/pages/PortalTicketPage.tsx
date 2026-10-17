@@ -319,11 +319,11 @@ export default function PortalTicketPage() {
             {ticket.comments.map((c) => (
               <div
                 key={c.id}
-                className={`flex ${c.isReporter ? "justify-end" : "justify-start"}`}
+                className={`flex ${c.isOwn ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[85%] rounded-lg p-3 ${
-                    c.isReporter
+                    c.isOwn
                       ? "bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800"
                       : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                   }`}
@@ -332,7 +332,7 @@ export default function PortalTicketPage() {
                     <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                       {c.authorName}
                     </span>
-                    {!c.isReporter && (
+                    {c.isTeam && (
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                         {t("portalTicket.agent")}
                       </span>

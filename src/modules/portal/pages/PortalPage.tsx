@@ -644,7 +644,7 @@ export default function PortalPage() {
         {!isWidget && (
           <div className="text-center text-xs text-gray-400 dark:text-gray-600 mt-6 space-x-3">
             <span>{t("portal.poweredBy")}</span>
-            <a href="/login" className="hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
+            <a href="/login?from=portal" className="hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
               {t("portal.signIn")}
             </a>
           </div>

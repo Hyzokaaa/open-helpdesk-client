@@ -45,7 +45,7 @@ export default function WorkspacesPage() {
 
   if (loading || lockedSlug) return <div className="flex justify-center py-12"><Spinner width={24} /></div>;
 
-  const roleColor = (role: string) => {
+  const roleColor = (role: string | null) => {
     if (role === "admin") return "primary" as const;
     if (role === "agent") return "blue" as const;
     return "gray" as const;
@@ -85,7 +85,7 @@ export default function WorkspacesPage() {
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-sm font-body-bold text-heading truncate">{ws.name}</h3>
-                  <StatusBadge label={tEnum("role", ws.role)} color={roleColor(ws.role)} size="xs" />
+                  <StatusBadge label={ws.role ? tEnum("role", ws.role) : t("workspaces.notMember")} color={roleColor(ws.role)} size="xs" />
                 </div>
                 <p className="text-xs text-muted line-clamp-2 min-h-[2rem]">
                   {ws.description || t("workspaces.noDescription")}

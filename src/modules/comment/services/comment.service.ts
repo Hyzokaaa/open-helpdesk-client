@@ -11,6 +11,8 @@ export interface CommentItem {
   createdAt: string | null;
   editedAt: string | null;
   author?: PersonSummary | null;
+  /** Lines of quoted text folded under an emailed reply (its quote and signature). */
+  quotedLines?: number;
 }
 
 export interface CommentEditItem {
@@ -43,6 +45,14 @@ export async function editComment(
     { content },
   );
   return res.data;
+}
+
+/** The quoted message and signature an emailed reply carried. */
+export async function getCommentQuotedText(workspaceId: string, ticketId: string, commentId: string): Promise<string> {
+  const res = await http.get<{ content: string }>(
+    `/workspaces/${workspaceId}/tickets/${ticketId}/comments/${commentId}/quoted-text`,
+  );
+  return res.data.content;
 }
 
 export async function getCommentHistory(

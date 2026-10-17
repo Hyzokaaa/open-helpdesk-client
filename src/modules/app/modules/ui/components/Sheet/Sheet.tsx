@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import clsx from "clsx";
 import { useModalLayer } from "../../shared/domain/modal-stack";
+import { SheetCloseGuardContext, type SheetCloseGuard } from "./sheet-close-guard";
 
 type SheetSize = "sm" | "md" | "lg";
 
@@ -36,6 +37,13 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
   const contentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const layer = useModalLayer();
+  // The content may hold the sheet open, e.g. to ask about unsaved changes (useSheetCloseGuard)
+  const guardRef = useRef<SheetCloseGuard | null>(null);
+  const registerGuard = useCallback((guard: SheetCloseGuard | null) => { guardRef.current = guard; }, []);
+  const requestClose = useCallback(() => {
+    if (guardRef.current?.()) return;
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
@@ -58,7 +66,7 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
       if (!layer.isTop()) return;
 
       if (e.key === "Escape") {
-        onClose();
+        requestClose();
         return;
       }
 
@@ -85,12 +93,12 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose, layer]);
+  }, [requestClose, layer]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
       {/* Backdrop — only this element closes the sheet */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={requestClose} />
 
       {/* Content — clicks here don't propagate to backdrop */}
       <div
@@ -103,13 +111,13 @@ export default function Sheet({ children, onClose, size = "lg", hideClose }: Pro
         {!hideClose && (
           <div className="sticky top-0 h-0 z-20 flex justify-end pr-3">
             <div className="mt-4">
-              <SheetCloseButton onClick={onClose} />
+              <SheetCloseButton onClick={requestClose} />
             </div>
           </div>
         )}
 
         <div className="p-6 pt-4">
-          {children}
+          <SheetCloseGuardContext.Provider value={registerGuard}>{children}</SheetCloseGuardContext.Provider>
         </div>
       </div>
     </div>

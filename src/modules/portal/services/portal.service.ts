@@ -45,6 +45,10 @@ export interface PortalTicketComment {
   content: string;
   authorName: string;
   isReporter: boolean;
+  /** Written by whoever opened this link: their replies sit on their side. */
+  isOwn: boolean;
+  /** Written by someone of the team, as opposed to the reporter or another customer. */
+  isTeam: boolean;
   createdAt: string;
 }
 

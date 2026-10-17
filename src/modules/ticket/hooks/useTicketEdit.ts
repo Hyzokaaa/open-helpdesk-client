@@ -41,6 +41,7 @@ interface UseTicketEditOptions {
   customFieldDefs: CustomFieldDefinition[];
   getMemberName: (id: string) => string;
   fetchTicket: (refreshActivity?: boolean) => void;
+  /** The edited description, or null when the person did not change it (the stored one stays). */
   getDescriptionHtml: () => string | null;
   onDirtyChange?: (dirty: boolean) => void;
   onClose?: () => void;
@@ -115,7 +116,13 @@ export default function useTicketEdit(options: UseTicketEditOptions) {
     });
   };
 
-  const isDirty = () => getChanges().length > 0;
+  // The description editor only reaches the draft on save, so what was typed there counts too
+  const isDirty = () => getChanges().length > 0 || getDescriptionHtml() !== null;
+
+  /** Unsaved edits that closing would lose. */
+  const hasUnsavedChanges = () => mode === "edit" && !!draft && isDirty();
+
+  const openDiscardModal = () => setShowDiscardModal(true);
 
   const cancelEdit = () => {
     if (isDirty()) {
@@ -215,5 +222,7 @@ export default function useTicketEdit(options: UseTicketEditOptions) {
     handleDraftStatusChange,
     getChanges,
     isDirty,
+    hasUnsavedChanges,
+    openDiscardModal,
   };
 }

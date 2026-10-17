@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
@@ -6,6 +6,7 @@ import MiniEditor, { MiniEditorRef } from "@modules/app/modules/ui/components/Mi
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import CommentInput from "@modules/comment/components/CommentInput";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
+import { useSheetCloseGuard } from "@modules/app/modules/ui/components/Sheet/sheet-close-guard";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
@@ -17,11 +18,14 @@ import {
   assignTicket,
   pickupTicket,
   deleteTicket,
+  getDescriptionQuotedText,
 } from "../services/ticket.service";
 import {
   createComment,
   editComment,
+  getCommentQuotedText,
 } from "@modules/comment/services/comment.service";
+import QuotedEmailText from "../components/QuotedEmailText";
 import VersionHistoryModal from "@modules/shared/components/VersionHistoryModal";
 import {
   deleteAttachment,
@@ -112,13 +116,33 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     showCloseReasonModal, setShowCloseReasonModal,
     enterEdit, cancelEdit, confirmDiscard, requestSave,
     handleSave, handleDraftStatusChange, getChanges,
+    hasUnsavedChanges, openDiscardModal,
   } = useTicketEdit({
     workspaceSlug, ticketId, ticket,
     wsCategories, wsProjects, workspaceTags, departments, organizations, customFieldDefs,
     getMemberName, fetchTicket,
-    getDescriptionHtml: () => descriptionEditorRef.current?.getHTML() ?? null,
+    // Only what the person typed counts: an untouched description keeps the stored HTML
+    getDescriptionHtml: () => {
+      const editor = descriptionEditorRef.current;
+      return editor && editor.isModified() ? editor.getHTML() : null;
+    },
     onDirtyChange, onClose, navigate, handlePlanLimitError, t, tEnum, initialMode,
   });
+
+  // Closing the ticket (its X, or the sheet's X, a click outside or Escape) while edits are
+  // unsaved asks first, like Cancel does; discarding then closes it.
+  const closeAfterDiscard = useRef(false);
+  const holdClose = useRef<() => boolean>(() => false);
+  holdClose.current = () => {
+    if (!hasUnsavedChanges()) return false;
+    closeAfterDiscard.current = true;
+    openDiscardModal();
+    return true;
+  };
+  useSheetCloseGuard(useCallback(() => holdClose.current(), []));
+  const requestClose = () => {
+    if (!holdClose.current()) onClose?.();
+  };
 
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -279,11 +303,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
 
   const handleEditComment = async (commentId: string) => {
     if (!workspaceSlug || !ticketId) return;
-    const content = commentEditorRef.current?.getHTML() || editingCommentContent;
+    const editor = commentEditorRef.current;
+    const content = editor?.getHTML() || editingCommentContent;
 
-    // Saving an untouched comment would add a version history entry for nothing.
+    // Saving an untouched comment would add a version history entry for nothing. The editor
+    // rewrites the HTML it loads, so "untouched" is what it reports, not a text comparison.
     const original = comments.find((c) => c.id === commentId)?.content;
-    if (isSameRichText(content, original)) {
+    if ((editor && !editor.isModified()) || isSameRichText(content, original)) {
       setEditingCommentId(null);
       setEditingCommentContent("");
       return;
@@ -342,8 +368,17 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           message={t("ticketDetail.discardChangesMessage")}
           confirmLabel={t("ticketDetail.discardChangesConfirm")}
           danger
-          onConfirm={confirmDiscard}
-          onCancel={closeDiscardModal}
+          onConfirm={() => {
+            confirmDiscard();
+            if (closeAfterDiscard.current) {
+              closeAfterDiscard.current = false;
+              onClose?.();
+            }
+          }}
+          onCancel={() => {
+            closeAfterDiscard.current = false;
+            closeDiscardModal();
+          }}
         />
       )}
 
@@ -511,7 +546,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           },
         })}
         onDelete={handleDelete}
-        onClose={onClose}
+        onClose={onClose ? requestClose : undefined}
         t={t}
       />
 
@@ -556,6 +591,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                   className="text-sm text-body break-words overflow-hidden tiptap"
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(ticket.description) }}
                 />
+                {!!ticket.descriptionQuotedLines && workspaceSlug && ticketId && (
+                  <QuotedEmailText lines={ticket.descriptionQuotedLines} load={() => getDescriptionQuotedText(workspaceSlug, ticketId)} />
+                )}
                 {ticket.descriptionEditedAt && (
                   <button
                     onClick={() => openHistory("description")}
@@ -735,6 +773,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
                       className={`text-sm text-body ${c.content.startsWith('<') ? 'tiptap' : 'whitespace-pre-wrap'}`}
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderMentions(c.content, members)) }}
                     />
+                  )}
+                  {!!c.quotedLines && workspaceSlug && ticketId && (
+                    <QuotedEmailText lines={c.quotedLines} load={() => getCommentQuotedText(workspaceSlug, ticketId, c.id)} />
                   )}
                   <AttachmentList
                     attachments={groupedAttachments.byComment.get(c.id) ?? []}

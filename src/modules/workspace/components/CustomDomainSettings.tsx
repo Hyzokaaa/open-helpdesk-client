@@ -16,14 +16,19 @@ interface Props {
   currentDomain: string | null;
   verified: boolean;
   verificationToken: string | null;
-  cnameTarget: string;
+  /** Since when the daily check finds the verified domain not pointing here (ISO), if it does. */
+  failingSince?: string | null;
+  /** False once it failed several days in a row: signing in there always asks for the password. */
+  trusted?: boolean;
+  /** Null when the installation did not set CUSTOM_DOMAIN_CNAME_TARGET: there is nothing to point to. */
+  cnameTarget: string | null;
   /** System admins set domains already verified; everyone else proves control over DNS. */
   canSkipVerification: boolean;
   onUpdate: (domain: string | null, verified: boolean, token: string | null, cnameTarget?: string) => void;
 }
 
-export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, cnameTarget, canSkipVerification, onUpdate }: Props) {
-  const { t } = useTranslation();
+export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, failingSince, trusted = true, cnameTarget, canSkipVerification, onUpdate }: Props) {
+  const { t, lang } = useTranslation();
   const [domain, setDomain] = useState(currentDomain ?? "");
   const [saving, setSaving] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -108,7 +113,7 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
               color={verified ? "green" : "yellow"}
               size="xs"
             />
-            {!verified && (
+            {!verified && activeCnameTarget && (
               <Button size="xs" color="light" onClick={handleVerify} loading={verifying}>
                 {t("customDomain.verify")}
               </Button>
@@ -118,8 +123,26 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
             </Button>
           </div>
 
+          {/* The daily check no longer finds the verified domain pointing here */}
+          {verified && failingSince && (
+            <div className="bg-surface-hover rounded-lg p-3 space-y-1">
+              <p className="text-xs font-body-medium text-heading">
+                {t(trusted ? "customDomain.checkFailing" : "customDomain.checkDistrusted")
+                  .replace("{date}", new Date(failingSince).toLocaleDateString(lang === "es" ? "es-ES" : "en-US"))}
+              </p>
+              <p className="text-exs text-muted">{t("customDomain.checkFix").replace("{target}", cnameTarget ?? "")}</p>
+            </div>
+          )}
+
+          {/* Without a target the DNS instructions cannot work: say who has to set it */}
+          {!verified && !activeCnameTarget && (
+            <div className="bg-surface-hover rounded-lg p-3">
+              <p className="text-xs text-body">{t("customDomain.noTarget")}</p>
+            </div>
+          )}
+
           {/* DNS verification instructions, for domains not verified yet */}
-          {!verified && verificationToken && (
+          {!verified && verificationToken && activeCnameTarget && (
             <div className="bg-surface-hover rounded-lg p-3 space-y-2">
               <p className="text-xs font-body-medium text-heading">{t("customDomain.dnsInstructions")}</p>
               <div className="space-y-1.5">

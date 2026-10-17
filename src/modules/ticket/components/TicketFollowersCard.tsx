@@ -5,6 +5,7 @@ import UserAvatar from "@modules/user/components/UserAvatar";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import MemberLink from "./MemberLink";
 import TicketMemberPickerModal from "./TicketMemberPickerModal";
+import NotMemberHint from "@modules/workspace/components/NotMemberHint";
 import { addParticipant, removeParticipant } from "../services/ticket.service";
 import type { TicketParticipant } from "../services/ticket.service";
 import { canRemoveFollower } from "../domain/can-remove-follower";
@@ -127,6 +128,8 @@ export default function TicketFollowersCard({
       ) : (
         <p className="text-exs text-muted">{t("ticketDetail.followerHint")}</p>
       )}
+      {/* With nobody left to add there is no picker to explain it in, so a system admin off the team is told here */}
+      {canManageFollowers && candidates.length === 0 && <NotMemberHint variant="follow" className="mt-2" />}
       {picking && (
         <TicketMemberPickerModal
           mode="follow"

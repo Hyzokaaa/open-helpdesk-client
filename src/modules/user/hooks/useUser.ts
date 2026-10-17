@@ -4,9 +4,10 @@ import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
 } from "@modules/app/domain/core/local-storage";
-import { clearSession } from "@modules/app/domain/core/session";
+import { clearSession, markSignedOut } from "@modules/app/domain/core/session";
 import { clearPermissionsCache } from "@modules/workspace/hooks/usePermissions";
 import { logout } from "../services/auth.service";
+import { markHandoffTried } from "../domain/session-handoff";
 
 export default function useUser() {
   const { user, loading, setUser } = useContext(UserContext);
@@ -16,7 +17,10 @@ export default function useUser() {
     const refreshToken = LocalStorage.get(LOCAL_STORAGE_KEY.REFRESH_TOKEN);
     if (refreshToken) logout(refreshToken).catch(() => {});
     clearSession();
+    markSignedOut();
     clearPermissionsCache();
+    // Signing out ends the session on every address: no point looking for it on the way out
+    markHandoffTried();
     setUser(null);
   }, [setUser]);
 

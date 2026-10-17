@@ -9,6 +9,7 @@ import { clearSession, saveSession } from "@modules/app/domain/core/session";
 import { exchangeOAuthCode, getProfile } from "../services/auth.service";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -56,9 +57,9 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        return getProfile().then((profile) => {
+        return getProfile().then(async (profile) => {
           setUser(profile);
-          navigate("/dashboard", { replace: true });
+          navigate(await pathAfterSignIn(), { replace: true });
         });
       })
       .catch(fail);

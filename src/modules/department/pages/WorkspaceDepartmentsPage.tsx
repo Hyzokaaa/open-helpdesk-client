@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import NotMemberHint from "@modules/workspace/components/NotMemberHint";
+import { useMembershipChanged } from "@modules/workspace/domain/membership-events";
+import useWorkspaceMembership from "@modules/workspace/hooks/useWorkspaceMembership";
+import useUser from "@modules/user/hooks/useUser";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -30,7 +34,10 @@ import {
 
 export default function WorkspaceDepartmentsPage() {
   const { workspaceSlug } = useParams();
+  const { user } = useUser();
   const { can } = usePermissions(workspaceSlug);
+  const { needsJoin } = useWorkspaceMembership(workspaceSlug);
+  const addAgentRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
 
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -70,6 +77,7 @@ export default function WorkspaceDepartmentsPage() {
     fetchDepartments();
     if (workspaceSlug) listMembers(workspaceSlug).then(setMembers);
   }, [workspaceSlug]);
+  useMembershipChanged(workspaceSlug, () => { if (workspaceSlug) listMembers(workspaceSlug).then(setMembers); });
 
   const openCreate = () => {
     setName("");
@@ -290,13 +298,20 @@ export default function WorkspaceDepartmentsPage() {
                             placeholder={t("departments.addAgent")}
                           />
                         </div>
-                        <Button size="sm" disabled={!addMemberUserId} onClick={handleAddMember}>
+                        <Button ref={addAgentRef} size="sm" disabled={!addMemberUserId} onClick={handleAddMember}>
                           {t("departments.addAgent")}
                         </Button>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted mb-3">{t("departments.allAgentsAssigned")}</p>
+                      // A system admin off the team is told why they are missing instead
+                      !needsJoin && <p className="text-xs text-muted mb-3">{t("departments.allAgentsAssigned")}</p>
                     )
+                  )}
+                  {canManage && (
+                    <NotMemberHint className="-mt-1 mb-3" onJoined={() => {
+                      if (user) setAddMemberUserId(user.id);
+                      requestAnimationFrame(() => addAgentRef.current?.focus());
+                    }} />
                   )}
 
                   {editDetail.members.length === 0 ? (

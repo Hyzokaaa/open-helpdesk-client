@@ -1,35 +1,47 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import { resendVerification, getProfile } from "@modules/user/services/auth.service";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { onEmailVerified } from "../domain/email-verified-signal";
 
 interface Props {
   onDone: () => void;
 }
 
+/** How often to look again, for a verification done on another device. */
+const CHECK_EVERY_MS = 3000;
+
+/**
+ * "Verify your email": moves on by itself once the email is verified, at once when it happens in
+ * another tab of this browser, within a few seconds when it happens elsewhere (the phone).
+ */
 export default function StepVerifyEmail({ onDone }: Props) {
-  const { user, setUser } = useUser();
+  const { user, setUser, signOut } = useUser();
   const { t } = useTranslation();
   const [resending, setResending] = useState(false);
   const [checking, setChecking] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /** True when the email turned out to be verified, after moving on. */
+  const check = useCallback(async (): Promise<boolean> => {
+    const profile = await getProfile();
+    setUser(profile);
+    if (!profile.isEmailVerified) return false;
+    onDone();
+    return true;
+  }, [onDone, setUser]);
 
   useEffect(() => {
-    pollRef.current = setInterval(async () => {
-      try {
-        const profile = await getProfile();
-        if (profile.isEmailVerified) {
-          if (pollRef.current) clearInterval(pollRef.current);
-          setUser(profile);
-          onDone();
-        }
-      } catch { /* ignore */ }
-    }, 3000);
-
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [onDone, setUser]);
+    let done = false;
+    const tick = () => {
+      if (done) return;
+      check().then((verified) => { done = verified; }).catch(() => { /* the next check tries again */ });
+    };
+    const interval = setInterval(tick, CHECK_EVERY_MS);
+    const unsubscribe = onEmailVerified(tick);
+    return () => { done = true; clearInterval(interval); unsubscribe(); };
+  }, [check]);
 
   const handleResend = async () => {
     setResending(true);
@@ -46,13 +58,7 @@ export default function StepVerifyEmail({ onDone }: Props) {
   const handleCheck = async () => {
     setChecking(true);
     try {
-      const profile = await getProfile();
-      setUser(profile);
-      if (profile.isEmailVerified) {
-        onDone();
-      } else {
-        toast.warning(t("onboarding.emailNotVerifiedYet"));
-      }
+      if (!(await check())) toast.warning(t("onboarding.emailNotVerifiedYet"));
     } catch {
       toast.error(t("onboarding.checkError"));
     } finally {
@@ -74,6 +80,9 @@ export default function StepVerifyEmail({ onDone }: Props) {
         <Button full color="light" onClick={handleResend} loading={resending}>
           {t("onboarding.resendEmail")}
         </Button>
+        <button type="button" onClick={signOut} className="text-xs text-muted hover:text-body cursor-pointer mt-1">
+          {t("nav.signOut")}
+        </button>
       </div>
     </div>
   );

@@ -283,6 +283,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 currentDomain={workspace.customDomain}
                 verified={workspace.customDomainVerified}
                 verificationToken={workspace.domainVerificationToken}
+                failingSince={workspace.customDomainFailingSince}
+                trusted={workspace.customDomainTrusted}
                 cnameTarget={workspace.cnameTarget}
                 canSkipVerification={!!user?.isSystemAdmin}
                 onUpdate={(d, v, t) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: t })}

@@ -17,11 +17,24 @@ export const ACCESS_TOKEN_CHANGED_EVENT = "session:access-token-changed";
  * Token refreshes leave it as it was.
  */
 export function saveSession(tokens: SessionTokens, options: { remember?: boolean } = {}): void {
+  signedOutHere = false;
   LocalStorage.set(LOCAL_STORAGE_KEY.ACCESS_TOKEN, tokens.accessToken);
   if (tokens.refreshToken) LocalStorage.set(LOCAL_STORAGE_KEY.REFRESH_TOKEN, tokens.refreshToken);
   if (options.remember !== undefined) LocalStorage.set(LOCAL_STORAGE_KEY.SESSION_REMEMBER, options.remember ? "1" : "0");
   markTabAlive();
   window.dispatchEvent(new Event(ACCESS_TOKEN_CHANGED_EVENT));
+}
+
+/** Set when the person signs out in this page, until the next sign-in. */
+let signedOutHere = false;
+
+/** Signing out on purpose: the sign-in page that follows has nothing to send them back to. */
+export function markSignedOut(): void {
+  signedOutHere = true;
+}
+
+export function wasSignedOutHere(): boolean {
+  return signedOutHere;
 }
 
 export function clearSession(): void {

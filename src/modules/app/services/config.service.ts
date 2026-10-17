@@ -11,6 +11,8 @@ export interface PublicConfig {
   emailConfigured: boolean;
   /** How long "keep me signed in" lasts; missing on older servers */
   sessionRememberDays?: number | null;
+  /** The installation's own address (FRONTEND_URL); missing on older servers */
+  appUrl?: string | null;
   systemEmailFrom: string | null;
   brandingAppName: string | null;
   brandingAppSubtitle: string | null;
@@ -38,6 +40,19 @@ export interface ResolvedWorkspace {
   appSubtitle: string | null;
   logo: string | null;
   icon: string | null;
+}
+
+/**
+ * Whether this page is served on the installation's own address (FRONTEND_URL), which is never a
+ * workspace's custom domain. False when the server does not say (older servers): ask, as before.
+ */
+export function isInstallationAddress(appUrl: string | null | undefined): boolean {
+  if (!appUrl) return false;
+  try {
+    return new URL(appUrl).origin === window.location.origin;
+  } catch {
+    return false;
+  }
 }
 
 export async function resolveDomain(host: string): Promise<ResolvedWorkspace[] | null> {

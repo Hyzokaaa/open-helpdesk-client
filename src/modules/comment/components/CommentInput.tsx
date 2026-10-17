@@ -14,6 +14,8 @@ import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
 import useStagedUploads, { StageFile } from "@modules/attachment/hooks/useStagedUploads";
 import StagedFileList from "@modules/attachment/components/StagedFileList";
 import { htmlToText } from "@modules/shared/domain/rich-text";
+import useUser from "@modules/user/hooks/useUser";
+import NotMemberHint from "@modules/workspace/components/NotMemberHint";
 
 // ── Props ─────────────────────────────────────────────────────
 
@@ -70,6 +72,12 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
         : [],
     [members, mentionQuery],
   );
+
+  // You never mention yourself, so a system admin off the team only misses themselves when typing their own name
+  const { user } = useUser();
+  const typingOwnName = mentionQuery !== null && mentionQuery.length >= 2 && !!user
+    && !members.some((m) => m.userId === user.id)
+    && `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase());
 
   const filteredCanned = useMemo(
     () => cannedResponses.filter((r) => r.title.toLowerCase().includes(cannedSearch.toLowerCase())),
@@ -400,7 +408,7 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
       {/* Editor with toolbar */}
       {withDropZone(
       <div className="relative border border-border-input rounded-lg bg-surface" ref={editorContainerRef}>
-        {mentionQuery !== null && filteredMembers.length > 0 && mentionPos && (
+        {mentionQuery !== null && (filteredMembers.length > 0 || typingOwnName) && mentionPos && (
           <div
             className="absolute bg-surface border border-border-input rounded-lg shadow-lg w-64 max-h-40 overflow-auto z-50"
             style={{ top: mentionPos.top + 4, left: mentionPos.left }}
@@ -424,6 +432,12 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
                 <span className="text-xs text-subtle ml-2">{m.email}</span>
               </button>
             ))}
+            {typingOwnName && (
+              // Keeps the focus in the editor, so the popup stays open while joining
+              <div onMouseDown={(e) => e.preventDefault()} className={clsx("px-3 py-2", filteredMembers.length > 0 && "border-t border-border-card")}>
+                <NotMemberHint />
+              </div>
+            )}
           </div>
         )}
 

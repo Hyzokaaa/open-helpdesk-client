@@ -7,7 +7,8 @@ export interface Workspace {
   name: string;
   slug: string;
   description: string;
-  role: string;
+  /** Null when a system admin sees a workspace they are not a member of */
+  role: string | null;
   ownerName?: string;
   palette: string | null;
   customDomain: string | null;
@@ -27,7 +28,12 @@ export interface WorkspaceDetail {
   customDomain: string | null;
   customDomainVerified: boolean;
   domainVerificationToken: string | null;
-  cnameTarget: string;
+  /** Since when the daily check finds the domain not pointing here (ISO); missing on older servers */
+  customDomainFailingSince?: string | null;
+  /** Whether the session of other addresses is still carried over to the domain */
+  customDomainTrusted?: boolean;
+  /** Host custom domains point their CNAME to; null when the installation has none set */
+  cnameTarget: string | null;
   appName: string | null;
   appSubtitle: string | null;
   logo: string | null;
@@ -440,8 +446,8 @@ export async function createExportToken(
   return res.data;
 }
 
-export async function setCustomDomain(slug: string, domain: string | null, autoVerify?: boolean): Promise<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }> {
-  const res = await http.patch<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string }>(`/workspaces/${slug}/custom-domain`, { domain, autoVerify });
+export async function setCustomDomain(slug: string, domain: string | null, autoVerify?: boolean): Promise<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string | null }> {
+  const res = await http.patch<{ customDomain: string | null; customDomainVerified: boolean; domainVerificationToken: string | null; cnameTarget: string | null }>(`/workspaces/${slug}/custom-domain`, { domain, autoVerify });
   return res.data;
 }
 

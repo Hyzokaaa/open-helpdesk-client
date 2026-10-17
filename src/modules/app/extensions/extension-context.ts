@@ -31,10 +31,11 @@ export interface Extensions {
   /** Extra routes rendered at the top level (landing pages, etc.) */
   extraPublicRoutes?: ReactNode;
 
-  /** Onboarding steps override — if provided, replaces the default steps */
-  onboardingSteps?: string[];
-
-  /** Render a custom onboarding step by name */
+  /**
+   * Render an onboarding step the core does not know (cloud's "plan"). Which steps there are
+   * and in what order comes from the backend (GET /onboarding). Props: defaultPlan, onDone
+   * (the step is done: ask for the next one) and onSkip (leave it for later).
+   */
   renderOnboardingStep?: (step: string, props: Record<string, unknown>) => ReactNode;
 
   /** Get plan info for all users (admin only) */

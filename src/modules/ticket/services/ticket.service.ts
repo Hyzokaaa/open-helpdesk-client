@@ -51,6 +51,8 @@ export interface TicketDetail {
   descriptionEditedAt: string | null;
   /** When a person last did anything to the ticket */
   lastActivityAt?: string | null;
+  /** Lines folded under the description: the signature of the email that opened the ticket. */
+  descriptionQuotedLines?: number;
   accessLevel?: 'full' | 'readonly';
   aiCache?: Record<string, { source: string; result: string }>;
   reporter?: PersonSummary | null;
@@ -136,6 +138,12 @@ export async function listAllTickets(
   }
   const items = all.slice(0, MAX_BOARD_TICKETS);
   return { items, total, truncated: total > MAX_BOARD_TICKETS };
+}
+
+/** What the email that opened the ticket carried besides its text (its signature). */
+export async function getDescriptionQuotedText(workspaceId: string, ticketId: string): Promise<string> {
+  const res = await http.get<{ content: string }>(`/workspaces/${workspaceId}/tickets/${ticketId}/quoted-text`);
+  return res.data.content;
 }
 
 export async function getTicket(

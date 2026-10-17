@@ -21,6 +21,8 @@ export interface ConfigContextProps {
   aiEnabled: boolean;
   emailConfigured: boolean;
   sessionRememberDays: number | null;
+  /** The installation's own address, through which custom domains pick up the session (#37). */
+  appUrl: string | null;
   systemEmailFrom: string | null;
   upgradeNotificationsEnabled: boolean;
   /** Web analytics for this installation, or null when it is off. */
@@ -45,6 +47,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   aiEnabled: false,
   emailConfigured: false,
   sessionRememberDays: null,
+  appUrl: null,
   systemEmailFrom: null,
   upgradeNotificationsEnabled: true,
   analytics: null,

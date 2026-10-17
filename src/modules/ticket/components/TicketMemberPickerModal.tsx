@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
+import NotMemberHint from "@modules/workspace/components/NotMemberHint";
 
 export type MemberPickerMode = "assign" | "transfer" | "follow";
 
@@ -34,6 +35,7 @@ export default function TicketMemberPickerModal({
   // undefined: nothing chosen yet; NOBODY: "Unassigned"
   const [target, setTarget] = useState<string | undefined>(initialTarget ?? undefined);
   const [saving, setSaving] = useState(false);
+  const submitRef = useRef<HTMLButtonElement>(null);
   const texts = TEXTS[mode];
 
   const members = mode === "transfer" ? assignableMembers.filter((m) => m.userId !== currentUserId) : assignableMembers;
@@ -62,9 +64,17 @@ export default function TicketMemberPickerModal({
         placeholder={t(mode === "follow" ? "ticketDetail.selectMember" : "ticketDetail.selectAssignee")}
         searchable={options.length > 8}
       />
+      {/* A system admin off the team is missing here. Transferring to yourself is never offered, so no hint there. */}
+      {mode !== "transfer" && (
+        <NotMemberHint
+          className="mt-2"
+          // The confirm button is enabled on the next render, so focus it after that
+          onJoined={() => { setTarget(currentUserId); requestAnimationFrame(() => submitRef.current?.focus()); }}
+        />
+      )}
       <div className="flex gap-2 mt-4 justify-end">
         <Button size="sm" color="light" onClick={onClose}>{t("ticketDetail.cancel")}</Button>
-        <Button size="sm" color="primary" disabled={unchanged || saving} onClick={submit}>
+        <Button ref={submitRef} size="sm" color="primary" disabled={unchanged || saving} onClick={submit}>
           {target === NOBODY ? t("ticketDetail.unassign") : t(texts.submit)}
         </Button>
       </div>

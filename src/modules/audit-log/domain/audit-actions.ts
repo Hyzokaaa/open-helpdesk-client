@@ -17,7 +17,9 @@ const SECURITY_ACTIONS = new Set([
   "user-password-reset-failed",
   "permission-denied",
   "api-session-exchanged",
+  "session-handed-over",
   "workspace-custom-domain-verification-failed",
+  "workspace-custom-domain-distrusted",
   "payment-webhook-rejected",
 ]);
 
@@ -40,6 +42,7 @@ const WORKSPACE_ACTIONS_OF_SYSTEM_GROUPS = new Set([
   "permission-denied",
   "api-session-exchanged",
   "workspace-custom-domain-verification-failed",
+  "workspace-custom-domain-distrusted",
 ]);
 
 /**
