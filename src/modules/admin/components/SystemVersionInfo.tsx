@@ -81,6 +81,15 @@ export default function SystemVersionInfo({ basedOn = false }: Props) {
           ? <>{t(basedOn ? "admin.versionBasedOn" : "admin.versionInstalled")} <span className="font-body-bold">Open Helpdesk v{info.currentProduct}</span></>
           : <>{t(basedOn ? "admin.versionBasedOn" : "admin.versionInstalled")} <span className="font-body-bold">{t("admin.versionDevelopmentBuild")}</span></>}
       </p>
+      {/* The product number differs from the components' ones, which confused people: say why */}
+      {info.currentProduct && (
+        <p className="text-xs text-muted -mt-3 mb-4">
+          {t("admin.versionComposition")
+            .replace("{product}", info.currentProduct)
+            .replace("{backend}", info.backend)
+            .replace("{client}", clientVersion)}
+        </p>
+      )}
 
       {overall === "behind" && info.latestRelease && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">

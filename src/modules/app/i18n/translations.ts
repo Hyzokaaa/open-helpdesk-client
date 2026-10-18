@@ -2119,6 +2119,7 @@ const translations = {
   "admin.versionBasedOn": { en: "Based on:", es: "Basado en:" },
   "admin.versionRedeployHint": { en: "— redeploy to pick it up.", es: "— redespliega para usarla." },
   "admin.versionDevelopmentBuild": { en: "development build (components do not match a release)", es: "versión de desarrollo (los componentes no coinciden con ninguna release)" },
+  "admin.versionComposition": { en: "Open Helpdesk v{product} is made of backend v{backend} and client v{client}. Each component has its own version number, so they need not match the product's.", es: "Open Helpdesk v{product} está formado por backend v{backend} y client v{client}. Cada componente tiene su propio número de versión, que no tiene por qué coincidir con el del producto." },
   "admin.versionComponent": { en: "Component", es: "Componente" },
   "admin.versionCurrent": { en: "Current", es: "Actual" },
   "admin.versionRelease": { en: "Latest Release", es: "Último Release" },
