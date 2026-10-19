@@ -24,10 +24,12 @@ interface Props {
   cnameTarget: string | null;
   /** System admins set domains already verified; everyone else proves control over DNS. */
   canSkipVerification: boolean;
+  /** What the domain shows someone signed out, for the routes list */
+  portalAccess?: { portalEnabled: boolean; publicKbEnabled: boolean };
   onUpdate: (domain: string | null, verified: boolean, token: string | null, cnameTarget?: string) => void;
 }
 
-export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, failingSince, trusted = true, cnameTarget, canSkipVerification, onUpdate }: Props) {
+export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, failingSince, trusted = true, cnameTarget, canSkipVerification, portalAccess = { portalEnabled: true, publicKbEnabled: true }, onUpdate }: Props) {
   const { t, lang } = useTranslation();
   const [domain, setDomain] = useState(currentDomain ?? "");
   const [saving, setSaving] = useState(false);
@@ -184,7 +186,16 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
               <div className="flex items-center gap-2 text-xs">
                 <code className="text-exs text-primary bg-primary/5 px-1.5 py-0.5 rounded font-body-medium">{currentDomain}/</code>
                 <span className="text-muted">→</span>
-                <span className="text-body">{t("routing.portal")} {t("customDomain.thisWorkspace")}</span>
+                <span className="text-body">
+                  {portalAccess.portalEnabled ? <>{t("routing.portal")} {t("customDomain.thisWorkspace")}</> : t("routing.signIn")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <code className="text-exs text-primary bg-primary/5 px-1.5 py-0.5 rounded font-body-medium">{currentDomain}/portal/kb</code>
+                <span className="text-muted">→</span>
+                <span className="text-body">
+                  {portalAccess.publicKbEnabled ? t("routing.publicKb") : portalAccess.portalEnabled ? t("routing.portalKbPrivate") : t("routing.signIn")}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <code className="text-exs text-primary bg-primary/5 px-1.5 py-0.5 rounded font-body-medium">{currentDomain}/dashboard</code>

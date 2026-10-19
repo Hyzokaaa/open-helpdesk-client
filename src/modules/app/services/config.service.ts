@@ -40,6 +40,8 @@ export interface ResolvedWorkspace {
   appSubtitle: string | null;
   logo: string | null;
   icon: string | null;
+  portalEnabled?: boolean;
+  publicKbEnabled?: boolean;
 }
 
 /**

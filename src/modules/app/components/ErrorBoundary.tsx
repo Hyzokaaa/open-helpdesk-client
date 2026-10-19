@@ -9,22 +9,27 @@ interface Props {
 }
 
 interface State {
-  hasError: boolean;
+  error: unknown;
+  /** A file of the previous build is missing but the page may not reload again yet */
+  reloadRefused: boolean;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { error: null, reloadRefused: false };
   }
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown): Partial<State> {
+    return { error };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // A file of the previous build, gone after a deployment: reloading fixes it, no error screen needed
-    if (isChunkLoadError(error) && reloadForNewBuild()) return;
+    if (isChunkLoadError(error)) {
+      if (reloadForNewBuild()) return;
+      this.setState({ reloadRefused: true });
+    }
     console.error("ErrorBoundary caught:", error, info.componentStack);
   }
 
@@ -33,8 +38,12 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
-    if (!this.state.hasError) {
+    if (!this.state.error) {
       return this.props.children;
+    }
+    // The page is about to reload into the new build: nothing to show meanwhile
+    if (isChunkLoadError(this.state.error) && !this.state.reloadRefused) {
+      return null;
     }
 
     return (

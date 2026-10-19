@@ -34,6 +34,8 @@ import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
+import PortalAccessSettings, { PortalStateBadge } from "../components/PortalAccessSettings";
+import useConfig from "@modules/app/hooks/useConfig";
 import BrandingSettings from "../components/BrandingSettings";
 import WorkspaceAnalyticsSettings from "../components/WorkspaceAnalyticsSettings";
 import WorkspaceImportSheet from "../components/WorkspaceImportSheet";
@@ -52,6 +54,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const workspaceSlug = workspaceSlugProp || params.workspaceSlug;
   const navigate = useNavigate();
   const { user } = useUser();
+  const { appUrl } = useConfig();
   const { t } = useTranslation();
   const { can } = usePermissions(workspaceSlug);
   const { setPalette } = useContext(PaletteContext);
@@ -93,6 +96,11 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
   const canManageSettings = can(P.WORKSPACE_SETTINGS_MANAGE);
   const canManageAnalytics = can(P.WORKSPACE_ANALYTICS_MANAGE);
   const hasChanges = name !== workspace.name || description !== workspace.description;
+  // Older servers do not send these: the portal and the knowledge base were always open then
+  const portalAccess = { portalEnabled: workspace.portalEnabled ?? true, publicKbEnabled: workspace.publicKbEnabled ?? true };
+  const portalUrl = workspace.customDomain && workspace.customDomainVerified
+    ? `https://${workspace.customDomain}/portal`
+    : `${appUrl ?? window.location.origin}/portal/${workspace.slug}`;
   const nameValid = name.trim().length > 0;
 
   const handlePaletteChange = async (palette: string) => {
@@ -277,6 +285,20 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
           )}
 
           {canManageSettings && (
+            <CollapsibleSection
+              title={t("portalAccess.title")}
+              badge={<PortalStateBadge on={portalAccess.portalEnabled} onLabel={t("portalAccess.portalOpen")} offLabel={t("portalAccess.portalClosed")} />}
+            >
+              <PortalAccessSettings
+                slug={workspaceSlug!}
+                access={portalAccess}
+                portalUrl={portalUrl}
+                onChange={(access) => setWorkspace({ ...workspace, ...access })}
+              />
+            </CollapsibleSection>
+          )}
+
+          {canManageSettings && (
             <CollapsibleSection title={t("customDomain.title")}>
               <CustomDomainSettings
                 slug={workspaceSlug!}
@@ -286,6 +308,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
                 failingSince={workspace.customDomainFailingSince}
                 trusted={workspace.customDomainTrusted}
                 cnameTarget={workspace.cnameTarget}
+                portalAccess={portalAccess}
                 canSkipVerification={!!user?.isSystemAdmin}
                 onUpdate={(d, v, t) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: t })}
               />

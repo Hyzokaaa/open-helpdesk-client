@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import DropZone from "@modules/app/modules/ui/components/DropZone/DropZone";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import { isPortalClosedError, portalLinkDashboardPath, portalSignInPath } from "../domain/portal-access";
 import { toast } from "react-toastify";
 import {
   getPortalTicket,
@@ -121,6 +122,7 @@ function PortalFiles({ files, small = false, onOpen }: {
 
 export default function PortalTicketPage() {
   const { portalToken } = useParams();
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState<PortalTicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -158,7 +160,12 @@ export default function PortalTicketPage() {
         const def = getPalette(data.workspacePalette);
         applyPortalPalette(def);
       }
-    } catch {
+    } catch (error) {
+      // The portal was closed after this link was sent: its owner signs in and lands on the ticket
+      if (isPortalClosedError(error)) {
+        navigate(portalSignInPath({ notice: "portal-link", redirect: portalLinkDashboardPath(portalToken) }), { replace: true });
+        return;
+      }
       setNotFound(true);
     } finally {
       setLoading(false);

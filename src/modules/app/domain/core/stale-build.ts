@@ -5,6 +5,8 @@
  */
 const RELOADED_AT = "ohd_reloaded_for_new_build";
 const ONCE_PER_MS = 60_000;
+// Once this page has asked for the reload, whatever else fails before it happens is the same stale build
+let reloadRequested = false;
 
 const CHUNK_LOAD_ERROR = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Loading chunk [\w-]+ failed/i;
 
@@ -15,6 +17,7 @@ export function isChunkLoadError(error: unknown): boolean {
 
 /** Reloads the page unless it already did so a moment ago; says whether it reloads. */
 export function reloadForNewBuild(now = Date.now()): boolean {
+  if (reloadRequested) return true;
   try {
     const last = Number(window.sessionStorage.getItem(RELOADED_AT) ?? 0);
     if (now - last < ONCE_PER_MS) return false;
@@ -22,6 +25,7 @@ export function reloadForNewBuild(now = Date.now()): boolean {
   } catch {
     return false;
   }
+  reloadRequested = true;
   window.location.reload();
   return true;
 }

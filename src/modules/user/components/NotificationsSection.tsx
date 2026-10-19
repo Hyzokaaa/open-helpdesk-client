@@ -80,6 +80,7 @@ export default function NotificationsSection() {
             <Switch
               checked={prefs.emailEnabled}
               onChange={(v) => handleChange("emailEnabled", v)}
+              label={t("notifications.emailEnabled")}
             />
           </div>
           <p className="text-exs text-muted leading-snug">
@@ -104,6 +105,7 @@ export default function NotificationsSection() {
             <Switch
               checked={prefs.inAppEnabled}
               onChange={(v) => handleChange("inAppEnabled", v)}
+              label={t("notifications.inAppEnabled")}
             />
           </div>
           <p className="text-exs text-muted leading-snug">
@@ -120,6 +122,7 @@ export default function NotificationsSection() {
           <Switch
             checked={prefs.bellUnreadOnly}
             onChange={(v) => handleChange("bellUnreadOnly", v)}
+            label={t("notifications.bellUnreadOnly")}
           />
         </div>
       )}
@@ -156,6 +159,7 @@ export default function NotificationsSection() {
                     <Switch
                       checked={prefs[`email${key}` as keyof NotificationPreferences] as boolean}
                       onChange={(v) => handleChange(`email${key}`, v)}
+                      label={`${t(labelKey)} · ${t("notifications.emailEnabled")}`}
                     />
                   </div>
                 ))}
@@ -164,6 +168,7 @@ export default function NotificationsSection() {
                     <Switch
                       checked={prefs[`inApp${key}` as keyof NotificationPreferences] as boolean}
                       onChange={(v) => handleChange(`inApp${key}`, v)}
+                      label={`${t(labelKey)} · ${t("notifications.inAppEnabled")}`}
                     />
                   </div>
                 )}
@@ -184,6 +189,7 @@ export default function NotificationsSection() {
                       <Switch
                         checked={prefs.emailUpgradeAvailable}
                         onChange={(v) => handleChange("emailUpgradeAvailable", v)}
+                        label={`${t("notifications.upgradeAvailable")} · ${t("notifications.emailEnabled")}`}
                       />
                     </div>
                   )}
@@ -192,6 +198,7 @@ export default function NotificationsSection() {
                       <Switch
                         checked={prefs.inAppUpgradeAvailable}
                         onChange={(v) => handleChange("inAppUpgradeAvailable", v)}
+                        label={`${t("notifications.upgradeAvailable")} · ${t("notifications.inAppEnabled")}`}
                       />
                     </div>
                   )}
@@ -213,6 +220,7 @@ export default function NotificationsSection() {
                       <Switch
                         checked={prefs[key as keyof NotificationPreferences] as boolean}
                         onChange={(v) => handleChange(key, v)}
+                        label={t(labelKey)}
                       />
                     </div>
                   </div>

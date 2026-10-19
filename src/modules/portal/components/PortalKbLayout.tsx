@@ -1,5 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router";
 import usePortalSlug from "../hooks/usePortalSlug";
+import usePortalAccess from "../hooks/usePortalAccess";
+import { portalSignInPath } from "../domain/portal-access";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { getPortalInfo } from "../services/portal.service";
 import {
@@ -26,6 +29,7 @@ interface Props {
 export default function PortalKbLayout({ children }: Props) {
   const { t } = useTranslation();
   const workspaceSlug = usePortalSlug();
+  const access = usePortalAccess(workspaceSlug);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -69,6 +73,17 @@ export default function PortalKbLayout({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* With the portal closed the articles are the only public page: the way in is from here */}
+      {access && !access.portalEnabled && workspaceSlug && (
+        <div className="flex justify-end px-4 pt-4 max-w-3xl mx-auto">
+          <Link
+            to={portalSignInPath({ workspaceSlug })}
+            className="text-sm font-body-semibold px-3 py-1.5 rounded-button border border-border-input bg-surface text-body hover:bg-surface-hover transition-colors"
+          >
+            {t("login.signIn")}
+          </Link>
+        </div>
+      )}
       {children}
     </div>
   );

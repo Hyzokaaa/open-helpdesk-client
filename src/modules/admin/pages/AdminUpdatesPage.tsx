@@ -51,6 +51,7 @@ export default function AdminUpdatesPage() {
             <Switch
               checked={settings.upgradeEnabled}
               onChange={(v) => handleChange("upgradeEnabled", v)}
+              label={t("admin.upgradeNotifications")}
             />
           </div>
 
@@ -61,6 +62,7 @@ export default function AdminUpdatesPage() {
                 <Switch
                   checked={settings.upgradeEmail}
                   onChange={(v) => handleChange("upgradeEmail", v)}
+                  label={t("admin.upgradeEmail")}
                 />
               </div>
               <div className="flex items-center justify-between px-3 py-2.5">
@@ -68,6 +70,7 @@ export default function AdminUpdatesPage() {
                 <Switch
                   checked={settings.upgradeInApp}
                   onChange={(v) => handleChange("upgradeInApp", v)}
+                  label={t("admin.upgradeInApp")}
                 />
               </div>
             </div>

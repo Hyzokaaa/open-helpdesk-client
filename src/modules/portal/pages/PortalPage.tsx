@@ -21,6 +21,7 @@ import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-
 import translations from "@modules/app/i18n/translations";
 import LanguageToggle from "@modules/app/components/LanguageToggle";
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
+import usePortalAccess from "../hooks/usePortalAccess";
 
 function t(key: string): string {
   const lang = LocalStorage.get(LOCAL_STORAGE_KEY.LANGUAGE) || navigator.language?.slice(0, 2) || "en";
@@ -48,6 +49,7 @@ interface StagedFile {
 export default function PortalPage() {
   const workspaceSlug = usePortalSlug();
   const basePath = usePortalBasePath();
+  const access = usePortalAccess(workspaceSlug);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isWidget = new URLSearchParams(window.location.search).get("mode") === "widget";
 
@@ -364,7 +366,7 @@ export default function PortalPage() {
           </div>
         )}
 
-        {!isWidget && (
+        {!isWidget && (access?.publicKbEnabled ?? true) && (
           <a
             href={`${basePath}/kb`}
             className="flex items-center justify-center gap-2 mb-6 px-4 py-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"

@@ -76,6 +76,8 @@ const FIELD_KEYS: Record<string, string> = {
   assignee: "auditLog.field.assignee",
   palette: "auditLog.field.palette",
   systemMailboxEnabled: "auditLog.field.systemMailboxEnabled",
+  portalEnabled: "auditLog.field.portalEnabled",
+  publicKbEnabled: "auditLog.field.publicKbEnabled",
   to: "auditLog.field.to",
   subject: "auditLog.field.subject",
   type: "auditLog.field.type",

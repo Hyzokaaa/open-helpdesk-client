@@ -24,6 +24,8 @@ import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import usePortalAccess from "@modules/portal/hooks/usePortalAccess";
+import { portalAccessOf } from "@modules/portal/domain/portal-access";
 import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
 
 export default function LoginPage() {
@@ -43,6 +45,17 @@ export default function LoginPage() {
     && searchParams.get("expired") !== "1");
 
   const inviteEmail = searchParams.get("email") || "";
+
+  // Sent here by a closed portal: speak to customers, not to the team
+  const portalSlug = searchParams.get("portal") ?? undefined;
+  const portalLinkNotice = searchParams.get("notice") === "portal-link";
+  const everyPortalClosed = !!domainWorkspaces?.length && domainWorkspaces.every((w) => !portalAccessOf(w).portalEnabled);
+  const forCustomers = searchParams.get("from") === "portal" && (!!portalSlug || portalLinkNotice || everyPortalClosed);
+  const portalAccess = usePortalAccess(portalSlug);
+  // The articles may still be public: on a domain of one workspace, at its clean address
+  const kbPath = portalSlug && portalAccess?.publicKbEnabled
+    ? (domainWorkspaces?.length === 1 && domainWorkspaces[0].slug === portalSlug ? "/portal/kb" : `/portal/${portalSlug}/kb`)
+    : null;
 
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
@@ -128,8 +141,14 @@ export default function LoginPage() {
               {brandSubtitle ? `${brandName} ${brandSubtitle}` : brandName}
             </h1>
             <p className="text-sm text-muted mb-6 text-center">
-              {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t("login.subtitle")}
+              {inviteEmail ? t("login.inviteHint").replace("{email}", inviteEmail) : t(forCustomers ? "login.customerSubtitle" : "login.subtitle")}
             </p>
+
+            {portalLinkNotice && (
+              <p role="status" className="text-sm text-body bg-surface-hover border border-border-card rounded-lg px-3 py-2 mb-4">
+                {t("login.portalLinkNotice")}
+              </p>
+            )}
 
             <OAuthButtons providers={providers} rememberMe={rememberMe} onSuccess={async () => {
               const profile = await getProfile();
@@ -173,13 +192,21 @@ export default function LoginPage() {
               <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                 {t("login.forgotPassword")}
               </Link>
-              {saasMode && !isCustomDomain && (
+              {forCustomers ? (
+                <p className="text-xs text-muted">{t("login.askInvitation")}</p>
+              ) : saasMode && !isCustomDomain && (
                 <Link to="/signup" className="text-xs text-primary hover:underline">
                   {t("login.noAccount")}
                 </Link>
               )}
             </div>
           </div>
+
+          {kbPath && (
+            <div className="text-center mt-4">
+              <Link to={kbPath} className="text-sm text-primary hover:underline">{t("login.browseKb")}</Link>
+            </div>
+          )}
 
           {!isCustomDomain && (
             <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">

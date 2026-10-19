@@ -4,6 +4,7 @@ import { getPortalKbCategories, searchPortalKb, PortalKbCategory, PortalKbArticl
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import PortalKbLayout from "../components/PortalKbLayout";
+import PortalKbCreateTicketLink from "../components/PortalKbCreateTicketLink";
 import { htmlToText } from "@modules/shared/domain/rich-text";
 
 export default function PortalKbPage() {
@@ -86,7 +87,7 @@ export default function PortalKbPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-muted mb-2">{t("portalKb.didntFind")}</p>
-            <Link to={`${basePath}`} className="text-sm text-primary hover:underline">{t("portalKb.createTicket")}</Link>
+            <PortalKbCreateTicketLink />
           </div>
         </div>
       )}

@@ -25,6 +25,10 @@ export interface WorkspaceDetail {
   defaultLanguage?: string | null;
   supportEmail: string | null;
   systemMailboxEnabled: boolean;
+  /** Anyone can open and follow tickets without signing in; missing on older servers (open) */
+  portalEnabled?: boolean;
+  /** Published articles can be read without signing in; missing on older servers (public) */
+  publicKbEnabled?: boolean;
   customDomain: string | null;
   customDomainVerified: boolean;
   domainVerificationToken: string | null;
@@ -308,6 +312,17 @@ export async function downloadImportTemplate(slug: string): Promise<void> {
   a.click();
   a.remove();
   window.URL.revokeObjectURL(url);
+}
+
+export interface PortalAccess {
+  portalEnabled: boolean;
+  publicKbEnabled: boolean;
+}
+
+/** Opens or closes the portal and, separately, the public knowledge base; only what is given changes */
+export async function updatePortalAccess(slug: string, change: Partial<PortalAccess>): Promise<PortalAccess> {
+  const res = await http.patch<PortalAccess>(`/workspaces/${slug}/portal-access`, change);
+  return res.data;
 }
 
 export async function toggleSystemMailbox(slug: string, enabled: boolean): Promise<{ systemMailboxEnabled: boolean }> {

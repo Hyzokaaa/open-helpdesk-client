@@ -4,6 +4,7 @@ import { getPortalKbArticle, PortalKbArticleDetail } from "../services/portal.se
 import usePortalSlug, { usePortalBasePath } from "../hooks/usePortalSlug";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import PortalKbLayout from "../components/PortalKbLayout";
+import PortalKbCreateTicketLink from "../components/PortalKbCreateTicketLink";
 import { sanitizeHtml } from "@modules/app/security/sanitize-html";
 
 export default function PortalKbArticlePage() {
@@ -52,7 +53,7 @@ export default function PortalKbArticlePage() {
 
           <div className="mt-12 pt-6 border-t border-border-card text-center">
             <p className="text-sm text-muted mb-2">{t("portalKb.didntFind")}</p>
-            <Link to={basePath} className="text-sm text-primary hover:underline">{t("portalKb.createTicket")}</Link>
+            <PortalKbCreateTicketLink />
           </div>
         </div>
       )}

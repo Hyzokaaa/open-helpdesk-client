@@ -3,6 +3,8 @@ import clsx from "clsx";
 
 interface Props {
   title: string;
+  /** A short state shown next to the title, so it reads also while the section is closed */
+  badge?: React.ReactNode;
   defaultOpen?: boolean;
   open?: boolean;
   onToggle?: (open: boolean) => void;
@@ -12,6 +14,7 @@ interface Props {
 
 export default function CollapsibleSection({
   title,
+  badge,
   defaultOpen = false,
   open: controlledOpen,
   onToggle,
@@ -54,7 +57,10 @@ export default function CollapsibleSection({
         onClick={toggle}
         className="w-full flex items-center justify-between px-5 py-3.5 cursor-pointer select-none"
       >
-        <span className="text-sm font-body-semibold text-heading">{title}</span>
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-body-semibold text-heading">{title}</span>
+          {badge}
+        </span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"

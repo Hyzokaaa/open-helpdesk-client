@@ -10,6 +10,7 @@ import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/Confir
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import RichTextEditor, { RichTextEditorRef } from "../components/RichTextEditor";
+import KbVisibilityLine from "../components/KbVisibilityLine";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -169,7 +170,8 @@ export default function WorkspaceKbPage() {
           </Button>
         </div>
       </div>
-      <p className="text-xs text-muted mb-6">{t("kb.subtitle")}</p>
+      <p className="text-xs text-muted mb-2">{t("kb.subtitle")}</p>
+      {workspaceSlug && <KbVisibilityLine slug={workspaceSlug} />}
 
       {categories.length === 0 ? (
         <p className="text-sm text-muted text-center py-12">{t("kb.empty")}</p>

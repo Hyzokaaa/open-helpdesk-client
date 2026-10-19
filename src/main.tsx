@@ -7,9 +7,11 @@ import { answerSessionPings, dropSessionIfBrowserWasClosed } from "@modules/app/
 import { reloadForNewBuild } from "@modules/app/domain/core/stale-build";
 import { runSessionHandoffBeforeApp } from "@modules/user/domain/session-handoff-boot";
 
-// A screen of the previous build failed to load after a deployment: the new build has it
-window.addEventListener("vite:preloadError", (event) => {
-  if (reloadForNewBuild()) event.preventDefault();
+// A screen of the previous build failed to load after a deployment: the new build has it. The
+// event is not cancelled: Vite would then resolve the import to nothing, and React would fail on
+// that ("reading 'default'") with the error screen instead of waiting for the reload
+window.addEventListener("vite:preloadError", () => {
+  reloadForNewBuild();
 });
 
 answerSessionPings();

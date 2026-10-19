@@ -1,4 +1,5 @@
 import axios from "axios";
+import { http } from "@modules/app/modules/http/domain/http";
 import { API_URL } from "@modules/app/domain/constants/env";
 import { trackEvent } from "@modules/analytics/domain/analytics";
 
@@ -8,6 +9,9 @@ export interface PortalInfo {
   name: string;
   slug: string;
   palette: string | null;
+  /** Missing on older servers: open */
+  portalEnabled?: boolean;
+  publicKbEnabled?: boolean;
 }
 
 export interface PortalCustomField {
@@ -87,6 +91,12 @@ export interface PortalStagedUpload {
   originalName: string;
   mimeType: string;
   size: number;
+}
+
+/** The ticket an own portal link opens, asked while signed in (the portal may be closed) */
+export async function resolveOwnPortalLink(token: string): Promise<{ workspaceSlug: string; ticketId: string }> {
+  const res = await http.get<{ workspaceSlug: string; ticketId: string }>(`/portal-links/${encodeURIComponent(token)}`, { headers: { "X-Silent-Errors": "true" } });
+  return res.data;
 }
 
 export async function getPortalInfo(slug: string): Promise<PortalInfo> {

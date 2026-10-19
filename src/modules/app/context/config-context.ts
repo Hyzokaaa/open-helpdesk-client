@@ -10,6 +10,9 @@ export interface DomainWorkspace {
   appSubtitle: string | null;
   logo: string | null;
   icon: string | null;
+  /** What the domain shows someone signed out; missing on older servers (open) */
+  portalEnabled?: boolean;
+  publicKbEnabled?: boolean;
 }
 
 export interface ConfigContextProps {
