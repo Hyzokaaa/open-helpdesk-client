@@ -3,10 +3,13 @@ import {
   callbackUrl,
   canReceiveHandoff,
   createPkce,
+  HANDOFF_RETRY_AFTER_MS,
   handoffAlreadyTried,
+  markHandoffTried,
   offerToStore,
   readReceiveCallback,
   safeRedirect,
+  signInPathFor,
   startReceive,
   takeHubOffer,
   takeStoreOffer,
@@ -70,6 +73,29 @@ describe("session handoff in the browser", () => {
     expect(readReceiveCallback(new URLSearchParams({ code: "c", state: "forged" }))).toEqual({ kind: "invalid" });
   });
 
+  it("holds off another trip only for a moment, so a session started meanwhile is picked up later", () => {
+    const tab = fakeTab(ACME);
+    const t0 = 1_000_000;
+    expect(handoffAlreadyTried(t0)).toBe(false);
+
+    markHandoffTried(t0);
+    expect(handoffAlreadyTried(t0 + 1)).toBe(true);
+    expect(handoffAlreadyTried(t0 + HANDOFF_RETRY_AFTER_MS - 1)).toBe(true);
+    expect(handoffAlreadyTried(t0 + HANDOFF_RETRY_AFTER_MS)).toBe(false);
+    // A clock that went back does not hold it off for ever
+    expect(handoffAlreadyTried(t0 - 1)).toBe(false);
+
+    // The mark earlier versions left for ever no longer blocks the tab
+    tab.window.sessionStorage.setItem("ohd_handoff_tried", "true");
+    expect(handoffAlreadyTried(t0)).toBe(false);
+  });
+
+  it("comes back to a plain sign-in page when the trip was for the panel's home", () => {
+    expect(signInPathFor("/dashboard")).toBe("/login");
+    expect(signInPathFor(null)).toBe("/login");
+    expect(signInPathFor("/dashboard/portal/acme")).toBe("/login?redirect=%2Fdashboard%2Fportal%2Facme");
+  });
+
   it("returns the code with the secret that trades it", async () => {
     const tab = fakeTab(ACME);
     await startReceive(APP, "/dashboard");
@@ -90,6 +116,19 @@ describe("session handoff in the browser", () => {
     expect(result).toEqual({ kind: "login", redirect: "/dashboard" });
     expect(takeHubOffer()).toEqual({ challenge: "hc", state: "hs" });
     expect(takeHubOffer()).toBeNull();
+  });
+
+  it("without a session there, comes back to the sign-in page it was given, and only to a sign-in page", async () => {
+    let tab = fakeTab(ACME);
+    const signIn = "/login?from=portal&portal=acme&redirect=%2Fdashboard%2Fportal%2Facme";
+    await startReceive(APP, "/dashboard/portal/acme", signIn);
+    let state = new URL(tab.navigatedTo!).searchParams.get("state")!;
+    expect(readReceiveCallback(new URLSearchParams({ error: "login_required", state }))).toEqual({ kind: "login", redirect: "/dashboard/portal/acme", signIn });
+
+    tab = fakeTab(ACME);
+    await startReceive(APP, "/dashboard", "https://elsewhere.example/login");
+    state = new URL(tab.navigatedTo!).searchParams.get("state")!;
+    expect(readReceiveCallback(new URLSearchParams({ error: "login_required", state }))).toEqual({ kind: "login", redirect: "/dashboard" });
   });
 
   it("on the installation, takes back only the session this tab offered to keep", async () => {

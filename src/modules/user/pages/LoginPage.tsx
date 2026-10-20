@@ -11,7 +11,6 @@ import {
   goStoreOnInstallation,
   handoffAlreadyTried,
   installationOrigin,
-  safeRedirect,
   startReceive,
   takeHubOffer,
 } from "../domain/session-handoff";
@@ -24,8 +23,7 @@ import BrandLogo from "@modules/app/components/BrandLogo";
 import OAuthButtons from "../components/OAuthButtons";
 import CookiePreferencesLink from "@modules/analytics/components/CookiePreferencesLink";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
-import usePortalAccess from "@modules/portal/hooks/usePortalAccess";
-import { portalAccessOf } from "@modules/portal/domain/portal-access";
+import { isClosedPortalSignIn, signInEntry } from "@modules/app/domain/core/entry";
 import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
 
 export default function LoginPage() {
@@ -35,27 +33,22 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { saasMode, brandName, brandSubtitle, brandLogo, domainWorkspaces, sessionRememberDays, appUrl } = useConfig();
   const isCustomDomain = !!domainWorkspaces;
-  // On a custom domain, first try the session of the installation's own address (#37). Not for
-  // people coming from the customer portal, who must only ever see this domain, nor after an
-  // expiry, which ended that session too.
-  const [checkingSession] = useState(() =>
-    canReceiveHandoff(appUrl, isCustomDomain)
-    && !handoffAlreadyTried()
-    && searchParams.get("from") !== "portal"
-    && searchParams.get("expired") !== "1");
-
-  const inviteEmail = searchParams.get("email") || "";
 
   // Sent here by a closed portal: speak to customers, not to the team
-  const portalSlug = searchParams.get("portal") ?? undefined;
   const portalLinkNotice = searchParams.get("notice") === "portal-link";
-  const everyPortalClosed = !!domainWorkspaces?.length && domainWorkspaces.every((w) => !portalAccessOf(w).portalEnabled);
-  const forCustomers = searchParams.get("from") === "portal" && (!!portalSlug || portalLinkNotice || everyPortalClosed);
-  const portalAccess = usePortalAccess(portalSlug);
-  // The articles may still be public: on a domain of one workspace, at its clean address
-  const kbPath = portalSlug && portalAccess?.publicKbEnabled
-    ? (domainWorkspaces?.length === 1 && domainWorkspaces[0].slug === portalSlug ? "/portal/kb" : `/portal/${portalSlug}/kb`)
-    : null;
+  const forCustomers = isClosedPortalSignIn(searchParams, domainWorkspaces);
+
+  // Decided once, on arrival: go on with a session, look for the installation's, or show the form
+  const [entry] = useState(() => signInEntry({
+    hasSession: !!LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN),
+    canHandoff: canReceiveHandoff(appUrl, isCustomDomain),
+    handoffTriedRecently: handoffAlreadyTried(),
+    search: searchParams,
+    closedPortal: forCustomers,
+    currentUrl: window.location.pathname + window.location.search,
+  }));
+
+  const inviteEmail = searchParams.get("email") || "";
 
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
@@ -65,7 +58,8 @@ export default function LoginPage() {
   const [providers, setProviders] = useState<AuthProviders>({ google: false });
 
   useEffect(() => {
-    if (checkingSession && appUrl) void startReceive(appUrl, safeRedirect(searchParams.get("redirect")));
+    if (entry.kind === "go") void pathAfterSignIn(entry.redirect).then((path) => navigate(path, { replace: true }));
+    if (entry.kind === "handoff" && appUrl) void startReceive(appUrl, entry.redirect, entry.signIn);
     // Once, on arrival
   }, []);
 
@@ -123,7 +117,7 @@ export default function LoginPage() {
   };
 
   // Leaving for the installation's address and back: nothing to show meanwhile
-  if (checkingSession) return <div className="min-h-dvh bg-page" />;
+  if (entry.kind !== "form") return <div className="min-h-dvh bg-page" />;
 
   return (
     <div className="min-h-dvh flex flex-col bg-page">
@@ -201,12 +195,6 @@ export default function LoginPage() {
               )}
             </div>
           </div>
-
-          {kbPath && (
-            <div className="text-center mt-4">
-              <Link to={kbPath} className="text-sm text-primary hover:underline">{t("login.browseKb")}</Link>
-            </div>
-          )}
 
           {!isCustomDomain && (
             <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-muted">

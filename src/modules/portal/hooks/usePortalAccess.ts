@@ -6,6 +6,11 @@ import { portalAccessOf, type PortalAccess } from "../domain/portal-access";
 // Asked once per workspace and page: it changes only when an admin flips a setting
 const known = new Map<string, PortalAccess>();
 
+/** The settings an admin just saved in this tab, so its portal pages do not keep the old ones */
+export function rememberPortalAccess(slug: string, access: PortalAccess): void {
+  known.set(slug, access);
+}
+
 /**
  * Whether the workspace's portal and public knowledge base are open; null while it is not known.
  * A custom domain already says it; otherwise the portal is asked. A workspace that cannot be

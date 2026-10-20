@@ -68,6 +68,7 @@ const AdminUpdatesPage = lazy(() => import("@modules/admin/pages/AdminUpdatesPag
 const PortalPage = lazy(() => import("@modules/portal/pages/PortalPage"));
 const PortalTicketPage = lazy(() => import("@modules/portal/pages/PortalTicketPage"));
 const PortalLinkRedirectPage = lazy(() => import("@modules/portal/pages/PortalLinkRedirectPage"));
+const PortalHomeRedirectPage = lazy(() => import("@modules/portal/pages/PortalHomeRedirectPage"));
 const PortalKbPage = lazy(() => import("@modules/portal/pages/PortalKbPage"));
 const PortalKbCategoryPage = lazy(() => import("@modules/portal/pages/PortalKbCategoryPage"));
 const PortalKbArticlePage = lazy(() => import("@modules/portal/pages/PortalKbArticlePage"));
@@ -128,6 +129,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<WorkspacesPage />} />
           <Route path="portal-link/:token" element={<PortalLinkRedirectPage />} />
+          <Route path="portal/:workspaceSlug" element={<PortalHomeRedirectPage />} />
           <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
           <Route element={<WorkspaceGuard />}>
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />

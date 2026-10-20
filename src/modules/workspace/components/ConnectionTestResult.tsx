@@ -11,6 +11,8 @@ export type ConnectionErrorCode =
   | "refused"
   | "timeout"
   | "certificate"
+  /** The test needs the password typed: the saved one only goes to its own server and user */
+  | "password-required"
   | "unknown";
 
 export interface ConnectionTestOutcome {
@@ -48,7 +50,7 @@ export default function ConnectionTestResult({ result, protocol, host, port, suc
   return (
     <span className="text-xs font-body-medium text-red-500 min-w-0">
       {explained ?? result.error ?? failedText}
-      {explained && result.error && (
+      {explained && result.error && result.errorCode !== "password-required" && (
         <span className="block text-muted font-body mt-0.5 break-words">
           {t("connectionError.detail")}: {result.error}
         </span>

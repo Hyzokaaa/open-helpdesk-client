@@ -1,5 +1,6 @@
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
+import { savedPasswordApplies } from "@modules/workspace/domain/saved-password";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -180,13 +181,15 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
   }, [isDirty]);
 
   const resolvedHost = smtpHost.trim();
+  // An empty password field means the saved one only while the server and user stay the same
+  const keepsSavedPassword = savedPasswordApplies(sender && { host: sender.smtpHost, user: sender.smtpUser }, { host: resolvedHost, user: smtpLogin });
   const resolvedPort = Number(smtpPort) || 587;
 
   useEffect(() => {
     setTestResult(null);
   }, [smtpLogin, password, smtpHost, smtpPort, encryption]);
 
-  const canTest = smtpLogin.trim() && resolvedHost && (password || isEdit);
+  const canTest = smtpLogin.trim() && resolvedHost && (password || keepsSavedPassword);
   const canSave = canTest && (testResult?.success || isEdit);
 
   const handleTest = async () => {
@@ -239,7 +242,7 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
       <h2 className="text-lg font-body-bold text-heading mb-1">
         {isEdit ? t("emailSender.editTitle") : t("emailSender.configure")}
       </h2>
-      <p className="text-sm text-muted mb-6">{t("emailSender.description")}</p>
+      <p className="text-sm text-muted mb-6">{t(isEdit ? "emailSender.activeDescription" : "emailSender.description")}</p>
 
       <form onSubmit={handleSave} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}>
         {/* Section 1: Sender Identity */}
@@ -262,8 +265,9 @@ function EmailSenderForm({ slug, sender, onSaved, onCancel, onDirtyChange }: {
           <FormInput label={t("emailSender.smtpUser")} required>
             <Input value={smtpLogin} onChange={setSmtpLogin} placeholder="user@company.com" />
           </FormInput>
-          <FormInput label={t("emailSender.password")} required={!isEdit}>
-            <Input value={password} onChange={setPassword} placeholder={isEdit ? "••••••••" : ""} type="password" />
+          <FormInput label={t("emailSender.password")} required={!keepsSavedPassword}>
+            <Input value={password} onChange={setPassword} placeholder={keepsSavedPassword ? t("savedPassword.placeholder") : ""} type="password" />
+            {isEdit && !keepsSavedPassword && !password && <p className="text-exs text-amber-700 dark:text-amber-300 mt-1">{t("savedPassword.changed")}</p>}
           </FormInput>
         </div>
 

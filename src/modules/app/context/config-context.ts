@@ -33,6 +33,8 @@ export interface ConfigContextProps {
   loading: boolean;
   /** Custom domain mode: null = normal SaaS, array = filtered to these workspaces */
   domainWorkspaces: DomainWorkspace[] | null;
+  /** Takes a workspace's new portal settings, saved in this tab, without reloading the page */
+  updateDomainWorkspaceAccess: (slug: string, access: { portalEnabled: boolean; publicKbEnabled: boolean }) => void;
   brandName: string;
   /** The installation's own name (system branding), never a workspace's: who runs its analytics. */
   installationName: string;
@@ -56,6 +58,7 @@ export const ConfigContext = createContext<ConfigContextProps>({
   analytics: null,
   loading: true,
   domainWorkspaces: null,
+  updateDomainWorkspaceAccess: () => {},
   brandName: APP_NAME,
   installationName: [APP_NAME, APP_SUBTITLE].filter(Boolean).join(" "),
   brandSubtitle: APP_SUBTITLE,

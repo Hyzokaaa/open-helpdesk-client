@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import ConfirmModal from "@modules/app/modules/ui/components/ConfirmModal/ConfirmModal";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useConfig from "@modules/app/hooks/useConfig";
+import { rememberPortalAccess } from "@modules/portal/hooks/usePortalAccess";
 import type { TranslationKey } from "@modules/app/i18n/translations";
 import { updatePortalAccess, type PortalAccess } from "../services/workspace.service";
 
@@ -33,13 +35,18 @@ export function PortalStateBadge({ on, onLabel, offLabel }: { on: boolean; onLab
  */
 export default function PortalAccessSettings({ slug, access, portalUrl, onChange }: Props) {
   const { t } = useTranslation();
+  const { updateDomainWorkspaceAccess } = useConfig();
   const [saving, setSaving] = useState<keyof PortalAccess | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
 
   const save = async (change: Partial<PortalAccess>, key: keyof PortalAccess, message: string) => {
     setSaving(key);
     try {
-      onChange(await updatePortalAccess(slug, change));
+      const saved = await updatePortalAccess(slug, change);
+      // This tab's portal pages and sign-in follow at once, without a reload
+      rememberPortalAccess(slug, saved);
+      updateDomainWorkspaceAccess(slug, saved);
+      onChange(saved);
       toast.success(message);
     } catch {
       toast.error(t("portalAccess.saveError"));

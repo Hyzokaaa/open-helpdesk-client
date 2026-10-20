@@ -23,6 +23,8 @@ interface PendingReceive {
   state: string;
   verifier: string;
   redirect: string;
+  /** The sign-in page to show when the installation has no session; a plain one if not given */
+  signIn?: string;
 }
 
 /** Kept by the installation while a custom domain signs in, to accept the session it sends back. */
@@ -91,23 +93,34 @@ export function canReceiveHandoff(appUrl: string | null, isCustomDomain: boolean
   return isCustomDomain && !!installation && installation !== window.location.origin && !!window.crypto?.subtle;
 }
 
-/** One silent attempt per tab, so a domain without a session does not bounce back and forth. */
-export function handoffAlreadyTried(): boolean {
-  return read<boolean>(TRIED_KEY) === true;
+/**
+ * How long an attempt holds off the next one. It only has to cover the trip itself, so a domain
+ * without a session does not bounce back and forth; a later visit tries again, in case a session
+ * was started on the installation's address meanwhile.
+ */
+export const HANDOFF_RETRY_AFTER_MS = 2 * 60 * 1000;
+
+/** Whether this tab tried lately. Older marks, or the `true` earlier versions left, do not count. */
+export function handoffAlreadyTried(now = Date.now()): boolean {
+  const triedAt = read<unknown>(TRIED_KEY);
+  return typeof triedAt === "number" && now - triedAt >= 0 && now - triedAt < HANDOFF_RETRY_AFTER_MS;
 }
 
-export function markHandoffTried(): void {
-  write(TRIED_KEY, true);
+export function markHandoffTried(now = Date.now()): void {
+  write(TRIED_KEY, now);
 }
 
 // ── On the custom domain ─────────────────────────────────────────────────────────────────────
 
-/** Leaves for the installation to pick up its session; it comes back to /auth/handoff/callback. */
-export async function startReceive(appUrl: string, redirect: string): Promise<void> {
+/**
+ * Leaves for the installation to pick up its session; it comes back to /auth/handoff/callback.
+ * `signIn` is the sign-in page to come back to without one (the customers' one of a closed portal).
+ */
+export async function startReceive(appUrl: string, redirect: string, signIn?: string): Promise<void> {
   const installation = installationOrigin(appUrl)!;
   const { verifier, challenge } = await createPkce();
   const state = randomToken(16);
-  write(RECEIVE_KEY, { state, verifier, redirect } satisfies PendingReceive);
+  write(RECEIVE_KEY, { state, verifier, redirect, ...(signIn && { signIn }) } satisfies PendingReceive);
   markHandoffTried();
   const params = new URLSearchParams({ return: window.location.origin, challenge, state });
   window.location.assign(`${installation}/auth/handoff?${params}`);
@@ -115,7 +128,7 @@ export async function startReceive(appUrl: string, redirect: string): Promise<vo
 
 export type ReceiveResult =
   | { kind: "code"; code: string; verifier: string; redirect: string }
-  | { kind: "login"; redirect: string }
+  | { kind: "login"; redirect: string; signIn?: string }
   | { kind: "invalid" };
 
 /** Reads what the installation sent back; the callback URL must match the trip this tab started. */
@@ -129,7 +142,8 @@ export function readReceiveCallback(params: URLSearchParams): ReceiveResult {
   const hubChallenge = params.get("hubChallenge");
   const hubState = params.get("hubState");
   if (hubChallenge && hubState) write(HUB_OFFER_KEY, { challenge: hubChallenge, state: hubState } satisfies HubOffer);
-  return { kind: "login", redirect: pending.redirect };
+  const signIn = pending.signIn?.startsWith("/login") ? pending.signIn : undefined;
+  return { kind: "login", redirect: pending.redirect, ...(signIn && { signIn }) };
 }
 
 /**
@@ -172,4 +186,9 @@ export function callbackUrl(returnTo: string, params: Record<string, string>): s
 /** A path on the custom domain to land on after the trip; only same-site paths. */
 export function safeRedirect(path: string | null): string {
   return path && path.startsWith("/") && !path.startsWith("//") ? path : "/dashboard";
+}
+
+/** The sign-in page that comes back to `redirect`; a plain one when that is the panel's home anyway */
+export function signInPathFor(redirect: string | null): string {
+  return !redirect || redirect === "/dashboard" ? "/login" : `/login?redirect=${encodeURIComponent(redirect)}`;
 }

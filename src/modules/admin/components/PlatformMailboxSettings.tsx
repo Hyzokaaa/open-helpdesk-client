@@ -1,6 +1,7 @@
 import { mailboxSaveBlocker } from "@modules/workspace/domain/mailbox-save";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import ConnectionTestResult, { ConnectionTestOutcome } from "@modules/workspace/components/ConnectionTestResult";
+import { savedPasswordApplies } from "@modules/workspace/domain/saved-password";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
@@ -189,7 +190,9 @@ function MailboxForm({
   const [folders, setFolders] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || isEdit);
+  // An empty password field means the saved one only while the server and user stay the same
+  const keepsSavedPassword = savedPasswordApplies(mailbox && { host: mailbox.imapHost, user: mailbox.imapUser }, { host: imapHost, user: imapUser });
+  const canTest = imapHost.trim() && imapUser.trim() && (imapPass.trim() || keepsSavedPassword);
   // A result describes the details it was run with: once they change it no longer applies, nor unlocks saving
   useEffect(() => {
     setTestResult(null);
@@ -291,8 +294,9 @@ function MailboxForm({
         <FormInput label={t("mailbox.imapUser")} required>
           <Input placeholder="support@example.com" value={imapUser} onChange={setImapUser} />
         </FormInput>
-        <FormInput label={t("mailbox.imapPass")} required={!isEdit}>
-          <Input type="password" placeholder={isEdit ? t("mailbox.keepPassword") : ""} value={imapPass} onChange={setImapPass} />
+        <FormInput label={t("mailbox.imapPass")} required={!keepsSavedPassword}>
+          <Input type="password" placeholder={keepsSavedPassword ? t("savedPassword.placeholder") : ""} value={imapPass} onChange={setImapPass} />
+          {isEdit && !keepsSavedPassword && !imapPass && <p className="text-exs text-amber-700 dark:text-amber-300 mt-1">{t("savedPassword.changed")}</p>}
         </FormInput>
       </div>
 

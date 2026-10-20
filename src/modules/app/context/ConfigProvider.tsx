@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConfigContext, type DomainWorkspace } from "./config-context";
 import { getPublicConfig, isInstallationAddress, resolveDomain } from "../services/config.service";
 import { parseAnalyticsConfig, type AnalyticsConfig } from "@modules/analytics/domain/analytics-config";
 import { APP_NAME, APP_SUBTITLE } from "../domain/constants/env";
+import { withPortalAccess } from "@modules/portal/domain/portal-access";
 
 function applyNameSplit(fullName: string): { name: string; subtitle: string } {
   const endsWithHelpdesk = fullName.toLowerCase().endsWith("helpdesk");
@@ -61,6 +62,10 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     init().finally(() => setLoading(false));
   }, []);
 
+  const updateDomainWorkspaceAccess = useCallback((slug: string, access: { portalEnabled: boolean; publicKbEnabled: boolean }) => {
+    setDomainWorkspaces((current) => withPortalAccess(current, slug, access));
+  }, []);
+
   const { brandName, brandSubtitle, brandLogo, brandIcon, installationName } = useMemo(() => {
     // System branding (from DB) with env var fallback
     const sysName = systemBranding.appName ?? null;
@@ -110,7 +115,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [brandIcon]);
 
   return (
-    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, sessionRememberDays, appUrl, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
+    <ConfigContext.Provider value={{ saasMode, paymentGateways, defaultGateway, paddleClientToken, paddleEnvironment, aiEnabled, emailConfigured, sessionRememberDays, appUrl, systemEmailFrom, upgradeNotificationsEnabled, analytics, loading, domainWorkspaces, updateDomainWorkspaceAccess, brandName, brandSubtitle, brandLogo, brandIcon, installationName }}>
       {children}
     </ConfigContext.Provider>
   );

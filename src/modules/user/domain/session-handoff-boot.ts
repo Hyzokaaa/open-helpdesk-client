@@ -2,7 +2,7 @@ import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-
 import { saveSession } from "@modules/app/domain/core/session";
 import translations from "@modules/app/i18n/translations";
 import { exchangeHandoffCode, startHandoff } from "../services/auth.service";
-import { callbackUrl, offerToStore, readReceiveCallback, safeRedirect, takeStoreOffer } from "./session-handoff";
+import { callbackUrl, offerToStore, readReceiveCallback, safeRedirect, signInPathFor, takeStoreOffer } from "./session-handoff";
 
 /**
  * The trips of the session handoff (see session-handoff.ts), handled before the app mounts: the
@@ -103,8 +103,11 @@ async function receiveOnCustomDomain(): Promise<void> {
       // Expired or already used: sign in as usual
     }
   }
-  const redirect = result.kind === "invalid" ? null : result.redirect;
-  window.history.replaceState(null, "", redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login");
+  if (result.kind === "login" && result.signIn) {
+    window.history.replaceState(null, "", result.signIn);
+    return;
+  }
+  window.history.replaceState(null, "", signInPathFor(result.kind === "invalid" ? null : result.redirect));
 }
 
 /** Says why the page goes nowhere, in the person's language; the app is not there to say it. */
