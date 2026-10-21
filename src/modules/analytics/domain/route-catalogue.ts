@@ -54,6 +54,7 @@ const CORE_ROUTES: AnalyticsRoute[] = [
   { pattern: "/dashboard/workspaces/new", title: "New workspace" },
   { pattern: WS, title: "Workspace" },
   { pattern: `${WS}/settings`, title: "Workspace settings" },
+  { pattern: `${WS}/settings/:section`, title: "Workspace settings section" },
   { pattern: `${WS}/audit-log`, title: "Workspace audit log" },
   { pattern: `${WS}/members`, title: "Members" },
   { pattern: `${WS}/contacts`, title: "Contacts" },
@@ -89,6 +90,7 @@ const CORE_ROUTES: AnalyticsRoute[] = [
   { pattern: "/dashboard/admin/branding", title: "Admin branding" },
   { pattern: "/dashboard/admin/analytics", title: "Admin analytics" },
   { pattern: "/dashboard/admin/settings", title: "Admin settings" },
+  { pattern: "/dashboard/admin/settings/:section", title: "Admin settings section" },
   { pattern: "/dashboard/admin/updates", title: "Admin updates" },
 ];
 

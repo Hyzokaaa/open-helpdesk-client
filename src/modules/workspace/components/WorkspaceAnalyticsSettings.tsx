@@ -5,6 +5,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import type { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import {
   getWorkspaceAnalyticsSettings,
@@ -74,6 +75,8 @@ export default function WorkspaceAnalyticsSettings({ slug }: Props) {
       .catch(() => setError(t("workspaceAnalytics.loadError")))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useUnsavedChanges(!!form && !!saved && !sameForm(form, saved));
 
   if (loading) return null;
   if (!form || !saved) return error ? <p className="text-xs text-red-500" role="alert">{error}</p> : null;

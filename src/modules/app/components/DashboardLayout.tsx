@@ -13,6 +13,9 @@ import RouteSuspense from "./RouteSuspense";
 import BrandLogo from "./BrandLogo";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import NotMemberBar from "@modules/workspace/components/NotMemberBar";
+import UnsavedChangesProvider from "@modules/app/context/UnsavedChangesProvider";
+import useSidebarCollapsed from "@modules/app/hooks/useSidebarCollapsed";
+import clsx from "clsx";
 
 function NoAccessScreen() {
   const { t } = useTranslation();
@@ -46,6 +49,7 @@ export default function DashboardLayout() {
   // A step still pending (verify the email, choose a plan…) is done in the onboarding first
   const [onboardingPending, setOnboardingPending] = useState<boolean | null>(null);
   const location = useLocation();
+  const sidebar = useSidebarCollapsed(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -75,15 +79,19 @@ export default function DashboardLayout() {
 
   return (
     <PaletteProvider>
+      <UnsavedChangesProvider>
       <div className="w-full flex h-dvh bg-page overflow-hidden">
-        <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={sidebar.collapsed} onToggleCollapsed={sidebar.toggle} />
 
-        <div className="w-full flex flex-col grow lg:pl-[240px] overflow-hidden">
+        <div className={clsx(
+          "w-full flex flex-col grow overflow-hidden transition-[padding] duration-200 ease-[cubic-bezier(.2,0,0,1)] motion-reduce:transition-none",
+          sidebar.collapsed ? "lg:pl-16" : "lg:pl-[240px]",
+        )}>
           <DashboardBanner />
-          <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} drawerOpen={sidebarOpen} />
           <NotMemberBar />
 
-          <div className="flex flex-col items-center px-6 md:px-8 w-full flex-1 overflow-y-auto">
+          <div data-scroll-root className="flex flex-col items-center px-6 md:px-8 w-full flex-1 overflow-y-auto">
             <main
               tabIndex={-1}
               className="flex flex-col grow w-full items-center py-6 min-h-0 outline-none"
@@ -96,6 +104,7 @@ export default function DashboardLayout() {
           </div>
         </div>
       </div>
+      </UnsavedChangesProvider>
     </PaletteProvider>
   );
 }

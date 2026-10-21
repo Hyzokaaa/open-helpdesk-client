@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { InstallationRetention, getInstallationRetention, updateInstallationRetention } from "../services/audit-log.service";
 import RetentionRow, { retentionRowValid } from "./RetentionRow";
@@ -28,6 +29,8 @@ export default function AuditRetentionSettings() {
   useEffect(() => {
     getInstallationRetention().then(load).catch(() => toast.error(t("auditRetention.loadError")));
   }, []);
+
+  useUnsavedChanges(!!settings && (enabled !== settings.enabled || settings.categories.some(isChanged)));
 
   if (!settings) return null;
 

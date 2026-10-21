@@ -21,8 +21,11 @@ describe("route catalogue", () => {
     ["/dashboard/workspaces/acme/tickets/new", `${WS}/tickets/new`, "New ticket"],
     ["/dashboard/workspaces/acme/tickets/01HZX5C3V9J8Q2W4E6R8T0Y1U3", `${WS}/tickets/:ticketId`, "Ticket detail"],
     ["/dashboard/workspaces/acme/stats/01HZX5C3V9J8Q2W4E6R8T0Y1U3", `${WS}/stats/:userId`, "User stats"],
+    ["/dashboard/workspaces/acme/settings", `${WS}/settings`, "Workspace settings"],
+    ["/dashboard/workspaces/acme/settings/email-sender", `${WS}/settings/:section`, "Workspace settings section"],
     ["/dashboard/settings/security", "/dashboard/settings/security", "Security settings"],
     ["/dashboard/admin/analytics", "/dashboard/admin/analytics", "Admin analytics"],
+    ["/dashboard/admin/settings/email-sending", "/dashboard/admin/settings/:section", "Admin settings section"],
   ])("%s reports %s", (path, pattern, title) => {
     expect(resolveAnalyticsRoute(path)).toEqual({ pattern, title });
   });

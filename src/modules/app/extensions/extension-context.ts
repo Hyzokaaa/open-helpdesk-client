@@ -1,5 +1,13 @@
 import { createContext, type ComponentType, type ReactNode } from "react";
 
+/** A sidebar link added by an extension. */
+export interface ExtensionNavItem {
+  label: string;
+  path: string;
+  /** Drawn at 18px in currentColor, like the core icons (see nav-icons.tsx). */
+  icon?: ReactNode;
+}
+
 export interface Extensions {
   /** Component shown when a feature requires a higher plan */
   PlanGate: ComponentType<{ message: string }>;
@@ -19,11 +27,11 @@ export interface Extensions {
   /** Get available plans (empty = no billing system) */
   getPlans: () => Promise<unknown[]>;
 
-  /** Additional nav items for the Settings section in sidebar */
-  extraSettingsNav: { label: string; path: string }[];
+  /** Additional nav items for the Settings section in sidebar; without an icon they get a generic one */
+  extraSettingsNav: ExtensionNavItem[];
 
   /** Additional nav items for the Admin section in sidebar */
-  extraAdminNav: { label: string; path: string }[];
+  extraAdminNav: ExtensionNavItem[];
 
   /** Extra routes rendered inside the dashboard protected area */
   extraDashboardRoutes?: ReactNode;

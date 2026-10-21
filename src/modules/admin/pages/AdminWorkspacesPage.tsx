@@ -23,10 +23,12 @@ import {
   deleteWorkspace,
 } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import { useLeaveGuard } from "@modules/app/hooks/useUnsavedChanges";
 
 export default function AdminWorkspacesPage() {
   const { user } = useUser();
   const { t } = useTranslation();
+  const confirmLeave = useLeaveGuard();
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export default function AdminWorkspacesPage() {
       )}
 
       {editingWsSlug && (
-        <Sheet onClose={() => { setEditingWsSlug(null); fetchData(); }}>
+        <Sheet onClose={() => confirmLeave(() => { setEditingWsSlug(null); fetchData(); })}>
           <WorkspaceSettingsPage workspaceSlugProp={editingWsSlug} onClose={() => { setEditingWsSlug(null); fetchData(); }} />
         </Sheet>
       )}

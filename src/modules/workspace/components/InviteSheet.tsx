@@ -182,7 +182,7 @@ export default function InviteSheet({ workspaceSlug, onClose, onSent, fixedRole 
               <button
                 type="button"
                 className="underline font-body-semibold hover:opacity-80 cursor-pointer"
-                onClick={() => { onClose(); navigate(`/dashboard/workspaces/${workspaceSlug}/settings`); }}
+                onClick={() => { onClose(); navigate(`/dashboard/workspaces/${workspaceSlug}/settings/email-sender`); }}
               >{t("invitations.configureEmail")}</button>
             </p>
           </div>

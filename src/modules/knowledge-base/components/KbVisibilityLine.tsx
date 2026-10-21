@@ -22,7 +22,7 @@ export default function KbVisibilityLine({ slug }: { slug: string }) {
       <PortalStateBadge on={isPublic} onLabel={t("portalAccess.kbPublic")} offLabel={t("portalAccess.kbPrivate")} />
       <span>{t(isPublic ? "kb.visibilityPublic" : "kb.visibilityPrivate")}</span>
       {can(P.WORKSPACE_SETTINGS_MANAGE) && (
-        <Link to={`/dashboard/workspaces/${slug}/settings`} className="text-primary hover:underline">{t("kb.visibilityChange")}</Link>
+        <Link to={`/dashboard/workspaces/${slug}/settings/portal`} className="text-primary hover:underline">{t("kb.visibilityChange")}</Link>
       )}
     </p>
   );

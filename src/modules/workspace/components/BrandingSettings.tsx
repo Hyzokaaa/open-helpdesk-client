@@ -4,6 +4,7 @@ import Input from "@modules/app/modules/ui/components/Input/Input";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import { setBranding, uploadLogo, deleteLogo, uploadIcon, deleteIcon } from "../services/workspace.service";
 import { getSystemBranding, type SystemBranding } from "@modules/admin/services/system-branding.service";
 import BrandLogo from "@modules/app/components/BrandLogo";
@@ -41,6 +42,7 @@ export default function BrandingSettings({ slug, appName, appSubtitle, logo, ico
   const nameChanged = name.trim() !== (appName ?? "");
   const subtitleChanged = subtitle.trim() !== (appSubtitle ?? "");
   const hasChanges = nameChanged || subtitleChanged;
+  useUnsavedChanges(hasChanges);
 
   const handleSave = async () => {
     setSaving(true);

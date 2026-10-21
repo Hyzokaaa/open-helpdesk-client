@@ -503,6 +503,8 @@ export interface TicketReferenceSettings {
   style: "sequential" | "random";
   prefix: string;
   example: string;
+  /** Tickets whose reference a conversion would change; older servers do not send it. */
+  toConvert?: number;
 }
 
 export async function getTicketReference(slug: string): Promise<TicketReferenceSettings> {

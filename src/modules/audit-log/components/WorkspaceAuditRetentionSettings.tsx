@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { WorkspaceRetention, getWorkspaceRetention, updateWorkspaceRetention } from "../services/audit-log.service";
 import RetentionRow, { retentionRowValid } from "./RetentionRow";
@@ -30,6 +31,8 @@ export default function WorkspaceAuditRetentionSettings({ slug }: Props) {
   useEffect(() => {
     getWorkspaceRetention(slug).then(load).catch(() => toast.error(t("auditRetention.loadError")));
   }, [slug]);
+
+  useUnsavedChanges(!!data && data.categories.some((c) => data.installation.days[c] !== null && isChanged(c)));
 
   if (!data) return null;
 

@@ -4,6 +4,7 @@ import Button from "@modules/app/modules/ui/components/Button/Button";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import Toggle from "@modules/app/modules/ui/components/Toggle/Toggle";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import {
   TicketReferenceSettings as Settings,
@@ -48,10 +49,14 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
     getTicketReference(slug).then(load).catch(() => toast.error(t("ticketReference.loadError")));
   }, [slug]);
 
+  useUnsavedChanges(!!current && (style !== current.style || prefix !== current.prefix));
+
   if (!current) return null;
 
   const changed = style !== current.style || prefix !== current.prefix;
   const prefixValid = PREFIX_PATTERN.test(prefix);
+  // Every ticket already has its reference in the saved format: converting would change nothing
+  const nothingToConvert = current.toConvert === 0;
   // The random code needs the workspace secret, which only exists once random has been saved; until
   // then a fixed sample shows the shape. Either way it is ticket 42, like the sequential example.
   const savedCode = current.style === "random" ? current.example.split("-").pop() : null;
@@ -76,6 +81,7 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
       const { converted } = await convertTicketReferences(slug, typedName);
       toast.success(t("ticketReference.converted").replace("{count}", String(converted)));
       setConfirmingConvert(false);
+      load(await getTicketReference(slug));
     } catch (err) {
       const e = err as HttpResponseError;
       if (!e?.handled) toast.error(e?.message || t("ticketReference.convertError"));
@@ -124,8 +130,12 @@ export default function TicketReferenceSettings({ slug, workspaceName }: Props) 
         <p className="text-sm font-body-semibold text-heading">{t("ticketReference.convertTitle")}</p>
         <p className="text-xs text-muted mt-1">{t("ticketReference.convertHint").replace("{example}", current.example)}</p>
         <div className="flex items-center justify-end gap-3 mt-3">
-          {changed && <p className="text-xs text-muted">{t("ticketReference.convertBlocked")}</p>}
-          <Button size="sm" color="danger-light" disabled={changed} onClick={() => setConfirmingConvert(true)}>
+          {changed
+            ? <p className="text-xs text-muted">{t("ticketReference.convertBlocked")}</p>
+            : nothingToConvert
+              ? <p className="text-xs text-muted">{t("ticketReference.nothingToConvert")}</p>
+              : current.toConvert !== undefined && <p className="text-xs text-muted">{t("ticketReference.toConvert").replace("{count}", String(current.toConvert))}</p>}
+          <Button size="sm" color="danger-light" disabled={changed || nothingToConvert} onClick={() => setConfirmingConvert(true)}>
             {t("ticketReference.convert")}
           </Button>
         </div>

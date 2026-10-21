@@ -133,7 +133,7 @@ function AppRoutes() {
           <Route path="workspaces/new" element={<WorkspaceCreatePage />} />
           <Route element={<WorkspaceGuard />}>
             <Route path="workspaces/:workspaceSlug" element={<Navigate to="tickets" replace />} />
-            <Route path="workspaces/:workspaceSlug/settings" element={<WorkspaceSettingsPage />} />
+            <Route path="workspaces/:workspaceSlug/settings/:section?" element={<WorkspaceSettingsPage />} />
             <Route path="workspaces/:workspaceSlug/audit-log" element={<WorkspaceAuditLogPage />} />
             <Route path="workspaces/:workspaceSlug/members" element={<WorkspaceMembersPage />} />
             <Route path="workspaces/:workspaceSlug/contacts" element={<WorkspaceContactsPage />} />
@@ -170,7 +170,7 @@ function AppRoutes() {
             <Route path="admin/logs" element={<SystemLogsPage />} />
             <Route path="admin/branding" element={<AdminBrandingPage />} />
             <Route path="admin/analytics" element={<AdminAnalyticsPage />} />
-            <Route path="admin/settings" element={<AdminSettingsPage />} />
+            <Route path="admin/settings/:section?" element={<AdminSettingsPage />} />
             <Route path="admin/updates" element={<AdminUpdatesPage />} />
           </Route>
         </Route>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useUnsavedChanges from "@modules/app/hooks/useUnsavedChanges";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import {
   SlaPolicy,
@@ -15,6 +16,9 @@ interface Props {
 }
 
 const PRIORITIES = ["critical", "high", "medium", "low"] as const;
+
+/** How long removing the policy can be undone. */
+const UNDO_MS = 8000;
 
 const EMPTY_TARGETS: SlaPriorityTargets = {
   critical: null,
@@ -40,19 +44,24 @@ export default function SlaSettings({ slug }: Props) {
   const savedFirstResponse = useRef<SlaPriorityTargets>({ ...EMPTY_TARGETS });
   const savedResolution = useRef<SlaPriorityTargets>({ ...EMPTY_TARGETS });
 
+  /** Shows a policy as the saved one: on load, after removing it, and after undoing that. */
+  const showSaved = (saved: SlaPolicy | null) => {
+    const fr = { ...EMPTY_TARGETS, ...saved?.firstResponse };
+    const rs = { ...EMPTY_TARGETS, ...saved?.resolution };
+    setPolicy(saved);
+    setFirstResponse(fr);
+    setResolution(rs);
+    savedFirstResponse.current = { ...fr };
+    savedResolution.current = { ...rs };
+    setRawInputs({});
+  };
+
   useEffect(() => {
     getSlaPolicy(slug, { silent: true })
       .then((res) => {
-        setPolicy(res.slaPolicy);
         setLocked(false);
-        if (res.slaPolicy) {
-          const fr = { ...EMPTY_TARGETS, ...res.slaPolicy.firstResponse };
-          const rs = { ...EMPTY_TARGETS, ...res.slaPolicy.resolution };
-          setFirstResponse(fr);
-          setResolution(rs);
-          savedFirstResponse.current = { ...fr };
-          savedResolution.current = { ...rs };
-        }
+        if (res.slaPolicy) showSaved(res.slaPolicy);
+        else setPolicy(null);
       })
       .catch((err) => {
         if (isPlanLimitError(err)) setLocked(true);
@@ -63,6 +72,7 @@ export default function SlaSettings({ slug }: Props) {
   const hasChanges =
     !targetsEqual(firstResponse, savedFirstResponse.current) ||
     !targetsEqual(resolution, savedResolution.current);
+  useUnsavedChanges(!loading && hasChanges);
 
   const handleSave = async () => {
     setSaving(true);
@@ -87,16 +97,34 @@ export default function SlaSettings({ slug }: Props) {
     }
   };
 
+  // Removing takes effect at once; for a few seconds the notice offers to put the same policy back
   const handleRemove = async () => {
+    const removed = policy;
     setSaving(true);
     try {
       await updateSlaPolicy(slug, null);
-      setPolicy(null);
-      setFirstResponse({ ...EMPTY_TARGETS });
-      setResolution({ ...EMPTY_TARGETS });
-      savedFirstResponse.current = { ...EMPTY_TARGETS };
-      savedResolution.current = { ...EMPTY_TARGETS };
-      toast.success(t("workspaceSettings.slaSaved"));
+      showSaved(null);
+      const undo = async () => {
+        try {
+          await updateSlaPolicy(slug, removed);
+          showSaved(removed);
+          toast.success(t("workspaceSettings.slaRestored"));
+        } catch {
+          toast.error(t("workspaceSettings.slaSaveError"));
+        }
+      };
+      toast.success(({ closeToast }) => (
+        <div className="flex items-center gap-3 w-full">
+          <span className="flex-1">{t("workspaceSettings.slaRemoved")}</span>
+          <button
+            type="button"
+            onClick={() => { closeToast(); undo(); }}
+            className="shrink-0 text-sm font-body-semibold text-primary hover:underline cursor-pointer"
+          >
+            {t("undo.action")}
+          </button>
+        </div>
+      ), { autoClose: UNDO_MS });
     } catch {
       toast.error(t("workspaceSettings.slaSaveError"));
     } finally {

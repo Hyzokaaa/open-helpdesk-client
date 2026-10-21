@@ -35,7 +35,8 @@
   --th-surface: #ffffff;
   --th-surface-hover: #f9fafb;
   --th-surface-disabled: #f3f4f6;
-  --th-surface-active: #ecfdf5;
+  /* Follows the workspace palette, like the dark themes */
+  --th-surface-active: rgb(var(--palette-accent-rgb) / 0.08);
 
   --th-heading: #1f2937;
   --th-body: #374151;
