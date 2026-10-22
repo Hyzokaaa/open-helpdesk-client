@@ -6,6 +6,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { HttpResponseError } from "@modules/app/modules/http/domain/http";
 import { DeletedWorkspace, listDeletedWorkspaces, restoreDeletedWorkspace } from "../services/workspace.service";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 /**
  * The workspaces the user owns that were deleted and can still be restored, each with the day it
@@ -43,7 +44,7 @@ export default function DeletedWorkspacesPage() {
       {items === null ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : items.length === 0 ? (
-        <p className="text-sm text-muted py-8 text-center">{t("workspaceDelete.empty")}</p>
+        <EmptyState bordered icon="deletedWorkspaces" title={t("emptyState.deletedWorkspaces.title")} size="sm" />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg divide-y divide-border-row">
           {items.map((ws) => (

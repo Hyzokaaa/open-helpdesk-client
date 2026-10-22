@@ -4,7 +4,8 @@
  *
  * Comments and files come from their own records, so the activity entries that only repeat them
  * (comment created, file uploaded, ticket created) are left out. Changes made by one person
- * within a few minutes of each other, with nothing in between, read as a single line.
+ * within a few minutes of each other, with nothing in between, read as a single line. A reopen
+ * is never joined: it has its own card.
  */
 
 export interface TimelineActivity {
@@ -33,7 +34,8 @@ export type TimelineEntry<C extends TimelineComment = TimelineComment, F extends
   | { kind: "opening"; at: string; authorId: string; via: "email" | "portal" | null; files: F[] }
   | { kind: "comment"; at: string; comment: C; files: F[] }
   | { kind: "files"; at: string; authorId: string | null; files: F[] }
-  | { kind: "changes"; at: string; authorId: string | null; items: TimelineActivity[] };
+  | { kind: "changes"; at: string; authorId: string | null; items: TimelineActivity[] }
+  | { kind: "reopened"; at: string; authorId: string | null; activity: TimelineActivity };
 
 /** Entries already told by the comments, files and opening card. */
 const SHOWN_ELSEWHERE = new Set([
@@ -51,6 +53,8 @@ const OPENING_GRACE_MS = 5 * 60 * 1000;
 
 const time = (iso: string | null | undefined) => (iso ? new Date(iso).getTime() : 0);
 const authorOf = (entry: TimelineEntry<TimelineComment, TimelineFile>) => (entry.kind === "comment" ? entry.comment.authorId : entry.authorId);
+
+export const REOPENED_ACTION = "ticket-reopened";
 
 interface Input<C extends TimelineComment, F extends TimelineFile> {
   ticket: { reporterId: string; createdAt: string | null };
@@ -81,7 +85,9 @@ export function buildTicketTimeline<C extends TimelineComment, F extends Timelin
     ...laterFiles.map((file) => ({ kind: "files" as const, at: file.createdAt ?? openedAt, authorId: file.uploadedBy?.id ?? null, files: [file] })),
     ...input.activity
       .filter((a) => !SHOWN_ELSEWHERE.has(a.action))
-      .map((a) => ({ kind: "changes" as const, at: a.createdAt, authorId: a.userId, items: [a] })),
+      .map((a) => (a.action === REOPENED_ACTION
+        ? { kind: "reopened" as const, at: a.createdAt, authorId: a.userId, activity: a }
+        : { kind: "changes" as const, at: a.createdAt, authorId: a.userId, items: [a] })),
   ];
   rest.sort((a, b) => time(a.at) - time(b.at));
 

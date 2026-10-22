@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import Pagination from "@modules/app/modules/ui/components/Pagination/Pagination";
 import { useParams } from "react-router";
 import { getDateRange } from "../domain/get-date-range";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -116,7 +117,7 @@ export default function UserStatsPage() {
         : { assigneeId: listUserId };
     listTickets(workspaceSlug, {
       ...filter,
-      ...(ticketStatus ? { status: ticketStatus } : {}),
+      ...(ticketStatus ? { statuses: [ticketStatus] } : {}),
       page: ticketPage, limit: 10, sortBy: ticketSortBy, sortOrder: ticketSortOrder,
     }).then((res) => { setTickets(res.items); setTicketTotal(res.total); });
   }, [workspaceSlug, listUserId, data?.isReporter, ticketPage, ticketSortBy, ticketSortOrder, ticketStatus, ticketView, ticketsKey]);
@@ -379,29 +380,7 @@ export default function UserStatsPage() {
                 </tbody>
               </table>
               </DndContext>
-              {ticketTotal > 10 && (
-                <div className="flex items-center justify-between px-4 py-2 border-t border-border-card">
-                  <span className="text-xs text-muted">
-                    {(ticketPage - 1) * 10 + 1}–{Math.min(ticketPage * 10, ticketTotal)} {t("stats.paginationOf")} {ticketTotal}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      disabled={ticketPage <= 1}
-                      onClick={() => setTicketPage((p) => p - 1)}
-                      className="px-2 py-1 text-xs text-muted hover:text-heading disabled:opacity-30 cursor-pointer disabled:cursor-default"
-                    >
-                      ← {t("tickets.previous")}
-                    </button>
-                    <button
-                      disabled={ticketPage * 10 >= ticketTotal}
-                      onClick={() => setTicketPage((p) => p + 1)}
-                      className="px-2 py-1 text-xs text-muted hover:text-heading disabled:opacity-30 cursor-pointer disabled:cursor-default"
-                    >
-                      {t("tickets.next")} →
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination page={ticketPage} total={ticketTotal} limit={10} onPageChange={setTicketPage} noun={t("pagination.tickets")} />
             </div>
           )}
         </div>

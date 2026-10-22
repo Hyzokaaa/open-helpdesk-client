@@ -52,6 +52,12 @@ export function describeTicketActivity(item: TicketActivityEntry, t: Translate, 
       }
       return t("auditLog.feed.statusChanged");
 
+    case "ticket-reopened": {
+      const reason = tEnum && typeof meta.reason === "string" ? ` · ${tEnum("reopenReason", meta.reason)}` : "";
+      if (before && after) return `${t("auditLog.feed.reopened")} ${status(before.status)} → ${status(after.status)}${reason}`;
+      return `${t("auditLog.feed.reopened")}${reason}`;
+    }
+
     case "ticket-assigned": {
       const newAssignee = after?.assignee;
       if (newAssignee) {

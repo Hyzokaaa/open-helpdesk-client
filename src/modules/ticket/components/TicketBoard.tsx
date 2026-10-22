@@ -36,9 +36,11 @@ interface Props {
   canViewAll?: boolean;
   userId?: string;
   refreshTrigger?: number;
+  /** A card dropped out of Resolved asks to reopen it, with a reason; without it the card goes back. */
+  onReopenRequest?: (ticketId: string, droppedOn: string) => void;
 }
 
-export default function TicketBoard({ workspaceSlug, filters, tags, members, categories, onTicketClick, canChangeStatus, canMoveToOpen, canViewAll, userId, refreshTrigger }: Props) {
+export default function TicketBoard({ workspaceSlug, filters, tags, members, categories, onTicketClick, canChangeStatus, canMoveToOpen, canViewAll, userId, refreshTrigger, onReopenRequest }: Props) {
   const { t, tEnum } = useTranslation();
   const { columns, loading, truncatedInfo, commitMove, reorderColumn, setColumns, setDragging, refetch } = useBoardTickets(workspaceSlug, filters);
   const [activeTicket, setActiveTicket] = useState<TicketListItem | null>(null);
@@ -143,6 +145,7 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, cat
     const ticketId = active.id as string;
     const originalStatus = dragStartStatus.current;
     const currentCol = findColumn(ticketId);
+    const startColumns = dragStartColumns.current;
 
     dragStartColumns.current = null;
     dragStartStatus.current = null;
@@ -157,6 +160,13 @@ export default function TicketBoard({ workspaceSlug, filters, tags, members, cat
 
     if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
       reorderColumn(currentCol as BoardStatus, fromIndex, toIndex);
+    }
+
+    // Out of Resolved is reopening: the card goes back while the reason is asked; once reopened, the board reloads
+    if (currentCol !== originalStatus && originalStatus === "resolved") {
+      setColumns(startColumns);
+      onReopenRequest?.(ticketId, currentCol);
+      return;
     }
 
     // Cross-column: commit status change to backend

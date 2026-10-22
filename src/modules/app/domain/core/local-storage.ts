@@ -8,6 +8,10 @@ export enum LOCAL_STORAGE_KEY {
   SESSION_REMEMBER = "session_remember",
   /** The last "Keep me signed in" choice, so the sign-in page offers it again. */
   LOGIN_REMEMBER_CHOICE = "login_remember_choice",
+  /** Page size chosen for the ticket list in this browser. */
+  PAGE_SIZE_TICKETS = "page_size_tickets",
+  /** Page size chosen for the audit logs (workspace and system) in this browser. */
+  PAGE_SIZE_AUDIT = "page_size_audit",
 }
 
 export class LocalStorage {

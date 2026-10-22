@@ -48,6 +48,10 @@ import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-tic
 import TicketReviewChangesModal from "../components/TicketReviewChangesModal";
 import TicketDiscardReasonModal from "../components/TicketDiscardReasonModal";
 import TicketDetailHeader from "../components/TicketDetailHeader";
+import ReopenTicketModal from "../components/ReopenTicketModal";
+import TicketResolutionBanner from "../components/TicketResolutionBanner";
+import { canReopenTicket, repliedAfterResolving, statusesFrom } from "../domain/ticket-reopen";
+import { reopenTicket } from "../services/ticket.service";
 import TicketDetailSidebar from "../components/TicketDetailSidebar";
 import useVersionHistory from "../hooks/useVersionHistory";
 import useTicketDetail from "../hooks/useTicketDetail";
@@ -149,6 +153,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   const [statusModalValue, setStatusModalValue] = useState<string | null>(null);
   const [pickupStatus, setPickupStatus] = useState<string | null>(null);
   const [askDiscardReason, setAskDiscardReason] = useState(false);
+  const [showReopen, setShowReopen] = useState(false);
   const [aiProcessing, setAiProcessing] = useState<string | null>(null);
   // AI results for members who cannot write the ticket's AI cache (it needs ticket.edit.description);
   // null marks a server-cached entry dismissed locally
@@ -189,6 +194,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
   // Who cannot assign may still let go of their own ticket, back to the queue
   const canRelease = !isReadonly && !can(P.TICKET_ASSIGN) && !isTerminal && !!ticket && !!user && ticket.assigneeId === user.id;
   const canPickup = !isReadonly && can(P.TICKET_PICKUP) && ticket?.status === "open";
+  const canReopen = !isReadonly && !!ticket && canReopenTicket(ticket, can);
   const canDiscard = !isReadonly && !!ticket && canDiscardFromQueue(ticket, user?.id, can);
   const canChangeStatusAction = !isReadonly && canMoveStatus && (isTerminal ? can(P.TICKET_CHANGE_STATUS_DISCARDED) : can(P.TICKET_CHANGE_STATUS));
   const canSwitchToEdit = !isReadonly && mode === "view" && (
@@ -426,6 +432,9 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           subtitle={ticket.name}
           selected={statusModalValue}
           currentStatus={ticket.status}
+          statuses={statusesFrom(ticket.status)}
+          assigneeId={ticket.assigneeId}
+          onReopen={canReopen ? () => { setStatusModalValue(null); setShowReopen(true); } : undefined}
           onSelect={setStatusModalValue}
           onClose={() => setStatusModalValue(null)}
           onConfirm={async () => {
@@ -444,6 +453,24 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
           }}
           t={t}
           tEnum={tEnum}
+        />
+      )}
+
+      {showReopen && workspaceSlug && ticketId && (
+        <ReopenTicketModal
+          ticket={ticket}
+          members={members}
+          canChooseAssignee={can(P.TICKET_ASSIGN)}
+          onCancel={() => setShowReopen(false)}
+          onConfirm={async (data) => {
+            try {
+              await reopenTicket(workspaceSlug, ticketId, data);
+              toast.success(t("reopen.done"));
+              setShowReopen(false);
+              fetchTicket(true);
+              setActivityKey((k) => k + 1);
+            } catch { toast.error(t("reopen.error")); }
+          }}
         />
       )}
 
@@ -521,6 +548,8 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         canDiscard={canDiscard}
         canTransfer={canTransfer && !pendingTransfer}
         canDelete={canDelete}
+        canReopen={canReopen}
+        onReopen={() => setShowReopen(true)}
         enterEdit={enterEdit}
         cancelEdit={cancelEdit}
         requestSave={requestSave}
@@ -548,6 +577,13 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
         onDelete={handleDelete}
         onClose={onClose ? requestClose : undefined}
         t={t}
+      />
+
+      <TicketResolutionBanner
+        ticket={ticket}
+        nameOf={(id) => (id ? getMemberName(id) : null)}
+        repliedAfterResolving={repliedAfterResolving(ticket, comments)}
+        onReopen={canReopen ? () => setShowReopen(true) : undefined}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

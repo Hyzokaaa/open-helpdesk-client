@@ -21,6 +21,7 @@ import useUser from "@modules/user/hooks/useUser";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 const ROLES = ["admin", "supervisor", "agent", "user"] as const;
 
@@ -133,7 +134,7 @@ export default function WorkspaceMembersPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : members.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("members.empty")}</p>
+        <EmptyState bordered icon="members" title={t("emptyState.members.title")} description={t("emptyState.members.description")} />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full table-fixed">

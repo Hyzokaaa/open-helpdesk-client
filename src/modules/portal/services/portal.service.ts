@@ -84,6 +84,8 @@ export interface PortalTicketDetail {
   workspacePalette: string | null;
   attachments: PortalTicketAttachment[];
   comments: PortalTicketComment[];
+  /** For the requester: until when they can say it is not solved (null: too late, or not resolved). Absent for others. */
+  reopenUntil?: string | null;
 }
 
 export interface PortalStagedUpload {
@@ -137,6 +139,11 @@ export async function addPortalComment(portalToken: string, content: string, upl
     uploadTokens.length > 0 ? { content, uploadTokens } : { content },
   );
   trackEvent("comment-created", { visibility: "public" });
+}
+
+/** The requester says it is not solved: the message is posted as their reply and the ticket reopens. */
+export async function reopenPortalTicket(portalToken: string, content: string): Promise<void> {
+  await portalHttp.post(`/portal/tickets/${portalToken}/reopen`, { content });
 }
 
 // Knowledge Base (public)

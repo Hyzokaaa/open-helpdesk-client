@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { P } from "@modules/workspace/domain/permissions";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -37,6 +40,8 @@ const COLOR_MAP: Record<string, string> = {
 export default function WorkspaceProjectsPage() {
   const { t } = useTranslation();
   const { workspaceSlug } = useParams();
+  const { can } = usePermissions(workspaceSlug);
+  const canManage = can(P.PROJECT_MANAGE);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -166,23 +171,23 @@ export default function WorkspaceProjectsPage() {
     <div className="w-full">
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
-      ) : projects.length === 0 ? (
-        <div className="flex flex-col items-center py-16">
-          <svg className="w-12 h-12 text-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-          </svg>
-          <p className="text-sm text-heading font-body-semibold mb-1">{t("projects.emptyTitle")}</p>
-          <p className="text-xs text-muted mb-4 max-w-xs text-center">{t("projects.emptyDescription")}</p>
-          <Button size="sm" onClick={openCreate}>{t("projects.new")}</Button>
-        </div>
       ) : (
         <>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-body-bold text-heading">
               {t("projects.title")} ({projects.length})
             </h2>
-            <Button size="sm" onClick={openCreate}>{t("projects.new")}</Button>
+            {canManage && <Button size="sm" onClick={openCreate}>{t("projects.new")}</Button>}
           </div>
+          {projects.length === 0 ? (
+            <EmptyState
+              bordered
+              icon="projects"
+              title={t("emptyState.projects.title")}
+              description={t("projects.emptyDescription")}
+              action={canManage && <Button size="sm" onClick={openCreate}>{t("projects.new")}</Button>}
+            />
+          ) : (
           <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
@@ -190,7 +195,7 @@ export default function WorkspaceProjectsPage() {
                   <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("projects.name")}</th>
                   <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase hidden md:table-cell">{t("projects.description")}</th>
                   <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase w-28">{t("projects.categories")}</th>
-                  <th className="px-2 py-2 w-10" />
+                  {canManage && <th className="px-2 py-2 w-10" />}
                 </tr>
               </thead>
               <tbody>
@@ -209,17 +214,20 @@ export default function WorkspaceProjectsPage() {
                     <td className="px-4 py-2.5">
                       <span className="text-sm text-muted">{p.categoryCount ?? 0}</span>
                     </td>
+                    {canManage && (
                     <td className="px-2 py-2.5 text-right">
                       <ActionMenu items={[
                         { label: t("common.edit"), onClick: () => openEdit(p) },
                         { label: t("common.delete"), onClick: () => setDeleteId(p.id), danger: true },
                       ]} />
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          )}
         </>
       )}
 

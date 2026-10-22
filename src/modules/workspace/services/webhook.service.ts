@@ -13,6 +13,7 @@ export interface WebhookDto {
 export const WEBHOOK_EVENTS = [
   "ticket.created",
   "ticket.statusChanged",
+  "ticket.reopened",
   "ticket.assigned",
   "ticket.deleted",
   "comment.created",

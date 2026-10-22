@@ -12,6 +12,7 @@ import {
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import NotificationIcon from "../components/NotificationIcon";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -89,9 +90,7 @@ export default function NotificationsPage() {
 
       <Card>
         {notifications.length === 0 ? (
-          <p className="text-sm text-muted text-center py-12">
-            {t("notifications.empty")}
-          </p>
+          <EmptyState icon="notifications" title={t("emptyState.notifications.title")} description={t("emptyState.notifications.description")} />
         ) : (
           <div className="divide-y divide-border-row">
             {notifications.map((n) => (

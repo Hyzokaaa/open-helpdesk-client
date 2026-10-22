@@ -18,6 +18,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import useConfig from "@modules/app/hooks/useConfig";
 import { getEmailSender } from "../services/email-sender.service";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 export default function WorkspaceInvitationsPage() {
   const { workspaceSlug } = useParams();
@@ -80,7 +81,7 @@ export default function WorkspaceInvitationsPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : invitations.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("invitations.empty")}</p>
+        <EmptyState bordered icon="invitations" title={t("emptyState.invitations.title")} description={t("emptyState.invitations.description")} />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
           <table className="w-full">

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import clsx from "clsx";
@@ -23,13 +23,20 @@ import {
   assignTicket,
   transferTicket,
   pickupTicket,
+  getTicket,
+  reopenTicket,
+  type TicketDetail,
 } from "../services/ticket.service";
+import ReopenTicketModal from "../components/ReopenTicketModal";
+import { canReopenTicket, statusesFrom } from "../domain/ticket-reopen";
 import {
   PRIORITY_COLORS,
   STATUS_COLORS,
   STATUSES,
   PICKUP_STATUSES,
+  PRIORITIES,
 } from "../domain/ticket-enums";
+import { FILTER_MINE, FILTER_NONE, isDefaultStatuses, statusesParam } from "../domain/ticket-list-selection";
 import { canDiscardFromQueue, canMoveTicketStatus } from "../domain/can-move-ticket-status";
 import { listCategories, listProjects, type TicketCategoryDto, type Project } from "@modules/project/services/project.service";
 import { PaginatedResult } from "@modules/shared/domain/pagination-result";
@@ -54,6 +61,11 @@ import TicketBulkActions from "../components/TicketBulkActions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import { canBeAssignee } from "../domain/can-be-assignee";
 import PageLoader from "@modules/shared/components/PageLoader/PageLoader";
+import Pagination from "@modules/app/modules/ui/components/Pagination/Pagination";
+import { scrollToTopOf } from "@modules/app/domain/core/scroll-root";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
+import { ticketListEmpty } from "../domain/ticket-list-empty";
+import { clampPage, parsePageParam } from "@modules/app/domain/core/pagination";
 
 // Loaded when a ticket is opened or created: they bring the rich text editor, which the list does not need
 const TicketDetailPage = lazy(() => import("./TicketDetailPage"));
@@ -82,16 +94,15 @@ export default function TicketsPage() {
   const { user } = useUser();
   const { can, loading: permLoading } = usePermissions(workspaceSlug);
   const isReporter = !permLoading && !can(P.TICKET_VIEW) && !can(P.TICKET_CHANGE_STATUS);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
-    filters, setFilters, filterTagIds, setFilterTagIds,
+    filters, setFilters, selection, toggleStatus, toggleAllStatuses, toggleIn, clearField, toggleReopened, pruneUnknown, selectionParams,
     filterProjectId, setFilterProjectId,
-    filterDepartmentId, setFilterDepartmentId,
-    filterOrganizationId, setFilterOrganizationId,
-    filterCategoryId, setFilterCategoryId,
-    tab, setTab, viewMode, setViewMode, isBoard,
+    setPage, setLimit, viewMode, setViewMode, isBoard,
     toggleSort, activeFilterCount, clearAllFilters,
-  } = useTicketFilters();
+  } = useTicketFilters(workspaceSlug, isReporter, parsePageParam(searchParams.get("page")));
+  const tableTopRef = useRef<HTMLDivElement>(null);
 
   const {
     selectedIds, setSelectedIds, toggleSelect, toggleSelectAll, clearSelection,
@@ -132,36 +143,58 @@ export default function TicketsPage() {
   // backing out of it closes it instead of falling back to the status picker.
   const [discardTarget, setDiscardTarget] = useState<TicketListItem | null>(null);
   const [releaseTarget, setReleaseTarget] = useState<TicketListItem | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
+  // Reopening asks for a reason in its own modal, with the full ticket (who resolved it, when)
+  const [reopenTarget, setReopenTarget] = useState<TicketDetail | null>(null);
+  // The board column the card was dropped on, so the modal starts from what was meant
+  const [reopenDroppedOn, setReopenDroppedOn] = useState<string | undefined>(undefined);
+  const openReopen = async (ticketId: string, droppedOn?: string) => {
+    if (!workspaceSlug) return;
+    try {
+      const detail = await getTicket(workspaceSlug, ticketId);
+      setReopenDroppedOn(droppedOn);
+      setReopenTarget(detail);
+    } catch { toast.error(t("reopen.error")); }
+  };
 
   useEffect(() => {
     const openId = searchParams.get("open");
     if (openId) {
       setSelectedTicketId(openId);
       setTicketMode("view");
-      setSearchParams({}, { replace: true });
+      // Only "open" goes: the page stays in the address
+      setSearchParams((prev) => { const next = new URLSearchParams(prev); next.delete("open"); return next; }, { replace: true });
     }
   }, [searchParams, setSearchParams]);
+
+  // The page is in the address (?page=), replaced rather than pushed so Back leaves the list
+  useEffect(() => {
+    const want = filters.page && filters.page > 1 ? String(filters.page) : null;
+    if (searchParams.get("page") === want) return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (want) next.set("page", want); else next.delete("page");
+      return next;
+    }, { replace: true });
+  }, [filters.page]);
+
+  const changePage = (page: number) => {
+    setPage(page);
+    scrollToTopOf(tableTopRef.current);
+  };
 
   const fetchTickets = () => {
     if (!workspaceSlug) return;
     setLoading(true);
-    const params: TicketFilters = { ...filters };
-    if (tab === "resolved") {
-      params.status = "resolved";
-    } else if (tab === "discarded") {
-      params.status = "discarded";
-    } else if (!params.status) {
-      params.excludeStatus = "resolved,discarded";
-    }
-    if (filterTagIds.length > 0) params.tagIds = filterTagIds;
-    if (filterDepartmentId) params.departmentId = filterDepartmentId;
-    if (filterOrganizationId) params.organizationId = filterOrganizationId;
+    const params: TicketFilters = { ...filters, ...selectionParams(true) };
     if (filterProjectId) params.projectId = filterProjectId;
-    if (filterCategoryId) params.categoryId = filterCategoryId;
     if (isReporter && user) params.reporterId = user.id;
     listTickets(workspaceSlug, params)
-      .then(setResult)
+      .then((r) => {
+        // Past the end (a bulk delete on the last page, an old address): to the last page there is
+        const page = params.page ?? 1;
+        if (r.items.length === 0 && r.total > 0 && page > 1) setPage(clampPage(page, r.total, r.limit));
+        else setResult(r);
+      })
       .catch(() => toast.error(t("tickets.loadError")))
       .finally(() => setLoading(false));
   };
@@ -191,11 +224,13 @@ export default function TicketsPage() {
   // Customers get their tickets' names from the tickets themselves.
   useEffect(() => {
     if (!workspaceSlug || permLoading) return;
-    if (can(P.TAG_VIEW)) listTags(workspaceSlug).then(setTags).catch(() => {});
-    if (can(P.DEPARTMENT_VIEW)) listDepartments(workspaceSlug).then(setDepartments).catch(() => {});
-    if (can(P.ORGANIZATION_VIEW)) listOrganizations(workspaceSlug).then(setOrgs).catch(() => {});
+    // Each list, once loaded, also drops the remembered filters on ids that no longer exist
+    const ids = (items: { id: string }[]) => items.map((i) => i.id);
+    if (can(P.TAG_VIEW)) listTags(workspaceSlug).then((r) => { setTags(r); pruneUnknown({ tagIds: ids(r) }); }).catch(() => {});
+    if (can(P.DEPARTMENT_VIEW)) listDepartments(workspaceSlug).then((r) => { setDepartments(r); pruneUnknown({ departmentIds: ids(r) }); }).catch(() => {});
+    if (can(P.ORGANIZATION_VIEW)) listOrganizations(workspaceSlug).then((r) => { setOrgs(r); pruneUnknown({ organizationIds: ids(r) }); }).catch(() => {});
     if (can(P.WORKSPACE_MEMBERS_VIEW)) listMembers(workspaceSlug).then(setMembers).catch(() => {});
-    listCategories(workspaceSlug).then(setCategories).catch(() => {});
+    listCategories(workspaceSlug).then((r) => { setCategories(r); pruneUnknown({ categoryIds: ids(r) }); }).catch(() => {});
     if (can(P.PROJECT_VIEW)) listProjects(workspaceSlug).then(setProjects).catch(() => {});
   }, [workspaceSlug, permLoading]);
   // A system admin joining the workspace now shows up as an assignee
@@ -206,12 +241,12 @@ export default function TicketsPage() {
   useEffect(() => {
     if (!permLoading) fetchTickets();
     setSelectedIds(new Set());
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, filterProjectId, filterCategoryId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, selection, filterProjectId, permLoading, isReporter, viewMode]);
 
   const refetchAll = useCallback(() => {
     fetchTickets();
     setBoardKey((k) => k + 1);
-  }, [workspaceSlug, filters, filterTagIds, filterDepartmentId, filterOrganizationId, filterProjectId, filterCategoryId, tab, permLoading, isReporter, viewMode]);
+  }, [workspaceSlug, filters, selection, filterProjectId, permLoading, isReporter, viewMode]);
 
   useWebSocket(workspaceSlug, {
     "ticket.created": refetchAll,
@@ -221,6 +256,7 @@ export default function TicketsPage() {
   });
 
   const tickets = result?.items ?? [];
+  const emptyKind = ticketListEmpty({ activeFilterCount, search: filters.search, projectId: filterProjectId });
   const tagMap = new Map(tags.map((t) => [t.id, t]));
   const orgMap = new Map(orgs.map((o) => [o.id, o]));
   const deptMap = new Map(departments.map((d) => [d.id, d]));
@@ -265,18 +301,15 @@ export default function TicketsPage() {
       {/* Tier 2: Search + Filters popover */}
       <div className="flex items-center gap-3 mb-3">
         <TicketFilterBar
-          tab={tab}
-          setTab={setTab}
           filters={filters}
           setFilters={setFilters}
-          filterTagIds={filterTagIds}
-          setFilterTagIds={setFilterTagIds}
-          filterDepartmentId={filterDepartmentId}
-          setFilterDepartmentId={setFilterDepartmentId}
-          filterOrganizationId={filterOrganizationId}
-          setFilterOrganizationId={setFilterOrganizationId}
-          filterCategoryId={filterCategoryId}
-          setFilterCategoryId={setFilterCategoryId}
+          selection={selection}
+          toggleStatus={toggleStatus}
+          toggleAllStatuses={toggleAllStatuses}
+          toggleIn={toggleIn}
+          clearField={clearField}
+          toggleReopened={toggleReopened}
+          isReporter={isReporter}
           tags={tags}
           departments={departments}
           organizations={orgs}
@@ -286,31 +319,39 @@ export default function TicketsPage() {
         />
       </div>
 
-      {/* Tier 3: Active filter chips */}
-      {activeFilterCount > 0 && (
+      {/* Tier 3: Active filter chips, one per filter */}
+      {/* The status chip is always there on the list, so it is clear which tickets are hidden; its ✕ only when it is not the default */}
+      {(!isBoard || activeFilterCount > 0) && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          {filters.priority && (
-            <FilterChip label={`${t("tickets.col.priority")}: ${tEnum("priority", filters.priority)}`} onRemove={() => setFilters((f) => ({ ...f, priority: undefined, page: 1 }))} />
+          {!isBoard && (
+            <FilterChip
+              label={`${t("tickets.col.status")}: ${statusesParam(selection, isReporter)?.map((s) => tEnum("status", s)).join(", ") ?? t("tickets.all")}`}
+              onRemove={isDefaultStatuses(selection, isReporter) ? undefined : () => clearField("statuses")}
+            />
           )}
-          {filters.status && (
-            <FilterChip label={`${t("tickets.col.status")}: ${tEnum("status", filters.status)}`} onRemove={() => setFilters((f) => ({ ...f, status: undefined, page: 1 }))} />
+          {selection.priorities.length > 0 && (
+            <FilterChip label={`${t("tickets.col.priority")}: ${PRIORITIES.filter((p) => selection.priorities.includes(p)).map((p) => tEnum("priority", p)).join(", ")}`} onRemove={() => clearField("priorities")} />
           )}
-          {filterDepartmentId && (
-            <FilterChip label={`${t("ticketDetail.department")}: ${departments.find((d) => d.id === filterDepartmentId)?.name ?? ""}`} onRemove={() => setFilterDepartmentId(undefined)} />
+          {selection.departmentIds.length > 0 && (
+            <FilterChip label={`${t("ticketDetail.department")}: ${namesOf(selection.departmentIds, departments, t("tickets.noDepartment"), t("tickets.myDepartments"))}`} onRemove={() => clearField("departmentIds")} />
           )}
-          {filterOrganizationId && (
-            <FilterChip label={`${t("ticketDetail.organization")}: ${orgs.find((o) => o.id === filterOrganizationId)?.name ?? ""}`} onRemove={() => setFilterOrganizationId(undefined)} />
+          {selection.organizationIds.length > 0 && (
+            <FilterChip label={`${t("ticketDetail.organization")}: ${namesOf(selection.organizationIds, orgs, t("tickets.noOrganization"))}`} onRemove={() => clearField("organizationIds")} />
           )}
-          {filterCategoryId && (
-            <FilterChip label={`${t("ticketDetail.category")}: ${categories.find((c) => c.id === filterCategoryId)?.name ?? ""}`} onRemove={() => setFilterCategoryId(undefined)} />
+          {selection.categoryIds.length > 0 && (
+            <FilterChip label={`${t("ticketDetail.category")}: ${namesOf(selection.categoryIds, categories, t("tickets.noCategory"))}`} onRemove={() => clearField("categoryIds")} />
           )}
-          {filterTagIds.map((tagId) => {
-            const tag = tags.find((t) => t.id === tagId);
-            return tag ? <FilterChip key={tagId} label={tag.name} onRemove={() => { setFilterTagIds((ids) => ids.filter((id) => id !== tagId)); setFilters((f) => ({ ...f, page: 1 })); }} /> : null;
-          })}
-          <button onClick={clearAllFilters} className="text-exs text-subtle hover:text-body cursor-pointer ml-1">
-            {t("tickets.clearAll")}
-          </button>
+          {selection.reopened && (
+            <FilterChip label={`↺ ${t("reopen.filter")}`} onRemove={() => clearField("reopened")} />
+          )}
+          {selection.tagIds.length > 0 && (
+            <FilterChip label={`${t("tickets.col.tags")}: ${namesOf(selection.tagIds, tags, "")}`} onRemove={() => clearField("tagIds")} />
+          )}
+          {activeFilterCount > 0 && (
+            <button onClick={clearAllFilters} className="text-exs text-subtle hover:text-body cursor-pointer ml-1">
+              {t("tickets.clearAll")}
+            </button>
+          )}
         </div>
       )}
 
@@ -321,12 +362,8 @@ export default function TicketsPage() {
             refreshTrigger={boardKey}
             filters={{
               search: filters.search,
-              priority: filters.priority,
-              tagIds: filterTagIds.length > 0 ? filterTagIds : undefined,
-              departmentId: filterDepartmentId,
-              organizationId: filterOrganizationId,
+              ...selectionParams(false),
               projectId: filterProjectId,
-              categoryId: filterCategoryId,
               reporterId: isReporter ? user?.id : undefined,
             }}
             tags={tags}
@@ -337,6 +374,7 @@ export default function TicketsPage() {
             canMoveToOpen={can(P.TICKET_ASSIGN)}
             canViewAll={can(P.TICKET_VIEW)}
             userId={user?.id}
+            onReopenRequest={can(P.TICKET_REOPEN) ? openReopen : undefined}
           />
         </div>
       ) : (
@@ -351,14 +389,36 @@ export default function TicketsPage() {
         />
       </div>
 
-      {loading ? (
+      {loading && !result ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : !result || result.items.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("tickets.empty")}</p>
+        emptyKind === "no-results" ? (
+          <EmptyState
+            bordered
+            variant="no-results"
+            icon="tickets"
+            title={t("emptyState.tickets.noResults")}
+            description={t("emptyState.noResultsHint")}
+            action={activeFilterCount > 0 && <Button size="sm" color="light" onClick={clearAllFilters}>{t("emptyState.clearFilters")}</Button>}
+          />
+        ) : emptyKind === "empty" ? (
+          <EmptyState
+            bordered
+            icon="tickets"
+            title={t("emptyState.tickets.title")}
+            description={t("emptyState.tickets.description")}
+            action={<Button size="sm" onClick={() => setShowCreate(true)}>{t("tickets.new")}</Button>}
+          />
+        ) : (
+          <EmptyState bordered icon="tickets" title={t("emptyState.tickets.viewTitle")} />
+        )
       ) : (
         <>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
+          {/* While the next page loads, the rows stay in place, dimmed, so the page does not jump */}
+          <div ref={tableTopRef} aria-busy={loading || undefined} className="relative bg-surface border border-border-card rounded-lg">
+          {loading && <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-primary-600 animate-pulse rounded-t-lg z-10" />}
+          <div className={clsx("overflow-x-auto rounded-lg transition-opacity", loading && "opacity-50 pointer-events-none")}>
             <table className="w-full">
               <thead>
                 <SortableContext items={order} strategy={horizontalListSortingStrategy}>
@@ -426,6 +486,15 @@ export default function TicketsPage() {
                               />
                             )}
                             <p className="text-sm font-body-semibold text-heading truncate">{ticket.name}</p>
+                            {!!ticket.reopenCount && (
+                              <span
+                                title={t("reopen.listBadge").replace("{count}", String(ticket.reopenCount))}
+                                aria-label={t("reopen.listBadge").replace("{count}", String(ticket.reopenCount))}
+                                className="shrink-0 text-exs font-body-semibold px-1 rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                              >
+                                ↺ {ticket.reopenCount}
+                              </span>
+                            )}
                           </div>
                         )}
                         {col.key === "organization" && (
@@ -474,6 +543,8 @@ export default function TicketsPage() {
                           ...(!isReporter && hasDirectAccess ? [{ label: t("tickets.edit"), onClick: () => { setSelectedTicketId(ticket.id); setTicketMode("edit"); } }] : []),
                           // Agents only on tickets assigned to them; an open one is picked up instead
                           ...(can(P.TICKET_CHANGE_STATUS) && canMoveTicketStatus(ticket, user?.id, can) ? [{ label: t("tickets.changeStatus"), onClick: () => { bulk.setChangeStatusTicket(ticket); bulk.setSelectedStatus(ticket.status); } }] : []),
+                          // Closed: back to work only by reopening, with a reason
+                          ...(hasDirectAccess && canReopenTicket(ticket, can) ? [{ label: t("reopen.actionEllipsis"), onClick: () => openReopen(ticket.id) }] : []),
                           // Admin/Supervisor: Assign (any ticket, any state except closed)
                           ...(can(P.TICKET_ASSIGN) && !isClosed ? [{ label: t("tickets.assign"), onClick: () => { setAssignTicketId(ticket.id); setAssignTarget(ticket.assigneeId); setAssignMode("assign"); } }] : []),
                           // Pickup into a chosen status (only open tickets); it assigns the ticket to whoever picks it up
@@ -494,21 +565,16 @@ export default function TicketsPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={result.page}
+            total={result.total}
+            limit={result.limit}
+            onPageChange={changePage}
+            onLimitChange={setLimit}
+            noun={t("pagination.tickets")}
+          />
+          </div>
           </DndContext>
-
-          {result.total > result.limit && (
-            <div className="flex justify-center gap-2 mt-6">
-              <Button size="xs" color="light" disabled={filters.page === 1} onClick={() => setFilters({ ...filters, page: (filters.page ?? 1) - 1 })}>
-                {t("tickets.previous")}
-              </Button>
-              <span className="text-xs text-muted flex items-center px-2">
-                {t("tickets.page")} {result.page} {t("tickets.of")} {Math.ceil(result.total / result.limit)}
-              </span>
-              <Button size="xs" color="light" disabled={(filters.page ?? 1) >= Math.ceil(result.total / result.limit)} onClick={() => setFilters({ ...filters, page: (filters.page ?? 1) + 1 })}>
-                {t("tickets.next")}
-              </Button>
-            </div>
-          )}
         </>
       )}
       </>
@@ -520,11 +586,33 @@ export default function TicketsPage() {
           subtitle={bulk.changeStatusTicket.name}
           selected={bulk.selectedStatus}
           currentStatus={bulk.changeStatusTicket.status}
+          statuses={statusesFrom(bulk.changeStatusTicket.status)}
+          assigneeId={bulk.changeStatusTicket.assigneeId}
+          onReopen={canReopenTicket(bulk.changeStatusTicket, can) ? () => { const id = bulk.changeStatusTicket!.id; bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); openReopen(id); } : undefined}
           onSelect={bulk.setSelectedStatus}
           onConfirm={bulk.handleChangeStatus}
           onClose={() => { bulk.setChangeStatusTicket(null); bulk.setSelectedStatus(""); }}
           t={t}
           tEnum={tEnum}
+        />
+      )}
+
+      {reopenTarget && workspaceSlug && (
+        <ReopenTicketModal
+          ticket={reopenTarget}
+          members={members}
+          canChooseAssignee={can(P.TICKET_ASSIGN)}
+          droppedOn={reopenDroppedOn}
+          onCancel={() => { setReopenTarget(null); setBoardKey((k) => k + 1); }}
+          onConfirm={async (data) => {
+            try {
+              await reopenTicket(workspaceSlug, reopenTarget.id, data);
+              toast.success(t("reopen.done"));
+              setReopenTarget(null);
+              fetchTickets();
+              setBoardKey((k) => k + 1);
+            } catch { toast.error(t("reopen.error")); }
+          }}
         />
       )}
 
@@ -741,11 +829,17 @@ export default function TicketsPage() {
   );
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+/** The names of the chosen items, in the order they were chosen; "none" and "mine" read as their own labels. */
+function namesOf(ids: string[], items: { id: string; name: string }[], noneLabel: string, mineLabel = ""): string {
+  return ids.map((id) => (id === FILTER_NONE ? noneLabel : id === FILTER_MINE ? mineLabel : items.find((i) => i.id === id)?.name)).filter(Boolean).join(", ");
+}
+
+/** Without `onRemove` the chip only says what applies (the default statuses). */
+function FilterChip({ label, onRemove }: { label: string; onRemove?: () => void }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-active text-xs text-primary border border-primary/20">
       {label}
-      <button onClick={onRemove} className="hover:text-red-500 cursor-pointer transition-colors">✕</button>
+      {onRemove && <button onClick={onRemove} aria-label={label} className="hover:text-red-500 cursor-pointer transition-colors">✕</button>}
     </span>
   );
 }

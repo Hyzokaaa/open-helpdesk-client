@@ -270,9 +270,11 @@ interface Props {
   /** Without a name, or with an unknown one (an extension item without its own icon), draws the generic one. */
   name?: NavIconName | null;
   className?: string;
+  /** Width and height classes; the sidebar size (18 px) by default. */
+  sizeClass?: string;
 }
 
-export default function NavIcon({ name, className }: Props) {
+export default function NavIcon({ name, className, sizeClass = "w-[18px] h-[18px]" }: Props) {
   return (
     <svg
       viewBox="0 0 20 20"
@@ -283,7 +285,7 @@ export default function NavIcon({ name, className }: Props) {
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      className={clsx("w-[18px] h-[18px] shrink-0", className)}
+      className={clsx(sizeClass, "shrink-0", className)}
     >
       {(name && PATHS[name]) || PATHS.extension}
     </svg>

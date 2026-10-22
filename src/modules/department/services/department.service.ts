@@ -5,6 +5,10 @@ export interface Department {
   name: string;
   description: string;
   memberCount?: number;
+  /** Its agents by name (from the list of departments). */
+  members?: { userId: string; firstName: string; lastName: string }[];
+  /** Whether the viewer is one of its agents. */
+  isMember?: boolean;
 }
 
 export interface DepartmentMember {
@@ -44,7 +48,7 @@ export async function getDepartment(
 
 export async function createDepartment(
   workspaceSlug: string,
-  data: { name: string; description?: string },
+  data: { name: string; description?: string; memberUserIds?: string[] },
 ): Promise<Department> {
   const res = await http.post<Department>(
     `/workspaces/${workspaceSlug}/departments`,
@@ -83,6 +87,19 @@ export async function addDepartmentMember(
     `/workspaces/${workspaceSlug}/departments/${departmentId}/members`,
     { userId },
   );
+}
+
+/** Replaces the department's agents with this list. */
+export async function setDepartmentMembers(
+  workspaceSlug: string,
+  departmentId: string,
+  userIds: string[],
+): Promise<{ added: string[]; removed: string[] }> {
+  const res = await http.put<{ added: string[]; removed: string[] }>(
+    `/workspaces/${workspaceSlug}/departments/${departmentId}/members`,
+    { userIds },
+  );
+  return res.data;
 }
 
 export async function removeDepartmentMember(

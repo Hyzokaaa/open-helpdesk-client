@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import {
   getPortalTicket,
   addPortalComment,
+  reopenPortalTicket,
   portalStageUpload,
   PortalTicketDetail,
   PortalTicketAttachment,
@@ -116,6 +117,76 @@ function PortalFiles({ files, small = false, onOpen }: {
           )}
         </button>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Under a resolved ticket: "Is it still not working?" with an explicit way to reopen it. A plain
+ * reply below does not reopen it (a "thanks" must not), though the team is told of it. Past the
+ * window, the requester is pointed to a new ticket instead.
+ */
+function PortalReopenPanel({ reopenUntil, newTicketPath, onReopen }: {
+  reopenUntil: string | null;
+  newTicketPath: string;
+  onReopen: (message: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  if (!reopenUntil) {
+    return (
+      <div className="mb-4 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+        {t("portalReopen.expired")}{" "}
+        <a href={newTicketPath} className="text-primary-600 dark:text-primary-400 font-medium hover:underline">{t("portalReopen.newTicket")}</a>
+      </div>
+    );
+  }
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setSending(true);
+    try {
+      await onReopen(message.trim());
+      toast.success(t("portalReopen.done"));
+      setOpen(false);
+      setMessage("");
+    } catch {
+      toast.error(t("portalReopen.error"));
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3">
+      <p className="text-sm text-amber-900 dark:text-amber-200">{t("portalReopen.question")}</p>
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className="mt-2 px-3 py-1.5 rounded-md text-sm font-medium border border-amber-600 text-amber-800 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/40 cursor-pointer">
+          {t("portalReopen.notSolved")}
+        </button>
+      ) : (
+        <form onSubmit={submit} className="mt-3">
+          <label htmlFor="portal-reopen-message" className="block text-sm font-medium text-gray-800 dark:text-gray-200">{t("portalReopen.tellUs")}</label>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{t("portalReopen.hint")}</p>
+          <textarea
+            id="portal-reopen-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            required
+            autoFocus
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-primary-400"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <button type="button" onClick={() => { setOpen(false); setMessage(""); }} className="px-3 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
+              {t("portalReopen.cancel")}
+            </button>
+            <button type="submit" disabled={sending || !message.trim()} className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50 cursor-pointer">
+              {t("portalReopen.confirm")}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
@@ -354,6 +425,19 @@ export default function PortalTicketPage() {
               </div>
             ))}
           </div>
+
+          {/* Only the requester is offered to reopen it, or told it is too late */}
+          {ticket.status === "resolved" && ticket.reopenUntil !== undefined && (
+            <PortalReopenPanel
+              reopenUntil={ticket.reopenUntil}
+              newTicketPath={`/portal/${ticket.workspaceSlug}`}
+              onReopen={async (message) => {
+                if (!portalToken) return;
+                await reopenPortalTicket(portalToken, message);
+                await fetchTicket();
+              }}
+            />
+          )}
 
           {/* Add comment */}
           <form onSubmit={handleSubmitComment}>

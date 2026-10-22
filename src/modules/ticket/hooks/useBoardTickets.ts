@@ -80,6 +80,8 @@ export function useBoardTickets(
   const [loading, setLoading] = useState(true);
   const [truncatedInfo, setTruncatedInfo] = useState<{ truncated: boolean; total: number }>({ truncated: false, total: 0 });
   const isDragging = useRef(false);
+  // Every filter, so a change of project or category also reloads the board
+  const filtersKey = JSON.stringify(filters);
 
   const fetchData = useCallback(async (silent = false) => {
     if (!workspaceSlug) return;
@@ -95,7 +97,7 @@ export function useBoardTickets(
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [workspaceSlug, filters.search, filters.priority, filters.tagIds?.join(","), filters.departmentId, filters.reporterId]);
+  }, [workspaceSlug, filtersKey]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

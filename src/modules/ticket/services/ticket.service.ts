@@ -20,6 +20,28 @@ export interface TicketListItem {
   customFields: Record<string, unknown>;
   firstResponseBreached: boolean;
   resolutionBreached: boolean;
+  /** How many times it was reopened. */
+  reopenCount?: number;
+}
+
+/** Why a closed ticket was reopened; "requester" comes from the portal. */
+export type TicketReopenReason = "issue-persists" | "closed-without-confirmation" | "work-missing" | "other" | "requester";
+export const TEAM_REOPEN_REASONS: TicketReopenReason[] = ["issue-persists", "closed-without-confirmation", "work-missing", "other"];
+/** The team explains a reopen in at least this many characters; the backend says the same. */
+export const REOPEN_NOTE_MIN_LENGTH = 20;
+
+/** The last time a ticket was reopened: who, when, why, and who had resolved it. */
+export interface TicketReopen {
+  byId: string;
+  at: string;
+  reason: TicketReopenReason;
+  /** Seen by the team only; empty for the requester. */
+  note: string;
+  fromStatus: "resolved" | "discarded";
+  previousResolvedById: string | null;
+  previousResolvedAt: string | null;
+  by?: PersonSummary | null;
+  previousResolvedBy?: PersonSummary | null;
 }
 
 export interface TicketDetail {
@@ -59,6 +81,12 @@ export interface TicketDetail {
   assignee?: PersonSummary | null;
   registeredBy?: PersonSummary | null;
   resolvedBy?: PersonSummary | null;
+  /** The first resolution, kept through reopens; resolvedAt empties while reopened. */
+  firstResolvedAt?: string | null;
+  reopenCount?: number;
+  lastReopen?: TicketReopen | null;
+  /** While resolved: whether whoever resolved it left a comment then. */
+  resolvedWithComment?: boolean;
 }
 
 export interface DescriptionEditItem {
@@ -68,18 +96,21 @@ export interface DescriptionEditItem {
   createdAt: string;
 }
 
+/** Each list matches any of its values; "none" in the department, organization and category lists matches the tickets without one. */
 export interface TicketFilters {
   search?: string;
-  status?: string;
+  statuses?: string[];
   excludeStatus?: string;
-  priority?: string;
+  priorities?: string[];
   assigneeId?: string;
   reporterId?: string;
   tagIds?: string[];
-  departmentId?: string;
-  organizationId?: string;
+  departmentIds?: string[];
+  organizationIds?: string[];
   projectId?: string;
-  categoryId?: string;
+  categoryIds?: string[];
+  /** Only the tickets reopened at least once. */
+  reopened?: boolean;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   page?: number;
@@ -91,18 +122,19 @@ export async function listTickets(
   filters: TicketFilters = {},
 ): Promise<PaginatedResult<TicketListItem>> {
   const params = new URLSearchParams();
+  const list = (name: string, values?: string[]) => { if (values?.length) params.set(name, values.join(",")); };
   if (filters.search) params.set("search", filters.search);
-  if (filters.status) params.set("status", filters.status);
+  list("status", filters.statuses);
   if (filters.excludeStatus) params.set("excludeStatus", filters.excludeStatus);
-  if (filters.priority) params.set("priority", filters.priority);
+  list("priority", filters.priorities);
   if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);
   if (filters.reporterId) params.set("reporterId", filters.reporterId);
-  if (filters.tagIds && filters.tagIds.length > 0)
-    params.set("tagIds", filters.tagIds.join(","));
-  if (filters.departmentId) params.set("departmentId", filters.departmentId);
-  if (filters.organizationId) params.set("organizationId", filters.organizationId);
+  list("tagIds", filters.tagIds);
+  list("departmentId", filters.departmentIds);
+  list("organizationId", filters.organizationIds);
   if (filters.projectId) params.set("projectId", filters.projectId);
-  if (filters.categoryId) params.set("categoryId", filters.categoryId);
+  list("categoryId", filters.categoryIds);
+  if (filters.reopened) params.set("reopened", "true");
   if (filters.sortBy) params.set("sortBy", filters.sortBy);
   if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
   params.set("page", String(filters.page ?? 1));
@@ -192,6 +224,16 @@ export async function updateTicket(
   }>,
 ): Promise<void> {
   await http.patch(`/workspaces/${workspaceId}/tickets/${ticketId}`, data);
+}
+
+/** Reopens a resolved or discarded ticket with a reason; `assigneeId` chooses who takes it (null: the queue). */
+export async function reopenTicket(
+  workspaceId: string,
+  ticketId: string,
+  data: { reason: TicketReopenReason; note: string; assigneeId?: string | null; status?: "open" | "pending" | "in-progress" },
+): Promise<{ id: string; status: string; assigneeId: string | null; reopenCount: number }> {
+  const res = await http.post(`/workspaces/${workspaceId}/tickets/${ticketId}/reopen`, data);
+  return res.data;
 }
 
 export async function changeTicketStatus(
@@ -310,6 +352,10 @@ export interface BulkResult {
   ticketId: string;
   success: boolean;
   error?: string;
+  /** A closed ticket asked to go back to work: reopened one by one, with a reason. */
+  needsReopen?: boolean;
+  /** Asked to go to work with nobody assigned: bulk does not take tickets for whoever moves them. */
+  needsAssignee?: boolean;
 }
 
 export async function bulkChangeStatus(

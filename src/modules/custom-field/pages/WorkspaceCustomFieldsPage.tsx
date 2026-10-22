@@ -22,6 +22,7 @@ import {
   deleteCustomField,
 } from "../services/custom-field.service";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 const FIELD_TYPES = ["text", "number", "select", "multi-select", "date", "checkbox"] as const;
 
@@ -166,9 +167,7 @@ export default function WorkspaceCustomFieldsPage() {
           <Spinner width={24} />
         </div>
       ) : fields.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">
-          {t("customFields.empty")}
-        </p>
+        <EmptyState bordered icon="customFields" title={t("emptyState.customFields.title")} description={t("emptyState.customFields.description")} />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
           <table className="w-full">

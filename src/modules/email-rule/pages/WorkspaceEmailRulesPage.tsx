@@ -28,6 +28,7 @@ import {
 } from "../services/email-rule.service";
 import { listCategories, type TicketCategoryDto } from "@modules/project/services/project.service";
 import { listMailboxes, type MailboxDto } from "@modules/workspace/services/mailbox.service";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 const CONDITION_FIELDS = [
   { value: "from", labelKey: "emailRules.fieldFrom" },
@@ -315,7 +316,7 @@ export default function WorkspaceEmailRulesPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : rules.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("emailRules.empty")}</p>
+        <EmptyState bordered icon="emailRules" title={t("emptyState.emailRules.title")} description={t("emptyState.emailRules.description")} />
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className="bg-surface border border-border-card rounded-lg overflow-hidden">

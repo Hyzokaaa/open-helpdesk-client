@@ -12,6 +12,7 @@ import ColorPicker from "@modules/app/modules/ui/components/ColorPicker/ColorPic
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 export default function WorkspaceTagsPage() {
   const { workspaceSlug } = useParams();
@@ -88,9 +89,7 @@ export default function WorkspaceTagsPage() {
           <Spinner width={24} />
         </div>
       ) : tags.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">
-          {t("tags.empty")}
-        </p>
+        <EmptyState bordered icon="tags" title={t("emptyState.tags.title")} description={t("emptyState.tags.description")} />
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (

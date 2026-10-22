@@ -22,6 +22,7 @@ import InviteSheet from "../components/InviteSheet";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 export default function WorkspaceContactsPage() {
   const { workspaceSlug } = useParams();
@@ -106,7 +107,7 @@ export default function WorkspaceContactsPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : contacts.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("members.noContacts")}</p>
+        <EmptyState bordered icon="contacts" title={t("emptyState.contacts.title")} description={t("emptyState.contacts.description")} />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full table-fixed">

@@ -13,6 +13,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import {
   CannedResponse,
   listCannedResponses,
@@ -143,9 +144,7 @@ export default function WorkspaceCannedResponsesPage() {
           <Spinner width={24} />
         </div>
       ) : responses.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">
-          {t("cannedResponses.empty")}
-        </p>
+        <EmptyState bordered icon="cannedResponses" title={t("emptyState.cannedResponses.title")} description={t("emptyState.cannedResponses.description")} />
       ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
           <table className="w-full">

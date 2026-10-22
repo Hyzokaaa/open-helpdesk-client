@@ -110,8 +110,13 @@ export default function useBulkOperations({
       const failedIds = results.filter((r) => !r.success).map((r) => r.ticketId);
       const updatedCount = results.length - failedIds.length;
       if (updatedCount > 0) toast.success(`${updatedCount} ${t("tickets.bulkUpdated")}`);
+      const needReopen = results.filter((r) => r.needsReopen).length;
+      if (needReopen > 0) toast.warning(t("reopen.bulkSkipped").replace("{count}", String(needReopen)));
+      const needAssignee = results.filter((r) => r.needsAssignee).length;
+      if (needAssignee > 0) toast.warning(t("tickets.bulkNeedsAssignee").replace("{count}", String(needAssignee)));
+      const otherFailures = failedIds.length - needReopen - needAssignee;
+      if (otherFailures > 0) toast.error(`${otherFailures} ${t("tickets.bulkNotUpdated")}`);
       if (failedIds.length > 0) {
-        toast.error(`${failedIds.length} ${t("tickets.bulkNotUpdated")}`);
         // Leave the rejected ones selected so they are easy to spot
         selectOnly(failedIds);
       } else {

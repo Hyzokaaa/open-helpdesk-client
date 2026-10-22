@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -142,16 +143,6 @@ export default function WorkspaceCategoriesPage() {
     <div className="w-full">
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
-      ) : categories.length === 0 ? (
-        <div className="flex flex-col items-center py-16">
-          <svg className="w-12 h-12 text-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-          </svg>
-          <p className="text-sm text-heading font-body-semibold mb-1">{t("categories.emptyTitle")}</p>
-          <p className="text-xs text-muted mb-4 max-w-xs text-center">{t("categories.emptyDescription")}</p>
-          {canManage && <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>}
-        </div>
       ) : (
         <>
           <div className="flex items-center justify-between mb-6">
@@ -160,6 +151,15 @@ export default function WorkspaceCategoriesPage() {
             </h2>
             {canManage && <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>}
           </div>
+          {categories.length === 0 ? (
+            <EmptyState
+              bordered
+              icon="categories"
+              title={t("emptyState.categories.title")}
+              description={t("categories.emptyDescription")}
+              action={canManage && <Button size="sm" onClick={openCreate}>{t("categories.new")}</Button>}
+            />
+          ) : (
           <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
@@ -195,6 +195,7 @@ export default function WorkspaceCategoriesPage() {
               </tbody>
             </table>
           </div>
+          )}
         </>
       )}
 

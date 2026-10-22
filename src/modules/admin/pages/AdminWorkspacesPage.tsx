@@ -24,6 +24,7 @@ import {
 } from "@modules/workspace/services/workspace.service";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { useLeaveGuard } from "@modules/app/hooks/useUnsavedChanges";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 
 export default function AdminWorkspacesPage() {
   const { user } = useUser();
@@ -208,7 +209,7 @@ export default function AdminWorkspacesPage() {
               </tr>
             ))}
             {workspaces.length === 0 && (
-              <tr><td colSpan={columns.length + 1} className="px-4 py-8 text-center text-sm text-muted">{t("workspaces.empty")}</td></tr>
+              <tr><td colSpan={columns.length + 1}><EmptyState icon="adminWorkspaces" size="sm" title={t("emptyState.workspaces.title")} /></td></tr>
             )}
           </tbody>
         </table>

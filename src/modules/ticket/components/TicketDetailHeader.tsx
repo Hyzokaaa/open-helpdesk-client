@@ -22,6 +22,9 @@ interface TicketDetailHeaderProps {
   /** The assignee may let go of their own ticket even without ticket.assign */
   canRelease: boolean;
   canDelete: boolean;
+  /** A closed ticket the viewer may take back to work, with a reason. */
+  canReopen?: boolean;
+  onReopen?: () => void;
   enterEdit: () => void;
   cancelEdit: () => void;
   requestSave: () => void;
@@ -40,7 +43,7 @@ export default function TicketDetailHeader({
   ticket, draft, setDraft,
   isEditing, canSwitchToEdit, canEditName,
   saving, embedded,
-  canChangeStatusAction, canAssignAction, canPickup, canDiscard, canTransfer, canRelease, canDelete,
+  canChangeStatusAction, canAssignAction, canPickup, canDiscard, canTransfer, canRelease, canDelete, canReopen, onReopen,
   enterEdit, cancelEdit, requestSave,
   onChangeStatus, onAssign, onPickup, onDiscard, onTransfer, onRelease, onDelete, onClose,
   t,
@@ -73,6 +76,14 @@ export default function TicketDetailHeader({
         ) : (
           <h2 className="text-lg font-body-bold text-heading truncate">
             <span className="text-muted font-body-medium">{ticket.ticketNumber}</span> {ticket.name}
+            {!!ticket.reopenCount && (
+              <span
+                title={t("reopen.badgeTitle").replace("{count}", String(ticket.reopenCount))}
+                className="ml-2 align-middle inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-body-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+              >
+                <span aria-hidden="true">↺</span>{t("reopen.badge").replace("{count}", String(ticket.reopenCount))}
+              </span>
+            )}
           </h2>
         )}
       </div>
@@ -86,6 +97,17 @@ export default function TicketDetailHeader({
         ) : canSwitchToEdit ? (
           <Button size="xs" onClick={enterEdit}>{t("ticketDetail.edit")}</Button>
         ) : null}
+
+        {/* In sight, not in the menu: serious, though not destructive like Delete */}
+        {!isEditing && canReopen && onReopen && (
+          <button
+            type="button"
+            onClick={onReopen}
+            className="px-2.5 py-1 rounded-md text-xs font-body-semibold border border-amber-600 text-amber-800 hover:bg-amber-50 cursor-pointer dark:text-amber-300 dark:hover:bg-amber-950/40"
+          >
+            ↺ {t("reopen.action")}
+          </button>
+        )}
 
         {!isEditing && <ActionMenu items={menuItems} />}
 

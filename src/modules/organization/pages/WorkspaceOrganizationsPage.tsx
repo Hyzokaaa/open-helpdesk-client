@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -235,22 +236,14 @@ export default function WorkspaceOrganizationsPage() {
   );
 
   const editingLogo = sheet?.mode === "edit" ? sheet.org.logo : null;
+  const query = search.toLowerCase();
+  const visibleOrganizations = organizations.filter((o) =>
+    !query || o.name.toLowerCase().includes(query) || o.domains.some((d) => d.includes(query)));
 
   return (
     <div className="w-full">
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
-      ) : organizations.length === 0 ? (
-        <div className="flex flex-col items-center py-16">
-          <svg className="w-12 h-12 text-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" />
-          </svg>
-          <p className="text-sm text-heading font-body-semibold mb-1">{t("organizations.emptyTitle")}</p>
-          <p className="text-xs text-muted mb-4 max-w-xs text-center">{t("organizations.emptyDescription")}</p>
-          {canManage && (
-            <Button size="sm" onClick={openCreate}>{t("organizations.new")}</Button>
-          )}
-        </div>
       ) : (
         <>
         <div className="flex items-center justify-between mb-4">
@@ -268,6 +261,23 @@ export default function WorkspaceOrganizationsPage() {
             <Input placeholder={t("organizations.search")} value={search} onChange={setSearch} />
           </div>
         )}
+        {organizations.length === 0 ? (
+          <EmptyState
+            bordered
+            icon="organizations"
+            title={t("emptyState.organizations.title")}
+            description={t("organizations.emptyDescription")}
+            action={canManage && <Button size="sm" onClick={openCreate}>{t("organizations.new")}</Button>}
+          />
+        ) : visibleOrganizations.length === 0 ? (
+          <EmptyState
+            bordered
+            variant="no-results"
+            icon="organizations"
+            title={t("emptyState.organizations.noResults")}
+            action={<Button size="sm" color="light" onClick={() => setSearch("")}>{t("emptyState.clearFilters")}</Button>}
+          />
+        ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
@@ -280,11 +290,7 @@ export default function WorkspaceOrganizationsPage() {
               </tr>
             </thead>
             <tbody>
-              {organizations.filter((o) => {
-                if (!search) return true;
-                const q = search.toLowerCase();
-                return o.name.toLowerCase().includes(q) || o.domains.some((d) => d.includes(q));
-              }).map((org) => (
+              {visibleOrganizations.map((org) => (
                 <tr key={org.id} className="border-b border-border-row last:border-0 hover:bg-surface-hover transition-colors">
                   <td className="px-4 py-2.5">
                     {org.logo ? (
@@ -328,6 +334,7 @@ export default function WorkspaceOrganizationsPage() {
             </tbody>
           </table>
         </div>
+        )}
         </>
       )}
 

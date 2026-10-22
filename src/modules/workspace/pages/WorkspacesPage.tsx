@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import { Workspace, listWorkspaces } from "../services/workspace.service";
@@ -63,14 +64,17 @@ export default function WorkspacesPage() {
       </div>
 
       {workspaces.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <p className="text-sm text-muted mb-4">{t("workspaces.emptyHome")}</p>
-          {showCreate && (
+        <EmptyState
+          bordered
+          icon="adminWorkspaces"
+          title={t("workspaces.emptyHome")}
+          description={t("emptyState.workspaces.description")}
+          action={showCreate && (
             <Button size="sm" onClick={() => navigate("/dashboard/workspaces/new")}>
               {t("workspaces.createFirst")}
             </Button>
           )}
-        </div>
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {workspaces.map((ws) => (

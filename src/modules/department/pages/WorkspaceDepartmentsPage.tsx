@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import NotMemberHint from "@modules/workspace/components/NotMemberHint";
 import { useMembershipChanged } from "@modules/workspace/domain/membership-events";
 import useWorkspaceMembership from "@modules/workspace/hooks/useWorkspaceMembership";
 import useUser from "@modules/user/hooks/useUser";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import Input from "@modules/app/modules/ui/components/Input/Input";
 import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
-import Select from "@modules/app/modules/ui/components/Select/Select";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
@@ -18,50 +17,44 @@ import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import {
   type Department,
-  type DepartmentDetail,
   listDepartments,
-  getDepartment,
   createDepartment,
   updateDepartment,
   deleteDepartment,
-  addDepartmentMember,
-  removeDepartmentMember,
+  setDepartmentMembers,
 } from "../services/department.service";
 import {
   listMembers,
   type WorkspaceMember,
 } from "@modules/workspace/services/workspace.service";
+import AgentMultiSelect, { type AgentMultiSelectHandle } from "../components/AgentMultiSelect";
+import { agentsChanged, initialsOf } from "../domain/department-agents";
+
+type SheetState = { mode: "create" } | { mode: "edit"; dept: Department };
 
 export default function WorkspaceDepartmentsPage() {
   const { workspaceSlug } = useParams();
   const { user } = useUser();
   const { can } = usePermissions(workspaceSlug);
-  const { needsJoin } = useWorkspaceMembership(workspaceSlug);
-  const addAgentRef = useRef<HTMLButtonElement>(null);
+  const { needsJoin, join, joining } = useWorkspaceMembership(workspaceSlug);
+  const agentsRef = useRef<AgentMultiSelectHandle>(null);
   const { t } = useTranslation();
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Sheet state: null = closed, { mode: "create" } or { mode: "edit", dept, detail }
-  const [sheet, setSheet] = useState<
-    | { mode: "create" }
-    | { mode: "edit"; dept: Department; detail: DepartmentDetail | null; detailLoading: boolean }
-    | null
-  >(null);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [agentIds, setAgentIds] = useState<string[]>([]);
+  const [original, setOriginal] = useState({ name: "", description: "", agentIds: [] as string[] });
   const [submitting, setSubmitting] = useState(false);
 
-  const [addMemberUserId, setAddMemberUserId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDiscard, setShowDiscard] = useState(false);
-  const [originalName, setOriginalName] = useState("");
-  const [originalDescription, setOriginalDescription] = useState("");
 
-  const isDirty = name !== originalName || description !== originalDescription;
-
+  const isDirty = name !== original.name || description !== original.description || agentsChanged(original.agentIds, agentIds);
   const canManage = can(P.DEPARTMENT_MANAGE);
 
   const fetchDepartments = () => {
@@ -79,42 +72,19 @@ export default function WorkspaceDepartmentsPage() {
   }, [workspaceSlug]);
   useMembershipChanged(workspaceSlug, () => { if (workspaceSlug) listMembers(workspaceSlug).then(setMembers); });
 
-  const openCreate = () => {
-    setName("");
-    setDescription("");
-    setOriginalName("");
-    setOriginalDescription("");
-    setSheet({ mode: "create" });
+  const openSheet = (next: SheetState, focusAgents = false) => {
+    const dept = next.mode === "edit" ? next.dept : null;
+    const ids = dept?.members?.map((m) => m.userId) ?? [];
+    setName(dept?.name ?? "");
+    setDescription(dept?.description ?? "");
+    setAgentIds(ids);
+    setOriginal({ name: dept?.name ?? "", description: dept?.description ?? "", agentIds: ids });
+    setSheet(next);
+    if (focusAgents) requestAnimationFrame(() => agentsRef.current?.focus());
   };
 
-  const openEdit = (dept: Department) => {
-    setName(dept.name);
-    setDescription(dept.description ?? "");
-    setOriginalName(dept.name);
-    setOriginalDescription(dept.description ?? "");
-    setSheet({ mode: "edit", dept, detail: null, detailLoading: true });
-    if (workspaceSlug) {
-      getDepartment(workspaceSlug, dept.id)
-        .then((d) => setSheet((prev) => prev?.mode === "edit" ? { ...prev, detail: d, detailLoading: false } : prev))
-        .catch(() => {
-          toast.error(t("common.loadError"));
-          setSheet((prev) => prev?.mode === "edit" ? { ...prev, detailLoading: false } : prev);
-        });
-    }
-  };
-
-  const closeSheet = () => {
-    setSheet(null);
-    setAddMemberUserId(null);
-  };
-
-  const handleClose = () => {
-    if (isDirty) {
-      setShowDiscard(true);
-    } else {
-      closeSheet();
-    }
-  };
+  const closeSheet = () => setSheet(null);
+  const handleClose = () => (isDirty ? setShowDiscard(true) : closeSheet());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,10 +92,15 @@ export default function WorkspaceDepartmentsPage() {
     setSubmitting(true);
     try {
       if (sheet.mode === "create") {
-        await createDepartment(workspaceSlug, { name, description: description || undefined });
+        await createDepartment(workspaceSlug, { name, description: description || undefined, memberUserIds: agentIds });
         toast.success(t("departments.created"));
       } else {
-        await updateDepartment(workspaceSlug, sheet.dept.id, { name, description: description || undefined });
+        if (name !== original.name || description !== original.description) {
+          await updateDepartment(workspaceSlug, sheet.dept.id, { name, description: description || undefined });
+        }
+        if (agentsChanged(original.agentIds, agentIds)) {
+          await setDepartmentMembers(workspaceSlug, sheet.dept.id, agentIds);
+        }
         toast.success(t("departments.updated"));
       }
       closeSheet();
@@ -150,54 +125,22 @@ export default function WorkspaceDepartmentsPage() {
     }
   };
 
-  const handleAddMember = async () => {
-    if (!workspaceSlug || !sheet || sheet.mode !== "edit" || !addMemberUserId) return;
-    try {
-      await addDepartmentMember(workspaceSlug, sheet.dept.id, addMemberUserId);
-      setAddMemberUserId(null);
-      const d = await getDepartment(workspaceSlug, sheet.dept.id);
-      setSheet((prev) => prev?.mode === "edit" ? { ...prev, detail: d } : prev);
-      fetchDepartments();
-      toast.success(t("departments.agentAdded"));
-    } catch {
-      toast.error(t("common.saveError"));
-    }
-  };
-
-  const handleRemoveMember = async (userId: string) => {
-    if (!workspaceSlug || !sheet || sheet.mode !== "edit") return;
-    try {
-      await removeDepartmentMember(workspaceSlug, sheet.dept.id, userId);
-      const d = await getDepartment(workspaceSlug, sheet.dept.id);
-      setSheet((prev) => prev?.mode === "edit" ? { ...prev, detail: d } : prev);
-      fetchDepartments();
-      toast.success(t("departments.agentRemoved"));
-    } catch {
-      toast.error(t("common.deleteError"));
-    }
-  };
-
-  const agentRoles = ["admin", "supervisor", "agent"];
-  const editDetail = sheet?.mode === "edit" ? sheet.detail : null;
-  const availableMembers = members.filter(
-    (m) => agentRoles.includes(m.role) && !editDetail?.members.some((dm) => dm.userId === m.userId),
+  // Names of chosen agents that may not be among the members (they left the workspace)
+  const knownNames = Object.fromEntries(
+    (sheet?.mode === "edit" ? sheet.dept.members ?? [] : []).map((m) => [m.userId, `${m.firstName} ${m.lastName}`]),
   );
+  if (user) knownNames[user.id] = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+
+  const joinOffer = needsJoin && user ? {
+    label: t("departments.notMemberSelf"),
+    joining,
+    onJoin: async () => { if (await join()) setAgentIds((ids) => (ids.includes(user.id) ? ids : [...ids, user.id])); },
+  } : undefined;
 
   return (
     <div className="w-full">
       {loading ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
-      ) : departments.length === 0 ? (
-        <div className="flex flex-col items-center py-16">
-          <svg className="w-12 h-12 text-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6A1.125 1.125 0 012.25 10.875v-3.75zM13.5 7.125C13.5 6.504 14.004 6 14.625 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM7.5 16.125c0-.621.504-1.125 1.125-1.125h6.75c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125H8.625A1.125 1.125 0 017.5 19.875v-3.75z" />
-          </svg>
-          <p className="text-sm text-heading font-body-semibold mb-1">{t("departments.emptyTitle")}</p>
-          <p className="text-xs text-muted mb-4 max-w-xs text-center">{t("departments.emptyDescription")}</p>
-          {canManage && (
-            <Button size="sm" onClick={openCreate}>{t("departments.new")}</Button>
-          )}
-        </div>
       ) : (
         <>
         <div className="flex items-center justify-between mb-6">
@@ -205,18 +148,27 @@ export default function WorkspaceDepartmentsPage() {
             {t("departments.title")} ({departments.length})
           </h2>
           {canManage && (
-            <Button size="sm" onClick={openCreate}>
+            <Button size="sm" onClick={() => openSheet({ mode: "create" })}>
               {t("departments.new")}
             </Button>
           )}
         </div>
+        {departments.length === 0 ? (
+          <EmptyState
+            bordered
+            icon="departments"
+            title={t("emptyState.departments.title")}
+            description={t("departments.emptyDescription")}
+            action={canManage && <Button size="sm" onClick={() => openSheet({ mode: "create" })}>{t("departments.new")}</Button>}
+          />
+        ) : (
         <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-card bg-surface-hover">
                 <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("departments.name")}</th>
                 <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase hidden md:table-cell">{t("departments.description")}</th>
-                <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase w-24">{t("departments.agents")}</th>
+                <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("departments.agents")}</th>
                 {canManage && <th className="px-2 py-2 w-10" />}
               </tr>
             </thead>
@@ -234,12 +186,13 @@ export default function WorkspaceDepartmentsPage() {
                     )}
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className="text-sm text-muted">{dept.memberCount ?? 0}</span>
+                    <AgentsCell dept={dept} canManage={canManage} onManage={() => openSheet({ mode: "edit", dept }, true)} />
                   </td>
                   {canManage && (
                     <td className="px-2 py-2.5 text-right">
                       <ActionMenu items={[
-                        { label: t("common.edit"), onClick: () => openEdit(dept) },
+                        { label: t("common.edit"), onClick: () => openSheet({ mode: "edit", dept }) },
+                        { label: t("departments.manageAgents"), onClick: () => openSheet({ mode: "edit", dept }, true) },
                         { label: t("common.delete"), onClick: () => setDeleteId(dept.id), danger: true },
                       ]} />
                     </td>
@@ -249,11 +202,12 @@ export default function WorkspaceDepartmentsPage() {
             </tbody>
           </table>
         </div>
+        )}
         </>
       )}
 
-      {/* Create / Edit Sheet */}
-      {sheet && (
+      {/* Create / Edit Sheet: name, description and agents, all saved together */}
+      {sheet && workspaceSlug && (
         <Sheet onClose={handleClose}>
           <h2 className="text-lg font-body-bold text-heading mb-6">
             {sheet.mode === "create" ? t("departments.new") : t("departments.editTitle")}
@@ -265,6 +219,23 @@ export default function WorkspaceDepartmentsPage() {
             <FormInput label={t("departments.description")}>
               <Input placeholder={t("departments.descriptionPlaceholder")} value={description} onChange={setDescription} />
             </FormInput>
+            <FormInput label={t("departments.agents")}>
+              {canManage ? (
+                <AgentMultiSelect
+                  ref={agentsRef}
+                  workspaceSlug={workspaceSlug}
+                  members={members}
+                  value={agentIds}
+                  onChange={setAgentIds}
+                  knownNames={knownNames}
+                  join={joinOffer}
+                  canInvite={can(P.WORKSPACE_INVITATIONS_MANAGE)}
+                />
+              ) : (
+                <p className="text-sm text-muted">{agentIds.map((id) => knownNames[id]).filter(Boolean).join(", ") || t("departments.noAgentsChip")}</p>
+              )}
+              <p className="text-xs text-muted mt-1.5">{t("departments.agentsHelp")}</p>
+            </FormInput>
             <div className="flex justify-end gap-3">
               <Button type="button" size="sm" color="light" onClick={handleClose}>
                 {t("common.cancel")}
@@ -274,88 +245,6 @@ export default function WorkspaceDepartmentsPage() {
               </Button>
             </div>
           </form>
-
-          {/* Members section (only in edit mode) */}
-          {sheet.mode === "edit" && (
-            <div className="mt-6 pt-6 border-t border-border-card">
-              <p className="text-xs font-body-semibold text-subtle uppercase mb-3">
-                {t("departments.agents")} ({editDetail?.members.length ?? 0})
-              </p>
-
-              {sheet.detailLoading ? (
-                <div className="flex justify-center py-6"><Spinner width={20} /></div>
-              ) : editDetail ? (
-                <>
-                  {canManage && (
-                    availableMembers.length > 0 ? (
-                      <div className="flex gap-2 mb-3">
-                        <div className="flex-1">
-                          <Select
-                            options={availableMembers}
-                            label={(m) => `${m.firstName} ${m.lastName} (${m.email})`}
-                            value={(m) => m.userId === addMemberUserId}
-                            onChange={(m) => setAddMemberUserId(m.userId)}
-                            placeholder={t("departments.addAgent")}
-                          />
-                        </div>
-                        <Button ref={addAgentRef} size="sm" disabled={!addMemberUserId} onClick={handleAddMember}>
-                          {t("departments.addAgent")}
-                        </Button>
-                      </div>
-                    ) : (
-                      // A system admin off the team is told why they are missing instead
-                      !needsJoin && <p className="text-xs text-muted mb-3">{t("departments.allAgentsAssigned")}</p>
-                    )
-                  )}
-                  {canManage && (
-                    <NotMemberHint className="-mt-1 mb-3" onJoined={() => {
-                      if (user) setAddMemberUserId(user.id);
-                      requestAnimationFrame(() => addAgentRef.current?.focus());
-                    }} />
-                  )}
-
-                  {editDetail.members.length === 0 ? (
-                    <p className="text-xs text-muted py-3">{t("departments.noAgents")}</p>
-                  ) : (
-                    <div className="bg-surface border border-border-card rounded-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border-card bg-surface-hover">
-                            <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.name")}</th>
-                            <th className="px-4 py-2 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
-                            {canManage && <th className="px-2 py-2 w-10" />}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {editDetail.members.map((m) => (
-                            <tr key={m.userId} className="border-b border-border-row last:border-0">
-                              <td className="px-4 py-2">
-                                <span className="text-sm font-body-medium text-heading">{m.firstName} {m.lastName}</span>
-                              </td>
-                              <td className="px-4 py-2">
-                                <span className="text-sm text-muted">{m.email}</span>
-                              </td>
-                              {canManage && (
-                                <td className="px-2 py-2 text-right">
-                                  <button
-                                    onClick={() => handleRemoveMember(m.userId)}
-                                    className="text-xs text-muted hover:text-red-500 cursor-pointer transition-colors p-1"
-                                    aria-label={t("departments.removeAgent")}
-                                  >
-                                    ✕
-                                  </button>
-                                </td>
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-          )}
         </Sheet>
       )}
 
@@ -381,5 +270,53 @@ export default function WorkspaceDepartmentsPage() {
         />
       )}
     </div>
+  );
+}
+
+/** The agents of a row: "No agents" with a way to add them, or their avatars and how many they are. */
+function AgentsCell({ dept, canManage, onManage }: { dept: Department; canManage: boolean; onManage: () => void }) {
+  const { t } = useTranslation();
+  const count = dept.memberCount ?? 0;
+  if (count === 0) {
+    return (
+      <span className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-50 text-amber-800 border border-amber-200">
+          <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4.5Zm0 7a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Z" /></svg>
+          {t("departments.noAgentsChip")}
+        </span>
+        {canManage && (
+          <button type="button" onClick={onManage} className="text-xs text-primary hover:underline cursor-pointer font-body-medium">
+            + {t("departments.addAgents")}
+            <span className="sr-only"> {t("departments.addAgentsTo").replace("{name}", dept.name)}</span>
+          </button>
+        )}
+      </span>
+    );
+  }
+  const shown = (dept.members ?? []).slice(0, 3);
+  const label = count === 1 ? t("departments.agentCountOne") : t("departments.agentCount").replace("{count}", String(count));
+  const content = (
+    <>
+      <span className="flex -space-x-1.5" aria-hidden="true">
+        {shown.map((m) => (
+          <span key={m.userId} title={`${m.firstName} ${m.lastName}`} className="w-6 h-6 rounded-full bg-surface-active text-primary text-exs font-body-bold flex items-center justify-center ring-2 ring-surface">
+            {initialsOf(m.firstName, m.lastName)}
+          </span>
+        ))}
+      </span>
+      <span className="text-sm text-muted">{label}</span>
+    </>
+  );
+  return canManage ? (
+    <button
+      type="button"
+      onClick={onManage}
+      aria-label={`${label} · ${t("departments.manageAgents")} · ${dept.name}`}
+      className="inline-flex items-center gap-2 cursor-pointer rounded hover:underline"
+    >
+      {content}
+    </button>
+  ) : (
+    <span className="inline-flex items-center gap-2">{content}</span>
   );
 }

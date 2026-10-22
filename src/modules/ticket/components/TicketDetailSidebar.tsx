@@ -16,6 +16,7 @@ import {
   PRIORITY_COLORS,
   STATUS_COLORS,
 } from "../domain/ticket-enums";
+import { statusesFrom } from "../domain/ticket-reopen";
 import { listCategories } from "@modules/project/services/project.service";
 import type { TicketDetail, PendingTransfer, TicketParticipant } from "../services/ticket.service";
 import type { Draft } from "../hooks/useTicketEdit";
@@ -96,8 +97,9 @@ export default function TicketDetailSidebar({
         <div className="divide-y divide-border-card/50">
           <PropertyRow label={t("ticketDetail.status")} control={editing && canChangeStatus}>
             {editing && canChangeStatus ? (
+              // A closed ticket only moves between closed statuses here; it goes back to work by reopening
               <Select
-                options={[...STATUSES]}
+                options={[...statusesFrom(ticket.status)]}
                 label={(s) => tEnum("status", s)}
                 value={(s) => s === v.status}
                 onChange={handleDraftStatusChange}

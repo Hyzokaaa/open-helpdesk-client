@@ -1,8 +1,13 @@
 import LogEntryPanel from "../components/LogEntryPanel";
 import { codeLabel } from "../domain/audit-summary";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
+import Pagination from "@modules/app/modules/ui/components/Pagination/Pagination";
+import { scrollToTopOf } from "@modules/app/domain/core/scroll-root";
 import Button from "@modules/app/modules/ui/components/Button/Button";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
+import { DEFAULT_PAGE_SIZE, readPageSize, savePageSize } from "@modules/app/domain/core/pagination";
+import { LOCAL_STORAGE_KEY } from "@modules/app/domain/core/local-storage";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import FilterPopover, { FilterChip, buildInitialState, getActiveFilterCount, getFilterChips, type FilterSection, type FilterState } from "@modules/app/modules/ui/components/FilterPopover/FilterPopover";
 import useTranslation from "@modules/app/i18n/useTranslation";
@@ -48,6 +53,7 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "ticket-created": "green",
   "ticket-updated": "blue",
   "ticket-status-changed": "yellow",
+  "ticket-reopened": "yellow",
   "ticket-assigned": "blue",
   "ticket-picked-up": "green",
   "ticket-transferred": "yellow",
@@ -124,7 +130,8 @@ export default function SystemLogsPage() {
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 20 });
+  const [filters, setFilters] = useState<AuditLogFilters>(() => ({ page: 1, limit: readPageSize(LOCAL_STORAGE_KEY.PAGE_SIZE_AUDIT) }));
+  const listTopRef = useRef<HTMLDivElement>(null);
   const [searchInput, setSearchInput] = useState("");
 
   const filterSections: FilterSection[] = useMemo(() => [
@@ -180,7 +187,6 @@ export default function SystemLogsPage() {
     fetchLog();
   }, [filters]);
 
-  const totalPages = Math.ceil(total / (filters.limit ?? 20));
 
   return (
     <div className="w-full">
@@ -244,7 +250,7 @@ export default function SystemLogsPage() {
             />
           ))}
           <button
-            onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters({ page: 1, limit: 20 }); }}
+            onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters((f) => ({ page: 1, limit: f.limit })); }}
             className="text-exs text-subtle hover:text-body cursor-pointer ml-1"
           >
             {t("filters.clearAll")}
@@ -252,13 +258,30 @@ export default function SystemLogsPage() {
         </div>
       )}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <div className="flex justify-center py-12"><Spinner width={24} /></div>
       ) : items.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("auditLog.empty")}</p>
+        activeFilterCount > 0 || filters.search ? (
+          <EmptyState
+            bordered
+            variant="no-results"
+            icon="adminLogs"
+            title={t("emptyState.auditLog.noResults")}
+            description={t("emptyState.noResultsHint")}
+            action={activeFilterCount > 0 && (
+              <Button size="sm" color="light" onClick={() => { setFilterState(buildInitialState(filterSections)); setFilters((f) => ({ page: 1, limit: f.limit })); }}>
+                {t("emptyState.clearFilters")}
+              </Button>
+            )}
+          />
+        ) : (
+          <EmptyState bordered icon="adminLogs" title={t("emptyState.auditLog.title")} />
+        )
       ) : (
         <>
-          <div className="bg-surface border border-border-card rounded-lg overflow-x-auto">
+          {/* While the next page loads, the rows stay in place, dimmed */}
+          <div ref={listTopRef} aria-busy={loading || undefined} className="bg-surface border border-border-card rounded-lg">
+          <div className={`overflow-x-auto rounded-lg transition-opacity ${loading ? "opacity-50 pointer-events-none" : ""}`}>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-card bg-surface-hover">
@@ -331,36 +354,15 @@ export default function SystemLogsPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-muted">
-                {t("auditLog.showing")} {items.length} / {total}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  size="xs"
-                  color="light"
-                  disabled={filters.page === 1}
-                  onClick={() => setFilters({ ...filters, page: (filters.page ?? 1) - 1 })}
-                >
-                  ←
-                </Button>
-                <span className="text-xs text-muted px-2 py-1">
-                  {filters.page} / {totalPages}
-                </span>
-                <Button
-                  size="xs"
-                  color="light"
-                  disabled={filters.page === totalPages}
-                  onClick={() => setFilters({ ...filters, page: (filters.page ?? 1) + 1 })}
-                >
-                  →
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            page={filters.page ?? 1}
+            total={total}
+            limit={filters.limit ?? DEFAULT_PAGE_SIZE}
+            onPageChange={(page) => { setFilters((f) => ({ ...f, page })); scrollToTopOf(listTopRef.current); }}
+            onLimitChange={(limit) => { savePageSize(LOCAL_STORAGE_KEY.PAGE_SIZE_AUDIT, limit); setFilters((f) => ({ ...f, limit, page: 1 })); }}
+            noun={t("pagination.entries")}
+          />
+          </div>
         </>
       )}
 

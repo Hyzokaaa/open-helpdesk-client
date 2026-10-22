@@ -7,6 +7,23 @@ const act = (id: string, action: string, userId: string | null, minutes: number,
 
 const ticket = { reporterId: "carla", createdAt: at(0) };
 
+describe("reopens in the timeline", () => {
+  it("get a card of their own, never joined to nearby changes", () => {
+    const at = (m: number) => new Date(Date.UTC(2026, 8, 19, 9, m)).toISOString();
+    const timeline = buildTicketTimeline({
+      ticket: { reporterId: "maria", createdAt: at(0) },
+      comments: [],
+      files: [],
+      activity: [
+        { id: "a1", action: "ticket-updated", userId: "stephen", createdAt: at(10) },
+        { id: "a2", action: "ticket-reopened", userId: "stephen", createdAt: at(11), metadata: { reason: "other" } },
+        { id: "a3", action: "ticket-updated", userId: "stephen", createdAt: at(12) },
+      ],
+    });
+    expect(timeline.map((e) => e.kind)).toEqual(["opening", "changes", "reopened", "changes"]);
+  });
+});
+
 describe("buildTicketTimeline", () => {
   it("opens with the ticket, with the files it came with and how it arrived", () => {
     const [opening] = buildTicketTimeline({

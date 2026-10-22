@@ -21,6 +21,8 @@ export const P = {
   TICKET_EDIT_TAGS: "ticket.edit.tags",
   TICKET_CHANGE_STATUS: "ticket.change.status",
   TICKET_CHANGE_STATUS_DISCARDED: "ticket.change.status.discarded",
+  /** Reopen a resolved or discarded ticket, with a reason. */
+  TICKET_REOPEN: "ticket.reopen",
   TICKET_ASSIGN: "ticket.assign",
   TICKET_PICKUP: "ticket.pickup",
   TICKET_TRANSFER: "ticket.transfer",

@@ -15,6 +15,7 @@ import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBa
 import ActionMenu from "@modules/app/modules/ui/components/ActionMenu/ActionMenu";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { trackEvent } from "@modules/analytics/domain/analytics";
+import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import {
   KbCategory, KbArticleListItem, KbArticle,
   listCategories, createCategory, updateCategory, deleteCategory,
@@ -174,7 +175,7 @@ export default function WorkspaceKbPage() {
       {workspaceSlug && <KbVisibilityLine slug={workspaceSlug} />}
 
       {categories.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">{t("kb.empty")}</p>
+        <EmptyState bordered icon="knowledgeBase" title={t("emptyState.kb.title")} description={t("emptyState.kb.description")} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Category sidebar */}

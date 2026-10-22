@@ -186,6 +186,40 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
               </div>
             );
           }
+          if (entry.kind === "reopened") {
+            const meta = (entry.activity.metadata ?? {}) as { reason?: string; note?: string; previousResolvedBy?: string | null; reopenCount?: number; before?: { status?: string }; after?: { status?: string } };
+            // People are stored as "Name (email)"; the name reads enough here
+            const previousResolver = meta.previousResolvedBy ? String(meta.previousResolvedBy).replace(/s*([^()]*@[^()]*)s*$/, "") : null;
+            const label = <span className="font-body-semibold text-amber-800 dark:text-amber-300">{t("timeline.reopened")}{meta.reopenCount ? ` · ${t("reopen.badge").replace("{count}", String(meta.reopenCount))}` : ""}</span>;
+            return (
+              <div key={entry.activity.id} className="relative">
+                <span className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full bg-amber-500 border-2 border-surface" />
+                {summary ? (
+                  <div className="flex items-start gap-2 text-xs text-muted">
+                    {avatar(entry.authorId, "xs")}
+                    <p className="min-w-0 flex-1">
+                      <span className="font-body-semibold text-body">{nameOf(entry.authorId)}</span> {label}
+                      {meta.reason && <> · {tEnum("reopenReason", meta.reason)}</>}
+                    </p>
+                    <span className="text-exs text-subtle shrink-0">{formatDate(entry.at)}</span>
+                  </div>
+                ) : (
+                  <Card className="p-3 border-amber-300 bg-amber-50/60 dark:bg-amber-950/30 dark:border-amber-800">
+                    <div className="flex items-start gap-2">
+                      {avatar(entry.authorId, "sm")}
+                      <div className="min-w-0 flex-1 text-sm">
+                        <p className="text-body"><span className="font-body-semibold">{nameOf(entry.authorId)}</span> {label}</p>
+                        {meta.reason && <p className="text-xs text-secondary-text mt-0.5">{tEnum("reopenReason", meta.reason)}{meta.before?.status && meta.after?.status && <> · {tEnum("status", meta.before.status)} → {tEnum("status", meta.after.status)}</>}</p>}
+                        {meta.note && <p className="text-sm text-body mt-1.5 whitespace-pre-wrap">"{meta.note}"</p>}
+                        {previousResolver && <p className="text-xs text-muted mt-1.5">{t("resolution.hadResolved").replace("{name}", previousResolver)}</p>}
+                      </div>
+                      <span className="text-exs text-subtle shrink-0">{formatDate(entry.at)}</span>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            );
+          }
           if (entry.kind === "files") {
             return (
               <div key={`files-${index}`} className="relative">

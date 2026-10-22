@@ -14,8 +14,9 @@ const EVENT_DESCRIPTIONS_ES: Record<string, string> = {
   "ticket.created": "Se abrió un ticket: en la aplicación, por la API pública, desde el portal público o por un correo entrante.",
   "ticket.updated":
     "Se editaron campos de un ticket (título, descripción, prioridad, categoría, etiquetas, departamento, organización, proyecto, campos personalizados), en la aplicación o por la API pública. Solo se envía si algo cambió; los cambios de estado y de asignado tienen sus propios eventos.",
-  "ticket.statusChanged": "Un ticket cambió de estado, en la aplicación o por la API pública. Fíjate en el nombre en camelCase.",
-  "ticket.assigned": "Un ticket se asignó, reasignó o desasignó, en la aplicación o por la API pública.",
+  "ticket.statusChanged": "Un ticket cambió de estado, en la aplicación o por la API pública. Fíjate en el nombre en camelCase. Una reapertura también lo envía, además de `ticket.reopened`.",
+  "ticket.reopened": "Un ticket resuelto o descartado volvió a trabajarse: lo reabrió el equipo, con un motivo, o el solicitante desde el portal. También se envía `ticket.statusChanged`.",
+  "ticket.assigned": "Un ticket se asignó, reasignó o desasignó, en la aplicación o por la API pública. También lo envía un cambio de estado que mueve al asignado: pasar a `open` lo desasigna, y un ticket sin asignar que pasa a `pending` o `in-progress` se asigna a quien lo movió.",
   "ticket.deleted": "Se eliminó un ticket, uno a uno o en bloque en la aplicación, o por la API pública.",
   "comment.created": "Se añadió un comentario a un ticket: en la aplicación, por la API pública, desde el portal público o como respuesta por correo.",
 };
