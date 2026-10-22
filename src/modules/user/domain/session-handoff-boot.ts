@@ -1,8 +1,8 @@
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import { saveSession } from "@modules/app/domain/core/session";
 import translations from "@modules/app/i18n/translations";
-import { exchangeHandoffCode, startHandoff } from "../services/auth.service";
-import { callbackUrl, offerToStore, readReceiveCallback, safeRedirect, signInPathFor, takeStoreOffer } from "./session-handoff";
+import { exchangeHandoffCode, issueHandoffCode, startHandoff } from "../services/auth.service";
+import { callbackUrl, goStoreOnInstallation, offerToStore, readReceiveCallback, safeRedirect, signInPathFor, takeStoreOffer } from "./session-handoff";
 
 /**
  * The trips of the session handoff (see session-handoff.ts), handled before the app mounts: the
@@ -16,8 +16,7 @@ export async function runSessionHandoffBeforeApp(): Promise<boolean> {
     case "/auth/handoff/store":
       return storeOnInstallation();
     case "/auth/handoff/callback":
-      await receiveOnCustomDomain();
-      return false;
+      return receiveOnCustomDomain();
     default:
       return false;
   }
@@ -30,6 +29,7 @@ async function answerOnInstallation(): Promise<boolean> {
   const challenge = params.get("challenge");
   const state = params.get("state");
   if (!returnTo || !challenge || !state) return refuse();
+  if (params.get("want") === "store") return offerAfterSignIn(returnTo, challenge, state);
 
   // Only a session kept signed in travels; the server checks it too
   const refreshToken = LocalStorage.get(LOCAL_STORAGE_KEY.SESSION_REMEMBER) !== "0"
@@ -54,6 +54,27 @@ async function answerOnInstallation(): Promise<boolean> {
     hubChallenge: offer.challenge,
     hubState: offer.state,
   }));
+  return true;
+}
+
+/**
+ * On the installation, asked by a custom domain whose user just signed in: offers to keep a copy
+ * of that session, unless this address already has one (it is never replaced). The server checks
+ * first that the domain belongs to the installation, so nobody else gets an offer.
+ */
+async function offerAfterSignIn(returnTo: string, challenge: string, state: string): Promise<boolean> {
+  try {
+    // Without a session it only checks the address and says to sign in
+    await startHandoff(returnTo, challenge, null);
+  } catch {
+    return refuse();
+  }
+  if (LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN)) {
+    window.location.replace(callbackUrl(returnTo, { error: "has_session", state }));
+    return true;
+  }
+  const offer = await offerToStore(returnTo);
+  window.location.replace(callbackUrl(returnTo, { error: "login_required", state, hubChallenge: offer.challenge, hubState: offer.state }));
   return true;
 }
 
@@ -89,25 +110,42 @@ async function storeOnInstallation(): Promise<boolean> {
  * so it starts once, already signed in, on the page that was asked for. Without a code it starts
  * on the sign-in page.
  */
-async function receiveOnCustomDomain(): Promise<void> {
+async function receiveOnCustomDomain(): Promise<boolean> {
   const result = readReceiveCallback(new URLSearchParams(window.location.search));
   // The code must not stay in the address bar or the history
   window.history.replaceState(null, "", "/auth/handoff/callback");
+
+  if (result.kind === "store") {
+    // Back from fetching the installation's offer, already signed in here: send it the session.
+    // Without an offer (it has one already) or if that fails, this domain just goes on
+    if (result.offer) {
+      try {
+        const code = await issueHandoffCode(result.installation, result.offer.challenge);
+        goStoreOnInstallation(result.installation, code, result.offer, result.redirect);
+        return true;
+      } catch {
+        // Not copied: the next domain asks for the password, as before
+      }
+    }
+    window.history.replaceState(null, "", result.redirect);
+    return false;
+  }
 
   if (result.kind === "code") {
     try {
       saveSession(await exchangeHandoffCode(result.code, result.verifier), { remember: true });
       window.history.replaceState(null, "", result.redirect);
-      return;
+      return false;
     } catch {
       // Expired or already used: sign in as usual
     }
   }
   if (result.kind === "login" && result.signIn) {
     window.history.replaceState(null, "", result.signIn);
-    return;
+    return false;
   }
   window.history.replaceState(null, "", signInPathFor(result.kind === "invalid" ? null : result.redirect));
+  return false;
 }
 
 /** Says why the page goes nowhere, in the person's language; the app is not there to say it. */

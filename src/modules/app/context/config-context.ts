@@ -13,6 +13,8 @@ export interface DomainWorkspace {
   /** What the domain shows someone signed out; missing on older servers (open) */
   portalEnabled?: boolean;
   publicKbEnabled?: boolean;
+  /** Whether the installation hands sessions over to this domain (#37); missing on older servers (yes) */
+  sessionHandoff?: boolean;
 }
 
 export interface ConfigContextProps {

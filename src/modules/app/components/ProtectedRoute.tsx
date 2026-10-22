@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from "react-router";
 import useConfig from "@modules/app/hooks/useConfig";
 import { wasSignedOutHere } from "@modules/app/domain/core/session";
 import { panelEntry, panelSignInPath } from "@modules/app/domain/core/entry";
-import { canReceiveHandoff, handoffAlreadyTried, startReceive } from "@modules/user/domain/session-handoff";
+import { canReceiveHandoff, domainTakesSessions, handoffAlreadyTried, startReceive } from "@modules/user/domain/session-handoff";
 import {
   LOCAL_STORAGE_KEY,
   LocalStorage,
@@ -20,7 +20,7 @@ export default function ProtectedRoute() {
   // render meanwhile must not fall back to the sign-in page
   const [pickUpSession] = useState(() => panelEntry({
     hasSession,
-    canHandoff: canReceiveHandoff(appUrl, !!domainWorkspaces),
+    canHandoff: canReceiveHandoff(appUrl, domainTakesSessions(domainWorkspaces)),
     handoffTriedRecently: handoffAlreadyTried(),
     signedOutHere: wasSignedOutHere(),
     path,

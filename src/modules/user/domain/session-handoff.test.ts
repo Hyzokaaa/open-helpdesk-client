@@ -3,6 +3,7 @@ import {
   callbackUrl,
   canReceiveHandoff,
   createPkce,
+  domainTakesSessions,
   HANDOFF_RETRY_AFTER_MS,
   handoffAlreadyTried,
   markHandoffTried,
@@ -11,6 +12,7 @@ import {
   safeRedirect,
   signInPathFor,
   startReceive,
+  startStoreAfterSignIn,
   takeHubOffer,
   takeStoreOffer,
 } from "./session-handoff";
@@ -116,6 +118,38 @@ describe("session handoff in the browser", () => {
     expect(result).toEqual({ kind: "login", redirect: "/dashboard" });
     expect(takeHubOffer()).toEqual({ challenge: "hc", state: "hs" });
     expect(takeHubOffer()).toBeNull();
+  });
+
+  it("after signing in with no offer, goes to fetch one and comes back to send the session there", async () => {
+    const tab = fakeTab(ACME);
+    await startStoreAfterSignIn(APP, "/dashboard/workspaces/acme");
+
+    const url = new URL(tab.navigatedTo!);
+    expect(url.origin + url.pathname).toBe(`${APP}/auth/handoff`);
+    expect(url.searchParams.get("want")).toBe("store");
+    expect(url.searchParams.get("return")).toBe(ACME);
+    const state = url.searchParams.get("state")!;
+
+    const result = readReceiveCallback(new URLSearchParams({ error: "login_required", state, hubChallenge: "hc", hubState: "hs" }));
+    expect(result).toEqual({ kind: "store", redirect: "/dashboard/workspaces/acme", installation: APP, offer: { challenge: "hc", state: "hs" } });
+  });
+
+  it("after signing in, an installation that already has a session makes no offer, and the domain goes on", async () => {
+    const tab = fakeTab(ACME);
+    await startStoreAfterSignIn(APP, "/dashboard");
+    const state = new URL(tab.navigatedTo!).searchParams.get("state")!;
+
+    expect(readReceiveCallback(new URLSearchParams({ error: "has_session", state })))
+      .toEqual({ kind: "store", redirect: "/dashboard", installation: APP, offer: null });
+    expect(readReceiveCallback(new URLSearchParams({ error: "has_session", state }))).toEqual({ kind: "invalid" });
+  });
+
+  it("only a domain the server still trusts takes sessions; older servers do not say, and it does", () => {
+    expect(domainTakesSessions(null)).toBe(false);
+    expect(domainTakesSessions([{ sessionHandoff: false }])).toBe(false);
+    expect(domainTakesSessions([{ sessionHandoff: true }])).toBe(true);
+    expect(domainTakesSessions([{}])).toBe(true);
+    expect(domainTakesSessions([{ sessionHandoff: false }, { sessionHandoff: true }])).toBe(true);
   });
 
   it("without a session there, comes back to the sign-in page it was given, and only to a sign-in page", async () => {

@@ -8,10 +8,12 @@ import FormInput from "@modules/app/modules/ui/components/FormInput/FormInput";
 import { login, getProfile, getAuthProviders, issueHandoffCode, type AuthProviders } from "../services/auth.service";
 import {
   canReceiveHandoff,
+  domainTakesSessions,
   goStoreOnInstallation,
   handoffAlreadyTried,
   installationOrigin,
   startReceive,
+  startStoreAfterSignIn,
   takeHubOffer,
 } from "../domain/session-handoff";
 import { saveSession } from "@modules/app/domain/core/session";
@@ -41,7 +43,7 @@ export default function LoginPage() {
   // Decided once, on arrival: go on with a session, look for the installation's, or show the form
   const [entry] = useState(() => signInEntry({
     hasSession: !!LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN),
-    canHandoff: canReceiveHandoff(appUrl, isCustomDomain),
+    canHandoff: canReceiveHandoff(appUrl, domainTakesSessions(domainWorkspaces)),
     handoffTriedRecently: handoffAlreadyTried(),
     search: searchParams,
     closedPortal: forCustomers,
@@ -73,7 +75,13 @@ export default function LoginPage() {
    */
   const finishSignIn = async (remember: boolean) => {
     const path = await pathAfterSignIn(searchParams.get("redirect"));
-    const offer = remember && canReceiveHandoff(appUrl, isCustomDomain) ? takeHubOffer() : null;
+    const copyToInstallation = remember && canReceiveHandoff(appUrl, domainTakesSessions(domainWorkspaces));
+    const offer = copyToInstallation ? takeHubOffer() : null;
+    if (copyToInstallation && !offer && appUrl) {
+      // No offer in this tab (a sign-out skips the trip that brings one): go and fetch it now
+      await startStoreAfterSignIn(appUrl, path);
+      return;
+    }
     if (offer && appUrl) {
       try {
         const code = await issueHandoffCode(installationOrigin(appUrl)!, offer.challenge);

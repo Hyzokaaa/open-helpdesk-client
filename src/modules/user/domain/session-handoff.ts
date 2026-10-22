@@ -25,6 +25,10 @@ interface PendingReceive {
   redirect: string;
   /** The sign-in page to show when the installation has no session; a plain one if not given */
   signIn?: string;
+  /** A trip made after signing in here, only to copy this session to the installation */
+  afterSignIn?: true;
+  /** The installation it went to, to send the session there on the way back */
+  installation?: string;
 }
 
 /** Kept by the installation while a custom domain signs in, to accept the session it sends back. */
@@ -35,7 +39,7 @@ interface PendingStore {
 }
 
 /** Handed to a custom domain without a session, for it to send one back once signed in. */
-interface HubOffer {
+export interface HubOffer {
   challenge: string;
   state: string;
 }
@@ -87,6 +91,15 @@ export function installationOrigin(appUrl: string | null): string | null {
   return originOf(appUrl);
 }
 
+/**
+ * Whether the custom domain this page is served on takes sessions from the installation: the
+ * server stops handing them over to a domain whose DNS no longer points to it. Older servers do
+ * not say, and did hand them over.
+ */
+export function domainTakesSessions(domainWorkspaces: readonly { sessionHandoff?: boolean }[] | null): boolean {
+  return !!domainWorkspaces?.some((w) => w.sessionHandoff !== false);
+}
+
 /** Whether this page is served on a custom domain that can pick up the installation's session. */
 export function canReceiveHandoff(appUrl: string | null, isCustomDomain: boolean): boolean {
   const installation = installationOrigin(appUrl);
@@ -126,8 +139,23 @@ export async function startReceive(appUrl: string, redirect: string, signIn?: st
   window.location.assign(`${installation}/auth/handoff?${params}`);
 }
 
+/**
+ * Right after signing in here with no offer from the installation (a sign-out skips the trip that
+ * brings one): goes to fetch one, so this session is copied there and the next domain finds it.
+ * The installation never replaces a session it already has.
+ */
+export async function startStoreAfterSignIn(appUrl: string, redirect: string): Promise<void> {
+  const installation = installationOrigin(appUrl)!;
+  const { verifier, challenge } = await createPkce();
+  const state = randomToken(16);
+  write(RECEIVE_KEY, { state, verifier, redirect, afterSignIn: true, installation } satisfies PendingReceive);
+  const params = new URLSearchParams({ return: window.location.origin, challenge, state, want: "store" });
+  window.location.assign(`${installation}/auth/handoff?${params}`);
+}
+
 export type ReceiveResult =
   | { kind: "code"; code: string; verifier: string; redirect: string }
+  | { kind: "store"; redirect: string; installation: string; offer: HubOffer | null }
   | { kind: "login"; redirect: string; signIn?: string }
   | { kind: "invalid" };
 
@@ -135,6 +163,12 @@ export type ReceiveResult =
 export function readReceiveCallback(params: URLSearchParams): ReceiveResult {
   const pending = take<PendingReceive>(RECEIVE_KEY);
   if (!pending || params.get("state") !== pending.state) return { kind: "invalid" };
+
+  if (pending.afterSignIn && pending.installation) {
+    const hubChallenge = params.get("hubChallenge");
+    const hubState = params.get("hubState");
+    return { kind: "store", redirect: pending.redirect, installation: pending.installation, offer: hubChallenge && hubState ? { challenge: hubChallenge, state: hubState } : null };
+  }
 
   const code = params.get("code");
   if (code) return { kind: "code", code, verifier: pending.verifier, redirect: pending.redirect };

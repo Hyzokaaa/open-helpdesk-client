@@ -42,6 +42,7 @@ export interface ResolvedWorkspace {
   icon: string | null;
   portalEnabled?: boolean;
   publicKbEnabled?: boolean;
+  sessionHandoff?: boolean;
 }
 
 /**
