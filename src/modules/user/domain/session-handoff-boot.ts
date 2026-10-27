@@ -2,7 +2,7 @@ import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-
 import { saveSession } from "@modules/app/domain/core/session";
 import translations from "@modules/app/i18n/translations";
 import { exchangeHandoffCode, issueHandoffCode, startHandoff } from "../services/auth.service";
-import { callbackUrl, goStoreOnInstallation, offerToStore, readReceiveCallback, safeRedirect, signInPathFor, takeStoreOffer } from "./session-handoff";
+import { callbackUrl, goStoreOnInstallation, HandoffFailure, handoffFailure, offerToStore, readReceiveCallback, safeRedirect, signInPathFor, takeStoreOffer } from "./session-handoff";
 
 /**
  * The trips of the session handoff (see session-handoff.ts), handled before the app mounts: the
@@ -38,9 +38,9 @@ async function answerOnInstallation(): Promise<boolean> {
   let answer: Awaited<ReturnType<typeof startHandoff>>;
   try {
     answer = await startHandoff(returnTo, challenge, refreshToken);
-  } catch {
-    // Not an address of the installation: nobody is sent there
-    return refuse();
+  } catch (error) {
+    // Not an address of the installation, or no answer at all: nobody is sent there
+    return refuse(handoffFailure(error));
   }
 
   if ("code" in answer) {
@@ -66,8 +66,8 @@ async function offerAfterSignIn(returnTo: string, challenge: string, state: stri
   try {
     // Without a session it only checks the address and says to sign in
     await startHandoff(returnTo, challenge, null);
-  } catch {
-    return refuse();
+  } catch (error) {
+    return refuse(handoffFailure(error));
   }
   if (LocalStorage.get(LOCAL_STORAGE_KEY.ACCESS_TOKEN)) {
     window.location.replace(callbackUrl(returnTo, { error: "has_session", state }));
@@ -149,9 +149,9 @@ async function receiveOnCustomDomain(): Promise<boolean> {
 }
 
 /** Says why the page goes nowhere, in the person's language; the app is not there to say it. */
-function refuse(): boolean {
+function refuse(reason: HandoffFailure = "refused"): boolean {
   const lang = (LocalStorage.get(LOCAL_STORAGE_KEY.LANGUAGE) ?? navigator.language).startsWith("es") ? "es" : "en";
   const root = document.getElementById("root");
-  if (root) root.textContent = translations["handoff.refused"][lang];
+  if (root) root.textContent = translations[reason === "refused" ? "handoff.refused" : "handoff.unreachable"][lang];
   return true;
 }

@@ -54,6 +54,17 @@ export interface DomainVerificationResult {
   txtRecord: string;
 }
 
+/** "Check now" on a verified domain that is failing: the daily check's rule, run on request. */
+export interface CustomDomainRecheckResult {
+  domain: string;
+  /** Whether sessions are handed over to the domain after the check. */
+  trusted: boolean;
+  /** It was failing and passes now. */
+  recovered: boolean;
+  dnsValid: boolean;
+  txtValid: boolean;
+}
+
 export interface WorkspaceMember {
   id: string;
   userId: string;
@@ -468,6 +479,11 @@ export async function setCustomDomain(slug: string, domain: string | null, autoV
 
 export async function verifyCustomDomain(slug: string): Promise<DomainVerificationResult> {
   const res = await http.post<DomainVerificationResult>(`/workspaces/${slug}/custom-domain/verify`);
+  return res.data;
+}
+
+export async function recheckCustomDomain(slug: string): Promise<CustomDomainRecheckResult> {
+  const res = await http.post<CustomDomainRecheckResult>(`/workspaces/${slug}/custom-domain/recheck`);
   return res.data;
 }
 

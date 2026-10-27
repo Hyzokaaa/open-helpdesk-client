@@ -8,6 +8,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import {
   setCustomDomain,
   verifyCustomDomain,
+  recheckCustomDomain,
   DomainVerificationResult,
 } from "../services/workspace.service";
 
@@ -27,13 +28,16 @@ interface Props {
   /** What the domain shows someone signed out, for the routes list */
   portalAccess?: { portalEnabled: boolean; publicKbEnabled: boolean };
   onUpdate: (domain: string | null, verified: boolean, token: string | null, cnameTarget?: string) => void;
+  /** After Check now passes: the domain is no longer failing and receives sessions again. */
+  onCheckPassed?: () => void;
 }
 
-export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, failingSince, trusted = true, cnameTarget, canSkipVerification, portalAccess = { portalEnabled: true, publicKbEnabled: true }, onUpdate }: Props) {
+export default function CustomDomainSettings({ slug, currentDomain, verified, verificationToken, failingSince, trusted = true, cnameTarget, canSkipVerification, portalAccess = { portalEnabled: true, publicKbEnabled: true }, onUpdate, onCheckPassed }: Props) {
   const { t, lang } = useTranslation();
   const [domain, setDomain] = useState(currentDomain ?? "");
   const [saving, setSaving] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [rechecking, setRechecking] = useState(false);
   const [result, setResult] = useState<DomainVerificationResult | null>(null);
   const [activeCnameTarget, setActiveCnameTarget] = useState(cnameTarget);
 
@@ -69,6 +73,24 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
       toast.error(t("customDomain.verifyError"));
     } finally {
       setVerifying(false);
+    }
+  };
+
+  // A failure counts nothing on the server, so it can be pressed again while the DNS propagates
+  const handleRecheck = async () => {
+    setRechecking(true);
+    try {
+      const res = await recheckCustomDomain(slug);
+      if (res.dnsValid || res.txtValid) {
+        onCheckPassed?.();
+        toast.success(t("customDomain.checkPassed"));
+      } else {
+        toast.warning(t("customDomain.checkStillFailing"));
+      }
+    } catch {
+      toast.error(t("customDomain.checkError"));
+    } finally {
+      setRechecking(false);
     }
   };
 
@@ -132,7 +154,20 @@ export default function CustomDomainSettings({ slug, currentDomain, verified, ve
                 {t(trusted ? "customDomain.checkFailing" : "customDomain.checkDistrusted")
                   .replace("{date}", new Date(failingSince).toLocaleDateString(lang === "es" ? "es-ES" : "en-US"))}
               </p>
-              <p className="text-exs text-muted">{t("customDomain.checkFix").replace("{target}", cnameTarget ?? "")}</p>
+              <p className="text-exs text-muted">
+                {activeCnameTarget
+                  ? t(verificationToken ? "customDomain.checkFixWithRecord" : "customDomain.checkFix")
+                    .replace("{target}", activeCnameTarget)
+                    .replace("{domain}", currentDomain ?? "")
+                  : t("customDomain.checkNoTarget")}
+              </p>
+              {activeCnameTarget && (
+                <div className="pt-1">
+                  <Button size="xs" color="light" onClick={handleRecheck} loading={rechecking}>
+                    {t("customDomain.checkNow")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

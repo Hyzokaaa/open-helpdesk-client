@@ -2,6 +2,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import { API_URL } from "@modules/app/domain/constants/env";
 import type { AuthProviders } from "../services/auth.service";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
+import { forgetSignupSource, keptSignupSource } from "../domain/signup-source";
 
 interface Props {
   providers: AuthProviders;
@@ -30,8 +31,11 @@ export default function OAuthButtons({ providers, rememberMe = false, onSuccess 
     const top = window.screenY + (window.outerHeight - height) / 2;
     // The popup's callback page opens the session, so it needs the user's choice
     LocalStorage.set(LOCAL_STORAGE_KEY.OAUTH_REMEMBER_ME, rememberMe ? "1" : "0");
+    // Where the person came from rides in the sign-in's state, in case it creates the account
+    const source = keptSignupSource();
+    const sourceParam = source ? `&source=${encodeURIComponent(JSON.stringify(source))}` : "";
     window.open(
-      `${API_URL}/auth/${provider}?redirect=${encodeURIComponent(window.location.origin)}`,
+      `${API_URL}/auth/${provider}?redirect=${encodeURIComponent(window.location.origin)}${sourceParam}`,
       `oauth-${provider}`,
       `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
     );
@@ -40,6 +44,7 @@ export default function OAuthButtons({ providers, rememberMe = false, onSuccess 
       if (e.origin !== window.location.origin) return;
       if (e.data === "oauth:success") {
         window.removeEventListener("message", handler);
+        forgetSignupSource();
         onSuccess?.();
       }
     };

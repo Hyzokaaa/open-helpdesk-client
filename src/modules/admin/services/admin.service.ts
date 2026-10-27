@@ -1,3 +1,4 @@
+import type { SignupMethod, SignupSourceInfo } from "../domain/signup-origin";
 import { http } from "@modules/app/modules/http/domain/http";
 
 export interface UserItem {
@@ -7,6 +8,9 @@ export interface UserItem {
   lastName: string;
   isSystemAdmin: boolean;
   isActive: boolean;
+  createdAt: string | null;
+  signupMethod: SignupMethod | null;
+  signupSource: SignupSourceInfo | null;
   planId?: string;
 }
 

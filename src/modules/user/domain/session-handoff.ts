@@ -226,3 +226,16 @@ export function safeRedirect(path: string | null): string {
 export function signInPathFor(redirect: string | null): string {
   return !redirect || redirect === "/dashboard" ? "/login" : `/login?redirect=${encodeURIComponent(redirect)}`;
 }
+
+/**
+ * Why the installation's page sends a custom domain nowhere: the server said the address is not
+ * one of its own (400), or the server could not be asked at all (network, rate limit, server
+ * error), which may work a moment later. Telling them apart keeps an outage from reading as
+ * "this domain is not ours".
+ */
+export type HandoffFailure = "refused" | "unreachable";
+
+export function handoffFailure(error: unknown): HandoffFailure {
+  const status = (error as { response?: { status?: number } } | null | undefined)?.response?.status;
+  return status === 400 ? "refused" : "unreachable";
+}

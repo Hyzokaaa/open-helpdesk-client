@@ -1,10 +1,12 @@
 import { StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import { onInstallationDeviceStorage } from "@modules/analytics/domain/analytics";
 import ErrorBoundary from "@modules/app/components/ErrorBoundary";
 import { runAppStart } from "@modules/app/domain/core/app-start";
 import { answerSessionPings, dropSessionIfBrowserWasClosed } from "@modules/app/domain/core/session";
 import { reloadForNewBuild } from "@modules/app/domain/core/stale-build";
 import { runSessionHandoffBeforeApp } from "@modules/user/domain/session-handoff-boot";
+import { allowSignupSourceStorage, rememberSignupSource } from "@modules/user/domain/signup-source";
 
 /**
  * Starts the app. Every build (core and cloud) goes through here, so none of them skips a step:
@@ -20,6 +22,8 @@ export function startApp(app: ReactNode): Promise<void> {
         reloadForNewBuild();
       });
       answerSessionPings();
+      onInstallationDeviceStorage(allowSignupSourceStorage);
+      rememberSignupSource();
     },
     settleSession: dropSessionIfBrowserWasClosed,
     settleHandoff: runSessionHandoffBeforeApp,

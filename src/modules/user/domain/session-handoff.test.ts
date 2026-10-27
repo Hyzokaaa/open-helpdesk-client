@@ -6,6 +6,7 @@ import {
   domainTakesSessions,
   HANDOFF_RETRY_AFTER_MS,
   handoffAlreadyTried,
+  handoffFailure,
   markHandoffTried,
   offerToStore,
   readReceiveCallback,
@@ -183,5 +184,23 @@ describe("session handoff in the browser", () => {
     expect(safeRedirect("//evil.test")).toBe("/dashboard");
     expect(safeRedirect("https://evil.test")).toBe("/dashboard");
     expect(safeRedirect(null)).toBe("/dashboard");
+  });
+});
+
+describe("handoffFailure", () => {
+  const withStatus = (status: number) => Object.assign(new Error(`Request failed with status code ${status}`), { response: { status } });
+
+  it("says the address is not the installation's only when the server answers 400", () => {
+    expect(handoffFailure(withStatus(400))).toBe("refused");
+  });
+
+  it.each([429, 500, 502, 503, 504])("reads a %i as the installation not answering", (status) => {
+    expect(handoffFailure(withStatus(status))).toBe("unreachable");
+  });
+
+  it("reads a network error, without a response, as the installation not answering", () => {
+    expect(handoffFailure(new Error("Network Error"))).toBe("unreachable");
+    expect(handoffFailure(undefined)).toBe("unreachable");
+    expect(handoffFailure(null)).toBe("unreachable");
   });
 });

@@ -12,6 +12,8 @@ export enum LOCAL_STORAGE_KEY {
   PAGE_SIZE_TICKETS = "page_size_tickets",
   /** Page size chosen for the audit logs (workspace and system) in this browser. */
   PAGE_SIZE_AUDIT = "page_size_audit",
+  /** Where this browser first came from (referrer, ?ref=, utm_*), until an account created here takes it. */
+  SIGNUP_SOURCE = "signup_source",
 }
 
 export class LocalStorage {

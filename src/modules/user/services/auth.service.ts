@@ -1,6 +1,7 @@
 import { http } from "@modules/app/modules/http/domain/http";
 import { AuthUser } from "../domain/auth-user";
 import { trackEvent } from "@modules/analytics/domain/analytics";
+import { forgetSignupSource, keptSignupSource } from "../domain/signup-source";
 
 interface SignupRequest {
   email: string;
@@ -87,8 +88,10 @@ export async function resetPassword(token: string, newPassword: string): Promise
   await http.post("/auth/reset-password", { token, newPassword });
 }
 
+/** Sends where the person came from with the new account, and forgets it once the account exists. */
 export async function signup(data: SignupRequest): Promise<SignupResponse> {
-  const res = await http.post<SignupResponse>("/auth/signup", data);
+  const res = await http.post<SignupResponse>("/auth/signup", { ...data, signupSource: keptSignupSource() ?? undefined });
+  forgetSignupSource();
   trackEvent("signup-completed");
   return res.data;
 }

@@ -107,6 +107,30 @@ function createDestination(config: AnalyticsConfig): Destination | null {
   }
 }
 
+/** Whether the installation's banner asks for cookies; only then can the visitor allow them. */
+let installationAsksForCookies = false;
+const deviceStorageListeners = new Set<(allowed: boolean) => void>();
+
+function settleDeviceStorage(allowed: boolean): void {
+  deviceStorageListeners.forEach((listener) => {
+    try {
+      listener(allowed);
+    } catch {
+      // One listener failing never blocks the others.
+    }
+  });
+}
+
+/**
+ * Tells whether the installation may keep on the device what is not strictly needed (such as
+ * where a visitor came from): only after the visitor accepted the cookies of its banner. Told once
+ * analytics starts (false without a banner) and again on every banner decision.
+ */
+export function onInstallationDeviceStorage(listener: (allowed: boolean) => void): () => void {
+  deviceStorageListeners.add(listener);
+  return () => deviceStorageListeners.delete(listener);
+}
+
 /**
  * Starts the runtime with the installation's analytics (null when the installation has it
  * off; workspaces can still have their own). Later calls are ignored: a settings change applies
@@ -115,6 +139,8 @@ function createDestination(config: AnalyticsConfig): Destination | null {
 export function startAnalytics(value: AnalyticsConfig | null): void {
   if (started) return;
   started = true;
+  installationAsksForCookies = !!value && needsCookieConsent(value);
+  settleDeviceStorage(installationAsksForCookies && readCookieConsent() === "accepted");
   installation = value ? createDestination(value) : null;
   setScope({ ...scope, installation: installation && sharesWithInstallation(current) ? installation.config : null });
 }
@@ -256,5 +282,6 @@ export function decideCookieConsent(consent: CookieConsent): void {
     }
   };
   apply(installation);
+  settleDeviceStorage(installationAsksForCookies && consent === "accepted");
   for (const pending of workspaces.values()) pending.then((entry) => apply(entry.destination), () => undefined);
 }

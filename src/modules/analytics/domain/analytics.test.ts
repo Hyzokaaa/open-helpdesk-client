@@ -179,6 +179,28 @@ describe("analytics runtime with the installation's Matomo", () => {
     expect(last(trackers[0].calls)).toEqual(["rememberCookieConsentGiven"]);
   });
 
+  it("lets the installation keep its own data on the device only after its banner's cookies were accepted", async () => {
+    fakeBrowser("", { analytics_cookie_consent: "accepted" });
+    let rt = await runtime();
+    const told: boolean[] = [];
+    rt.onInstallationDeviceStorage((allowed) => told.push(allowed));
+    rt.startAnalytics({ ...MATOMO, useCookies: true });
+    rt.decideCookieConsent("rejected");
+    rt.decideCookieConsent("accepted");
+    expect(told).toEqual([true, false, true]);
+
+    // Without a banner there is nothing to accept, whatever an older visit stored
+    for (const config of [MATOMO, null]) {
+      fakeBrowser("", { analytics_cookie_consent: "accepted" });
+      rt = await runtime();
+      const answers: boolean[] = [];
+      rt.onInstallationDeviceStorage((allowed) => answers.push(allowed));
+      rt.startAnalytics(config);
+      rt.decideCookieConsent("accepted");
+      expect(answers).toEqual([false, false]);
+    }
+  });
+
   it("keeps cookies off until the visitor accepts, even if Matomo remembers an older consent", async () => {
     const { trackers } = fakeBrowser("", { analytics_cookie_consent: "rejected" });
     const { startAnalytics } = await runtime();

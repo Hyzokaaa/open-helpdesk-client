@@ -252,6 +252,7 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
             portalAccess={portalAccess}
             canSkipVerification={access.isSystemAdmin}
             onUpdate={(d, v, token) => setWorkspace({ ...workspace, customDomain: d, customDomainVerified: v, domainVerificationToken: token })}
+            onCheckPassed={() => setWorkspace({ ...workspace, customDomainFailingSince: null, customDomainTrusted: true })}
           />
         );
       case "api-keys":

@@ -25,6 +25,7 @@ import {
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
+import SignupOrigin from "../components/SignupOrigin";
 
 export default function AdminUsersPage() {
   const { user } = useUser();
@@ -53,7 +54,7 @@ export default function AdminUsersPage() {
 
   const activeAdminCount = users.filter(u => u.isSystemAdmin && u.isActive).length;
 
-  const columnKeys = ["name", "email", "role", "status"];
+  const columnKeys = ["name", "email", "role", "status", "signupOrigin"];
   const sensors = useSensors(useSensor(PointerSensor));
   const { order, handleDragEnd, reorder } = useColumnDrag(columnKeys);
 
@@ -62,6 +63,7 @@ export default function AdminUsersPage() {
     { key: "email", label: t("admin.col.email"), sortable: true, sortField: "email" },
     { key: "role", label: t("admin.col.role"), sortable: true, sortField: "isSystemAdmin" },
     { key: "status", label: t("admin.col.status"), sortable: true, sortField: "isActive" },
+    { key: "signupOrigin", label: t("admin.col.signupOrigin"), sortable: true, sortField: "signupChannel" },
   ];
 
   const toggleSort = (field: string) => {
@@ -252,6 +254,9 @@ export default function AdminUsersPage() {
                       u.isActive
                         ? <StatusBadge label={t("admin.active")} color="green" size="xs" />
                         : <StatusBadge label={t("admin.inactive")} color="gray" size="xs" />
+                    )}
+                    {col.key === "signupOrigin" && (
+                      <SignupOrigin method={u.signupMethod} source={u.signupSource} createdAt={u.createdAt} />
                     )}
                   </td>
                 ))}
