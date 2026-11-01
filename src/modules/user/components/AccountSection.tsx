@@ -93,7 +93,7 @@ export default function AccountSection() {
       </p>
 
       <div className="flex items-center gap-4 mb-4">
-        <UserAvatar avatarUrl={user.avatarUrl} firstName={user.firstName} lastName={user.lastName} size="lg" />
+        <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} firstName={user.firstName} lastName={user.lastName} size="lg" />
         <div className="flex flex-col gap-1.5">
           <input
             ref={fileInputRef}

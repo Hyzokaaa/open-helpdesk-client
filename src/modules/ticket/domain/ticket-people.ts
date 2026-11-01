@@ -4,6 +4,8 @@ interface NamedPerson {
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
+  /** Only member entries have it; the ticket's own names do not. */
+  role?: string;
 }
 
 interface PeopleSources {

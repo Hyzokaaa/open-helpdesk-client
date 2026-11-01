@@ -1,23 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import RichContent from "@modules/shared/components/RichContent";
 import { htmlToText } from "@modules/shared/domain/rich-text";
 import AttachmentList from "@modules/attachment/components/AttachmentList";
 import type { TicketAttachment } from "@modules/attachment/services/attachment.service";
 import { AuditLogItem, listTicketActivity } from "@modules/audit-log/services/audit-log.service";
 import { describeTicketActivity } from "@modules/audit-log/domain/describe-ticket-activity";
-import type { MentionMember } from "../domain/render-mentions";
 import { buildTicketTimeline } from "../domain/build-ticket-timeline";
+import { MemberCardTrigger, type CardMember } from "./MemberLink";
 
 interface Person {
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
+  role?: string;
 }
 
 interface TimelineCommentItem {
@@ -32,7 +34,7 @@ interface Props {
   ticket: { id: string; description: string; reporterId: string; createdAt: string | null };
   comments: TimelineCommentItem[];
   attachments: TicketAttachment[];
-  members: readonly MentionMember[];
+  members: readonly CardMember[];
   getPerson: (userId: string) => Person | undefined;
   onOpenAttachment: (attachment: TicketAttachment) => void;
   /** Takes the reader to the Details tab, where the conversation is answered. */
@@ -46,7 +48,7 @@ const FOLD_AFTER_CHARS = 400;
 const SUMMARY_CHARS = 140;
 const SUMMARY_KEY = "ticketTimeline.summary";
 
-function Folded({ content, members }: { content: string; members: readonly MentionMember[] }) {
+function Folded({ content, members }: { content: string; members: readonly CardMember[] }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const long = htmlToText(content).length > FOLD_AFTER_CHARS;
@@ -71,6 +73,7 @@ function Folded({ content, members }: { content: string; members: readonly Menti
 export default function TicketTimeline({ workspaceSlug, ticket, comments, attachments, members, getPerson, onOpenAttachment, onGoToDetails, refreshKey }: Props) {
   const { t, tEnum } = useTranslation();
   const { isPlanLimitError } = useExtensions();
+  const navigate = useNavigate();
   const formatDate = useFormatDate();
   const [activity, setActivity] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +110,22 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
   };
   const avatar = (userId: string | null, size: "xs" | "sm") => {
     const p = userId ? getPerson(userId) : undefined;
-    return <UserAvatar avatarUrl={p?.avatarUrl} firstName={p?.firstName ?? nameOf(userId)} lastName={p?.lastName} size={size} />;
+    const img = <UserAvatar avatarUrl={p?.avatarUrl} userId={userId} firstName={p?.firstName ?? nameOf(userId)} lastName={p?.lastName} team={isTeamRole(p?.role)} size={size} />;
+    if (!userId) return img;
+    return (
+      <MemberCardTrigger userId={userId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} anchor="left" focusable={false} className="flex shrink-0 pr-2 -mr-2">
+        {img}
+      </MemberCardTrigger>
+    );
+  };
+  // The name opens the same card as the avatar
+  const who = (userId: string | null) => {
+    if (!userId) return nameOf(userId);
+    return (
+      <MemberCardTrigger userId={userId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} anchor="left" className="text-left transition-colors" linkClassName="hover:text-primary">
+        {nameOf(userId)}
+      </MemberCardTrigger>
+    );
   };
 
   if (loading) return null;
@@ -157,10 +175,10 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
               return (
                 <div key={entry.kind === "comment" ? entry.comment.id : "opening"} className="relative">
                   <span className="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-surface" />
-                  <div className="flex items-start gap-2 text-xs">
+                  <div data-card-anchor className="flex items-start gap-2 text-xs">
                     {avatar(authorId, "xs")}
                     <p className="min-w-0 flex-1 text-muted">
-                      <span className="font-body-semibold text-body">{nameOf(authorId)}</span>
+                      <span className="font-body-semibold text-body">{who(authorId)}</span>
                       {entry.kind === "opening" && <> {t("timeline.opened")}{via}</>}
                       : <span className="text-body">{excerpt}</span>
                       {entry.files.length > 0 && <span className="ml-1 whitespace-nowrap">· 📎 {entry.files.length}</span>}
@@ -174,9 +192,9 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
               <div key={entry.kind === "comment" ? entry.comment.id : "opening"} className="relative">
                 <span className="absolute -left-[26px] top-5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-surface" />
                 <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div data-card-anchor className="flex items-center gap-2 mb-2">
                     {avatar(authorId, "sm")}
-                    <p className="text-xs text-body font-body-semibold">{nameOf(authorId)}</p>
+                    <p className="text-xs text-body font-body-semibold">{who(authorId)}</p>
                     {entry.kind === "opening" && <p className="text-xs text-muted">{t("timeline.opened")}{via}</p>}
                     <p className="text-exs text-subtle ml-auto">{formatDate(entry.at)}</p>
                   </div>
@@ -195,20 +213,20 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
               <div key={entry.activity.id} className="relative">
                 <span className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full bg-amber-500 border-2 border-surface" />
                 {summary ? (
-                  <div className="flex items-start gap-2 text-xs text-muted">
+                  <div data-card-anchor className="flex items-start gap-2 text-xs text-muted">
                     {avatar(entry.authorId, "xs")}
                     <p className="min-w-0 flex-1">
-                      <span className="font-body-semibold text-body">{nameOf(entry.authorId)}</span> {label}
+                      <span className="font-body-semibold text-body">{who(entry.authorId)}</span> {label}
                       {meta.reason && <> · {tEnum("reopenReason", meta.reason)}</>}
                     </p>
                     <span className="text-exs text-subtle shrink-0">{formatDate(entry.at)}</span>
                   </div>
                 ) : (
                   <Card className="p-3 border-amber-300 bg-amber-50/60 dark:bg-amber-950/30 dark:border-amber-800">
-                    <div className="flex items-start gap-2">
+                    <div data-card-anchor className="flex items-start gap-2">
                       {avatar(entry.authorId, "sm")}
                       <div className="min-w-0 flex-1 text-sm">
-                        <p className="text-body"><span className="font-body-semibold">{nameOf(entry.authorId)}</span> {label}</p>
+                        <p className="text-body"><span className="font-body-semibold">{who(entry.authorId)}</span> {label}</p>
                         {meta.reason && <p className="text-xs text-secondary-text mt-0.5">{tEnum("reopenReason", meta.reason)}{meta.before?.status && meta.after?.status && <> · {tEnum("status", meta.before.status)} → {tEnum("status", meta.after.status)}</>}</p>}
                         {meta.note && <p className="text-sm text-body mt-1.5 whitespace-pre-wrap">"{meta.note}"</p>}
                         {previousResolver && <p className="text-xs text-muted mt-1.5">{t("resolution.hadResolved").replace("{name}", previousResolver)}</p>}
@@ -224,10 +242,10 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
             return (
               <div key={`files-${index}`} className="relative">
                 <span className="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full bg-surface border-2 border-subtle" />
-                <div className="flex items-start gap-2 text-xs text-muted">
+                <div data-card-anchor className="flex items-start gap-2 text-xs text-muted">
                   {avatar(entry.authorId, "xs")}
                   <div className="min-w-0 flex-1">
-                    <p><span className="font-body-semibold text-body">{nameOf(entry.authorId)}</span> {t("timeline.addedFiles")}</p>
+                    <p><span className="font-body-semibold text-body">{who(entry.authorId)}</span> {t("timeline.addedFiles")}</p>
                     <AttachmentList attachments={entry.files} onOpen={onOpenAttachment} />
                   </div>
                   <span className="text-exs text-subtle shrink-0">{formatDate(entry.at)}</span>
@@ -238,10 +256,10 @@ export default function TicketTimeline({ workspaceSlug, ticket, comments, attach
           return (
             <div key={entry.items[0].id} className="relative">
               <span className="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full bg-surface border-2 border-subtle" />
-              <div className="flex items-start gap-2 text-xs text-muted">
+              <div data-card-anchor className="flex items-start gap-2 text-xs text-muted">
                 {avatar(entry.authorId, "xs")}
                 <p className="min-w-0 flex-1">
-                  <span className="font-body-semibold text-body">{nameOf(entry.authorId)}</span>{" "}
+                  <span className="font-body-semibold text-body">{who(entry.authorId)}</span>{" "}
                   {entry.items.map((item) => describeTicketActivity(item, t as (k: string) => string, tEnum)).join(" · ")}
                 </p>
                 <span className="text-exs text-subtle shrink-0">{formatDate(entry.at)}</span>

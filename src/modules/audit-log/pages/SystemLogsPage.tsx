@@ -105,6 +105,8 @@ const ACTION_COLORS: Record<string, "primary" | "yellow" | "green" | "red" | "gr
   "subscription-updated": "blue",
   "discount-created": "yellow",
   "discount-updated": "yellow",
+  "announcements-consent-given": "green",
+  "announcements-consent-withdrawn": "yellow",
   "subscription-cancelled": "red",
   "subscription-reactivated": "green",
   "subscription-seats-changed": "blue",

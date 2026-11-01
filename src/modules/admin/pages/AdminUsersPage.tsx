@@ -26,6 +26,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
 import Checkbox from "@modules/app/modules/ui/components/Checkbox/Checkbox";
 import SignupOrigin from "../components/SignupOrigin";
+import UserAvatar from "@modules/user/components/UserAvatar";
 
 export default function AdminUsersPage() {
   const { user } = useUser();
@@ -240,7 +241,10 @@ export default function AdminUsersPage() {
                 {reorder(columns).map((col) => (
                   <td key={col.key} className="px-4 py-3">
                     {col.key === "name" && (
-                      <span className="text-sm font-body-semibold text-heading block truncate">{u.firstName} {u.lastName}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <UserAvatar avatarUrl={u.avatarUrl} userId={u.id} firstName={u.firstName} lastName={u.lastName} size="sm" />
+                        <span className="text-sm font-body-semibold text-heading block truncate">{u.firstName} {u.lastName}</span>
+                      </div>
                     )}
                     {col.key === "email" && (
                       <span className="text-sm text-muted block truncate" title={u.email}>{u.email}</span>

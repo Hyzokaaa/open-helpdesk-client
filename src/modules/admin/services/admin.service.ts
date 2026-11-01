@@ -8,6 +8,8 @@ export interface UserItem {
   lastName: string;
   isSystemAdmin: boolean;
   isActive: boolean;
+  /** Signed link to the profile photo, or null for the generated avatar. */
+  avatarUrl?: string | null;
   createdAt: string | null;
   signupMethod: SignupMethod | null;
   signupSource: SignupSourceInfo | null;

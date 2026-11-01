@@ -9,7 +9,7 @@
  * This script copies package.json to a temp directory, runs
  * `npm install --package-lock-only`, and copies the resulting lockfile back.
  *
- * Usage: node scripts/sync-lockfile.js
+ * Usage: node scripts/sync-lockfile.cjs
  * Run before deploying or after adding/removing dependencies.
  */
 

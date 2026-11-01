@@ -9,6 +9,7 @@ import { saveSession } from "@modules/app/domain/core/session";
 import useUser from "@modules/user/hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { isPasswordAcceptable } from "@modules/user/domain/password-policy";
+import useExtensions from "@modules/app/extensions/useExtensions";
 
 interface Props {
   onDone: () => void;
@@ -17,6 +18,7 @@ interface Props {
 export default function StepAccount({ onDone }: Props) {
   const { setUser } = useUser();
   const { t } = useTranslation();
+  const { SignupExtraFields } = useExtensions();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -24,6 +26,7 @@ export default function StepAccount({ onDone }: Props) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [extra, setExtra] = useState<Record<string, unknown>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +43,7 @@ export default function StepAccount({ onDone }: Props) {
 
     setLoading(true);
     try {
-      const res = await signup({ email, password, firstName, lastName });
+      const res = await signup({ email, password, firstName, lastName }, extra);
       saveSession(res);
       const profile = await getProfile();
       setUser(profile);
@@ -79,6 +82,8 @@ export default function StepAccount({ onDone }: Props) {
         <FormInput label={t("onboarding.confirmPassword")} required>
           <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={setConfirmPassword} />
         </FormInput>
+
+        {SignupExtraFields && <SignupExtraFields value={extra} onChange={setExtra} />}
 
         <Button type="submit" full loading={loading} className="mt-2">
           {t("onboarding.continue")}

@@ -25,6 +25,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import DateRangeSelector from "../components/DateRangeSelector";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import { UserStatsData, getUserStats } from "../services/user-stats.service";
 import { listTickets, type TicketListItem } from "@modules/ticket/services/ticket.service";
 import Sheet from "@modules/app/modules/ui/components/Sheet/Sheet";
@@ -155,8 +156,10 @@ export default function UserStatsPage() {
           {targetUser && (
             <UserAvatar
               avatarUrl={targetUser.avatarUrl}
+              userId={listUserId}
               firstName={targetUser.firstName}
               lastName={targetUser.lastName}
+              team={isTeamRole(targetUser.role)}
               size="lg"
               className="!w-10 !h-10 !text-sm"
             />

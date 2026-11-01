@@ -24,6 +24,7 @@ export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
 
 /** Props per event; an event not listed here takes none. */
 export interface AnalyticsEventProps {
+  "signup-completed": { method: string };
   "member-invited": { role: string };
   "ticket-created": { channel: "dashboard" | "portal" };
   "comment-created": { visibility: "public" | "internal" };

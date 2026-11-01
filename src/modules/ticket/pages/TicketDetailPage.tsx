@@ -11,6 +11,7 @@ import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import { P } from "@modules/workspace/domain/permissions";
 import {
   changeTicketStatus,
@@ -40,6 +41,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import useConfig from "@modules/app/hooks/useConfig";
 import { improveText, translateText, saveAiCache, clearAiCache, AI_TEXT_MAX_LENGTH } from "@modules/ai/services/ai.service";
 import TicketTimeline from "../components/TicketTimeline";
+import { MemberCardTrigger } from "../components/MemberLink";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 import TicketMemberPickerModal from "../components/TicketMemberPickerModal";
 import TicketStatusModal from "../components/TicketStatusModal";
@@ -756,9 +758,15 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
               {comments.map((c) => (
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      {(() => { const cm = getPerson(c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} firstName={cm?.firstName} lastName={cm?.lastName} size="sm" />; })()}
-                      <p className="text-exs text-subtle">{getMemberName(c.authorId)}</p>
+                    <div data-card-anchor className="flex items-center gap-2">
+                      <MemberCardTrigger userId={c.authorId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} anchor="left" focusable={false} className="flex shrink-0 pr-2 -mr-2">
+                        {(() => { const cm = getPerson(c.authorId); return <UserAvatar avatarUrl={cm?.avatarUrl} userId={c.authorId} firstName={cm?.firstName} lastName={cm?.lastName} team={isTeamRole(cm?.role)} size="sm" />; })()}
+                      </MemberCardTrigger>
+                      <p className="text-exs text-subtle">
+                        <MemberCardTrigger userId={c.authorId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} anchor="left" className="transition-colors" linkClassName="hover:text-primary">
+                          {getMemberName(c.authorId)}
+                        </MemberCardTrigger>
+                      </p>
                       {c.editedAt && (
                         <button
                           onClick={() => openHistory("comment", c.id)}

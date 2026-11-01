@@ -2,8 +2,9 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import Card from "@modules/app/modules/ui/components/Card/Card";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
-import MemberLink from "./MemberLink";
+import MemberLink, { MemberCardTrigger } from "./MemberLink";
 import TicketMemberPickerModal from "./TicketMemberPickerModal";
 import NotMemberHint from "@modules/workspace/components/NotMemberHint";
 import { addParticipant, removeParticipant } from "../services/ticket.service";
@@ -24,7 +25,7 @@ interface TicketFollowersCardProps {
   t: (key: any) => string;
   /** For the same hover card and stats link as the assignee and the reporter */
   members?: WorkspaceMember[];
-  getPerson?: (id: string) => { avatarUrl?: string | null } | undefined;
+  getPerson?: (id: string) => { avatarUrl?: string | null; role?: string } | undefined;
   navigate?: (path: string) => void;
 }
 
@@ -98,8 +99,10 @@ export default function TicketFollowersCard({
         <div className="space-y-1.5">
           {participants.map((p) => (
             <div key={p.id} className={`flex items-center justify-between gap-2 transition-opacity ${removing === p.userId ? "opacity-50" : ""}`}>
-              <div className="flex items-center gap-2 min-w-0">
-                <UserAvatar avatarUrl={getPerson?.(p.userId)?.avatarUrl} firstName={p.firstName} lastName={p.lastName} size="xs" />
+              <div data-card-anchor className="flex items-center gap-2 min-w-0">
+                <MemberCardTrigger userId={p.userId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} focusable={false} className="flex shrink-0 pr-2 -mr-2">
+                  <UserAvatar avatarUrl={getPerson?.(p.userId)?.avatarUrl} userId={p.userId} firstName={p.firstName} lastName={p.lastName} team={isTeamRole(getPerson?.(p.userId)?.role)} size="xs" />
+                </MemberCardTrigger>
                 <span className="text-xs min-w-0">
                   <MemberLink
                     userId={p.userId}

@@ -239,7 +239,7 @@ describe("analytics off", () => {
     const { scripts, trackers } = fakeBrowser();
     const { startAnalytics, setAnalyticsContext, setWorkspaceAnalyticsLoader, trackPage, trackEvent } = await runtime();
     trackPage("/login");
-    trackEvent("signup-completed");
+    trackEvent("signup-completed", { method: "password" });
     startAnalytics(null);
     setWorkspaceAnalyticsLoader(async () => ({ analytics: null, shareWithInstallation: true, name: null }));
     setAnalyticsContext("acme");

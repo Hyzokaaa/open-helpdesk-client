@@ -23,6 +23,7 @@ import usePermissions from "@modules/workspace/hooks/usePermissions";
 import { P } from "@modules/workspace/domain/permissions";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
+import UserAvatar from "@modules/user/components/UserAvatar";
 
 export default function WorkspaceContactsPage() {
   const { workspaceSlug } = useParams();
@@ -124,7 +125,10 @@ export default function WorkspaceContactsPage() {
               {contacts.map((m) => (
                 <tr key={m.id} className="border-b border-border-row">
                   <td className="px-4 py-3 max-w-[200px]">
-                    <span className="text-sm font-body-semibold text-heading block truncate">{m.firstName} {m.lastName}</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <UserAvatar avatarUrl={m.avatarUrl} userId={m.userId} firstName={m.firstName} lastName={m.lastName} size="sm" />
+                      <span className="text-sm font-body-semibold text-heading block truncate">{m.firstName} {m.lastName}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-muted block truncate" title={m.email}>{m.email}</span>

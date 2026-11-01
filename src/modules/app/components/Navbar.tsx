@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import useUser from "@modules/user/hooks/useUser";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import usePermissions from "@modules/workspace/hooks/usePermissions";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import NotificationBell from "@modules/notification/components/NotificationBell";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { useLeaveGuard } from "@modules/app/hooks/useUnsavedChanges";
@@ -17,6 +19,9 @@ export default function Navbar({ onMenuToggle, drawerOpen = false }: Props) {
   const { user, signOut } = useUser();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Inside a workspace your avatar is the one its people see: with the headset if you are on the team
+  const { workspaceSlug } = useParams();
+  const { role } = usePermissions(workspaceSlug);
   const confirmLeave = useLeaveGuard();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -56,7 +61,7 @@ export default function Navbar({ onMenuToggle, drawerOpen = false }: Props) {
               onClick={() => setMenuOpen((o) => !o)}
               className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
             >
-              <UserAvatar avatarUrl={user?.avatarUrl} firstName={user?.firstName} lastName={user?.lastName} size="md" />
+              <UserAvatar avatarUrl={user?.avatarUrl} userId={user?.id} firstName={user?.firstName} lastName={user?.lastName} team={isTeamRole(role)} size="md" />
               <span className="text-sm text-secondary-text font-body-medium hidden sm:inline">
                 {user?.firstName} {user?.lastName}
               </span>

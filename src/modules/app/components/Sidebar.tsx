@@ -8,6 +8,7 @@ import { Workspace, listWorkspaces } from "@modules/workspace/services/workspace
 import { PaletteContext } from "@modules/workspace/context/PaletteProvider";
 import usePermissions from "@modules/workspace/hooks/usePermissions";
 import useConfig from "@modules/app/hooks/useConfig";
+import useChangelogNews from "@modules/admin/hooks/useChangelogNews";
 import { P } from "@modules/workspace/domain/permissions";
 import { canCreateWorkspace } from "@modules/workspace/domain/can-create-workspace";
 import Spinner from "@modules/app/modules/ui/components/Spinner/Spinner";
@@ -29,6 +30,8 @@ interface NavItem {
   path: string;
   /** A core icon by name, or an extension's own drawing; without one, the generic icon. */
   icon?: NavIconName | ReactNode;
+  /** Marked "New" until it is opened: the Updates page while there are unseen changelog versions */
+  isNew?: boolean;
 }
 
 type Flyout = "workspace" | "user" | "admin";
@@ -88,6 +91,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
   const filteredWorkspaces = domainSlugs ? workspaces.filter((ws) => domainSlugs.includes(ws.slug)) : workspaces;
   const isSingleWorkspace = filteredWorkspaces.length <= 1 && !showCreateWorkspace;
   const showAdmin = !!user?.isSystemAdmin && configReady && !isCustomDomain;
+  const hasNews = useChangelogNews(showAdmin).unseen.length > 0;
 
   useEffect(() => {
     if (user) listWorkspaces().then(setWorkspaces);
@@ -175,7 +179,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
     { label: t("sidebar.adminBranding"), path: "/dashboard/admin/branding", icon: "adminBranding" },
     { label: t("sidebar.adminAnalytics"), path: "/dashboard/admin/analytics", icon: "adminAnalytics" },
     { label: t("sidebar.adminSettings"), path: "/dashboard/admin/settings", icon: "adminSettings" },
-    { label: t("sidebar.adminUpdates"), path: "/dashboard/admin/updates", icon: "adminUpdates" },
+    { label: t("sidebar.adminUpdates"), path: "/dashboard/admin/updates", icon: "adminUpdates", isNew: hasNews },
     { label: t("sidebar.adminLogs"), path: "/dashboard/admin/logs", icon: "adminLogs" },
     ...extraAdminNav.map((item) => ({ ...item, label: t(item.label as any) })),
   ];
@@ -199,6 +203,13 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
 
   const iconClass = (active: boolean) => clsx("flex shrink-0", active ? "text-primary" : "text-muted group-hover:text-secondary-text");
 
+  const newMark = (
+    <span className="ml-auto shrink-0 rounded-full bg-primary/10 px-1.5 text-exs leading-4 font-body-bold text-primary">{t("sidebar.new")}</span>
+  );
+  const newsDot = (className?: string) => (
+    <span aria-hidden="true" className={clsx("size-2 shrink-0 rounded-full bg-primary", className)} />
+  );
+
   const link = (item: NavItem) => {
     const active = isNavActive(item.path);
     return (
@@ -212,11 +223,12 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
       >
         <span className={iconClass(active)}>{iconOf(item.icon)}</span>
         {label(item.label)}
+        {item.isNew && !rail && newMark}
       </Link>
     );
   };
 
-  const blockHeader = (title: string, open: boolean, active: boolean, onToggle: () => void, controls: string) => (
+  const blockHeader = (title: string, open: boolean, active: boolean, onToggle: () => void, controls: string, dot = false) => (
     <button
       type="button"
       onClick={onToggle}
@@ -227,7 +239,10 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
         active ? "text-primary" : "text-muted hover:text-heading",
       )}
     >
-      {title}
+      <span className="flex items-center gap-1.5">
+        {title}
+        {dot && <>{newsDot()}<span className="sr-only">, {t("sidebar.hasNews")}</span></>}
+      </span>
       <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
         className={clsx("size-3.5 transition-transform duration-150 motion-reduce:transition-none", !open && "-rotate-90")}>
         <path d="m4 6 4 4 4-4" />
@@ -236,7 +251,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
   );
 
   // The folded rail shows the secondary blocks as one button each, opening a panel with their links
-  const blockButton = (kind: "user" | "admin", title: string, icon: NavIconName, active: boolean, ref: React.RefObject<HTMLButtonElement | null>) => {
+  const blockButton = (kind: "user" | "admin", title: string, icon: NavIconName, active: boolean, ref: React.RefObject<HTMLButtonElement | null>, dot = false) => {
     const open = flyout?.kind === kind;
     return (
       <button
@@ -249,8 +264,12 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
         onClick={(e) => setFlyout(open ? null : { kind, viaKeyboard: e.detail === 0 })}
         className={rowClass(active)}
       >
-        <span className={iconClass(active)}><NavIcon name={icon} /></span>
+        <span className={clsx(iconClass(active), "relative")}>
+          <NavIcon name={icon} />
+          {dot && newsDot("absolute -top-0.5 -right-0.5 ring-2 ring-surface")}
+        </span>
         {label(title)}
+        {dot && <span className="sr-only">, {t("sidebar.hasNews")}</span>}
         {active && <span className="sr-only">, {t("sidebar.currentSection")}</span>}
       </button>
     );
@@ -275,6 +294,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
       >
         <span className={iconClass(active)}>{iconOf(item.icon)}</span>
         <span className="truncate">{item.label}</span>
+        {item.isNew && newMark}
       </Link>
     );
   };
@@ -450,7 +470,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
             </div>
             {showAdmin && (
               <div className="mt-1">
-                {blockHeader(t("sidebar.administration"), adminOpen, isAdminActive, () => setAdminOpen(!adminOpen), "sidebar-block-admin")}
+                {blockHeader(t("sidebar.administration"), adminOpen, isAdminActive, () => setAdminOpen(!adminOpen), "sidebar-block-admin", hasNews)}
                 {adminOpen && (
                   <div id="sidebar-block-admin" className="flex flex-col gap-0.5 mt-0.5 mb-1">{adminNav.map(link)}</div>
                 )}
@@ -464,7 +484,7 @@ export default function Sidebar({ mobileOpen, onClose, collapsed = false, onTogg
           {rail && (
             <>
               {blockButton("user", t("nav.userSettings"), "blockUser", isSettingsActive, userButtonRef)}
-              {showAdmin && blockButton("admin", t("sidebar.administration"), "blockAdmin", isAdminActive, adminButtonRef)}
+              {showAdmin && blockButton("admin", t("sidebar.administration"), "blockAdmin", isAdminActive, adminButtonRef, hasNews)}
             </>
           )}
           {onToggleCollapsed && (

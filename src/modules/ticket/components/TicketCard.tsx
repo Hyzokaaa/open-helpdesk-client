@@ -4,6 +4,7 @@ import type { TicketListItem } from "../services/ticket.service";
 import type { Tag } from "@modules/tag/services/tag.service";
 import type { WorkspaceMember } from "@modules/workspace/services/workspace.service";
 import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useFormatDate from "@modules/app/hooks/useFormatDate";
 
@@ -84,7 +85,7 @@ export default function TicketCard({ ticket, tags, members, categoryName, onClic
           </p>
         </div>
         {assignee && (
-          <UserAvatar avatarUrl={assignee.avatarUrl} firstName={assignee.firstName} lastName={assignee.lastName} size="sm" className="mt-0.5" />
+          <UserAvatar avatarUrl={assignee.avatarUrl} userId={assignee.userId} firstName={assignee.firstName} lastName={assignee.lastName} team={isTeamRole(assignee.role)} size="sm" className="mt-0.5" />
         )}
       </div>
 

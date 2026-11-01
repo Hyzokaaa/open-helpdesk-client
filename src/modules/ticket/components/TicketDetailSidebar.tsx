@@ -2,7 +2,8 @@ import Card from "@modules/app/modules/ui/components/Card/Card";
 import Select from "@modules/app/modules/ui/components/Select/Select";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
 import UserAvatar from "@modules/user/components/UserAvatar";
-import MemberLink from "./MemberLink";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
+import MemberLink, { MemberCardTrigger } from "./MemberLink";
 import PropertyRow from "./PropertyRow";
 import TagSelector from "@modules/tag/components/TagSelector";
 import CustomFieldsForm from "@modules/custom-field/components/CustomFieldsForm";
@@ -57,7 +58,7 @@ interface TicketDetailSidebarProps {
   userId: string | undefined;
   getMemberName: (id: string) => string;
   /** Member entry, or the name the ticket carries when the caller cannot list members. */
-  getPerson?: (id: string) => { firstName: string; lastName: string; avatarUrl?: string | null } | undefined;
+  getPerson?: (id: string) => { firstName: string; lastName: string; avatarUrl?: string | null; role?: string } | undefined;
   fetchTicket: (refreshActivity?: boolean) => void;
   fetchParticipants: () => void;
   handleDraftStatusChange: (status: string) => void;
@@ -212,8 +213,10 @@ export default function TicketDetailSidebar({
             return (
               <PropertyRow key={label} label={label}>
                 {personId ? (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar avatarUrl={person?.avatarUrl} firstName={person?.firstName} lastName={person?.lastName} size="xs" />
+                  <div data-card-anchor className="flex items-center gap-2 min-w-0">
+                    <MemberCardTrigger userId={personId} members={members} navigate={navigate} workspaceSlug={workspaceSlug} focusable={false} className="flex shrink-0 pr-2 -mr-2">
+                      <UserAvatar avatarUrl={person?.avatarUrl} userId={personId} firstName={person?.firstName} lastName={person?.lastName} team={isTeamRole(person?.role)} size="xs" />
+                    </MemberCardTrigger>
                     <MemberLink
                       userId={personId}
                       members={members}

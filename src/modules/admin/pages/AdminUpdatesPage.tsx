@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { toast } from "react-toastify";
-import Card from "@modules/app/modules/ui/components/Card/Card";
 import Switch from "@modules/app/modules/ui/components/Switch/Switch";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import SystemVersionInfo from "../components/SystemVersionInfo";
+import ChangelogNews from "../components/ChangelogNews";
+import { upgradeChannels, withUpgradeChannel, type UpgradeChannel } from "../domain/upgrade-notify";
 import {
   getNotificationSettings,
   updateNotificationSettings,
@@ -15,22 +16,25 @@ export default function AdminUpdatesPage() {
   const { t } = useTranslation();
   const { UpdatesHeader } = useExtensions();
   const [settings, setSettings] = useState<SystemNotificationSettings | null>(null);
+  const id = useId();
 
   useEffect(() => {
     getNotificationSettings().then(setSettings).catch(() => {});
   }, []);
 
-  const handleChange = async (key: keyof SystemNotificationSettings, value: boolean) => {
+  const handleChange = async (channel: UpgradeChannel, on: boolean) => {
     if (!settings) return;
-    const updated = { ...settings, [key]: value };
+    const updated = withUpgradeChannel(settings, channel, on);
     setSettings(updated);
     try {
-      await updateNotificationSettings({ [key]: value });
+      await updateNotificationSettings(updated);
     } catch {
       setSettings(settings);
       toast.error(t("common.saveError"));
     }
   };
+
+  const channels = settings ? upgradeChannels(settings) : null;
 
   return (
     <div className="w-full max-w-3xl">
@@ -42,41 +46,24 @@ export default function AdminUpdatesPage() {
 
       <SystemVersionInfo basedOn={!!UpdatesHeader} />
 
-      {settings && (
-        <Card className="p-5 mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-body-semibold text-heading">
-              {t("admin.upgradeNotifications")}
-            </p>
-            <Switch
-              checked={settings.upgradeEnabled}
-              onChange={(v) => handleChange("upgradeEnabled", v)}
-              label={t("admin.upgradeNotifications")}
-            />
-          </div>
-
-          {settings.upgradeEnabled && (
-            <div className="rounded-lg border border-border-card divide-y divide-border-card">
-              <div className="flex items-center justify-between px-3 py-2.5">
-                <span className="text-xs text-body">{t("admin.upgradeEmail")}</span>
-                <Switch
-                  checked={settings.upgradeEmail}
-                  onChange={(v) => handleChange("upgradeEmail", v)}
-                  label={t("admin.upgradeEmail")}
-                />
-              </div>
-              <div className="flex items-center justify-between px-3 py-2.5">
-                <span className="text-xs text-body">{t("admin.upgradeInApp")}</span>
-                <Switch
-                  checked={settings.upgradeInApp}
-                  onChange={(v) => handleChange("upgradeInApp", v)}
-                  label={t("admin.upgradeInApp")}
-                />
-              </div>
+      {channels && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-border-card bg-surface px-4 py-3">
+          <p className="mr-auto text-sm font-body-semibold text-heading">{t("admin.upgradeNotify")}</p>
+          {/* The two switches wrap together, never one alone */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Switch checked={channels.email} onChange={(v) => handleChange("email", v)} labelledBy={`${id}-email`} />
+              <span id={`${id}-email`} className="text-sm text-body">{t("admin.upgradeByEmail")}</span>
             </div>
-          )}
-        </Card>
+            <div className="flex items-center gap-2">
+              <Switch checked={channels.inApp} onChange={(v) => handleChange("inApp", v)} labelledBy={`${id}-in-app`} />
+              <span id={`${id}-in-app`} className="text-sm text-body">{t("admin.upgradeInTheApp")}</span>
+            </div>
+          </div>
+        </div>
       )}
+
+      <ChangelogNews />
     </div>
   );
 }

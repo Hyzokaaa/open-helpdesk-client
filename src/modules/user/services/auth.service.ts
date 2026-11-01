@@ -34,6 +34,8 @@ interface LoginRequest {
 interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  /** OAuth exchange only: the provider, when this sign-in created the account. */
+  signupMethod?: string;
 }
 
 interface ProfileResponse {
@@ -89,10 +91,11 @@ export async function resetPassword(token: string, newPassword: string): Promise
 }
 
 /** Sends where the person came from with the new account, and forgets it once the account exists. */
-export async function signup(data: SignupRequest): Promise<SignupResponse> {
-  const res = await http.post<SignupResponse>("/auth/signup", { ...data, signupSource: keptSignupSource() ?? undefined });
+/** `extra` carries the fields an extension adds to the form; they never replace the core ones. */
+export async function signup(data: SignupRequest, extra: Record<string, unknown> = {}): Promise<SignupResponse> {
+  const res = await http.post<SignupResponse>("/auth/signup", { ...extra, ...data, signupSource: keptSignupSource() ?? undefined });
   forgetSignupSource();
-  trackEvent("signup-completed");
+  trackEvent("signup-completed", { method: "password" });
   return res.data;
 }
 

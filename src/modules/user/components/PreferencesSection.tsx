@@ -9,6 +9,7 @@ import { Theme } from "@modules/app/context/theme-context";
 import { updateLanguage, updateTheme, updateDateFormat, updateTimezone } from "../services/auth.service";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import useTranslation from "@modules/app/i18n/useTranslation";
+import useExtensions from "@modules/app/extensions/useExtensions";
 
 function getTimezoneOffset(tz: string): string {
   try {
@@ -62,6 +63,7 @@ export default function PreferencesSection() {
   const { user, setUser } = useUser();
   const { setTheme } = useTheme();
   const { t } = useTranslation();
+  const { PreferencesExtra } = useExtensions();
   const [saving, setSaving] = useState(false);
 
   if (!user) return null;
@@ -175,6 +177,7 @@ export default function PreferencesSection() {
           disabled={saving}
         />
       </FormInput>
+      {PreferencesExtra && <PreferencesExtra />}
     </Card>
     </div>
   );

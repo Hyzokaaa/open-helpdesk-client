@@ -28,7 +28,9 @@ import {
   type WorkspaceMember,
 } from "@modules/workspace/services/workspace.service";
 import AgentMultiSelect, { type AgentMultiSelectHandle } from "../components/AgentMultiSelect";
-import { agentsChanged, initialsOf } from "../domain/department-agents";
+import { agentsChanged } from "../domain/department-agents";
+import UserAvatar from "@modules/user/components/UserAvatar";
+import { isTeamRole } from "@modules/workspace/domain/team-role";
 
 type SheetState = { mode: "create" } | { mode: "edit"; dept: Department };
 
@@ -186,7 +188,7 @@ export default function WorkspaceDepartmentsPage() {
                     )}
                   </td>
                   <td className="px-4 py-2.5">
-                    <AgentsCell dept={dept} canManage={canManage} onManage={() => openSheet({ mode: "edit", dept }, true)} />
+                    <AgentsCell dept={dept} members={members} canManage={canManage} onManage={() => openSheet({ mode: "edit", dept }, true)} />
                   </td>
                   {canManage && (
                     <td className="px-2 py-2.5 text-right">
@@ -274,7 +276,7 @@ export default function WorkspaceDepartmentsPage() {
 }
 
 /** The agents of a row: "No agents" with a way to add them, or their avatars and how many they are. */
-function AgentsCell({ dept, canManage, onManage }: { dept: Department; canManage: boolean; onManage: () => void }) {
+function AgentsCell({ dept, members, canManage, onManage }: { dept: Department; members: WorkspaceMember[]; canManage: boolean; onManage: () => void }) {
   const { t } = useTranslation();
   const count = dept.memberCount ?? 0;
   if (count === 0) {
@@ -298,11 +300,15 @@ function AgentsCell({ dept, canManage, onManage }: { dept: Department; canManage
   const content = (
     <>
       <span className="flex -space-x-1.5" aria-hidden="true">
-        {shown.map((m) => (
-          <span key={m.userId} title={`${m.firstName} ${m.lastName}`} className="w-6 h-6 rounded-full bg-surface-active text-primary text-exs font-body-bold flex items-center justify-center ring-2 ring-surface">
-            {initialsOf(m.firstName, m.lastName)}
-          </span>
-        ))}
+        {shown.map((m) => {
+          // The department only lists names: the photo and the role come from the workspace members
+          const member = members.find((w) => w.userId === m.userId);
+          return (
+            <span key={m.userId} title={`${m.firstName} ${m.lastName}`} className="rounded-full ring-2 ring-surface">
+              <UserAvatar avatarUrl={member?.avatarUrl} userId={m.userId} firstName={m.firstName} lastName={m.lastName} team={isTeamRole(member?.role)} size="sm" />
+            </span>
+          );
+        })}
       </span>
       <span className="text-sm text-muted">{label}</span>
     </>

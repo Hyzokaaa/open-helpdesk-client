@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agentsChanged, canBeDepartmentAgent, initialsOf, matchesPerson } from "./department-agents";
+import { agentsChanged, canBeDepartmentAgent, matchesPerson } from "./department-agents";
 
 describe("department agents", () => {
   it("only the team can be in a department", () => {
@@ -19,10 +19,5 @@ describe("department agents", () => {
     expect(agentsChanged(["a", "b"], ["b", "a"])).toBe(false);
     expect(agentsChanged(["a"], ["a", "b"])).toBe(true);
     expect(agentsChanged(["a", "b"], ["a", "c"])).toBe(true);
-  });
-
-  it("initials for the avatars", () => {
-    expect(initialsOf("stephen", "bateman")).toBe("SB");
-    expect(initialsOf("", "")).toBe("?");
   });
 });

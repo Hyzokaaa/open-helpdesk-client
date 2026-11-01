@@ -10,6 +10,8 @@ import { exchangeOAuthCode, getProfile } from "../services/auth.service";
 import useUser from "../hooks/useUser";
 import useTranslation from "@modules/app/i18n/useTranslation";
 import { pathAfterSignIn } from "@modules/onboarding/domain/after-sign-in";
+import { trackEvent } from "@modules/analytics/domain/analytics";
+import { oauthSuccessMessage } from "../domain/oauth-popup";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -52,11 +54,13 @@ export default function AuthCallbackPage() {
         saveSession(tokens, { remember: rememberMe });
 
         if (window.opener) {
-          window.opener.postMessage("oauth:success", window.location.origin);
+          // The popup closes at once, so the page that opened it reports the signup
+          window.opener.postMessage(oauthSuccessMessage(tokens.signupMethod), window.location.origin);
           window.close();
           return;
         }
 
+        if (tokens.signupMethod) trackEvent("signup-completed", { method: tokens.signupMethod });
         return getProfile().then(async (profile) => {
           setUser(profile);
           navigate(await pathAfterSignIn(), { replace: true });

@@ -3,6 +3,8 @@ import { API_URL } from "@modules/app/domain/constants/env";
 import type { AuthProviders } from "../services/auth.service";
 import { LOCAL_STORAGE_KEY, LocalStorage } from "@modules/app/domain/core/local-storage";
 import { forgetSignupSource, keptSignupSource } from "../domain/signup-source";
+import { trackEvent } from "@modules/analytics/domain/analytics";
+import { readOAuthSuccess } from "../domain/oauth-popup";
 
 interface Props {
   providers: AuthProviders;
@@ -42,9 +44,11 @@ export default function OAuthButtons({ providers, rememberMe = false, onSuccess 
 
     const handler = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
-      if (e.data === "oauth:success") {
+      const success = readOAuthSuccess(e.data);
+      if (success) {
         window.removeEventListener("message", handler);
         forgetSignupSource();
+        if (success.signupMethod) trackEvent("signup-completed", { method: success.signupMethod });
         onSuccess?.();
       }
     };

@@ -63,6 +63,15 @@ export interface Extensions {
    * then presents the core versions below as the base it runs on.
    */
   UpdatesHeader?: ComponentType;
+
+  /**
+   * Extra fields at the end of the signup form, above the button (e.g. the cloud's announcements
+   * consent). What they put in `value` is sent along with the signup.
+   */
+  SignupExtraFields?: ComponentType<{ value: Record<string, unknown>; onChange: (value: Record<string, unknown>) => void }>;
+
+  /** Shown at the end of Preferences (e.g. the cloud's announcements switch). */
+  PreferencesExtra?: ComponentType;
 }
 
 const noopAsync = () => Promise.resolve(null);

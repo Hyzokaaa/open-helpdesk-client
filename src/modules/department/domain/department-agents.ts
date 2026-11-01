@@ -17,8 +17,3 @@ export function matchesPerson(person: { firstName: string; lastName: string; ema
 export function agentsChanged(before: string[], after: string[]): boolean {
   return before.length !== after.length || after.some((id) => !before.includes(id));
 }
-
-/** Up to two initials of a name, for the small avatars of the list. */
-export function initialsOf(firstName: string, lastName: string): string {
-  return `${firstName.trim()[0] ?? ""}${lastName.trim()[0] ?? ""}`.toUpperCase() || "?";
-}
