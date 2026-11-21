@@ -10,6 +10,7 @@ import { useSheetCloseGuard } from "@modules/app/modules/ui/components/Sheet/she
 import Lightbox from "@modules/app/modules/ui/components/Lightbox/Lightbox";
 import useExtensions from "@modules/app/extensions/useExtensions";
 import useUser from "@modules/user/hooks/useUser";
+import { ticketMentionIds } from "@modules/comment/domain/mention-candidates";
 import UserAvatar from "@modules/user/components/UserAvatar";
 import { isTeamRole } from "@modules/workspace/domain/team-role";
 import { P } from "@modules/workspace/domain/permissions";
@@ -303,6 +304,14 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (files.length > 0) handleDroppedFiles(files);
   };
+
+  const mentionIds = useMemo(() => ticketMentionIds({
+    assigneeId: ticket?.assigneeId,
+    reporterId: ticket?.reporterId,
+    followerIds: participants.map((p) => p.userId),
+    commentAuthorIds: comments.map((c) => c.authorId),
+    selfId: user?.id,
+  }), [ticket?.assigneeId, ticket?.reporterId, participants, comments, user?.id]);
 
   const groupedAttachments = useMemo(
     () => groupAttachments(attachments, comments.map((c) => c.id)),
@@ -834,6 +843,7 @@ export default function TicketDetailPage({ workspaceSlugProp, ticketIdProp, onCl
             <CommentInput
               members={members}
               allowMentions={can(P.WORKSPACE_MEMBERS_VIEW)}
+              ticketUserIds={mentionIds}
               loading={sendingComment}
               onSubmit={handleAddComment}
               onSubmitAndResolve={handleAddCommentAndResolve}

@@ -12,6 +12,8 @@ import { clearSession, saveSession, type SessionTokens } from "@modules/app/doma
 export interface HttpResponseError {
   message: string;
   status: number;
+  /** A stable name for the reason, when the server gives one: to show it in the user's language. */
+  code?: string;
   handled?: boolean;
 }
 
@@ -167,6 +169,7 @@ http.interceptors.response.use(
       const e: HttpResponseError = {
         message,
         status: error.response.status,
+        ...(typeof error.response.data?.code === "string" ? { code: error.response.data.code } : {}),
         handled,
       };
       return Promise.reject(e);

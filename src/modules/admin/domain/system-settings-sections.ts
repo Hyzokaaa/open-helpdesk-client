@@ -1,11 +1,11 @@
 import { MenuSection } from "@modules/settings/domain/settings-menu";
 
 /** The system settings menu, for system admins: section ids are part of the URL (`/admin/settings/:section`). */
-export type SystemSettingsSectionId = "workspace-creation" | "email-sending" | "email-receiving" | "audit-retention";
+export type SystemSettingsSectionId = "workspace-creation" | "email-sending" | "email-receiving" | "matrix" | "audit-retention";
 
-export type SystemSettingsGroupId = "workspaces" | "email" | "data";
+export type SystemSettingsGroupId = "workspaces" | "email" | "integrations" | "data";
 
-export const SYSTEM_SETTINGS_GROUPS: SystemSettingsGroupId[] = ["workspaces", "email", "data"];
+export const SYSTEM_SETTINGS_GROUPS: SystemSettingsGroupId[] = ["workspaces", "email", "integrations", "data"];
 
 /** In menu order. Every system admin sees them all. */
 export const SYSTEM_SETTINGS_SECTIONS: MenuSection<SystemSettingsSectionId>[] = [
@@ -43,6 +43,16 @@ export const SYSTEM_SETTINGS_SECTIONS: MenuSection<SystemSettingsSectionId>[] = 
       { en: "IMAP port", es: "Puerto IMAP" },
       { en: "IMAP user", es: "Usuario IMAP" },
       { en: "Mailbox password", es: "Contraseña del buzón" },
+    ],
+  },
+  {
+    id: "matrix",
+    group: "integrations",
+    keywords: ["matrix", "element", "chat", "bot", "notices", "avisos", "notifications", "notificaciones"],
+    fields: [
+      { en: "Matrix bot", es: "Bot de Matrix" },
+      { en: "Matrix ID", es: "ID de Matrix" },
+      { en: "Access token", es: "Token de acceso" },
     ],
   },
   {

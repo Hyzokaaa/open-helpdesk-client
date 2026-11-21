@@ -1,4 +1,4 @@
-import { notificationLabelKey, notificationTarget } from "../domain/notification-display";
+import { notificationLabel, notificationTarget, unreadBadge } from "../domain/notification-display";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
@@ -16,13 +16,14 @@ import NotificationIcon from "./NotificationIcon";
 
 export default function NotificationBell() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const formatDate = useFormatDate();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const bellUnreadOnly = useRef(false);
   const ref = useRef<HTMLDivElement>(null);
+  const badge = unreadBadge(unreadCount);
 
   const fetchCount = useCallback(async () => {
     try {
@@ -94,6 +95,8 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label={unreadCount > 0 ? t("notifications.bellUnread").replace("{count}", String(unreadCount)) : t("notifications.title")}
+        aria-expanded={open}
         className="w-8 h-8 flex items-center justify-center rounded-button border border-border-input bg-surface hover:bg-surface-hover transition-all duration-300 cursor-pointer text-muted hover:text-body relative"
       >
         <svg
@@ -109,8 +112,13 @@ export default function NotificationBell() {
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-red-500 rounded-full w-2.5 h-2.5 border-2 border-surface" />
+        {badge && (
+          <span
+            aria-hidden="true"
+            className="absolute -top-1.5 left-[20px] min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] leading-none font-body-semibold tabular-nums border-2 border-surface"
+          >
+            {badge}
+          </span>
         )}
       </button>
 
@@ -150,11 +158,11 @@ export default function NotificationBell() {
                   <NotificationIcon type={n.type} />
                   <div className="flex-1 min-w-0">
                     <p className="text-exs text-subtle">
-                      {t(notificationLabelKey(n.type) as any)}
+                      {notificationLabel(n, lang, t as (key: string) => string)}
                     </p>
                     <p
                       className={clsx(
-                        "text-xs truncate",
+                        "text-xs line-clamp-2 break-words",
                         n.isRead ? "text-muted" : "text-heading font-body-medium",
                       )}
                     >

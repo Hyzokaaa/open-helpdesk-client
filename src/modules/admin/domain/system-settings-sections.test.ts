@@ -16,6 +16,8 @@ describe("system settings sections", () => {
   it("finds sections and their fields in either language", () => {
     const found = (q: string, lang: string) => searchMenu(SYSTEM_SETTINGS_SECTIONS, q, (id) => id, lang).map((r) => r.field ?? r.id);
     expect(found("smtp", "en")[0]).toBe("email-sending");
+    expect(found("matrix", "en")[0]).toBe("matrix");
+    expect(found("token", "es")).toEqual(["Token de acceso"]);
     expect(found("contraseña", "es")).toEqual(["Contraseña SMTP", "Contraseña del buzón"]);
     expect(found("password", "en")).toEqual(["SMTP password", "Mailbox password"]);
   });

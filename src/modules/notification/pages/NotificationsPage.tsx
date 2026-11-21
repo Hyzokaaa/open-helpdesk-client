@@ -1,4 +1,4 @@
-import { notificationLabelKey, notificationTarget } from "../domain/notification-display";
+import { notificationLabel, notificationTarget } from "../domain/notification-display";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
@@ -16,7 +16,7 @@ import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const formatDate = useFormatDate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
                     {n.title}
                   </p>
                   <p className="text-exs text-subtle mt-1">
-                    {t(notificationLabelKey(n.type) as any)}{n.createdAt ? ` · ${formatDate(n.createdAt)}` : ""}
+                    {[notificationLabel(n, lang, t as (key: string) => string), n.createdAt ? formatDate(n.createdAt) : ""].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 {!n.isRead && (

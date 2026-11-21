@@ -1,5 +1,5 @@
 import { http } from "@modules/app/modules/http/domain/http";
-import { Notification, NotificationPreferences } from "../domain/notification";
+import { NoticeChannel, NoticeSetting, Notification, NotificationPreferences } from "../domain/notification";
 
 interface NotificationsResponse {
   notifications: Notification[];
@@ -53,4 +53,13 @@ export async function updatePreferences(
     prefs,
   );
   return res.data;
+}
+
+export async function getNoticePreferences(): Promise<NoticeSetting[]> {
+  const res = await http.get<NoticeSetting[]>("/notifications/notices");
+  return res.data;
+}
+
+export async function updateNoticePreference(kind: string, channel: NoticeChannel, enabled: boolean): Promise<void> {
+  await http.put("/notifications/notices", { kind, channel, enabled });
 }

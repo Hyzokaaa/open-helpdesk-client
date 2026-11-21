@@ -14,6 +14,7 @@ export type SettingsSectionId =
   | "custom-domain"
   | "api-keys"
   | "webhooks"
+  | "matrix"
   | "analytics"
   | "audit-retention"
   | "data-migration"
@@ -52,6 +53,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: "custom-domain", group: "portal", keywords: ["domain", "dominio", "dns", "cname"], visible: settings },
   { id: "api-keys", group: "integrations", keywords: ["api", "key", "clave", "token"], visible: settings },
   { id: "webhooks", group: "integrations", keywords: ["webhook", "events", "eventos"], visible: settings },
+  { id: "matrix", group: "integrations", keywords: ["matrix", "element", "chat", "bot", "room", "sala", "notices", "avisos", "notifications", "notificaciones"], visible: settings },
   { id: "analytics", group: "integrations", keywords: ["matomo", "analytics", "analítica", "tracking"], visible: (a) => a.canManageAnalytics },
   { id: "audit-retention", group: "data", keywords: ["audit", "auditoría", "retention", "retención", "log", "registro"], visible: settings },
   { id: "data-migration", group: "data", keywords: ["export", "exportar", "import", "importar", "migration", "migración", "backup"], visible: settings },
@@ -140,6 +142,12 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsField[]> = {
     { en: "Webhook URL", es: "URL del webhook" },
     { en: "Events", es: "Eventos" },
     { en: "Signing secret", es: "Secreto de firma" },
+  ],
+  matrix: [
+    { en: "Matrix room", es: "Sala de Matrix" },
+    { en: "Custom bot", es: "Bot personalizado" },
+    { en: "Include the text", es: "Incluir el texto" },
+    { en: "Send a test notice", es: "Enviar aviso de prueba" },
   ],
   analytics: [
     { en: "Matomo address", es: "Dirección de Matomo" },

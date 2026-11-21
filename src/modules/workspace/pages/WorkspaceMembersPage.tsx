@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import clsx from "clsx";
 import { toast } from "react-toastify";
 import Button from "@modules/app/modules/ui/components/Button/Button";
 import StatusBadge from "@modules/app/modules/ui/components/StatusBadge/StatusBadge";
@@ -24,6 +25,7 @@ import useTranslation from "@modules/app/i18n/useTranslation";
 import EmptyState from "@modules/app/modules/ui/components/EmptyState/EmptyState";
 import UserAvatar from "@modules/user/components/UserAvatar";
 import { isTeamRole } from "@modules/workspace/domain/team-role";
+import { joinedMemberIds } from "@modules/workspace/domain/members-joined";
 
 const ROLES = ["admin", "supervisor", "agent", "user"] as const;
 
@@ -40,6 +42,12 @@ export default function WorkspaceMembersPage() {
   const [showImport, setShowImport] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // Opened from a "new team member" notice: those who joined are marked, and the first is brought into view
+  const [searchParams] = useSearchParams();
+  const joined = useMemo(() => joinedMemberIds(searchParams), [searchParams]);
+  const firstJoinedRef = useRef<HTMLTableRowElement>(null);
+  const firstJoinedId = members.find((m) => joined.has(m.userId))?.userId;
+  useEffect(() => { firstJoinedRef.current?.scrollIntoView({ block: "center" }); }, [firstJoinedId]);
 
   const fetchMembers = () => {
     if (!workspaceSlug) return;
@@ -101,7 +109,7 @@ export default function WorkspaceMembersPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 ref={titleRef} tabIndex={-1} className="text-lg font-body-bold text-heading outline-none">{t("sidebar.members")}</h2>
         <div className="flex gap-2">
           {canManageMembers && (
@@ -142,22 +150,31 @@ export default function WorkspaceMembersPage() {
           <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-border-card bg-surface-hover">
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[200px]">{t("admin.col.name")}</th>
-                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
+                <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase sm:w-[200px]">{t("admin.col.name")}</th>
+                {/* On a phone the email goes under the name, so the columns left keep their room */}
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase">{t("admin.col.email")}</th>
                 <th className="px-4 py-3 text-left text-xs font-body-semibold text-subtle uppercase w-[100px]">{t("admin.col.role")}</th>
                 <th className="px-2 py-3 w-10" />
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
-                <tr key={m.id} className="border-b border-border-row">
-                  <td className="px-4 py-3 max-w-[200px]">
+                <tr
+                  key={m.id}
+                  ref={m.userId === firstJoinedId ? firstJoinedRef : undefined}
+                  className={clsx("border-b border-border-row", joined.has(m.userId) && "bg-surface-active")}
+                >
+                  <td className="px-4 py-3 sm:max-w-[200px]">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <UserAvatar avatarUrl={m.avatarUrl} userId={m.userId} firstName={m.firstName} lastName={m.lastName} team={isTeamRole(m.role)} size="sm" />
-                      <span className="text-sm font-body-semibold text-heading block truncate">{m.firstName} {m.lastName}</span>
+                      <div className="min-w-0">
+                        <span className="text-sm font-body-semibold text-heading block truncate">{m.firstName} {m.lastName}</span>
+                        <span className="sm:hidden text-exs text-muted block truncate" title={m.email}>{m.email}</span>
+                        {joined.has(m.userId) && <span className="text-exs text-primary block">{t("members.justJoined")}</span>}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-4 py-3">
                     <span className="text-sm text-muted block truncate" title={m.email}>{m.email}</span>
                   </td>
                   <td className="px-4 py-3">

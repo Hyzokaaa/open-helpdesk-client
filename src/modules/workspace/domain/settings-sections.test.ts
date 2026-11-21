@@ -70,6 +70,8 @@ describe("searchSettings", () => {
   it("finds a section by a technical word", () => {
     expect(found("smtp")[0]).toBe("email-sender");
     expect(found("IMAP")[0]).toBe("mailboxes");
+    expect(found("element")[0]).toBe("matrix");
+    expect(found("sala")[0]).toBe("matrix");
   });
 
   it("finds a field inside a section, named in the person's language", () => {

@@ -1,12 +1,14 @@
 import { useEffect, useId, useRef } from "react";
 import Button from "../Button/Button";
 import { useModalLayer } from "../../shared/domain/modal-stack";
+import useTranslation from "@modules/app/i18n/useTranslation";
 
 interface Props {
   title: string;
   message: string;
   /** Richer content than `message`, such as a list of consequences; shown below it. */
   children?: React.ReactNode;
+  /** "Confirm" and "Cancel" in the viewer's language unless given. */
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
@@ -25,12 +27,13 @@ export default function ConfirmModal({
   title,
   message,
   children,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   danger = false,
   onConfirm,
   onCancel,
 }: Props) {
+  const { t } = useTranslation();
   const layer = useModalLayer();
   const titleId = useId();
   const messageId = useId();
@@ -91,14 +94,14 @@ export default function ConfirmModal({
         </div>
         <div className="flex justify-end gap-2">
           <Button ref={cancelRef} size="sm" color="light" onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </Button>
           <Button
             size="sm"
             color={danger ? "danger" : "primary"}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("common.confirm")}
           </Button>
         </div>
       </div>

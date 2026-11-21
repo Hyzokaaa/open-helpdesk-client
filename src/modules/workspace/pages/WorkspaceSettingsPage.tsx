@@ -22,6 +22,7 @@ import EmailSenderSettings from "../components/EmailSenderSettings";
 import SlaSettings from "../components/SlaSettings";
 import ApiKeySettings from "../components/ApiKeySettings";
 import WebhookSettings from "../components/WebhookSettings";
+import MatrixSettings from "../components/MatrixSettings";
 import CustomDomainSettings from "../components/CustomDomainSettings";
 import PortalAccessSettings, { PortalStateBadge } from "../components/PortalAccessSettings";
 import useConfig from "@modules/app/hooks/useConfig";
@@ -58,6 +59,7 @@ const SECTION_TITLES: Record<SettingsSectionId, string> = {
   "custom-domain": "customDomain.title",
   "api-keys": "apiKeys.title",
   webhooks: "webhooks.title",
+  matrix: "matrix.title",
   analytics: "workspaceAnalytics.title",
   "audit-retention": "auditRetention.title",
   "data-migration": "workspaceSettings.dataMigration",
@@ -259,6 +261,8 @@ export default function WorkspaceSettingsPage({ workspaceSlugProp, onClose }: Pr
         return <ApiKeySettings slug={slug} />;
       case "webhooks":
         return <WebhookSettings slug={slug} />;
+      case "matrix":
+        return <MatrixSettings slug={slug} workspaceName={workspace.name} />;
       case "analytics":
         return <WorkspaceAnalyticsSettings key={importRound} slug={slug} />;
       case "audit-retention":

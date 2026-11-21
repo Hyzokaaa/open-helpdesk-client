@@ -13,6 +13,8 @@ interface Props {
   className?: string;
   disabled?: boolean;
   loading?: boolean;
+  /** A fuller name for screen readers when the visible text alone is ambiguous (e.g. several "Reconnect"). */
+  ariaLabel?: string;
 }
 
 function Button(
@@ -26,6 +28,7 @@ function Button(
     color = "primary",
     size = "sm",
     type = "button",
+    ariaLabel,
   }: Props,
   ref: ForwardedRef<HTMLButtonElement>,
 ) {
@@ -81,6 +84,7 @@ function Button(
     <button
       disabled={disabled}
       type={type}
+      aria-label={ariaLabel}
       className={CLASS}
       ref={ref}
       onClick={(e) => {

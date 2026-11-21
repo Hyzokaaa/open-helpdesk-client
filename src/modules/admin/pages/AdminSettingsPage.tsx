@@ -7,6 +7,7 @@ import SettingsMenuLayout from "@modules/settings/components/SettingsMenuLayout"
 import { MenuGroup } from "@modules/settings/components/SettingsMenuNav";
 import PlatformMailboxSettings from "../components/PlatformMailboxSettings";
 import WorkspaceCreationSettings from "../components/WorkspaceCreationSettings";
+import SystemMatrixSettings from "../components/SystemMatrixSettings";
 import AuditRetentionSettings from "@modules/audit-log/components/AuditRetentionSettings";
 import { SYSTEM_SETTINGS_GROUPS, SYSTEM_SETTINGS_SECTIONS, SystemSettingsSectionId } from "../domain/system-settings-sections";
 
@@ -16,6 +17,7 @@ const SECTION_TITLES: Record<SystemSettingsSectionId, string> = {
   "workspace-creation": "adminSettings.workspaceCreation",
   "email-sending": "adminSettings.emailSending",
   "email-receiving": "adminSettings.emailReceiving",
+  matrix: "adminSettings.matrix",
   "audit-retention": "auditRetention.title",
 };
 
@@ -36,6 +38,8 @@ export default function AdminSettingsPage() {
         return <SystemEmailPage embedded />;
       case "email-receiving":
         return <PlatformMailboxSettings />;
+      case "matrix":
+        return <SystemMatrixSettings />;
       case "audit-retention":
         return <AuditRetentionSettings />;
     }

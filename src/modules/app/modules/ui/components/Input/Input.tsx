@@ -14,6 +14,12 @@ interface Props {
   disabled?: boolean;
   autoFocus?: boolean;
   required?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  autoComplete?: string;
+  maxLength?: number;
+  /** The id of the text that explains the field, read after its label. */
+  describedBy?: string;
+  invalid?: boolean;
 }
 
 export default function Input({
@@ -27,6 +33,11 @@ export default function Input({
   disabled,
   autoFocus,
   required,
+  inputMode,
+  autoComplete,
+  maxLength,
+  describedBy,
+  invalid,
 }: Props) {
   const formId = useFormInputId();
   const CLASS = useMemo(
@@ -48,6 +59,11 @@ export default function Input({
         placeholder={placeholder}
         disabled={disabled}
         required={required}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        maxLength={maxLength}
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
         value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
       />

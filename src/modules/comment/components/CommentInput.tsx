@@ -16,6 +16,7 @@ import StagedFileList from "@modules/attachment/components/StagedFileList";
 import { htmlToText } from "@modules/shared/domain/rich-text";
 import useUser from "@modules/user/hooks/useUser";
 import NotMemberHint from "@modules/workspace/components/NotMemberHint";
+import { mentionCandidates } from "../domain/mention-candidates";
 
 // ── Props ─────────────────────────────────────────────────────
 
@@ -35,11 +36,13 @@ interface Props {
   cannedResponses?: CannedResponse[];
   /** Off for members who cannot list the workspace members: "@" is then plain text, no popup. */
   allowMentions?: boolean;
+  /** The ticket's people, most involved first: the "@" popup offers them first, and customers only from here. */
+  ticketUserIds?: string[];
 }
 
 // ── Component ─────────────────────────────────────────────────
 
-export default function CommentInput({ members, loading, onSubmit, onSubmitAndResolve, onStageFile, canResolve = false, cannedResponses = [], allowMentions = true }: Props) {
+export default function CommentInput({ members, loading, onSubmit, onSubmitAndResolve, onStageFile, canResolve = false, cannedResponses = [], allowMentions = true, ticketUserIds = [] }: Props) {
   const { t } = useTranslation();
   const staged = useStagedUploads(onStageFile ?? noStaging);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,21 +63,12 @@ export default function CommentInput({ members, loading, onSubmit, onSubmitAndRe
   const mentionCommandRef = useRef<((attrs: { id: string; label: string }) => void) | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredMembers = useMemo(
-    () =>
-      mentionQuery !== null
-        ? members
-            .filter((m) => {
-              const name = `${m.firstName} ${m.lastName}`.toLowerCase();
-              return name.includes(mentionQuery.toLowerCase());
-            })
-            .slice(0, 8)
-        : [],
-    [members, mentionQuery],
-  );
-
   // You never mention yourself, so a system admin off the team only misses themselves when typing their own name
   const { user } = useUser();
+  const filteredMembers = useMemo(
+    () => (mentionQuery !== null ? mentionCandidates(members.filter((m) => m.userId !== user?.id), ticketUserIds, mentionQuery) : []),
+    [members, ticketUserIds, mentionQuery, user?.id],
+  );
   const typingOwnName = mentionQuery !== null && mentionQuery.length >= 2 && !!user
     && !members.some((m) => m.userId === user.id)
     && `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase());

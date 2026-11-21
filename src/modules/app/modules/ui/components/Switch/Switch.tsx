@@ -12,6 +12,11 @@ interface Props {
   describedBy?: string;
   /** While a change is being saved: announced, and the switch does not move until it is done. */
   busy?: boolean;
+  /**
+   * Disabled, but still reached with Tab so a screen reader finds it and its explanation
+   * (aria-disabled instead of the native attribute). For a switch that waits for something else.
+   */
+  focusableWhenDisabled?: boolean;
 }
 
 /**
@@ -19,7 +24,8 @@ interface Props {
  * which keeps 3:1 against the page in both themes; a wider invisible area around it makes it easy
  * to hit (WCAG 2.5.8).
  */
-export default function Switch({ checked, onChange, disabled, label, labelledBy, describedBy, busy }: Props) {
+export default function Switch({ checked, onChange, disabled, label, labelledBy, describedBy, busy, focusableWhenDisabled }: Props) {
+  const soft = !!disabled && !!focusableWhenDisabled;
   return (
     <button
       type="button"
@@ -29,8 +35,9 @@ export default function Switch({ checked, onChange, disabled, label, labelledBy,
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       aria-busy={busy || undefined}
-      disabled={disabled}
-      onClick={(e) => { e.stopPropagation(); if (!busy) onChange(!checked); }}
+      disabled={disabled && !soft}
+      aria-disabled={soft || undefined}
+      onClick={(e) => { e.stopPropagation(); if (!busy && !disabled) onChange(!checked); }}
       className={clsx(
         "relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0 p-[2px] flex",
         "before:absolute before:-inset-x-1 before:-inset-y-1.5 before:content-['']",
